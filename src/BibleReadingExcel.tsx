@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Download, Moon, Sun } from 'lucide-react';
 
 const BibleReadingExcel = () => {
   const [status, setStatus] = useState('');
   const [darkMode, setDarkMode] = useState(false);
 
-  const readings = {
+  const readings: Record<number, string[]> = {
     1: ['Gen 1–3 | Matt 1', 'Gen 4–8 | Matt 2', 'Gen 9–12 | Matt 3', 'Gen 13–16 | Matt 4', 'Gen 17–19 | Matt 5'],
     2: ['Gen 20–23 | Matt 6', 'Gen 24–25 | Matt 7', 'Gen 26–27 | Matt 8', 'Gen 28–30 | Matt 9', 'Gen 31–33 | Matt 10'],
     3: ['Gen 34–36 | Matt 11', 'Gen 37–39 | Matt 12', 'Gen 40–41 | Matt 13', 'Gen 42–44 | Matt 14', 'Gen 45–47 | Matt 15'],
@@ -111,8 +111,8 @@ const BibleReadingExcel = () => {
   return (
     <div className={`min-h-screen p-8 transition-colors duration-300 ${
       darkMode 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-        : 'bg-gradient-to-br from-blue-50 to-indigo-100'
+        ? 'bg-linear-to-br from-gray-900 to-gray-800' 
+        : 'bg-linear-to-br from-blue-50 to-indigo-100'
     }`}>
       <div className="max-w-4xl mx-auto">
         <div className={`rounded-lg shadow-xl p-8 transition-colors duration-300 ${
@@ -219,22 +219,25 @@ const BibleReadingExcel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.keys(readings).map(week => (
-                    <tr key={week} className={`border-b transition-colors duration-200 ${
-                      darkMode 
-                        ? 'border-gray-600 hover:bg-gray-600' 
-                        : 'border-gray-200 hover:bg-blue-50'
-                    }`}>
-                      <td className={`px-4 py-2 font-medium ${
-                        darkMode ? 'text-gray-200' : 'text-gray-800'
-                      }`}>Week {week}</td>
-                      {readings[week].map((reading, i) => (
-                        <td key={i} className={`px-4 py-2 ${
-                          darkMode ? 'text-gray-300' : 'text-gray-700'
-                        }`}>{reading}</td>
-                      ))}
-                    </tr>
-                  ))}
+                  {Object.keys(readings).map((weekKey) => {
+                    const week = Number(weekKey);
+                    return (
+                      <tr key={week} className={`border-b transition-colors duration-200 ${
+                        darkMode 
+                          ? 'border-gray-600 hover:bg-gray-600' 
+                          : 'border-gray-200 hover:bg-blue-50'
+                      }`}>
+                        <td className={`px-4 py-2 font-medium ${
+                          darkMode ? 'text-gray-200' : 'text-gray-800'
+                        }`}>Week {week}</td>
+                        {readings[week].map((reading: string, i: number) => (
+                          <td key={i} className={`px-4 py-2 ${
+                            darkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>{reading}</td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
