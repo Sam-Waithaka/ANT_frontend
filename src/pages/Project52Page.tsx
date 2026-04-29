@@ -92,7 +92,7 @@ const Project52Page = () => {
 
   return (
     <div className={`min-h-screen overflow-x-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
-      <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} subtitle="Project 52 Bible reading plan" />
+      <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
 
       <main>
         <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:pt-12">
