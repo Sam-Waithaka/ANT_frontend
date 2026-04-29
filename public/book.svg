@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AIC Njoro Town">
+  <rect width="64" height="64" rx="16" fill="#111111"/>
+  <path d="M17 14h20a10 10 0 0 1 10 10v27H25a8 8 0 0 0-8 8V14Z" fill="#991b1b"/>
+  <path d="M17 14h20a10 10 0 0 1 10 10v27H25a8 8 0 0 0-8 8V14Z" fill="none" stroke="#f8f5ef" stroke-width="3"/>
+  <path d="M27 25h11M27 34h13" stroke="#f8f5ef" stroke-width="3" stroke-linecap="round"/>
+</svg>
