@@ -19,7 +19,11 @@ const SiteHeader = ({
     }`}
   >
     <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-      <div className="flex min-w-0 items-center gap-3">
+      <a
+        href="/"
+        className="flex min-w-0 items-center gap-3 rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2"
+        aria-label="Go to AIC Njoro Town home"
+      >
         <div
           className={`grid size-12 shrink-0 place-items-center rounded-2xl border text-xs font-black tracking-[0.18em] shadow-sm ${
             darkMode ? 'border-red-400/30 bg-white/5 text-red-200' : 'border-red-900/15 bg-white text-red-900'
@@ -32,7 +36,7 @@ const SiteHeader = ({
           <p className="truncate text-sm font-bold uppercase tracking-[0.16em]">AIC Njoro Town</p>
           <p className={`truncate text-xs ${darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>{subtitle}</p>
         </div>
-      </div>
+      </a>
       <button
         onClick={onToggleTheme}
         className={`grid size-11 shrink-0 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
