@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { project52Catchphrases } from '../../data/project52Catchphrases';
+import type { Catchphrase } from '../../types/project52';
 
 type RotatingCatchphraseProps = {
   darkMode: boolean;
+  onPhraseChange?: (phrase: Catchphrase) => void;
 };
 
-const RotatingCatchphrase = ({ darkMode }: RotatingCatchphraseProps) => {
+const RotatingCatchphrase = ({ darkMode, onPhraseChange }: RotatingCatchphraseProps) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const activePhrase = project52Catchphrases[activeIndex];
 
@@ -17,6 +19,10 @@ const RotatingCatchphrase = ({ darkMode }: RotatingCatchphraseProps) => {
 
     return () => window.clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    onPhraseChange?.(activePhrase);
+  }, [activePhrase, onPhraseChange]);
 
   return (
     <div

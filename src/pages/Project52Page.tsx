@@ -6,7 +6,7 @@ import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { readings } from '../data/project52Readings';
 import { useTheme } from '../hooks/useTheme';
-import type { TestamentFilter } from '../types/project52';
+import type { Catchphrase, TestamentFilter } from '../types/project52';
 import { createProject52Pdf } from '../utils/project52Pdf';
 import { buildReadingWeeks, getCurrentReadingTarget } from '../utils/project52Schedule';
 
@@ -16,6 +16,7 @@ const Project52Page = () => {
   const readingTarget = useMemo(() => getCurrentReadingTarget(), []);
   const [activeWeek, setActiveWeek] = useState(() => readingTarget.week);
   const [activeFilter, setActiveFilter] = useState<TestamentFilter>('both');
+  const [activeCatchphrase, setActiveCatchphrase] = useState<Catchphrase>({ label: 'Let The Text Speak' });
   const [searchTerm, setSearchTerm] = useState('');
   const currentWeek = readingTarget.week;
   const currentWeekRef = useRef<HTMLElement | null>(null);
@@ -99,7 +100,7 @@ const Project52Page = () => {
     setStatus('Creating Project 52 PDF...');
 
     try {
-      const blob = await createProject52Pdf();
+      const blob = await createProject52Pdf(activeCatchphrase);
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
 
@@ -133,6 +134,7 @@ const Project52Page = () => {
             <Project52Hero
               darkMode={darkMode}
               status={status}
+              onCatchphraseChange={setActiveCatchphrase}
               onJumpToCurrentWeek={jumpToCurrentWeek}
               onDownloadPdf={generatePdf}
             />

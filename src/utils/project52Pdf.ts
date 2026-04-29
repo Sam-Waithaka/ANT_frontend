@@ -1,11 +1,17 @@
 import { readingDays, splitReading } from './project52Schedule';
 import { assetPaths } from '../constants/assets';
 import { readings } from '../data/project52Readings';
+import type { Catchphrase } from '../types/project52';
 
 const escapePdfText = (value: string) => value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
 
 const addPdfText = (commands: string[], text: string, x: number, y: number, size = 10, font = 'F1') => {
   commands.push(`BT /${font} ${size} Tf ${x} ${y} Td (${escapePdfText(text)}) Tj ET`);
+};
+
+const addCenteredPdfText = (commands: string[], text: string, centerX: number, y: number, size = 8) => {
+  const estimatedWidth = text.length * size * 0.47;
+  addPdfText(commands, text, centerX - estimatedWidth / 2, y, size);
 };
 
 const wrapPdfText = (text: string, maxChars: number) => {
@@ -75,7 +81,10 @@ const loadPdfImage = async (src: string): Promise<PdfImage | null> => {
   }
 };
 
-export const createProject52Pdf = async () => {
+const formatCatchphrase = (catchphrase: Catchphrase) =>
+  catchphrase.scripture ? `${catchphrase.label} | ${catchphrase.scripture}` : catchphrase.label;
+
+export const createProject52Pdf = async (footerCatchphrase: Catchphrase = { label: 'Let The Text Speak' }) => {
   const letterHead = await loadPdfImage(assetPaths.letterHead);
   const footerLogo = await loadPdfImage(assetPaths.logoBlack);
   const mediaCrewLogo = await loadPdfImage(assetPaths.mediaCrewLogoBlack);
@@ -90,10 +99,12 @@ export const createProject52Pdf = async () => {
   let pageNumber = 1;
 
   const addFooter = () => {
+    const catchphraseText = formatCatchphrase(footerCatchphrase);
     commands.push('0.62 0.11 0.11 rg');
     commands.push(`${margin} ${footerRuleY} 528 1.2 re f`);
     commands.push('0.25 0.25 0.25 rg');
-    addPdfText(commands, `Let The Text Speak | Project 52 | Page ${pageNumber}`, margin, footerTextY, 8);
+    addPdfText(commands, `Project 52 | Page ${pageNumber}`, margin, footerTextY, 8);
+    addCenteredPdfText(commands, catchphraseText, pageWidth / 2, 31, 7);
 
     if (footerLogo) {
       const logoHeight = 42;

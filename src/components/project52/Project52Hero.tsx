@@ -1,16 +1,24 @@
 import { CalendarDays, Download } from 'lucide-react';
 import RotatingCatchphrase from './RotatingCatchphrase';
+import type { Catchphrase } from '../../types/project52';
 
 type Project52HeroProps = {
   darkMode: boolean;
   status: string;
+  onCatchphraseChange: (phrase: Catchphrase) => void;
   onJumpToCurrentWeek: () => void;
   onDownloadPdf: () => void;
 };
 
-const Project52Hero = ({ darkMode, status, onJumpToCurrentWeek, onDownloadPdf }: Project52HeroProps) => (
+const Project52Hero = ({
+  darkMode,
+  status,
+  onCatchphraseChange,
+  onJumpToCurrentWeek,
+  onDownloadPdf,
+}: Project52HeroProps) => (
   <div className="pt-4 sm:pt-8">
-    <RotatingCatchphrase darkMode={darkMode} />
+    <RotatingCatchphrase darkMode={darkMode} onPhraseChange={onCatchphraseChange} />
     <h1 className="max-w-3xl text-5xl font-black leading-[0.95] tracking-normal sm:text-6xl lg:text-7xl">Project 52</h1>
     <p className={`mt-5 max-w-2xl text-lg leading-8 sm:text-xl ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
       Read through the Bible week by week with our church community across 52 intentional weeks.
