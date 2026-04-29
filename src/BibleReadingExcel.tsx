@@ -85,7 +85,39 @@ const wrapPdfText = (text: string, maxChars: number) => {
   return lines;
 };
 
-const createProject52Pdf = () => {
+type PdfLogo = {
+  hex: string;
+  width: number;
+  height: number;
+};
+
+const getProject52Logo = async (): Promise<PdfLogo | null> => {
+  try {
+    const src = '/full%20logo.jpeg';
+    const [response, image] = await Promise.all([
+      fetch(src),
+      new Promise<HTMLImageElement>((resolve, reject) => {
+        const logo = new Image();
+        logo.onload = () => resolve(logo);
+        logo.onerror = reject;
+        logo.src = src;
+      }),
+    ]);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+
+    return {
+      hex,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const createProject52Pdf = async () => {
+  const logo = await getProject52Logo();
   const pageWidth = 612;
   const pageHeight = 792;
   const margin = 42;
@@ -122,10 +154,18 @@ const createProject52Pdf = () => {
   newPage();
   commands.push('0.05 0.05 0.05 rg');
   commands.push('0 704 612 88 re f');
-  commands.push('0.62 0.11 0.11 rg');
-  commands.push('42 720 50 50 re f');
   commands.push('1 1 1 rg');
-  addPdfText(commands, 'AIC', 56, 742, 16);
+  commands.push('42 720 58 50 re f');
+  if (logo) {
+    const logoHeight = 42;
+    const logoWidth = Math.min(50, (logo.width / logo.height) * logoHeight);
+    commands.push(`q ${logoWidth} 0 0 ${logoHeight} 46 724 cm /Logo Do Q`);
+  } else {
+    commands.push('0.62 0.11 0.11 rg');
+    commands.push('42 720 50 50 re f');
+    commands.push('1 1 1 rg');
+    addPdfText(commands, 'AIC', 56, 742, 16);
+  }
   addPdfText(commands, 'AIC Njoro Town', 110, 753, 14);
   addPdfText(commands, 'Project 52 Bible Reading Plan', 110, 731, 24);
   y = 674;
@@ -140,14 +180,21 @@ const createProject52Pdf = () => {
     commands.push('1 1 1 rg');
     addPdfText(commands, `Week ${week}`, margin + 10, y, 12);
     y -= 22;
+    commands.push('0.05 0.05 0.05 rg');
+    commands.push(`${margin} ${y - 13} 528 18 re f`);
+    commands.push('1 1 1 rg');
+    addPdfText(commands, 'Day', margin + 10, y - 7, 8);
+    addPdfText(commands, 'Old Testament', margin + 92, y - 7, 8);
+    addPdfText(commands, 'New Testament', margin + 336, y - 7, 8);
+    y -= 21;
 
     readings[week].forEach((reading, index) => {
       const { oldTestament, newTestament } = splitReading(reading);
       const day = readingDays[index];
       const rowLines = Math.max(
         1,
-        wrapPdfText(oldTestament, 31).length,
-        wrapPdfText(newTestament, 24).length,
+        wrapPdfText(oldTestament, 34).length,
+        wrapPdfText(newTestament, 27).length,
       );
       const rowHeight = Math.max(18, rowLines * 11 + 7);
       ensureSpace(rowHeight + 4);
@@ -158,17 +205,13 @@ const createProject52Pdf = () => {
       commands.push(`${margin} ${y - rowHeight + 6} 528 ${rowHeight} re S`);
       commands.push('0.08 0.08 0.08 rg');
       addPdfText(commands, day, margin + 10, y - 8, 9);
-      commands.push('0.62 0.11 0.11 rg');
-      addPdfText(commands, 'OT', margin + 112, y - 8, 8);
       commands.push('0.08 0.08 0.08 rg');
-      wrapPdfText(oldTestament, 31).forEach((line, lineIndex) => {
-        addPdfText(commands, line, margin + 132, y - 8 - lineIndex * 11, 9);
+      wrapPdfText(oldTestament, 34).forEach((line, lineIndex) => {
+        addPdfText(commands, line, margin + 92, y - 8 - lineIndex * 11, 9);
       });
-      commands.push('0.62 0.11 0.11 rg');
-      addPdfText(commands, 'NT', margin + 358, y - 8, 8);
       commands.push('0.08 0.08 0.08 rg');
-      wrapPdfText(newTestament, 24).forEach((line, lineIndex) => {
-        addPdfText(commands, line, margin + 378, y - 8 - lineIndex * 11, 9);
+      wrapPdfText(newTestament, 27).forEach((line, lineIndex) => {
+        addPdfText(commands, line, margin + 336, y - 8 - lineIndex * 11, 9);
       });
       y -= rowHeight + 3;
     });
@@ -184,12 +227,15 @@ const createProject52Pdf = () => {
   objects.push('<< /Type /Catalog /Pages 2 0 R >>');
   objects.push('');
   objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  if (logo) {
+    objects.push(`<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${logo.hex.length + 1} >>\nstream\n${logo.hex}>\nendstream`);
+  }
 
   pages.forEach((content, index) => {
-    const pageObjectNumber = 4 + index * 2;
+    const pageObjectNumber = (logo ? 5 : 4) + index * 2;
     const contentObjectNumber = pageObjectNumber + 1;
     pageRefs.push(`${pageObjectNumber} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectNumber} 0 R >>`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >>${logo ? ' /XObject << /Logo 4 0 R >>' : ''} >> /Contents ${contentObjectNumber} 0 R >>`);
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   });
 
@@ -349,11 +395,11 @@ const BibleReadingExcel = () => {
     }, 50);
   };
 
-  const generatePdf = () => {
+  const generatePdf = async () => {
     setStatus('Creating Project 52 PDF...');
 
     try {
-      const blob = createProject52Pdf();
+      const blob = await createProject52Pdf();
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
 
