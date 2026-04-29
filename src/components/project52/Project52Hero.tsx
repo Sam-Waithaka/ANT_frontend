@@ -38,7 +38,7 @@ const Project52Hero = ({ darkMode, status, onJumpToCurrentWeek, onDownloadPdf }:
         }`}
       >
         <Download size={19} />
-        Download PDF
+        Download Plan
       </button>
     </div>
     {status && (
