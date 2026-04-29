@@ -5,11 +5,12 @@ import {
   CheckCircle2,
   ChevronRight,
   Download,
-  Moon,
   Search,
   Sparkles,
-  Sun,
 } from 'lucide-react';
+import SiteFooter from './components/SiteFooter';
+import SiteHeader from './components/SiteHeader';
+import { useTheme } from './hooks/useTheme';
 
 type TestamentFilter = 'both' | 'old' | 'new';
 
@@ -54,6 +55,161 @@ const getCurrentReadingTarget = (date = new Date()) => {
 const splitReading = (reading: string): Omit<ReadingItem, 'day' | 'dayIndex' | 'searchable'> => {
   const [oldTestament = '', newTestament = ''] = reading.split('|').map((part) => part.trim());
   return { oldTestament, newTestament };
+};
+
+const escapePdfText = (value: string) => value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+
+const addPdfText = (commands: string[], text: string, x: number, y: number, size = 10, font = 'F1') => {
+  commands.push(`BT /${font} ${size} Tf ${x} ${y} Td (${escapePdfText(text)}) Tj ET`);
+};
+
+const wrapPdfText = (text: string, maxChars: number) => {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let current = '';
+
+  words.forEach((word) => {
+    const next = current ? `${current} ${word}` : word;
+    if (next.length > maxChars && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  });
+
+  if (current) {
+    lines.push(current);
+  }
+
+  return lines;
+};
+
+const createProject52Pdf = () => {
+  const pageWidth = 612;
+  const pageHeight = 792;
+  const margin = 42;
+  const footerY = 28;
+  const pages: string[] = [];
+  let commands: string[] = [];
+  let y = pageHeight - margin;
+  let pageNumber = 1;
+
+  const addFooter = () => {
+    commands.push('0.62 0.11 0.11 rg');
+    commands.push(`${margin} 22 528 1.2 re f`);
+    commands.push('0.25 0.25 0.25 rg');
+    addPdfText(commands, `AIC Njoro Town | Project 52 | Page ${pageNumber}`, margin, footerY, 8);
+  };
+
+  const newPage = () => {
+    if (commands.length) {
+      addFooter();
+      pages.push(commands.join('\n'));
+      pageNumber += 1;
+    }
+
+    commands = [];
+    y = pageHeight - margin;
+  };
+
+  const ensureSpace = (height: number) => {
+    if (y - height < 56) {
+      newPage();
+    }
+  };
+
+  newPage();
+  commands.push('0.05 0.05 0.05 rg');
+  commands.push('0 704 612 88 re f');
+  commands.push('0.62 0.11 0.11 rg');
+  commands.push('42 720 50 50 re f');
+  commands.push('1 1 1 rg');
+  addPdfText(commands, 'AIC', 56, 742, 16);
+  addPdfText(commands, 'AIC Njoro Town', 110, 753, 14);
+  addPdfText(commands, 'Project 52 Bible Reading Plan', 110, 731, 24);
+  y = 674;
+  commands.push('0.1 0.1 0.1 rg');
+  addPdfText(commands, 'Read through the Bible week by week with our church community across 52 intentional weeks.', margin, y, 11);
+  y -= 34;
+
+  for (let week = 1; week <= 52; week += 1) {
+    ensureSpace(112);
+    commands.push('0.62 0.11 0.11 rg');
+    commands.push(`${margin} ${y - 5} 528 20 re f`);
+    commands.push('1 1 1 rg');
+    addPdfText(commands, `Week ${week}`, margin + 10, y, 12);
+    y -= 22;
+
+    readings[week].forEach((reading, index) => {
+      const { oldTestament, newTestament } = splitReading(reading);
+      const day = readingDays[index];
+      const rowLines = Math.max(
+        1,
+        wrapPdfText(oldTestament, 31).length,
+        wrapPdfText(newTestament, 24).length,
+      );
+      const rowHeight = Math.max(18, rowLines * 11 + 7);
+      ensureSpace(rowHeight + 4);
+
+      commands.push(index % 2 === 0 ? '0.98 0.96 0.92 rg' : '1 1 1 rg');
+      commands.push(`${margin} ${y - rowHeight + 6} 528 ${rowHeight} re f`);
+      commands.push('0.86 0.83 0.78 RG');
+      commands.push(`${margin} ${y - rowHeight + 6} 528 ${rowHeight} re S`);
+      commands.push('0.08 0.08 0.08 rg');
+      addPdfText(commands, day, margin + 10, y - 8, 9);
+      commands.push('0.62 0.11 0.11 rg');
+      addPdfText(commands, 'OT', margin + 112, y - 8, 8);
+      commands.push('0.08 0.08 0.08 rg');
+      wrapPdfText(oldTestament, 31).forEach((line, lineIndex) => {
+        addPdfText(commands, line, margin + 132, y - 8 - lineIndex * 11, 9);
+      });
+      commands.push('0.62 0.11 0.11 rg');
+      addPdfText(commands, 'NT', margin + 358, y - 8, 8);
+      commands.push('0.08 0.08 0.08 rg');
+      wrapPdfText(newTestament, 24).forEach((line, lineIndex) => {
+        addPdfText(commands, line, margin + 378, y - 8 - lineIndex * 11, 9);
+      });
+      y -= rowHeight + 3;
+    });
+
+    y -= 12;
+  }
+
+  addFooter();
+  pages.push(commands.join('\n'));
+
+  const objects: string[] = [];
+  const pageRefs: string[] = [];
+  objects.push('<< /Type /Catalog /Pages 2 0 R >>');
+  objects.push('');
+  objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+
+  pages.forEach((content, index) => {
+    const pageObjectNumber = 4 + index * 2;
+    const contentObjectNumber = pageObjectNumber + 1;
+    pageRefs.push(`${pageObjectNumber} 0 R`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${contentObjectNumber} 0 R >>`);
+    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  });
+
+  objects[1] = `<< /Type /Pages /Kids [${pageRefs.join(' ')}] /Count ${pageRefs.length} >>`;
+
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(pdf.length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${offset.toString().padStart(10, '0')} 00000 n \n`;
+  });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+  return new Blob([pdf], { type: 'application/pdf' });
 };
 
 const readings: Record<number, string[]> = {
@@ -113,7 +269,7 @@ const readings: Record<number, string[]> = {
 
 const BibleReadingExcel = () => {
   const [status, setStatus] = useState('');
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('aic-theme') === 'dark');
+  const { darkMode, toggleTheme } = useTheme();
   const readingTarget = useMemo(() => getCurrentReadingTarget(), []);
   const [activeWeek, setActiveWeek] = useState(() => readingTarget.week);
   const [activeFilter, setActiveFilter] = useState<TestamentFilter>('both');
@@ -168,11 +324,6 @@ const BibleReadingExcel = () => {
   const yearProgress = Math.round((currentWeek / 52) * 100);
 
   useEffect(() => {
-    localStorage.setItem('aic-theme', darkMode ? 'dark' : 'light');
-    document.documentElement.classList.toggle('dark', darkMode);
-  }, [darkMode]);
-
-  useEffect(() => {
     const timer = window.setTimeout(() => {
       currentWeekRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       currentWeekRef.current?.focus({ preventScroll: true });
@@ -198,66 +349,33 @@ const BibleReadingExcel = () => {
     }, 50);
   };
 
-  const generateExcel = () => {
-    setStatus('Generating CSV file...');
+  const generatePdf = () => {
+    setStatus('Creating Project 52 PDF...');
 
     try {
-      const bom = '\uFEFF';
-      let csvContent = `${bom}Week,Monday,Tuesday,Wednesday,Thursday,Friday\n`;
-
-      for (let week = 1; week <= 52; week++) {
-        const row = [`Week ${week}`, ...readings[week]];
-        const escapedRow = row.map((cell) => {
-          if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
-            return `"${cell.replace(/"/g, '""')}"`;
-          }
-          return cell;
-        });
-        csvContent += `${escapedRow.join(',')}\n`;
-      }
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = createProject52Pdf();
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
 
       link.setAttribute('href', url);
-      link.setAttribute('download', 'AIC-Njoro-Town-52-Week-Bible-Reading-Plan.csv');
+      link.setAttribute('download', 'AIC-Njoro-Town-Project-52-Bible-Reading-Plan.pdf');
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setStatus('CSV file downloaded successfully.');
+      setStatus('Project 52 PDF downloaded successfully.');
       window.setTimeout(() => setStatus(''), 4000);
     } catch (error) {
-      setStatus('Error generating file. Please try again.');
+      setStatus('Error creating PDF. Please try again.');
       console.error(error);
     }
   };
 
   return (
     <div className={`min-h-screen overflow-x-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
-      <header className={`sticky top-0 z-30 border-b backdrop-blur-xl transition-colors duration-300 ${darkMode ? 'border-white/10 bg-black/75' : 'border-black/10 bg-[#f8f5ef]/85'}`}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className={`grid size-12 shrink-0 place-items-center rounded-2xl border text-xs font-black tracking-[0.18em] shadow-sm ${darkMode ? 'border-red-400/30 bg-white/5 text-red-200' : 'border-red-900/15 bg-white text-red-900'}`} aria-label="AIC Njoro Town logo placeholder">
-              AIC
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold uppercase tracking-[0.16em]">AIC Njoro Town</p>
-              <p className={`truncate text-xs ${darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>Logo placeholder</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setDarkMode((current) => !current)}
-            className={`grid size-11 shrink-0 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${darkMode ? 'border-white/10 bg-white/10 text-amber-200 focus:ring-offset-black' : 'border-black/10 bg-white text-zinc-900 shadow-sm focus:ring-offset-[#f8f5ef]'}`}
-            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-        </div>
-      </header>
+      <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} subtitle="Project 52 Bible reading plan" />
 
       <main>
         <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:pt-12">
@@ -278,9 +396,9 @@ const BibleReadingExcel = () => {
                   <CalendarDays size={19} />
                   Today / Current Week
                 </button>
-                <button onClick={generateExcel} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full border px-6 py-3 font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${darkMode ? 'border-white/15 bg-white/10 text-white hover:bg-white/15 focus:ring-offset-black' : 'border-black/10 bg-white text-zinc-950 shadow-sm hover:bg-zinc-50 focus:ring-offset-[#f8f5ef]'}`}>
+                <button onClick={generatePdf} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full border px-6 py-3 font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${darkMode ? 'border-white/15 bg-white/10 text-white hover:bg-white/15 focus:ring-offset-black' : 'border-black/10 bg-white text-zinc-950 shadow-sm hover:bg-zinc-50 focus:ring-offset-[#f8f5ef]'}`}>
                   <Download size={19} />
-                  Download plan
+                  Download PDF
                 </button>
               </div>
               {status && (
@@ -421,10 +539,7 @@ const BibleReadingExcel = () => {
         </section>
       </main>
 
-      <footer className={`border-t px-4 py-8 text-center text-sm sm:px-6 ${darkMode ? 'border-white/10 text-stone-400' : 'border-black/10 text-zinc-600'}`}>
-        <p>© 2020 - 2026 ANT Media Crew. All rights reserved.</p>
-        <p className="mt-1">Full Website coming soon.</p>
-      </footer>
+      <SiteFooter darkMode={darkMode} />
     </div>
   );
 };
