@@ -23,20 +23,28 @@ type ReadingItem = {
 
 const readingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-const getWeekOfYear = (date = new Date()) => {
+const getReadingWeekOfYear = (date = new Date()) => {
   const startOfYear = new Date(date.getFullYear(), 0, 1);
-  const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / 86400000) + 1;
-  return Math.min(52, Math.max(1, Math.ceil((dayOfYear + startOfYear.getDay()) / 7)));
+  const firstMonday = new Date(startOfYear);
+  const daysUntilMonday = (8 - startOfYear.getDay()) % 7;
+  firstMonday.setDate(startOfYear.getDate() + daysUntilMonday);
+
+  if (date < firstMonday) {
+    return 1;
+  }
+
+  const daysSinceFirstMonday = Math.floor((date.getTime() - firstMonday.getTime()) / 86400000);
+  return Math.min(52, Math.max(1, Math.floor(daysSinceFirstMonday / 7) + 1));
 };
 
 const getCurrentReadingTarget = (date = new Date()) => {
-  const calendarWeek = getWeekOfYear(date);
+  const readingWeek = getReadingWeekOfYear(date);
   const dayOfWeek = date.getDay();
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   const dayIndex = isWeekend ? 4 : Math.max(0, dayOfWeek - 1);
 
   return {
-    week: isWeekend ? Math.max(1, calendarWeek - 1) : calendarWeek,
+    week: isWeekend ? Math.max(1, readingWeek - 1) : readingWeek,
     dayIndex,
     day: readingDays[dayIndex],
     isWeekendCarryover: isWeekend,
@@ -414,8 +422,8 @@ const BibleReadingExcel = () => {
       </main>
 
       <footer className={`border-t px-4 py-8 text-center text-sm sm:px-6 ${darkMode ? 'border-white/10 text-stone-400' : 'border-black/10 text-zinc-600'}`}>
-        <p>© 2026 AIC Njoro Town. All rights reserved.</p>
-        <p className="mt-1">Website launching soon.</p>
+        <p>© 2020 - 2026 ANT Media Crew. All rights reserved.</p>
+        <p className="mt-1">Full Website coming soon.</p>
       </footer>
     </div>
   );
