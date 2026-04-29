@@ -77,10 +77,13 @@ const loadPdfImage = async (src: string): Promise<PdfImage | null> => {
 
 export const createProject52Pdf = async () => {
   const letterHead = await loadPdfImage(assetPaths.letterHead);
+  const footerLogo = await loadPdfImage(assetPaths.logoBlack);
+  const mediaCrewLogo = await loadPdfImage(assetPaths.mediaCrewLogoBlack);
   const pageWidth = 612;
   const pageHeight = 792;
   const margin = 42;
-  const footerY = 28;
+  const footerTextY = 70;
+  const footerRuleY = 60;
   const pages: string[] = [];
   let commands: string[] = [];
   let y = pageHeight - margin;
@@ -88,9 +91,21 @@ export const createProject52Pdf = async () => {
 
   const addFooter = () => {
     commands.push('0.62 0.11 0.11 rg');
-    commands.push(`${margin} 22 528 1.2 re f`);
+    commands.push(`${margin} ${footerRuleY} 528 1.2 re f`);
     commands.push('0.25 0.25 0.25 rg');
-    addPdfText(commands, `AIC Njoro Town | Project 52 | Page ${pageNumber}`, margin, footerY, 8);
+    addPdfText(commands, `Let The Text Speak | Project 52 | Page ${pageNumber}`, margin, footerTextY, 8);
+
+    if (footerLogo) {
+      const logoHeight = 42;
+      const logoWidth = Math.min(230, (footerLogo.width / footerLogo.height) * logoHeight);
+      commands.push(`q ${logoWidth} 0 0 ${logoHeight} ${margin} 12 cm /FooterLogo Do Q`);
+    }
+
+    if (mediaCrewLogo) {
+      const mediaHeight = 42;
+      const mediaWidth = Math.min(250, (mediaCrewLogo.width / mediaCrewLogo.height) * mediaHeight);
+      commands.push(`q ${mediaWidth} 0 0 ${mediaHeight} ${pageWidth - margin - mediaWidth} 12 cm /MediaCrewLogo Do Q`);
+    }
   };
 
   const newPage = () => {
@@ -105,7 +120,7 @@ export const createProject52Pdf = async () => {
   };
 
   const ensureSpace = (height: number) => {
-    if (y - height < 56) {
+    if (y - height < 118) {
       newPage();
     }
   };
@@ -182,18 +197,34 @@ export const createProject52Pdf = async () => {
 
   const objects: string[] = [];
   const pageRefs: string[] = [];
+  const imageResources: string[] = [];
   objects.push('<< /Type /Catalog /Pages 2 0 R >>');
   objects.push('');
   objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+
   if (letterHead) {
+    imageResources.push(`/LetterHead ${objects.length + 1} 0 R`);
     objects.push(`<< /Type /XObject /Subtype /Image /Width ${letterHead.width} /Height ${letterHead.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${letterHead.hex.length + 1} >>\nstream\n${letterHead.hex}>\nendstream`);
   }
 
+  if (footerLogo) {
+    imageResources.push(`/FooterLogo ${objects.length + 1} 0 R`);
+    objects.push(`<< /Type /XObject /Subtype /Image /Width ${footerLogo.width} /Height ${footerLogo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${footerLogo.hex.length + 1} >>\nstream\n${footerLogo.hex}>\nendstream`);
+  }
+
+  if (mediaCrewLogo) {
+    imageResources.push(`/MediaCrewLogo ${objects.length + 1} 0 R`);
+    objects.push(`<< /Type /XObject /Subtype /Image /Width ${mediaCrewLogo.width} /Height ${mediaCrewLogo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${mediaCrewLogo.hex.length + 1} >>\nstream\n${mediaCrewLogo.hex}>\nendstream`);
+  }
+
+  const pageStartObjectNumber = objects.length + 1;
+  const xObjectResources = imageResources.length ? ` /XObject << ${imageResources.join(' ')} >>` : '';
+
   pages.forEach((content, index) => {
-    const pageObjectNumber = (letterHead ? 5 : 4) + index * 2;
+    const pageObjectNumber = pageStartObjectNumber + index * 2;
     const contentObjectNumber = pageObjectNumber + 1;
     pageRefs.push(`${pageObjectNumber} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >>${letterHead ? ' /XObject << /LetterHead 4 0 R >>' : ''} >> /Contents ${contentObjectNumber} 0 R >>`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >>${xObjectResources} >> /Contents ${contentObjectNumber} 0 R >>`);
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   });
 
