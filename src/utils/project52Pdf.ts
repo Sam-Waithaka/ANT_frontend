@@ -104,7 +104,7 @@ export const createProject52Pdf = async (footerCatchphrase: Catchphrase = { labe
     commands.push(`${margin} ${footerRuleY} 528 1.2 re f`);
     commands.push('0.25 0.25 0.25 rg');
     addPdfText(commands, `Project 52 | Page ${pageNumber}`, margin, footerTextY, 8);
-    addCenteredPdfText(commands, catchphraseText, pageWidth / 2, 31, 7);
+    addCenteredPdfText(commands, catchphraseText, pageWidth / 2, 31, 10);
 
     if (footerLogo) {
       const logoHeight = 42;
