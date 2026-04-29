@@ -181,6 +181,15 @@ const BibleReadingExcel = () => {
     }, 50);
   };
 
+  const changeFilter = (filter: TestamentFilter) => {
+    setActiveFilter(filter);
+    setActiveWeek(currentWeek);
+    window.setTimeout(() => {
+      currentWeekRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      currentWeekRef.current?.focus({ preventScroll: true });
+    }, 50);
+  };
+
   const generateExcel = () => {
     setStatus('Generating CSV file...');
 
@@ -309,6 +318,9 @@ const BibleReadingExcel = () => {
               <div>
                 <p className={`text-sm font-bold uppercase tracking-[0.16em] ${darkMode ? 'text-red-200' : 'text-red-900'}`}>Bible reading plan</p>
                 <h2 id="reading-plan-heading" className="mt-2 text-3xl font-black sm:text-4xl">Weekly readings</h2>
+                <p className={`mt-2 text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+                  Scroll inside the plan to browse all 52 weeks.
+                </p>
               </div>
               <div className={`relative rounded-full border ${darkMode ? 'border-white/10 bg-white/10' : 'border-black/10 bg-white shadow-sm'}`}>
                 <Search className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 ${darkMode ? 'text-stone-400' : 'text-zinc-500'}`} size={18} />
@@ -330,7 +342,7 @@ const BibleReadingExcel = () => {
               ].map(([value, label]) => (
                 <button
                   key={value}
-                  onClick={() => setActiveFilter(value as TestamentFilter)}
+                  onClick={() => changeFilter(value as TestamentFilter)}
                   className={`min-h-11 rounded-full px-2 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-red-700 ${activeFilter === value ? 'bg-red-800 text-white shadow-md shadow-red-950/20' : darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'}`}
                   role="tab"
                   aria-selected={activeFilter === value}
@@ -340,7 +352,8 @@ const BibleReadingExcel = () => {
               ))}
             </div>
 
-            <div className="grid gap-4">
+            <div className={`max-h-[72vh] overflow-y-auto rounded-[2rem] border p-2 pr-1 shadow-inner sm:max-h-[680px] sm:p-3 ${darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-white/45'}`}>
+              <div className="grid gap-4 pr-1">
               {filteredWeeks.length === 0 ? (
                 <div className={`rounded-3xl border p-8 text-center ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-black/10 bg-white text-zinc-600'}`}>
                   No readings match that search. Try a book name like John, Psalms, or Romans.
@@ -394,6 +407,7 @@ const BibleReadingExcel = () => {
                   );
                 })
               )}
+              </div>
             </div>
           </div>
         </section>
