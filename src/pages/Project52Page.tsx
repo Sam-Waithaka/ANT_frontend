@@ -1,0 +1,138 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Project52Hero from '../components/project52/Project52Hero';
+import Project52ProgressCard from '../components/project52/Project52ProgressCard';
+import ReadingPlanSection from '../components/project52/ReadingPlanSection';
+import SiteFooter from '../components/SiteFooter';
+import SiteHeader from '../components/SiteHeader';
+import { readings } from '../data/project52Readings';
+import { useTheme } from '../hooks/useTheme';
+import type { TestamentFilter } from '../types/project52';
+import { createProject52Pdf } from '../utils/project52Pdf';
+import { buildReadingWeeks, getCurrentReadingTarget } from '../utils/project52Schedule';
+
+const Project52Page = () => {
+  const [status, setStatus] = useState('');
+  const { darkMode, toggleTheme } = useTheme();
+  const readingTarget = useMemo(() => getCurrentReadingTarget(), []);
+  const [activeWeek, setActiveWeek] = useState(() => readingTarget.week);
+  const [activeFilter, setActiveFilter] = useState<TestamentFilter>('both');
+  const [searchTerm, setSearchTerm] = useState('');
+  const currentWeek = readingTarget.week;
+  const currentWeekRef = useRef<HTMLElement | null>(null);
+
+  const weeks = useMemo(() => buildReadingWeeks(readings, currentWeek), [currentWeek]);
+
+  const filteredWeeks = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return weeks
+      .map((week) => {
+        const items = week.items.filter((item) => {
+          const matchesSearch = !query || item.searchable.includes(query);
+          const matchesFilter =
+            activeFilter === 'both' ||
+            (activeFilter === 'old' && item.oldTestament) ||
+            (activeFilter === 'new' && item.newTestament);
+
+          return matchesSearch && matchesFilter;
+        });
+
+        return { ...week, items };
+      })
+      .filter((week) => week.items.length > 0);
+  }, [activeFilter, searchTerm, weeks]);
+
+  const yearProgress = Math.round((currentWeek / 52) * 100);
+
+  const scrollToCurrentWeek = (delay = 50) => {
+    window.setTimeout(() => {
+      currentWeekRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      currentWeekRef.current?.focus({ preventScroll: true });
+    }, delay);
+  };
+
+  useEffect(() => {
+    scrollToCurrentWeek(450);
+  }, []);
+
+  const jumpToCurrentWeek = () => {
+    setActiveWeek(currentWeek);
+    scrollToCurrentWeek();
+  };
+
+  const changeFilter = (filter: TestamentFilter) => {
+    setActiveFilter(filter);
+    setActiveWeek(currentWeek);
+    scrollToCurrentWeek();
+  };
+
+  const generatePdf = async () => {
+    setStatus('Creating Project 52 PDF...');
+
+    try {
+      const blob = await createProject52Pdf();
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'AIC-Njoro-Town-Project-52-Bible-Reading-Plan.pdf');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      setStatus('Project 52 PDF downloaded successfully.');
+      window.setTimeout(() => setStatus(''), 4000);
+    } catch (error) {
+      setStatus('Error creating PDF. Please try again.');
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className={`min-h-screen overflow-x-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
+      <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} subtitle="Project 52 Bible reading plan" />
+
+      <main>
+        <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:pt-12">
+          <div className="absolute inset-0 -z-10 overflow-hidden">
+            <div className={`h-full ${darkMode ? 'bg-[radial-gradient(circle_at_top_left,rgba(185,28,28,0.30),transparent_34%),linear-gradient(135deg,#080808,#171717_55%,#260b0b)]' : 'bg-[radial-gradient(circle_at_top_left,rgba(153,27,27,0.16),transparent_35%),linear-gradient(135deg,#fffaf0,#f8f5ef_50%,#ece7de)]'}`} />
+          </div>
+
+          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+            <Project52Hero
+              darkMode={darkMode}
+              status={status}
+              onJumpToCurrentWeek={jumpToCurrentWeek}
+              onDownloadPdf={generatePdf}
+            />
+            <Project52ProgressCard
+              currentWeek={currentWeek}
+              darkMode={darkMode}
+              readingTarget={readingTarget}
+              yearProgress={yearProgress}
+            />
+          </div>
+        </section>
+
+        <ReadingPlanSection
+          activeFilter={activeFilter}
+          activeWeek={activeWeek}
+          currentWeekRef={currentWeekRef}
+          darkMode={darkMode}
+          filteredWeeks={filteredWeeks}
+          readingTarget={readingTarget}
+          searchTerm={searchTerm}
+          onChangeFilter={changeFilter}
+          onSearchChange={setSearchTerm}
+          onToggleWeek={setActiveWeek}
+        />
+      </main>
+
+      <SiteFooter darkMode={darkMode} />
+    </div>
+  );
+};
+
+export default Project52Page;
