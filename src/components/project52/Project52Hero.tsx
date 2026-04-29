@@ -15,7 +15,7 @@ const Project52Hero = ({ darkMode, status, onJumpToCurrentWeek, onDownloadPdf }:
       }`}
     >
       <Sparkles size={14} />
-      One Year. One Word
+      Let the text speak
     </div>
     <h1 className="max-w-3xl text-5xl font-black leading-[0.95] tracking-normal sm:text-6xl lg:text-7xl">Project 52</h1>
     <p className={`mt-5 max-w-2xl text-lg leading-8 sm:text-xl ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>

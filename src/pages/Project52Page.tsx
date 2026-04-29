@@ -66,6 +66,35 @@ const Project52Page = () => {
     scrollToCurrentWeek();
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+
+    const query = value.trim().toLowerCase();
+    if (!query) {
+      setActiveFilter('both');
+      return;
+    }
+
+    const hasOldTestamentMatch = weeks.some((week) =>
+      week.items.some((item) => item.oldTestament.toLowerCase().includes(query)),
+    );
+    const hasNewTestamentMatch = weeks.some((week) =>
+      week.items.some((item) => item.newTestament.toLowerCase().includes(query)),
+    );
+
+    if (hasOldTestamentMatch && !hasNewTestamentMatch) {
+      setActiveFilter('old');
+      return;
+    }
+
+    if (hasNewTestamentMatch && !hasOldTestamentMatch) {
+      setActiveFilter('new');
+      return;
+    }
+
+    setActiveFilter('both');
+  };
+
   const generatePdf = async () => {
     setStatus('Creating Project 52 PDF...');
 
@@ -125,7 +154,7 @@ const Project52Page = () => {
           readingTarget={readingTarget}
           searchTerm={searchTerm}
           onChangeFilter={changeFilter}
-          onSearchChange={setSearchTerm}
+          onSearchChange={handleSearchChange}
           onToggleWeek={setActiveWeek}
         />
       </main>
