@@ -21,3 +21,8 @@ export type ReadingTarget = {
   day: string;
   isWeekendCarryover: boolean;
 };
+
+export type Catchphrase = {
+  label: string;
+  scripture?: string;
+};

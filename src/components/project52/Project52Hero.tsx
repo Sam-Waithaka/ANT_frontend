@@ -1,100 +1,11 @@
-import { useEffect, useState } from 'react';
-import { CalendarDays, Download, Sparkles } from 'lucide-react';
-
-type Catchphrase = {
-  label: string;
-  scripture?: string;
-};
-
-const catchphrases: Catchphrase[] = [
-  { label: 'One Year. One Word.' },
-  { label: 'Let The Text Speak' },
-  { label: 'A Year In Scripture' },
-  { label: 'Read. Reflect. Renew.' },
-  { label: 'Journey Through The Word' },
-  { label: 'Week By Week In Grace' },
-  { label: 'Rooted In The Word' },
-  { label: 'Open The Scriptures' },
-  { label: 'Grace In Every Chapter' },
-  { label: 'Walk With The Word' },
-  { label: 'Truth For Every Season' },
-  { label: 'Read Together. Grow Together.' },
-  { label: 'Fifty-Two Weeks Of Faith' },
-  { label: 'Scripture For The Journey' },
-  { label: 'Begin With The Word' },
-  { label: 'The Word, Every Week' },
-  { label: 'Growing Through Scripture' },
-  { label: 'One Church. One Journey.' },
-  { label: 'Hear. Read. Live.' },
-  { label: 'Come To The Word' },
-  { label: 'Build On The Word' },
-  { label: 'Unshaken Truth' },
-  { label: 'One Body. One Word.' },
-  { label: 'Together In Truth' },
-  { label: 'Anchored In Truth' },
-  { label: 'Faith Comes By Hearing' },
-  { label: 'Scripture In Season' },
-  { label: 'The Word Endures' },
-  { label: 'Truth That Transforms' },
-  { label: 'Step Into Scripture' },
-  { label: 'Word Alive, Faith Alive' },
-  { label: 'Genesis To Revelation' },
-  { label: 'Start. Stay. Finish.' },
-  { label: 'You Read. You Grow.' },
-  { label: 'Through The Bible. Through The Year.' },
-  { label: 'Read It. Live It. Every Day.' },
-  { label: 'Still Reading. Still Believing.' },
-  { label: 'Same Word. New Wonder.' },
-  { label: 'Open. Read. Obey.' },
-  { label: 'Hide It In Your Heart', scripture: 'Psalm 119:11' },
-  { label: 'A Lamp To My Feet', scripture: 'Psalm 119:105' },
-  { label: 'The Word Became Flesh', scripture: 'John 1:14' },
-  { label: 'Open My Eyes', scripture: 'Psalm 119:18' },
-  { label: 'Teach Me, O Lord', scripture: 'Psalm 119:33' },
-  { label: 'Sweeter Than Honey', scripture: 'Psalm 119:103' },
-  { label: 'More To Be Desired Than Gold', scripture: 'Psalm 19:10' },
-  { label: 'Built On The Rock', scripture: 'Matthew 7:24' },
-  { label: 'Study To Show Yourself Approved', scripture: '2 Timothy 2:15' },
-  { label: 'Not By Bread Alone', scripture: 'Deuteronomy 8:3' },
-  { label: 'Oh Come Let Us Worship', scripture: 'Psalm 95:6' },
-];
+import { CalendarDays, Download } from 'lucide-react';
+import RotatingCatchphrase from './RotatingCatchphrase';
 
 type Project52HeroProps = {
   darkMode: boolean;
   status: string;
   onJumpToCurrentWeek: () => void;
   onDownloadPdf: () => void;
-};
-
-const RotatingCatchphrase = ({ darkMode }: { darkMode: boolean }) => {
-  const [activeIndex, setActiveIndex] = useState(43);
-  const activePhrase = catchphrases[activeIndex];
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % catchphrases.length);
-    }, 4200);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  return (
-    <div
-      className={`mb-6 inline-flex min-h-14 max-w-full items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-bold tracking-[0.14em] sm:min-h-9 sm:text-xs ${
-        darkMode ? 'border-red-300/20 bg-red-950/30 text-red-100' : 'border-red-900/15 bg-white/70 text-red-950'
-      }`}
-    >
-      <Sparkles size={14} className="shrink-0" />
-      <span key={activePhrase.label} className="project52-catchphrase inline-flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="uppercase">{activePhrase.label}</span>
-        {activePhrase.scripture && (
-          <span className={`shrink-0 normal-case tracking-normal ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
-            {activePhrase.scripture}
-          </span>
-        )}
-      </span>
-    </div>
-  );
 };
 
 const Project52Hero = ({ darkMode, status, onJumpToCurrentWeek, onDownloadPdf }: Project52HeroProps) => (
