@@ -15,12 +15,12 @@ const catchphrases: Catchphrase[] = [
   { label: 'Week By Week In Grace' },
   { label: 'Rooted In The Word' },
   { label: 'Open The Scriptures' },
-  { label: 'Grace In Every Chapter.' },
+  { label: 'Grace In Every Chapter' },
   { label: 'Walk With The Word' },
   { label: 'Truth For Every Season' },
   { label: 'Read Together. Grow Together.' },
   { label: 'Fifty-Two Weeks Of Faith' },
-  { label: 'Scripture For The Journey.' },
+  { label: 'Scripture For The Journey' },
   { label: 'Begin With The Word' },
   { label: 'The Word, Every Week' },
   { label: 'Growing Through Scripture' },
@@ -56,6 +56,7 @@ const catchphrases: Catchphrase[] = [
   { label: 'Built On The Rock', scripture: 'Matthew 7:24' },
   { label: 'Study To Show Yourself Approved', scripture: '2 Timothy 2:15' },
   { label: 'Not By Bread Alone', scripture: 'Deuteronomy 8:3' },
+  { label: 'Oh Come Let Us Worship', scripture: 'Psalm 95:6' },
 ];
 
 type Project52HeroProps = {
