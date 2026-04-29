@@ -1,4 +1,5 @@
 import { readingDays, splitReading } from './project52Schedule';
+import { assetPaths } from '../constants/assets';
 import { readings } from '../data/project52Readings';
 
 const escapePdfText = (value: string) => value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
@@ -29,25 +30,39 @@ const wrapPdfText = (text: string, maxChars: number) => {
   return lines;
 };
 
-type PdfLogo = {
+type PdfImage = {
   hex: string;
   width: number;
   height: number;
 };
 
-const getProject52Logo = async (): Promise<PdfLogo | null> => {
+const loadPdfImage = async (src: string): Promise<PdfImage | null> => {
   try {
-    const src = '/full%20logo.jpeg';
-    const [response, image] = await Promise.all([
-      fetch(src),
-      new Promise<HTMLImageElement>((resolve, reject) => {
-        const logo = new Image();
-        logo.onload = () => resolve(logo);
-        logo.onerror = reject;
-        logo.src = src;
-      }),
-    ]);
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const logo = new Image();
+      logo.onload = () => resolve(logo);
+      logo.onerror = reject;
+      logo.src = src;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0);
+
+    const base64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
     const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
     return {
@@ -61,7 +76,7 @@ const getProject52Logo = async (): Promise<PdfLogo | null> => {
 };
 
 export const createProject52Pdf = async () => {
-  const logo = await getProject52Logo();
+  const letterHead = await loadPdfImage(assetPaths.letterHead);
   const pageWidth = 612;
   const pageHeight = 792;
   const margin = 42;
@@ -96,23 +111,22 @@ export const createProject52Pdf = async () => {
   };
 
   newPage();
-  commands.push('0.05 0.05 0.05 rg');
-  commands.push('0 704 612 88 re f');
-  commands.push('1 1 1 rg');
-  commands.push('42 720 58 50 re f');
-  if (logo) {
-    const logoHeight = 42;
-    const logoWidth = Math.min(50, (logo.width / logo.height) * logoHeight);
-    commands.push(`q ${logoWidth} 0 0 ${logoHeight} 46 724 cm /Logo Do Q`);
+  if (letterHead) {
+    const letterHeadWidth = 528;
+    const letterHeadHeight = (letterHead.height / letterHead.width) * letterHeadWidth;
+    const letterHeadY = pageHeight - margin - letterHeadHeight;
+    commands.push(`q ${letterHeadWidth} 0 0 ${letterHeadHeight} ${margin} ${letterHeadY} cm /LetterHead Do Q`);
+    y = letterHeadY - 30;
   } else {
-    commands.push('0.62 0.11 0.11 rg');
-    commands.push('42 720 50 50 re f');
+    commands.push('0.05 0.05 0.05 rg');
+    commands.push('0 704 612 88 re f');
     commands.push('1 1 1 rg');
-    addPdfText(commands, 'AIC', 56, 742, 16);
+    addPdfText(commands, 'AIC Njoro Town', 42, 753, 14);
+    y = 674;
   }
-  addPdfText(commands, 'AIC Njoro Town', 110, 753, 14);
-  addPdfText(commands, 'Project 52 Bible Reading Plan', 110, 731, 24);
-  y = 674;
+  commands.push('0.62 0.11 0.11 rg');
+  addPdfText(commands, 'Project 52 Bible Reading Plan', margin, y, 22);
+  y -= 28;
   commands.push('0.1 0.1 0.1 rg');
   addPdfText(commands, 'Read through the Bible week by week with our church community across 52 intentional weeks.', margin, y, 11);
   y -= 34;
@@ -171,15 +185,15 @@ export const createProject52Pdf = async () => {
   objects.push('<< /Type /Catalog /Pages 2 0 R >>');
   objects.push('');
   objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
-  if (logo) {
-    objects.push(`<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${logo.hex.length + 1} >>\nstream\n${logo.hex}>\nendstream`);
+  if (letterHead) {
+    objects.push(`<< /Type /XObject /Subtype /Image /Width ${letterHead.width} /Height ${letterHead.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${letterHead.hex.length + 1} >>\nstream\n${letterHead.hex}>\nendstream`);
   }
 
   pages.forEach((content, index) => {
-    const pageObjectNumber = (logo ? 5 : 4) + index * 2;
+    const pageObjectNumber = (letterHead ? 5 : 4) + index * 2;
     const contentObjectNumber = pageObjectNumber + 1;
     pageRefs.push(`${pageObjectNumber} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >>${logo ? ' /XObject << /Logo 4 0 R >>' : ''} >> /Contents ${contentObjectNumber} 0 R >>`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >>${letterHead ? ' /XObject << /LetterHead 4 0 R >>' : ''} >> /Contents ${contentObjectNumber} 0 R >>`);
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   });
 
