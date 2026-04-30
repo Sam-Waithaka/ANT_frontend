@@ -16,7 +16,6 @@ const SiteFooter = ({ darkMode }: SiteFooterProps) => {
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 text-center sm:flex-row sm:text-left">
         <div>
           <p>© 2020 - {currentYear} A.N.T Media Crew. All rights reserved.</p>
-          <p className="mt-1">Full Website coming soon.</p>
         </div>
         <a
           href="https://media-crew.aicnjorotown.org"

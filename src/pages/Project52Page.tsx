@@ -13,7 +13,7 @@ import { buildReadingWeeks, getCurrentReadingTarget } from '../utils/project52Sc
 const Project52Page = () => {
   const [status, setStatus] = useState('');
   const { darkMode, toggleTheme } = useTheme();
-  const readingTarget = useMemo(() => getCurrentReadingTarget(), []);
+  const [readingTarget, setReadingTarget] = useState(() => getCurrentReadingTarget());
   const [activeWeek, setActiveWeek] = useState(() => readingTarget.week);
   const [activeFilter, setActiveFilter] = useState<TestamentFilter>('both');
   const [activeCatchphrase, setActiveCatchphrase] = useState<Catchphrase>({ label: 'Let The Text Speak' });
@@ -53,8 +53,57 @@ const Project52Page = () => {
   };
 
   useEffect(() => {
-    scrollToCurrentWeek(450);
+    let timeoutId: number;
+
+    const refreshReadingTarget = () => {
+      const nextTarget = getCurrentReadingTarget();
+
+      setReadingTarget((currentTarget) => {
+        const targetChanged =
+          currentTarget.week !== nextTarget.week ||
+          currentTarget.dayIndex !== nextTarget.dayIndex ||
+          currentTarget.isWeekendCarryover !== nextTarget.isWeekendCarryover;
+
+        if (targetChanged) {
+          setActiveWeek(nextTarget.week);
+        }
+
+        return targetChanged ? nextTarget : currentTarget;
+      });
+    };
+
+    const scheduleNextRefresh = () => {
+      window.clearTimeout(timeoutId);
+
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setHours(24, 0, 0, 0);
+
+      timeoutId = window.setTimeout(() => {
+        refreshReadingTarget();
+        scheduleNextRefresh();
+      }, Math.max(1000, nextMidnight.getTime() - now.getTime()));
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshReadingTarget();
+        scheduleNextRefresh();
+      }
+    };
+
+    scheduleNextRefresh();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
+
+  useEffect(() => {
+    scrollToCurrentWeek(450);
+  }, [currentWeek]);
 
   const jumpToCurrentWeek = () => {
     setActiveWeek(currentWeek);
