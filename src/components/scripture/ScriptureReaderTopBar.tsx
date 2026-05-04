@@ -57,7 +57,7 @@ const ScriptureReaderTopBar = ({
         <input
           value={searchTerm}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search this chapter"
+          placeholder="Search Scripture..."
           type="search"
           className={`h-11 w-full rounded-full border pl-11 pr-4 text-sm font-bold outline-none transition ${
             darkMode

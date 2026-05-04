@@ -134,6 +134,29 @@ const toToolRecord = (item: unknown, index: number): BibleToolRecord => {
   };
 };
 
+const toSearchRecord = (item: unknown, index: number): BibleToolRecord => {
+  const record = asRecord(item);
+  const book = readString(record, ['book_name', 'book', 'book_id', 'osis_book']);
+  const chapter = readString(record, ['chapter', 'chapter_number']);
+  const verse = readString(record, ['verse', 'verse_number', 'number']);
+  const computedReference = [book, chapter && verse ? `${chapter}:${verse}` : chapter].filter(Boolean).join(' ');
+  const reference = readString(
+    record,
+    ['reference', 'display_reference', 'verse_reference', 'ref', 'osis_ref', 'title'],
+    computedReference || `Result ${index + 1}`,
+  );
+  const text = readString(record, ['text', 'content', 'verseText', 'body', 'snippet']);
+  const version = readString(record, ['version', 'version_abbr', 'version_id', 'translation']);
+
+  return {
+    id: readString(record, ['id', '_id', 'uuid'], `${reference}-${index}`),
+    title: reference,
+    subtitle: version || undefined,
+    body: text || undefined,
+    meta: readString(record, ['testament', 'language', 'language_code']) || undefined,
+  };
+};
+
 const normalizeNoteType = (value: string): BibleNoteType => {
   const type = value.toLowerCase();
 
@@ -403,5 +426,5 @@ export const searchBible = async (params: {
   versions?: string;
 }): Promise<BibleToolRecord[]> => {
   const payload = await fetchJson(`/v1/bible/search/${toQueryString(params)}`);
-  return unwrapCollection(payload).map(toToolRecord);
+  return unwrapCollection(payload).map(toSearchRecord);
 };

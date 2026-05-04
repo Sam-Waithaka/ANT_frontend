@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../../types/scripture';
+import type { BibleBook, BibleChapter, BibleToolRecord, BibleVerse, BibleVersion } from '../../types/scripture';
+import ScriptureSearchResults from './ScriptureSearchResults';
 import ScriptureStatus from './ScriptureStatus';
 
 type ScriptureDisplayProps = {
@@ -7,6 +8,9 @@ type ScriptureDisplayProps = {
   error: string;
   footer?: ReactNode;
   loading: boolean;
+  searchError?: string;
+  searchLoading?: boolean;
+  searchResults?: BibleToolRecord[];
   searchTerm: string;
   selectedBook?: BibleBook;
   selectedChapter?: BibleChapter;
@@ -19,6 +23,9 @@ const ScriptureDisplay = ({
   error,
   footer,
   loading,
+  searchError = '',
+  searchLoading = false,
+  searchResults = [],
   searchTerm,
   selectedBook,
   selectedChapter,
@@ -26,8 +33,8 @@ const ScriptureDisplay = ({
   verses,
 }: ScriptureDisplayProps) => {
   const query = searchTerm.trim().toLowerCase();
+  const isSearching = query.length >= 2;
   const scriptureVerses = verses.filter((verse) => verse.number > 0);
-  const filteredVerses = query ? scriptureVerses.filter((verse) => verse.text.toLowerCase().includes(query)) : scriptureVerses;
   const passageTitle = selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture';
   const footnotes = scriptureVerses.flatMap((verse) =>
     (verse.notes || [])
@@ -51,11 +58,26 @@ const ScriptureDisplay = ({
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-900 dark:text-red-200">
             {selectedVersion?.abbreviation || selectedVersion?.name || 'Bible'}
           </p>
-          <h1 className="mt-3 font-serif text-4xl font-bold leading-tight tracking-normal sm:text-5xl">{passageTitle}</h1>
+          <h1 className="mt-3 font-serif text-4xl font-bold leading-tight tracking-normal sm:text-5xl">
+            {isSearching ? 'Search Scripture' : passageTitle}
+          </h1>
+          {isSearching && (
+            <p className={`mt-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+              Showing results for "{searchTerm.trim()}"
+            </p>
+          )}
         </div>
 
       <div className="pt-7">
-        {error ? (
+        {isSearching ? (
+          <ScriptureSearchResults
+            darkMode={darkMode}
+            error={searchError}
+            loading={searchLoading}
+            query={searchTerm.trim()}
+            results={searchResults}
+          />
+        ) : error ? (
           <ScriptureStatus darkMode={darkMode} title="Connection issue" message={error} tone="error" />
         ) : loading ? (
           <div className="grid gap-5">
@@ -69,15 +91,15 @@ const ScriptureDisplay = ({
               </div>
             ))}
           </div>
-        ) : filteredVerses.length === 0 ? (
+        ) : scriptureVerses.length === 0 ? (
           <ScriptureStatus
             darkMode={darkMode}
             title="No verses found"
-            message={query ? 'No verses in this chapter match your search.' : 'Select a chapter to begin reading.'}
+            message="Select a chapter to begin reading."
           />
         ) : (
           <div className="grid gap-5 pb-52 md:pb-36">
-            {filteredVerses.map((verse) => (
+            {scriptureVerses.map((verse) => (
               <p key={verse.id} className="grid grid-cols-[2rem_1fr] gap-4 font-serif text-xl leading-9 text-zinc-900 dark:text-stone-100 sm:text-2xl sm:leading-10">
                 <span className="pt-1 font-sans text-sm font-bold text-zinc-500 dark:text-stone-400">{verse.number}</span>
                 <span>{verse.text}</span>
