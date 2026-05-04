@@ -2,10 +2,10 @@ import { useState } from 'react';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
 import ScriptureDisplay from '../components/scripture/ScriptureDisplay';
 import ScriptureFloatingControls from '../components/scripture/ScriptureFloatingControls';
-import ScriptureMobileNav from '../components/scripture/ScriptureMobileNav';
 import ScriptureReaderTopBar from '../components/scripture/ScriptureReaderTopBar';
 import ScriptureSidePanel from '../components/scripture/ScriptureSidePanel';
 import SiteFooter from '../components/SiteFooter';
+import SiteHeader from '../components/SiteHeader';
 import SiteSideNav from '../components/SiteSideNav';
 import { useScriptureChapterMeta } from '../hooks/useScriptureChapterMeta';
 import { useScriptureReader } from '../hooks/useScriptureReader';
@@ -53,6 +53,9 @@ const ScripturePage = () => {
         />
 
         <main className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
+          <div className="lg:hidden">
+            <SiteHeader activePath="/scripture" darkMode={darkMode} onToggleTheme={toggleTheme} />
+          </div>
           <ScriptureReaderTopBar
             darkMode={darkMode}
             searchTerm={searchTerm}
@@ -112,7 +115,6 @@ const ScripturePage = () => {
         onPrevious={goToPreviousChapter}
         onVersionChange={setSelectedVersionId}
       />
-      <ScriptureMobileNav darkMode={darkMode} />
     </div>
   );
 };

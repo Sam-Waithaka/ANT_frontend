@@ -177,7 +177,7 @@ const Project52Page = () => {
 
         <div className="min-w-0 flex-1 overflow-y-auto">
           <div className="lg:hidden">
-            <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
+            <SiteHeader activePath="/project52" darkMode={darkMode} onToggleTheme={toggleTheme} />
           </div>
 
           <main>
