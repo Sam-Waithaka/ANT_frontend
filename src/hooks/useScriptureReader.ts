@@ -23,6 +23,13 @@ export const useScriptureReader = () => {
     [chapters, selectedChapterId],
   );
   const selectedChapterIndex = chapters.findIndex((chapter) => chapter.id === selectedChapterId);
+  const selectedBookIndex = books.findIndex((book) => book.id === selectedBookId);
+  const canGoPrevious =
+    selectedChapterIndex > 0 ||
+    (selectedChapterIndex === 0 && selectedBookIndex > 0);
+  const canGoNext =
+    (selectedChapterIndex >= 0 && selectedChapterIndex < chapters.length - 1) ||
+    (selectedChapterIndex === chapters.length - 1 && selectedBookIndex >= 0 && selectedBookIndex < books.length - 1);
 
   useEffect(() => {
     let cancelled = false;
@@ -169,17 +176,31 @@ export const useScriptureReader = () => {
   const goToPreviousChapter = () => {
     if (selectedChapterIndex > 0) {
       setSelectedChapterId(chapters[selectedChapterIndex - 1].id);
+      return;
+    }
+
+    if (selectedChapterIndex === 0 && selectedBookIndex > 0) {
+      setSelectedBookId(books[selectedBookIndex - 1].id);
+      setSelectedChapterId('');
     }
   };
 
   const goToNextChapter = () => {
     if (selectedChapterIndex >= 0 && selectedChapterIndex < chapters.length - 1) {
       setSelectedChapterId(chapters[selectedChapterIndex + 1].id);
+      return;
+    }
+
+    if (selectedChapterIndex === chapters.length - 1 && selectedBookIndex >= 0 && selectedBookIndex < books.length - 1) {
+      setSelectedBookId(books[selectedBookIndex + 1].id);
+      setSelectedChapterId('');
     }
   };
 
   return {
     books,
+    canGoNext,
+    canGoPrevious,
     chapters,
     error,
     loading,

@@ -26,7 +26,7 @@ const ScriptureSidePanel = ({
   onNext,
   onPrevious,
 }: ScriptureSidePanelProps) => (
-  <aside className="w-full shrink-0 border-t border-black/10 p-4 dark:border-white/10 xl:w-80 xl:border-l xl:border-t-0">
+  <aside className="min-h-0 w-full shrink-0 overflow-y-auto border-t border-black/10 p-4 pb-36 dark:border-white/10 xl:w-80 xl:border-l xl:border-t-0 xl:pb-4">
     <div className="grid content-start gap-4">
     <BibleToolsPanel
       darkMode={darkMode}

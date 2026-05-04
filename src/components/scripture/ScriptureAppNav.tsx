@@ -15,7 +15,7 @@ const navItems = [
 
 const ScriptureAppNav = ({ darkMode, onToggleTheme }: ScriptureAppNavProps) => (
   <aside
-    className={`hidden min-h-screen w-48 shrink-0 border-r px-4 py-5 lg:flex lg:flex-col ${
+    className={`hidden h-screen w-48 shrink-0 border-r px-4 py-5 lg:flex lg:flex-col ${
       darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#fffaf0] text-zinc-950'
     }`}
   >
@@ -49,20 +49,20 @@ const ScriptureAppNav = ({ darkMode, onToggleTheme }: ScriptureAppNavProps) => (
     </nav>
 
     <div className="mt-auto grid gap-2">
-      <button
-        type="button"
-        onClick={onToggleTheme}
-        className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
-          darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
-        }`}
-      >
-        {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-        Theme
-      </button>
       <a className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`} href="#">
         <Settings size={17} />
         Settings
       </a>
+      <button
+        type="button"
+        onClick={onToggleTheme}
+        className={`ml-4 flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
+          darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
+        }`}
+      >
+        {darkMode ? <Sun size={17} /> : <Moon size={17} />}
+        {darkMode ? 'Light theme' : 'Dark theme'}
+      </button>
       <a className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`} href="#">
         <HelpCircle size={17} />
         Help

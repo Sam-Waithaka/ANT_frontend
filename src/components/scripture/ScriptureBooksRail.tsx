@@ -9,7 +9,7 @@ type ScriptureBooksRailProps = {
 
 const ScriptureBooksRail = ({ books, darkMode, selectedBookId, onBookChange }: ScriptureBooksRailProps) => (
   <aside
-    className={`hidden w-44 shrink-0 border-r px-4 py-5 md:block ${
+    className={`hidden h-screen w-44 shrink-0 overflow-hidden border-r px-4 py-5 md:block ${
       darkMode ? 'border-white/10 bg-[#111111]' : 'border-black/10 bg-[#f8f5ef]'
     }`}
   >
