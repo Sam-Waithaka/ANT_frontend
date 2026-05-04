@@ -134,13 +134,17 @@ const SiteNavigation = ({
 
   return (
     <>
-      {compactSmallHeader ? (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition lg:hidden">
+      <div
+        className={`pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition-all duration-300 ease-out lg:hidden ${
+          compactSmallHeader ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
+        }`}
+        aria-hidden={!compactSmallHeader}
+      >
           <a
             href={churchWebsiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="pointer-events-auto rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700"
+            className={`${compactSmallHeader ? 'pointer-events-auto' : 'pointer-events-none'} rounded-2xl transition-transform duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-red-700`}
             aria-label="Open the AIC Njoro Town website"
           >
             <img
@@ -154,19 +158,18 @@ const SiteNavigation = ({
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className={`pointer-events-auto grid size-11 shrink-0 place-items-center rounded-full border shadow-lg backdrop-blur-xl transition focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+            className={`${compactSmallHeader ? 'pointer-events-auto' : 'pointer-events-none'} grid size-11 shrink-0 place-items-center rounded-full border shadow-lg backdrop-blur-xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
               darkMode
-                ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black'
-                : 'border-black/10 bg-white/80 text-zinc-900 focus:ring-offset-[#f8f5ef]'
+                ? 'border-white/15 bg-white/10 text-stone-100 shadow-black/25 focus:ring-offset-black hover:bg-white/15'
+                : 'border-black/10 bg-white/85 text-zinc-900 shadow-zinc-900/15 focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
             }`}
             aria-label="Open navigation menu"
           >
             <Menu size={21} />
           </button>
         </div>
-      ) : null}
       <header
-        className={`${sticky ? 'sticky top-0' : 'relative'} z-30 border-b backdrop-blur-xl transition-all duration-300 ${
+        className={`${sticky ? 'sticky top-0' : 'relative'} z-30 border-b backdrop-blur-xl transition-all duration-300 ease-out ${
         compactSmallHeader ? 'max-lg:max-h-0 max-lg:-translate-y-full max-lg:overflow-hidden max-lg:border-b-0 max-lg:opacity-0' : 'max-lg:max-h-24 max-lg:translate-y-0 max-lg:opacity-100'
       } ${
         darkMode ? 'border-white/10 bg-black/75' : 'border-black/10 bg-[#f8f5ef]/85'

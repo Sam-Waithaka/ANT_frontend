@@ -24,8 +24,8 @@ const ScriptureSearchInput = ({ darkMode, onChange, responsiveIcon = false, valu
         responsiveIcon ? 'max-[420px]:w-11 max-[420px]:cursor-pointer max-[420px]:px-0 max-[420px]:text-transparent max-[420px]:placeholder:text-transparent max-[420px]:focus:w-44 max-[420px]:focus:cursor-text max-[420px]:focus:pl-11 max-[420px]:focus:pr-4 max-[420px]:focus:text-inherit' : ''
       } ${
         darkMode
-          ? 'border-white/15 bg-white/10 text-stone-100 placeholder:text-stone-500 focus:border-red-300'
-          : 'border-black/10 bg-white text-zinc-950 shadow-sm placeholder:text-zinc-500 focus:border-red-800'
+          ? 'border-white/15 bg-white/10 text-stone-100 shadow-lg shadow-black/25 placeholder:text-stone-500 hover:bg-white/15 focus:border-red-300'
+          : 'border-black/10 bg-white/85 text-zinc-950 shadow-lg shadow-zinc-900/15 placeholder:text-zinc-500 hover:bg-[#fffaf0] focus:border-red-800'
       }`}
     />
   </label>
