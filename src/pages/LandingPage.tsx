@@ -9,7 +9,7 @@ const LandingPage = () => {
 
   return (
     <div className={`min-h-screen overflow-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
-      <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} sticky={false} />
+      <SiteHeader activePath="/" darkMode={darkMode} onToggleTheme={toggleTheme} sticky={false} />
 
       <main className="relative grid min-h-[calc(100vh-73px)] place-items-center px-4 py-16 sm:px-6 sm:py-24">
         <div className="absolute inset-0 -z-10">

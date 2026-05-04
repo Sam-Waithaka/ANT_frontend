@@ -18,6 +18,8 @@ const navItems = [
   { label: 'Giving', href: '#', icon: Heart },
 ] as const;
 
+const churchWebsiteUrl = 'https://aicnjoro.org';
+
 const SiteNavigation = ({
   activePath,
   darkMode,
@@ -34,7 +36,11 @@ const SiteNavigation = ({
           darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#fffaf0] text-zinc-950'
         }`}
       >
-        <a href="/" className="flex items-center gap-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700">
+        <a
+          href={churchWebsiteUrl}
+          className="flex items-center gap-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700"
+          aria-label="Open the AIC Njoro Town website"
+        >
           <img src={assetPaths.circleLogo} alt="" className="size-10 rounded-2xl bg-white object-contain p-1 shadow-sm" />
           <div className="min-w-0">
             <p className="truncate text-sm font-black leading-tight">AIC Njoro</p>
@@ -95,9 +101,9 @@ const SiteNavigation = ({
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <a
-          href="/"
+          href={churchWebsiteUrl}
           className="flex min-w-0 items-center gap-3 rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2"
-          aria-label="Go to AIC Njoro Town home"
+          aria-label="Open the AIC Njoro Town website"
         >
           <img
             src={assetPaths.circleLogo}
@@ -113,18 +119,38 @@ const SiteNavigation = ({
             </p>
           </div>
         </a>
-        <button
-          type="button"
-          onClick={onToggleTheme}
-          className={`grid size-11 shrink-0 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
-            darkMode
-              ? 'border-white/10 bg-white/10 text-amber-200 focus:ring-offset-black'
-              : 'border-black/10 bg-white text-zinc-900 shadow-sm focus:ring-offset-[#f8f5ef]'
-          }`}
-          aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
+        <div className="flex shrink-0 items-center gap-3">
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Site navigation">
+            {navItems.map(({ href, icon: Icon, label }) => (
+              <a
+                key={label}
+                href={href}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-bold transition ${
+                  isActive(href)
+                    ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                    : darkMode
+                      ? 'text-stone-300 hover:bg-white/10'
+                      : 'text-zinc-700 hover:bg-white'
+                }`}
+              >
+                <Icon size={16} />
+                {label}
+              </a>
+            ))}
+          </nav>
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className={`grid size-11 shrink-0 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+              darkMode
+                ? 'border-white/10 bg-white/10 text-amber-200 focus:ring-offset-black'
+                : 'border-black/10 bg-white text-zinc-900 shadow-sm focus:ring-offset-[#f8f5ef]'
+            }`}
+            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
       </div>
     </header>
   );
