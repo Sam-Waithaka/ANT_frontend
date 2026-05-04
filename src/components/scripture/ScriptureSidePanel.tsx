@@ -4,6 +4,7 @@ import BibleToolsPanel from './BibleToolsPanel';
 import ChapterNavigation from './ChapterNavigation';
 
 type ScriptureSidePanelProps = {
+  books: BibleBook[];
   canGoNext: boolean;
   canGoPrevious: boolean;
   darkMode: boolean;
@@ -17,6 +18,7 @@ type ScriptureSidePanelProps = {
 };
 
 const ScriptureSidePanel = ({
+  books,
   canGoNext,
   canGoPrevious,
   darkMode,
@@ -33,6 +35,7 @@ const ScriptureSidePanel = ({
   }`}>
     <div className="grid content-start gap-4">
     <BibleToolsPanel
+      books={books}
       darkMode={darkMode}
       selectedBook={selectedBook}
       selectedChapter={selectedChapter}

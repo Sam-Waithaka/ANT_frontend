@@ -85,6 +85,7 @@ const ScripturePage = () => {
               footer={<SiteFooter darkMode={darkMode} />}
             />
             <ScriptureSidePanel
+              books={books}
               canGoNext={canGoNext}
               canGoPrevious={canGoPrevious}
               darkMode={darkMode}

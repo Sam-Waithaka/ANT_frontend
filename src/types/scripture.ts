@@ -61,6 +61,23 @@ export type BibleToolRecord = {
   meta?: string;
 };
 
+export type BibleComparisonReading = {
+  text: string;
+  version: string;
+};
+
+export type BibleComparisonVerse = {
+  readings: BibleComparisonReading[];
+  verseNumber: number;
+};
+
+export type BibleComparisonChapter = {
+  book: string;
+  chapter: number;
+  versions: string[];
+  verses: BibleComparisonVerse[];
+};
+
 export type VerseLookupResult = {
   reference: string;
   text: string;

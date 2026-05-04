@@ -2,6 +2,8 @@ import type {
   BibleBook,
   BibleChapterNote,
   BibleChapter,
+  BibleComparisonChapter,
+  BibleComparisonVerse,
   BibleMarkerStatus,
   BibleNoteType,
   BibleResourceType,
@@ -396,24 +398,70 @@ export const compareBibleChapter = async (
   versions: string[],
   bookId: string,
   chapter: number,
-): Promise<BibleToolRecord[]> => {
+): Promise<BibleComparisonChapter> => {
   const payload = await fetchJson(
     `/v1/bible/compare/${toQueryString({ versions: versions.join(','), book: bookId, chapter })}`,
   );
+  const verseMap = new Map<number, BibleComparisonVerse>();
+  const addReading = (version: string, verseNumber: number, text: string) => {
+    if (!text) return;
+
+    const existing = verseMap.get(verseNumber) || { verseNumber, readings: [] };
+    existing.readings.push({ version, text });
+    verseMap.set(verseNumber, existing);
+  };
+  const addVerseCollection = (version: string, collection: unknown[]) => {
+    collection.forEach((item, index) => {
+      const record = asRecord(item);
+      const verseNumber = readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1);
+      const text = readString(record, ['text', 'content', 'verseText', 'body']);
+
+      addReading(version, verseNumber, text);
+    });
+  };
+  const payloadRecord = asRecord(payload);
   const collection = unwrapCollection(payload);
 
   if (collection.length > 0) {
-    return collection.map(toToolRecord);
+    collection.forEach((item, index) => {
+      const record = asRecord(item);
+      const verseNumber = readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1);
+
+      versions.forEach((version) => {
+        const text = readString(record, [version, version.toLowerCase()]);
+        addReading(version, verseNumber, text);
+      });
+
+      const version = readString(record, ['version', 'version_abbr', 'version_id', 'translation']);
+      const text = readString(record, ['text', 'content', 'verseText', 'body']);
+      if (version && text) {
+        addReading(version, verseNumber, text);
+      }
+    });
   }
 
-  return Object.entries(asRecord(payload)).map(([version, value], index) => {
-    const record = asRecord(value);
-    return {
-      id: `${version}-${index}`,
-      title: version,
-      body: readString(record, ['text', 'content', 'body']) || JSON.stringify(value),
-    };
+  versions.forEach((version) => {
+    const versionPayload = payloadRecord[version];
+    const versionRecord = asRecord(versionPayload);
+    const versionVerses = unwrapCollection(versionPayload);
+
+    if (versionVerses.length > 0) {
+      addVerseCollection(version, versionVerses);
+      return;
+    }
+
+    const text = readString(versionRecord, ['text', 'content', 'verseText', 'body']);
+    if (text) {
+      addReading(version, 1, text);
+    }
   });
+
+  return {
+    book: readString(payloadRecord, ['book', 'book_id', 'book_name'], bookId),
+    chapter: readNumber(payloadRecord, ['chapter', 'chapter_number'], chapter),
+    versions,
+    verses: Array.from(verseMap.values()).sort((left, right) => left.verseNumber - right.verseNumber),
+  };
 };
 
 export const searchBible = async (params: {
