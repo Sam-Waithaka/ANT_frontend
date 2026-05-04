@@ -5,6 +5,7 @@ export type BibleVersion = {
 };
 
 export type BibleBook = {
+  abbreviation?: string;
   id: string;
   name: string;
   testament?: 'old' | 'new';

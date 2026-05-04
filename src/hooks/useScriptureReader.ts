@@ -1,8 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getBibleBooks, getBibleChapters, getBibleVersions, getBibleVerses } from '../services/scriptureApi';
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
+import { normalizeReferenceValue } from '../utils/scriptureReference';
 
 export const useScriptureReader = () => {
+  const initialReference = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    return {
+      book: params.get('book') || '',
+      chapter: Number(params.get('chapter') || 0),
+      version: params.get('version') || '',
+    };
+  }, []);
+  const hasAppliedInitialBook = useRef(false);
+  const hasAppliedInitialChapter = useRef(false);
   const [versions, setVersions] = useState<BibleVersion[]>([]);
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
@@ -43,7 +55,14 @@ export const useScriptureReader = () => {
         if (cancelled) return;
 
         setVersions(nextVersions);
-        setSelectedVersionId((current) => current || nextVersions[0]?.id || '');
+        setSelectedVersionId((current) => {
+          const requestedVersion = nextVersions.find((version) =>
+            normalizeReferenceValue(version.id) === normalizeReferenceValue(initialReference.version) ||
+            normalizeReferenceValue(version.abbreviation || '') === normalizeReferenceValue(initialReference.version),
+          );
+
+          return requestedVersion?.id || current || nextVersions[0]?.id || '';
+        });
       } catch {
         if (!cancelled) {
           setError('We could not load Bible versions. Please check the Scripture API connection.');
@@ -60,7 +79,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialReference.version]);
 
   useEffect(() => {
     if (!selectedVersionId) return;
@@ -79,7 +98,26 @@ export const useScriptureReader = () => {
         if (cancelled) return;
 
         setBooks(nextBooks);
-        setSelectedBookId((current) => (nextBooks.some((book) => book.id === current) ? current : nextBooks[0]?.id || ''));
+        setSelectedBookId((current) => {
+          if (initialReference.book && !hasAppliedInitialBook.current) {
+            const requestedBook = nextBooks.find((book) => {
+              const requested = normalizeReferenceValue(initialReference.book);
+
+              return (
+                normalizeReferenceValue(book.id) === requested ||
+                normalizeReferenceValue(book.name) === requested ||
+                normalizeReferenceValue(book.abbreviation || '') === requested
+              );
+            });
+
+            if (requestedBook) {
+              hasAppliedInitialBook.current = true;
+              return requestedBook.id;
+            }
+          }
+
+          return nextBooks.some((book) => book.id === current) ? current : nextBooks[0]?.id || '';
+        });
       } catch {
         if (!cancelled) {
           setError('We could not load Bible books for this version.');
@@ -96,7 +134,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedVersionId]);
+  }, [initialReference.book, selectedVersionId]);
 
   useEffect(() => {
     if (!selectedVersionId || !selectedBookId) return;
@@ -114,9 +152,18 @@ export const useScriptureReader = () => {
         if (cancelled) return;
 
         setChapters(nextChapters);
-        setSelectedChapterId((current) =>
-          nextChapters.some((chapter) => chapter.id === current) ? current : nextChapters[0]?.id || '',
-        );
+        setSelectedChapterId((current) => {
+          if (initialReference.chapter && !hasAppliedInitialChapter.current) {
+            const requestedChapter = nextChapters.find((chapter) => chapter.number === initialReference.chapter);
+
+            if (requestedChapter) {
+              hasAppliedInitialChapter.current = true;
+              return requestedChapter.id;
+            }
+          }
+
+          return nextChapters.some((chapter) => chapter.id === current) ? current : nextChapters[0]?.id || '';
+        });
       } catch {
         if (!cancelled) {
           setError('We could not load chapters for this book.');
@@ -133,7 +180,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedBookId, selectedVersionId]);
+  }, [initialReference.chapter, selectedBookId, selectedVersionId]);
 
   useEffect(() => {
     if (!selectedVersionId || !selectedBookId || !selectedChapter) return;

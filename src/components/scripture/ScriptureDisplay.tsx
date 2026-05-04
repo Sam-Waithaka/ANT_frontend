@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../../types/scripture';
 import ScriptureStatus from './ScriptureStatus';
 
 type ScriptureDisplayProps = {
   darkMode: boolean;
   error: string;
+  footer?: ReactNode;
   loading: boolean;
   searchTerm: string;
   selectedBook?: BibleBook;
@@ -15,6 +17,7 @@ type ScriptureDisplayProps = {
 const ScriptureDisplay = ({
   darkMode,
   error,
+  footer,
   loading,
   searchTerm,
   selectedBook,
@@ -101,6 +104,7 @@ const ScriptureDisplay = ({
                 </p>
               </section>
             )}
+            {footer}
           </div>
         )}
       </div>

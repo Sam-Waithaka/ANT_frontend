@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import ScriptureAppNav from '../components/scripture/ScriptureAppNav';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
 import ScriptureDisplay from '../components/scripture/ScriptureDisplay';
 import ScriptureFloatingControls from '../components/scripture/ScriptureFloatingControls';
 import ScriptureMobileNav from '../components/scripture/ScriptureMobileNav';
 import ScriptureReaderTopBar from '../components/scripture/ScriptureReaderTopBar';
 import ScriptureSidePanel from '../components/scripture/ScriptureSidePanel';
+import SiteFooter from '../components/SiteFooter';
+import SiteSideNav from '../components/SiteSideNav';
 import { useScriptureReader } from '../hooks/useScriptureReader';
 import { useTheme } from '../hooks/useTheme';
 
@@ -44,7 +45,7 @@ const ScripturePage = () => {
   return (
     <div className={`h-screen overflow-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <div className="flex h-screen overflow-hidden">
-        <ScriptureAppNav darkMode={darkMode} onToggleTheme={toggleTheme} />
+        <SiteSideNav activePath="/scripture" darkMode={darkMode} onToggleTheme={toggleTheme} />
         <ScriptureBooksRail
           books={books}
           darkMode={darkMode}
@@ -71,6 +72,7 @@ const ScripturePage = () => {
               selectedChapter={selectedChapter}
               selectedVersion={selectedVersion}
               verses={verses}
+              footer={<SiteFooter darkMode={darkMode} />}
             />
             <ScriptureSidePanel
               canGoNext={canGoNext}

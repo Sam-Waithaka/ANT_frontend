@@ -4,6 +4,7 @@ import Project52ProgressCard from '../components/project52/Project52ProgressCard
 import ReadingPlanSection from '../components/project52/ReadingPlanSection';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
+import SiteSideNav from '../components/SiteSideNav';
 import { readings } from '../data/project52Readings';
 import { useTheme } from '../hooks/useTheme';
 import type { Catchphrase, TestamentFilter } from '../types/project52';
@@ -170,47 +171,55 @@ const Project52Page = () => {
   };
 
   return (
-    <div className={`min-h-screen overflow-x-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
-      <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
+    <div className={`h-screen overflow-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
+      <div className="flex h-screen overflow-hidden">
+        <SiteSideNav activePath="/project52" darkMode={darkMode} onToggleTheme={toggleTheme} />
 
-      <main>
-        <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:pt-12">
-          <div className="absolute inset-0 -z-10 overflow-hidden">
-            <div className={`h-full ${darkMode ? 'bg-[radial-gradient(circle_at_top_left,rgba(185,28,28,0.30),transparent_34%),linear-gradient(135deg,#080808,#171717_55%,#260b0b)]' : 'bg-[radial-gradient(circle_at_top_left,rgba(153,27,27,0.16),transparent_35%),linear-gradient(135deg,#fffaf0,#f8f5ef_50%,#ece7de)]'}`} />
+        <div className="min-w-0 flex-1 overflow-y-auto">
+          <div className="lg:hidden">
+            <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
           </div>
 
-          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
-            <Project52Hero
+          <main>
+            <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:pt-12">
+              <div className="absolute inset-0 -z-10 overflow-hidden">
+                <div className={`h-full ${darkMode ? 'bg-[radial-gradient(circle_at_top_left,rgba(185,28,28,0.30),transparent_34%),linear-gradient(135deg,#080808,#171717_55%,#260b0b)]' : 'bg-[radial-gradient(circle_at_top_left,rgba(153,27,27,0.16),transparent_35%),linear-gradient(135deg,#fffaf0,#f8f5ef_50%,#ece7de)]'}`} />
+              </div>
+
+              <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
+                <Project52Hero
+                  darkMode={darkMode}
+                  status={status}
+                  onCatchphraseChange={setActiveCatchphrase}
+                  onJumpToCurrentWeek={jumpToCurrentWeek}
+                  onDownloadPdf={generatePdf}
+                />
+                <Project52ProgressCard
+                  currentWeek={currentWeek}
+                  darkMode={darkMode}
+                  readingTarget={readingTarget}
+                  yearProgress={yearProgress}
+                />
+              </div>
+            </section>
+
+            <ReadingPlanSection
+              activeFilter={activeFilter}
+              activeWeek={activeWeek}
+              currentWeekRef={currentWeekRef}
               darkMode={darkMode}
-              status={status}
-              onCatchphraseChange={setActiveCatchphrase}
-              onJumpToCurrentWeek={jumpToCurrentWeek}
-              onDownloadPdf={generatePdf}
-            />
-            <Project52ProgressCard
-              currentWeek={currentWeek}
-              darkMode={darkMode}
+              filteredWeeks={filteredWeeks}
               readingTarget={readingTarget}
-              yearProgress={yearProgress}
+              searchTerm={searchTerm}
+              onChangeFilter={changeFilter}
+              onSearchChange={handleSearchChange}
+              onToggleWeek={setActiveWeek}
             />
-          </div>
-        </section>
+          </main>
 
-        <ReadingPlanSection
-          activeFilter={activeFilter}
-          activeWeek={activeWeek}
-          currentWeekRef={currentWeekRef}
-          darkMode={darkMode}
-          filteredWeeks={filteredWeeks}
-          readingTarget={readingTarget}
-          searchTerm={searchTerm}
-          onChangeFilter={changeFilter}
-          onSearchChange={handleSearchChange}
-          onToggleWeek={setActiveWeek}
-        />
-      </main>
-
-      <SiteFooter darkMode={darkMode} />
+          <SiteFooter darkMode={darkMode} />
+        </div>
+      </div>
     </div>
   );
 };

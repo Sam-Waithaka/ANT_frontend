@@ -128,7 +128,7 @@ const ScriptureFloatingControls = ({
               <ChevronDown size={15} className="shrink-0 text-red-800 dark:text-red-200" />
             </button>
             {openMenu === 'book' && (
-              <div className={`${menuBase} ${surfaceClass} left-1/2 w-72 -translate-x-1/2 sm:w-96`}>
+              <div className={`${menuBase} ${surfaceClass} left-1/2 w-[min(90vw,34rem)] -translate-x-1/2`}>
                 <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Book</p>
                 <div className={`mb-3 grid grid-cols-3 gap-1 rounded-full border p-1 ${darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-zinc-50'}`}>
                   {bookFilters.map(([value, label]) => (
@@ -148,7 +148,7 @@ const ScriptureFloatingControls = ({
                     </button>
                   ))}
                 </div>
-                <div className="grid max-h-80 grid-cols-2 gap-1 overflow-y-auto sm:grid-cols-3">
+                <div className="grid max-h-80 grid-cols-2 gap-1 overflow-y-auto md:grid-cols-3">
                   {filteredBooks.map((book) => (
                     <button
                       key={book.id}
@@ -157,7 +157,7 @@ const ScriptureFloatingControls = ({
                         onBookChange(book.id);
                         closeMenu();
                       }}
-                      className={`rounded-xl px-3 py-2 text-left text-xs font-bold transition ${
+                      className={`rounded-xl px-3 py-2 text-left text-sm font-bold leading-tight transition ${
                         book.id === selectedBookId
                           ? 'bg-red-800 text-white'
                           : darkMode

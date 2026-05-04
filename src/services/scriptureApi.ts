@@ -246,6 +246,7 @@ export const getBibleBooks = async (versionId: string): Promise<BibleBook[]> => 
     const testament = readString(record, ['testament', 'section']).toLowerCase();
 
     return {
+      abbreviation: readString(record, ['abbreviation', 'abbr']),
       id: readString(record, ['osis_id', 'osisId', 'abbreviation', 'code', 'bookId', 'id', '_id', 'uuid'], `book-${index + 1}`),
       name: readString(record, ['name', 'title', 'label', 'book'], `Book ${index + 1}`),
       testament: testament.startsWith('old') || testament === 'ot' ? 'old' : testament.startsWith('new') || testament === 'nt' ? 'new' : undefined,
