@@ -24,22 +24,18 @@ const ScriptureReaderTopBar = ({
   onVersionChange,
 }: ScriptureReaderTopBarProps) => (
   <header
-    className={`shrink-0 border-b px-4 py-3 backdrop-blur-xl ${
-      darkMode ? 'border-white/10 bg-[#080808]/90' : 'border-black/10 bg-[#f8f5ef]/90'
+    className={`shrink-0 border-b px-4 py-4 backdrop-blur-xl transition-colors duration-300 ${
+      darkMode ? 'border-white/10 bg-[#080808]/92' : 'border-black/10 bg-[#f8f5ef]/92'
     }`}
   >
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-4">
       <div className="min-w-0 flex-1">
-        <p className={`text-xs font-black uppercase tracking-[0.16em] ${darkMode ? 'text-red-200' : 'text-red-900'}`}>
+        <p className={`text-xs font-bold uppercase tracking-[0.16em] ${darkMode ? 'text-red-200' : 'text-red-900'}`}>
           Scripture
         </p>
-        <h1 className="truncate text-lg font-black">
+        <h1 className="mt-1 truncate text-xl font-extrabold leading-tight">
           {selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture'}
         </h1>
-      </div>
-
-      <div className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full text-sm font-black md:hidden">
-        <span className="truncate">{selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture'}</span>
       </div>
 
       <div className="hidden w-80 md:block">

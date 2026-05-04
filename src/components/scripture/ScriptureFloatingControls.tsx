@@ -56,11 +56,11 @@ const ScriptureFloatingControls = ({
   const selectedChapter = chapters.find((chapter) => chapter.id === selectedChapterId);
   const filteredBooks = books.filter((book) => bookFilter === 'both' || book.testament === bookFilter);
   const surfaceClass = darkMode
-    ? 'border-white/10 bg-[#111111]/95 text-stone-100 shadow-black/40'
+    ? 'border-white/10 bg-zinc-950/95 text-stone-100 shadow-black/40'
     : 'border-black/10 bg-white/95 text-zinc-950 shadow-zinc-900/15';
   const neutralPillClass = darkMode
-    ? 'border-white/10 bg-white/10 text-stone-100 hover:bg-white/15'
-    : 'border-black/10 bg-white text-zinc-950 hover:bg-zinc-50';
+    ? 'border-white/15 bg-white/10 text-stone-100 hover:bg-white/15'
+    : 'border-black/10 bg-white text-zinc-700 hover:bg-[#fffaf0]';
 
   const closeMenu = () => setOpenMenu(null);
 

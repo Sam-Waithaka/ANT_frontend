@@ -28,7 +28,9 @@ const ScriptureSidePanel = ({
   onNext,
   onPrevious,
 }: ScriptureSidePanelProps) => (
-  <aside className="min-h-0 w-full shrink-0 overflow-y-auto border-t border-black/10 p-4 pb-36 dark:border-white/10 xl:w-80 xl:border-l xl:border-t-0 xl:pb-4">
+  <aside className={`min-h-0 w-full shrink-0 overflow-y-auto border-t p-4 pb-36 xl:w-80 xl:border-l xl:border-t-0 xl:pb-4 ${
+    darkMode ? 'border-white/10 bg-[#111111]' : 'border-black/10 bg-[#fffaf0]'
+  }`}>
     <div className="grid content-start gap-4">
     <BibleToolsPanel
       darkMode={darkMode}
@@ -40,7 +42,7 @@ const ScriptureSidePanel = ({
     {crossReferences.length > 0 && (
       <section
         className={`rounded-[2rem] border p-5 shadow-sm ${
-          darkMode ? 'border-white/10 bg-white/[0.055]' : 'border-black/10 bg-white/80'
+          darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/5'
         }`}
       >
         <div className="flex items-center gap-3">
@@ -80,7 +82,7 @@ const ScriptureSidePanel = ({
 
     <section
       className={`rounded-[2rem] border p-5 shadow-sm ${
-        darkMode ? 'border-white/10 bg-white/[0.055]' : 'border-black/10 bg-white/80'
+        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/5'
       }`}
     >
       <div className="flex items-center gap-3">

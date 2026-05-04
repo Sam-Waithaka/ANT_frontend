@@ -105,7 +105,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
   return (
     <section
       className={`rounded-[2rem] border p-4 shadow-sm ${
-        darkMode ? 'border-white/10 bg-white/[0.055]' : 'border-black/10 bg-white/80'
+        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/5'
       }`}
     >
       <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Bible tools</p>
@@ -120,7 +120,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
                 ? 'bg-red-800 text-white'
                 : darkMode
                   ? 'bg-white/10 text-stone-300 hover:bg-white/15'
-                  : 'bg-white text-zinc-700 shadow-sm hover:bg-zinc-50'
+                  : 'bg-[#fffaf0] text-zinc-700 shadow-sm hover:bg-white'
             }`}
           >
             {label}

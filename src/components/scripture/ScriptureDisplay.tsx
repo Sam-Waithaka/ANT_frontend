@@ -43,13 +43,13 @@ const ScriptureDisplay = ({
   const passageTitle = selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture';
 
   return (
-    <article className={`min-h-0 min-w-0 flex-1 overflow-y-auto px-5 py-8 sm:px-10 lg:px-16 ${darkMode ? 'bg-[#080808]' : 'bg-[#f8f5ef]'}`}>
+    <article className={`min-h-0 min-w-0 flex-1 overflow-y-auto px-5 py-10 sm:px-10 lg:px-16 ${darkMode ? 'bg-[#080808]' : 'bg-[#f8f5ef]'}`}>
       <div className="mx-auto max-w-3xl">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-900 dark:text-red-200">
             {selectedVersion?.abbreviation || selectedVersion?.name || 'Bible'}
           </p>
-          <h1 className="mt-3 font-serif text-4xl font-bold leading-tight tracking-normal sm:text-5xl">
+          <h1 className="mt-4 font-serif text-4xl font-bold leading-tight tracking-normal sm:text-5xl">
             {isSearching ? 'Search Scripture' : passageTitle}
           </h1>
           {isSearching && (
@@ -59,7 +59,7 @@ const ScriptureDisplay = ({
           )}
         </div>
 
-      <div className="pt-7">
+      <div className="pt-8">
         {isSearching ? (
           <ScriptureSearchResults
             darkMode={darkMode}

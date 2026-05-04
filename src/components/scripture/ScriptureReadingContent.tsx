@@ -16,13 +16,13 @@ const ScriptureReadingContent = ({
   licenseNote,
   verses,
 }: ScriptureReadingContentProps) => (
-  <div className="grid gap-5 pb-52 md:pb-36">
+  <div className="grid gap-6 pb-52 md:pb-36">
     {verses.map((verse) => (
       <p
         key={verse.id}
-        className="grid grid-cols-[2rem_1fr] gap-4 font-serif text-xl leading-9 text-zinc-900 dark:text-stone-100 sm:text-2xl sm:leading-10"
+        className="grid grid-cols-[2rem_1fr] gap-4 font-serif text-[1.35rem] leading-9 text-zinc-900 dark:text-stone-100 sm:text-[1.55rem] sm:leading-10"
       >
-        <span className="pt-1 font-sans text-sm font-bold text-zinc-500 dark:text-stone-400">{verse.number}</span>
+        <span className="pt-1 font-sans text-sm font-bold text-zinc-500 dark:text-stone-500">{verse.number}</span>
         <span>{verse.text}</span>
       </p>
     ))}
