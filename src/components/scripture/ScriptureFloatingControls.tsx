@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { BibleBook, BibleChapter, BibleVersion, BookFilter } from '../../types/scripture';
 
 type ScriptureFloatingControlsProps = {
@@ -51,6 +51,7 @@ const ScriptureFloatingControls = ({
 }: ScriptureFloatingControlsProps) => {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [bookFilter, setBookFilter] = useState<BookFilter>('both');
+  const controlsRef = useRef<HTMLDivElement>(null);
   const selectedVersion = versions.find((version) => version.id === selectedVersionId);
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const selectedChapter = chapters.find((chapter) => chapter.id === selectedChapterId);
@@ -70,9 +71,24 @@ const ScriptureFloatingControls = ({
 
   const closeMenu = () => setOpenMenu(null);
 
+  useEffect(() => {
+    if (!openMenu) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (controlsRef.current?.contains(event.target as Node)) return;
+      closeMenu();
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [openMenu]);
+
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 px-4 md:left-44 md:right-0 md:px-6 lg:left-[23rem] xl:bottom-6 xl:right-80">
-      <div className={`pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl ${controlSurfaceClass}`}>
+      <div
+        ref={controlsRef}
+        className={`pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl ${controlSurfaceClass}`}
+      >
         <button
           type="button"
           onClick={onPrevious}
