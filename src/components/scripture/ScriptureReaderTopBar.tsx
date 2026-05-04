@@ -26,13 +26,17 @@ const ScriptureReaderTopBar = ({
   onVersionChange,
 }: ScriptureReaderTopBarProps) => (
   <header
-    className={`shrink-0 overflow-hidden border-b px-4 backdrop-blur-xl transition-all duration-300 ${
-      compact ? 'max-h-0 border-b-0 py-0 opacity-0' : 'max-h-20 py-2 opacity-100'
+    className={`shrink-0 overflow-hidden border-b px-4 backdrop-blur-xl transition-[max-height,opacity,transform,padding,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+      compact ? 'max-h-0 -translate-y-3 border-b-0 py-0 opacity-0' : 'max-h-20 translate-y-0 py-2 opacity-100'
     } ${
       darkMode ? 'border-white/10 bg-[#080808]/92' : 'border-black/10 bg-[#f8f5ef]/92'
     }`}
   >
-    <div className="flex items-center justify-end gap-2">
+    <div
+      className={`flex items-center justify-end gap-2 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        compact ? '-translate-y-2 scale-[0.98] opacity-0' : 'translate-y-0 scale-100 opacity-100'
+      }`}
+    >
       <div className="hidden w-[min(22rem,42vw)] md:block">
         <ScriptureSearchInput
           autoFocus={autoFocusSearch}

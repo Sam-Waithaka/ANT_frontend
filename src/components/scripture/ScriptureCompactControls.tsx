@@ -20,12 +20,16 @@ const ScriptureCompactControls = ({
   onVersionChange,
 }: ScriptureCompactControlsProps) => (
   <div
-    className={`pointer-events-none fixed inset-x-0 top-0 z-50 px-[4.75rem] py-3 transition-all duration-300 ease-out md:hidden ${
-      compact ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+    className={`pointer-events-none fixed inset-x-0 top-0 z-50 px-[4.75rem] py-3 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:hidden ${
+      compact ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
     }`}
     aria-hidden={!compact}
   >
-    <div className="pointer-events-auto ml-auto flex w-fit items-center justify-end gap-2">
+    <div
+      className={`pointer-events-auto ml-auto flex w-fit items-center justify-end gap-2 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        compact ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-[0.98] opacity-0'
+      }`}
+    >
       <ScriptureVersionSelect
         darkMode={darkMode}
         selectedVersionId={selectedVersionId}
