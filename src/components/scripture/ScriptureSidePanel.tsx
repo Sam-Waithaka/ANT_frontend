@@ -42,7 +42,7 @@ const ScriptureSidePanel = ({
     {crossReferences.length > 0 && (
       <section
         className={`rounded-[2rem] border p-5 shadow-sm ${
-          darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/5'
+          darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
         }`}
       >
         <div className="flex items-center gap-3">
@@ -56,7 +56,7 @@ const ScriptureSidePanel = ({
         </div>
         <div className="mt-5 grid gap-3">
           {crossReferences.map((reference) => (
-            <article key={reference.id} className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-white/70'}`}>
+            <article key={reference.id} className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#fffaf0]'}`}>
               <p className="text-xs font-black uppercase tracking-[0.14em] text-red-900 dark:text-red-200">
                 {reference.verseNumber ? `Verse ${reference.verseNumber}` : 'Reference'}
               </p>
@@ -82,7 +82,7 @@ const ScriptureSidePanel = ({
 
     <section
       className={`rounded-[2rem] border p-5 shadow-sm ${
-        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/5'
+        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
       }`}
     >
       <div className="flex items-center gap-3">

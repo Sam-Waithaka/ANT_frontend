@@ -42,6 +42,8 @@ const tools: Array<[ToolKey, string]> = [
 const resourceTypes: BibleResourceType[] = ['preface', 'copyright', 'study_help', 'translation_review', 'glossary', 'front_matter', 'other'];
 const markerStatuses: BibleMarkerStatus[] = ['omitted', 'empty_marker', 'source_unavailable'];
 const noteTypes: BibleNoteType[] = ['footnote', 'cross_reference', 'textual_variant'];
+const inputClass =
+  'h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-red-800 dark:border-white/15 dark:bg-white/10 dark:text-stone-100 dark:placeholder:text-stone-500';
 
 const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVersion, versions }: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('search');
@@ -105,7 +107,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
   return (
     <section
       className={`rounded-[2rem] border p-4 shadow-sm ${
-        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/5'
+        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
       }`}
     >
       <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Bible tools</p>
@@ -120,7 +122,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
                 ? 'bg-red-800 text-white'
                 : darkMode
                   ? 'bg-white/10 text-stone-300 hover:bg-white/15'
-                  : 'bg-[#fffaf0] text-zinc-700 shadow-sm hover:bg-white'
+                  : 'border border-black/10 bg-[#fffaf0] text-zinc-700 shadow-sm hover:bg-white'
             }`}
           >
             {label}
@@ -134,7 +136,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={activeTool === 'glossary' ? 'Glossary term' : 'Search text'}
-            className="h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-red-800 dark:border-white/10 dark:bg-white/10 dark:text-stone-100"
+            className={inputClass}
           />
         )}
 
@@ -143,7 +145,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
             value={languageCode}
             onChange={(event) => setLanguageCode(event.target.value)}
             placeholder="Optional language code, e.g. sw"
-            className="h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-red-800 dark:border-white/10 dark:bg-white/10 dark:text-stone-100"
+            className={inputClass}
           />
         )}
 
@@ -153,7 +155,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
             min={1}
             onChange={(event) => setVerseNumber(Number(event.target.value))}
             type="number"
-            className="h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-red-800 dark:border-white/10 dark:bg-white/10 dark:text-stone-100"
+            className={inputClass}
           />
         )}
 
@@ -162,7 +164,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
             value={compareVersions}
             onChange={(event) => setCompareVersions(event.target.value)}
             placeholder="ASV,WEBP,KJV"
-            className="h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-red-800 dark:border-white/10 dark:bg-white/10 dark:text-stone-100"
+            className={inputClass}
           />
         )}
 
@@ -170,7 +172,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
           <select
             value={resourceType}
             onChange={(event) => setResourceType(event.target.value as BibleResourceType | '')}
-            className="h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-red-800 dark:border-white/10 dark:bg-white/10 dark:text-stone-100"
+            className={inputClass}
           >
             <option value="">All resource types</option>
             {resourceTypes.map((type) => <option key={type} value={type}>{type}</option>)}
@@ -181,7 +183,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
           <select
             value={markerStatus}
             onChange={(event) => setMarkerStatus(event.target.value as BibleMarkerStatus | '')}
-            className="h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-red-800 dark:border-white/10 dark:bg-white/10 dark:text-stone-100"
+            className={inputClass}
           >
             <option value="">All marker statuses</option>
             {markerStatuses.map((statusOption) => <option key={statusOption} value={statusOption}>{statusOption}</option>)}
@@ -192,7 +194,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
           <select
             value={noteType}
             onChange={(event) => setNoteType(event.target.value as BibleNoteType | '')}
-            className="h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold outline-none focus:border-red-800 dark:border-white/10 dark:bg-white/10 dark:text-stone-100"
+            className={inputClass}
           >
             <option value="">All note types</option>
             {noteTypes.map((type) => <option key={type} value={type}>{type}</option>)}
@@ -208,7 +210,7 @@ const BibleToolsPanel = ({ darkMode, selectedBook, selectedChapter, selectedVers
         </button>
       </div>
 
-      <div className={`mt-4 max-h-80 overflow-y-auto rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-white/70'}`}>
+      <div className={`mt-4 max-h-80 overflow-y-auto rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#fffaf0]'}`}>
         {status ? <p className="text-sm leading-6 text-red-800 dark:text-red-200">{status}</p> : null}
         {verseResult ? (
           <div>
