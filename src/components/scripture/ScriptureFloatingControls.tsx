@@ -130,7 +130,7 @@ const ScriptureFloatingControls = ({
               <ChevronDown size={15} className="shrink-0 text-red-800 dark:text-red-200" />
             </button>
             {openMenu === 'book' && (
-              <div className={`${menuBase} ${menuSurfaceClass} left-1/2 w-[min(90vw,34rem)] -translate-x-1/2`}>
+              <div className={`${menuBase} ${menuSurfaceClass} left-[calc(50%+2.875rem)] w-[min(84vw,34rem)] -translate-x-1/2 md:left-1/2 md:w-[min(90vw,34rem)]`}>
                 <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Book</p>
                 <div className={`mb-4 grid grid-cols-3 gap-1 rounded-full border p-1 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
                   {bookFilters.map(([value, label]) => (
@@ -183,7 +183,7 @@ const ScriptureFloatingControls = ({
               <ChevronDown size={15} className="shrink-0 text-red-800 dark:text-red-200" />
             </button>
             {openMenu === 'chapter' && (
-              <div className={`${menuBase} ${menuSurfaceClass} right-0 w-72 sm:w-80`}>
+              <div className={`${menuBase} ${menuSurfaceClass} left-[calc(50%-2.875rem)] w-[min(84vw,20rem)] -translate-x-1/2 sm:w-80 md:left-auto md:right-0 md:translate-x-0`}>
                 <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Chapter</p>
                 <div className="grid max-h-72 grid-cols-5 gap-2 overflow-y-auto sm:grid-cols-6">
                   {chapters.map((chapter) => (
