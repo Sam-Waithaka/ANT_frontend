@@ -403,11 +403,23 @@ export const compareBibleChapter = async (
     `/v1/bible/compare/${toQueryString({ versions: versions.join(','), book: bookId, chapter })}`,
   );
   const verseMap = new Map<number, BibleComparisonVerse>();
+  const normalizedVersions = versions.map((version) => version.toLowerCase());
+  const normalizeVersion = (version: string) => version.trim().toLowerCase();
+  const isRequestedVersion = (version: string) => normalizedVersions.includes(normalizeVersion(version));
+  const displayVersion = (version: string) => versions.find((item) => normalizeVersion(item) === normalizeVersion(version)) || version;
   const addReading = (version: string, verseNumber: number, text: string) => {
     if (!text) return;
 
     const existing = verseMap.get(verseNumber) || { verseNumber, readings: [] };
-    existing.readings.push({ version, text });
+    const normalizedVersion = displayVersion(version);
+    const existingReading = existing.readings.find((reading) => normalizeVersion(reading.version) === normalizeVersion(normalizedVersion));
+
+    if (existingReading) {
+      existingReading.text = text;
+    } else {
+      existing.readings.push({ version: normalizedVersion, text });
+    }
+
     verseMap.set(verseNumber, existing);
   };
   const addVerseCollection = (version: string, collection: unknown[]) => {
@@ -419,45 +431,139 @@ export const compareBibleChapter = async (
       addReading(version, verseNumber, text);
     });
   };
-  const payloadRecord = asRecord(payload);
-  const collection = unwrapCollection(payload);
+  const readVersionFromRecord = (record: UnknownRecord) => {
+    const directVersion = readString(record, ['version', 'version_abbr', 'version_id', 'translation', 'abbreviation', 'abbr', 'code']);
 
-  if (collection.length > 0) {
-    collection.forEach((item, index) => {
+    if (directVersion) {
+      return directVersion;
+    }
+
+    const versionRecord = asRecord(record.version);
+    return readString(versionRecord, ['abbreviation', 'abbr', 'code', 'version_abbr', 'id', 'name']);
+  };
+  const addReadingsObject = (verseNumber: number, value: unknown) => {
+    const record = asRecord(value);
+
+    Object.entries(record).forEach(([version, textValue]) => {
+      if (!isRequestedVersion(version)) {
+        return;
+      }
+
+      if (typeof textValue === 'string' || typeof textValue === 'number') {
+        addReading(version, verseNumber, String(textValue));
+        return;
+      }
+
+      const textRecord = asRecord(textValue);
+      addReading(version, verseNumber, readString(textRecord, ['text', 'content', 'verseText', 'body']));
+    });
+  };
+  const addReadingsArray = (verseNumber: number, collection: unknown[]) => {
+    collection.forEach((item) => {
       const record = asRecord(item);
-      const verseNumber = readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1);
-
-      versions.forEach((version) => {
-        const text = readString(record, [version, version.toLowerCase()]);
-        addReading(version, verseNumber, text);
-      });
-
-      const version = readString(record, ['version', 'version_abbr', 'version_id', 'translation']);
+      const version = readVersionFromRecord(record);
       const text = readString(record, ['text', 'content', 'verseText', 'body']);
-      if (version && text) {
+
+      if (version && isRequestedVersion(version)) {
         addReading(version, verseNumber, text);
       }
     });
-  }
+  };
+  const addVerseRow = (item: unknown, index: number) => {
+    const record = asRecord(item);
+    const verseNumber = readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1);
 
-  versions.forEach((version) => {
-    const versionPayload = payloadRecord[version];
-    const versionRecord = asRecord(versionPayload);
-    const versionVerses = unwrapCollection(versionPayload);
+    versions.forEach((version) => {
+      const text = readString(record, [version, version.toLowerCase()]);
+      addReading(version, verseNumber, text);
+    });
 
-    if (versionVerses.length > 0) {
-      addVerseCollection(version, versionVerses);
+    ['texts', 'readings', 'translations', 'versions'].forEach((key) => {
+      const value = record[key];
+
+      if (Array.isArray(value)) {
+        addReadingsArray(verseNumber, value);
+      } else {
+        addReadingsObject(verseNumber, value);
+      }
+    });
+
+    const version = readVersionFromRecord(record);
+    const text = readString(record, ['text', 'content', 'verseText', 'body']);
+    if (version && text) {
+      addReading(version, verseNumber, text);
+    }
+  };
+  const addVersionPayload = (version: string, value: unknown) => {
+    if (!isRequestedVersion(version)) {
       return;
     }
 
-    const text = readString(versionRecord, ['text', 'content', 'verseText', 'body']);
-    if (text) {
-      addReading(version, 1, text);
+    const record = asRecord(value);
+    const verses = unwrapCollection(value);
+
+    if (verses.length > 0) {
+      addVerseCollection(version, verses);
+      return;
     }
+
+    ['verses', 'results', 'items', 'data'].forEach((key) => {
+      const collection = record[key];
+      if (Array.isArray(collection)) {
+        addVerseCollection(version, collection);
+      }
+    });
+
+    const text = readString(record, ['text', 'content', 'verseText', 'body']);
+    if (text) {
+      addReading(version, readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], 1), text);
+    }
+  };
+  const inspectContainer = (value: unknown) => {
+    const collection = unwrapCollection(value);
+
+    if (collection.length > 0) {
+      collection.forEach((item, index) => {
+        const record = asRecord(item);
+        const version = readVersionFromRecord(record);
+        const nestedVerses = unwrapCollection(record.verses || record.results || record.items || record.data);
+
+        if (version && nestedVerses.length > 0) {
+          addVerseCollection(version, nestedVerses);
+          return;
+        }
+
+        addVerseRow(item, index);
+      });
+      return;
+    }
+
+    Object.entries(asRecord(value)).forEach(([key, nestedValue]) => {
+      if (isRequestedVersion(key)) {
+        addVersionPayload(key, nestedValue);
+      }
+    });
+  };
+  const payloadRecord = asRecord(payload);
+
+  inspectContainer(payload);
+
+  [
+    payloadRecord.results,
+    payloadRecord.data,
+    payloadRecord.comparisons,
+    payloadRecord.comparison,
+    payloadRecord.translations,
+    payloadRecord.versions,
+  ].forEach(inspectContainer);
+
+  versions.forEach((version) => {
+    const versionPayload = payloadRecord[version];
+    addVersionPayload(version, versionPayload);
   });
 
   return {
-    book: readString(payloadRecord, ['book', 'book_id', 'book_name'], bookId),
+    book: readString(payloadRecord, ['book', 'book_id', 'book_name']) || readString(asRecord(payloadRecord.book), ['name', 'osis_id', 'abbreviation'], bookId),
     chapter: readNumber(payloadRecord, ['chapter', 'chapter_number'], chapter),
     versions,
     verses: Array.from(verseMap.values()).sort((left, right) => left.verseNumber - right.verseNumber),

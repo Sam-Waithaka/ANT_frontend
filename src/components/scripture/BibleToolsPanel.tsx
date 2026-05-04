@@ -59,6 +59,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
   const [noteType, setNoteType] = useState<BibleNoteType | ''>('');
   const [records, setRecords] = useState<BibleToolRecord[]>([]);
   const [comparison, setComparison] = useState<BibleComparisonChapter | null>(null);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [verseResult, setVerseResult] = useState<VerseLookupResult | null>(null);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,6 +69,9 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
   const chapterNumber = selectedChapter?.number || 3;
   const selectedCompareVersions = compareVersionIds.filter((id) => versions.some((version) => version.id === id));
   const compareBook = books.find((book) => book.id === compareBookId);
+  const comparisonHasVerses = Boolean(comparison?.verses.length);
+  const getVersionLabel = (versionIdToFind: string) =>
+    versions.find((version) => version.id.toLowerCase() === versionIdToFind.toLowerCase())?.abbreviation || versionIdToFind;
 
   useEffect(() => {
     if (versions.length === 0 || compareVersionIds.length > 0) {
@@ -122,6 +126,21 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
     };
   }, [compareBookId, versionId]);
 
+  useEffect(() => {
+    if (!comparisonOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setComparisonOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [comparisonOpen]);
+
   const toggleCompareVersion = (versionIdToToggle: string) => {
     setCompareVersionIds((current) =>
       current.includes(versionIdToToggle)
@@ -148,7 +167,18 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
           return;
         }
 
-        setComparison(await compareBibleChapter(selectedCompareVersions, compareBookId || bookId, compareChapterNumber || chapterNumber));
+        const nextComparison = await compareBibleChapter(
+          selectedCompareVersions,
+          compareBookId || bookId,
+          compareChapterNumber || chapterNumber,
+        );
+        setComparison(nextComparison);
+
+        if (nextComparison.verses.length > 0) {
+          setComparisonOpen(true);
+        } else {
+          setStatus('No comparison text was returned for this chapter. Try another version pair or confirm the compare endpoint response shape.');
+        }
       }
 
       if (activeTool === 'resources') {
@@ -174,11 +204,12 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
   };
 
   return (
-    <section
-      className={`rounded-[2rem] border p-4 shadow-sm ${
-        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
-      }`}
-    >
+    <>
+      <section
+        className={`rounded-[2rem] border p-4 shadow-sm ${
+          darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
+        }`}
+      >
       <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Bible tools</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {tools.map(([key, label]) => (
@@ -190,6 +221,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
               setStatus('');
               setRecords([]);
               setComparison(null);
+              setComparisonOpen(false);
               setVerseResult(null);
             }}
             className={`rounded-full px-3 py-2 text-xs font-black transition ${
@@ -332,29 +364,21 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
 
       <div className={`mt-4 max-h-80 overflow-y-auto rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#fffaf0]'}`}>
         {status ? <p className="text-sm leading-6 text-red-800 dark:text-red-200">{status}</p> : null}
-        {comparison && comparison.verses.length > 0 ? (
-          <div className="grid gap-4">
-            {comparison.verses.map((verse) => (
-              <section key={verse.verseNumber} className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`}>
-                <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">
-                  Verse {verse.verseNumber}
-                </p>
-                <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
-                  {selectedCompareVersions.map((version) => {
-                    const reading = verse.readings.find((item) => item.version === version);
-
-                    return (
-                      <article key={version} className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#fffaf0]'}`}>
-                        <p className="text-xs font-black uppercase tracking-[0.14em] text-red-900 dark:text-red-200">{version}</p>
-                        <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
-                          {reading?.text || 'This verse is not available in this version.'}
-                        </p>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
+        {comparisonHasVerses ? (
+          <div className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`}>
+            <p className="text-sm font-black">
+              {comparison?.book} {comparison?.chapter}
+            </p>
+            <p className={`mt-1 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+              {comparison?.verses.length} verses compared across {selectedCompareVersions.length} versions.
+            </p>
+            <button
+              type="button"
+              onClick={() => setComparisonOpen(true)}
+              className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-full bg-red-800 px-4 text-sm font-bold text-white transition hover:bg-red-700"
+            >
+              View comparison
+            </button>
           </div>
         ) : null}
         {verseResult ? (
@@ -381,7 +405,90 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
           ))}
         </div>
       </div>
-    </section>
+      </section>
+
+      {comparisonOpen && comparison ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="comparison-title"
+        >
+          <div
+            className={`flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border shadow-2xl ${
+              darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
+            }`}
+          >
+            <div className={`flex items-start justify-between gap-4 border-b p-5 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-red-900 dark:text-red-200">Chapter comparison</p>
+                <h2 id="comparison-title" className="mt-2 text-2xl font-black sm:text-3xl">
+                  {comparison.book} {comparison.chapter}
+                </h2>
+                <p className={`mt-1 text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+                  {selectedCompareVersions.map(getVersionLabel).join(', ')}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setComparisonOpen(false)}
+                className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full border text-xl font-black transition ${
+                  darkMode ? 'border-white/10 bg-white/10 hover:bg-white/15' : 'border-black/10 bg-white hover:bg-[#fffaf0]'
+                }`}
+                aria-label="Close comparison"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="overflow-y-auto p-5">
+              {comparison.verses.length > 0 ? (
+                <div className="grid gap-5">
+                  {comparison.verses.map((verse) => (
+                    <section
+                      key={verse.verseNumber}
+                      className={`rounded-3xl border p-4 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-white'}`}
+                    >
+                      <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">
+                        Verse {verse.verseNumber}
+                      </p>
+                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        {selectedCompareVersions.map((version) => {
+                          const reading = verse.readings.find((item) => item.version.toLowerCase() === version.toLowerCase());
+
+                          return (
+                            <article
+                              key={version}
+                              className={`rounded-2xl border p-4 ${
+                                darkMode ? 'border-white/10 bg-[#080808]' : 'border-black/10 bg-[#fffaf0]'
+                              }`}
+                            >
+                              <p className="text-xs font-black uppercase tracking-[0.14em] text-red-900 dark:text-red-200">
+                                {getVersionLabel(version)}
+                              </p>
+                              <p className={`mt-3 text-base leading-8 ${darkMode ? 'text-stone-200' : 'text-zinc-800'}`}>
+                                {reading?.text || 'This verse is not available in this version.'}
+                              </p>
+                            </article>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <div className={`rounded-3xl border p-6 text-center ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-white'}`}>
+                  <p className="text-sm font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">No comparison text</p>
+                  <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+                    The compare endpoint responded, but no verse text was found for this chapter.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 };
 
