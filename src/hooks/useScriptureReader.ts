@@ -3,6 +3,8 @@ import { getBibleBooks, getBibleChapters, getBibleVersions, getBibleVerses } fro
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
 import { normalizeReferenceValue } from '../utils/scriptureReference';
 
+const DEFAULT_VERSION_ABBR = 'BSB';
+
 export const useScriptureReader = () => {
   const initialReference = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -60,8 +62,12 @@ export const useScriptureReader = () => {
             normalizeReferenceValue(version.id) === normalizeReferenceValue(initialReference.version) ||
             normalizeReferenceValue(version.abbreviation || '') === normalizeReferenceValue(initialReference.version),
           );
+          const defaultVersion = nextVersions.find((version) =>
+            normalizeReferenceValue(version.id) === normalizeReferenceValue(DEFAULT_VERSION_ABBR) ||
+            normalizeReferenceValue(version.abbreviation || '') === normalizeReferenceValue(DEFAULT_VERSION_ABBR),
+          );
 
-          return requestedVersion?.id || current || nextVersions[0]?.id || '';
+          return requestedVersion?.id || current || defaultVersion?.id || nextVersions[0]?.id || '';
         });
       } catch {
         if (!cancelled) {
