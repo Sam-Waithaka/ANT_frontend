@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
 import ScriptureDisplay from '../components/scripture/ScriptureDisplay';
 import ScriptureFloatingControls from '../components/scripture/ScriptureFloatingControls';
+import ScriptureMobilePanels from '../components/scripture/ScriptureMobilePanels';
 import ScriptureReaderTopBar from '../components/scripture/ScriptureReaderTopBar';
 import ScriptureSidePanel from '../components/scripture/ScriptureSidePanel';
 import SiteFooter from '../components/SiteFooter';
@@ -115,6 +116,14 @@ const ScripturePage = () => {
         onNext={goToNextChapter}
         onPrevious={goToPreviousChapter}
         onVersionChange={setSelectedVersionId}
+      />
+      <ScriptureMobilePanels
+        books={books}
+        darkMode={darkMode}
+        selectedBook={selectedBook}
+        selectedChapter={selectedChapter}
+        selectedVersion={selectedVersion}
+        versions={versions}
       />
     </div>
   );
