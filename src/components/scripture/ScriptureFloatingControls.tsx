@@ -80,7 +80,7 @@ const ScriptureFloatingControls = ({
         </button>
 
         <div className="flex min-w-0 flex-wrap items-center justify-center gap-2">
-          <div className="relative">
+          <div className="relative hidden md:block">
             <button
               type="button"
               onClick={() => setOpenMenu(openMenu === 'version' ? null : 'version')}
