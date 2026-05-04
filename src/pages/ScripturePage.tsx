@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
 import ScriptureDisplay from '../components/scripture/ScriptureDisplay';
 import ScriptureFloatingControls from '../components/scripture/ScriptureFloatingControls';
@@ -7,17 +7,14 @@ import ScriptureReaderTopBar from '../components/scripture/ScriptureReaderTopBar
 import ScriptureSidePanel from '../components/scripture/ScriptureSidePanel';
 import SiteFooter from '../components/SiteFooter';
 import SiteSideNav from '../components/SiteSideNav';
+import { useScriptureChapterMeta } from '../hooks/useScriptureChapterMeta';
 import { useScriptureReader } from '../hooks/useScriptureReader';
+import { useScriptureSearch } from '../hooks/useScriptureSearch';
 import { useTheme } from '../hooks/useTheme';
-import { searchBible } from '../services/scriptureApi';
-import type { BibleToolRecord } from '../types/scripture';
 
 const ScripturePage = () => {
   const { darkMode, toggleTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<BibleToolRecord[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState('');
   const {
     books,
     chapters,
@@ -41,52 +38,8 @@ const ScripturePage = () => {
   } = useScriptureReader();
 
   const isLoading = loading.versions || loading.books || loading.chapters || loading.verses;
-  const normalizedSearchTerm = searchTerm.trim();
-  const crossReferences = verses.flatMap((verse) =>
-    (verse.notes || [])
-      .filter((note) => note.type === 'cross_reference')
-      .map((note) => ({ ...note, verseNumber: note.verseNumber || verse.number })),
-  );
-
-  useEffect(() => {
-    if (normalizedSearchTerm.length < 2) {
-      setSearchResults([]);
-      setSearchError('');
-      setSearchLoading(false);
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeout = window.setTimeout(async () => {
-      setSearchLoading(true);
-      setSearchError('');
-
-      try {
-        const results = await searchBible({
-          q: normalizedSearchTerm,
-          version: selectedVersionId || undefined,
-        });
-
-        if (!controller.signal.aborted) {
-          setSearchResults(results);
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setSearchResults([]);
-          setSearchError('We could not search Scripture right now. Confirm the Bible API is running.');
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setSearchLoading(false);
-        }
-      }
-    }, 350);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeout);
-    };
-  }, [normalizedSearchTerm, selectedVersionId]);
+  const { crossReferences, footnotes, licenseNote } = useScriptureChapterMeta(verses);
+  const scriptureSearch = useScriptureSearch(searchTerm, selectedVersionId);
 
   return (
     <div className={`h-screen overflow-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
@@ -115,10 +68,12 @@ const ScripturePage = () => {
             <ScriptureDisplay
               darkMode={darkMode}
               error={error}
+              footnotes={footnotes}
+              licenseNote={licenseNote}
               loading={isLoading}
-              searchError={searchError}
-              searchLoading={searchLoading}
-              searchResults={searchResults}
+              searchError={scriptureSearch.error}
+              searchLoading={scriptureSearch.loading}
+              searchResults={scriptureSearch.results}
               searchTerm={searchTerm}
               selectedBook={selectedBook}
               selectedChapter={selectedChapter}

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import type { BibleBook, BibleChapter, BibleToolRecord, BibleVerse, BibleVersion } from '../../types/scripture';
+import type { BibleBook, BibleChapter, BibleChapterNote, BibleToolRecord, BibleVerse, BibleVersion } from '../../types/scripture';
+import ScriptureReadingContent from './ScriptureReadingContent';
 import ScriptureSearchResults from './ScriptureSearchResults';
 import ScriptureStatus from './ScriptureStatus';
 
@@ -7,6 +8,8 @@ type ScriptureDisplayProps = {
   darkMode: boolean;
   error: string;
   footer?: ReactNode;
+  footnotes: BibleChapterNote[];
+  licenseNote?: BibleChapterNote;
   loading: boolean;
   searchError?: string;
   searchLoading?: boolean;
@@ -22,6 +25,8 @@ const ScriptureDisplay = ({
   darkMode,
   error,
   footer,
+  footnotes,
+  licenseNote,
   loading,
   searchError = '',
   searchLoading = false,
@@ -36,20 +41,6 @@ const ScriptureDisplay = ({
   const isSearching = query.length >= 2;
   const scriptureVerses = verses.filter((verse) => verse.number > 0);
   const passageTitle = selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture';
-  const footnotes = scriptureVerses.flatMap((verse) =>
-    (verse.notes || [])
-      .filter((note) => note.type === 'footnote')
-      .map((note) => ({ ...note, verseNumber: note.verseNumber || verse.number })),
-  ).filter((note, index, notes) =>
-    notes.findIndex((candidate) =>
-      candidate.verseNumber === note.verseNumber &&
-      candidate.text === note.text &&
-      candidate.reference === note.reference
-    ) === index,
-  );
-  const licenseNote = verses
-    .flatMap((verse) => verse.notes || [])
-    .find((note) => note.reference === 'license');
 
   return (
     <article className={`min-h-0 min-w-0 flex-1 overflow-y-auto px-5 py-8 sm:px-10 lg:px-16 ${darkMode ? 'bg-[#080808]' : 'bg-[#f8f5ef]'}`}>
@@ -98,36 +89,13 @@ const ScriptureDisplay = ({
             message="Select a chapter to begin reading."
           />
         ) : (
-          <div className="grid gap-5 pb-52 md:pb-36">
-            {scriptureVerses.map((verse) => (
-              <p key={verse.id} className="grid grid-cols-[2rem_1fr] gap-4 font-serif text-xl leading-9 text-zinc-900 dark:text-stone-100 sm:text-2xl sm:leading-10">
-                <span className="pt-1 font-sans text-sm font-bold text-zinc-500 dark:text-stone-400">{verse.number}</span>
-                <span>{verse.text}</span>
-              </p>
-            ))}
-            {footnotes.length > 0 && !query && (
-              <section className={`mt-8 border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Footnotes</p>
-                <div className="mt-4 grid gap-3">
-                  {footnotes.map((note) => (
-                    <p key={note.id} className={`text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
-                      <span className="font-black text-red-900 dark:text-red-200">{note.verseNumber}</span>
-                      <span className="ml-2">{note.text}</span>
-                    </p>
-                  ))}
-                </div>
-              </section>
-            )}
-            {licenseNote && !query && (
-              <section className={`border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">License Notes</p>
-                <p className={`mt-4 whitespace-pre-line text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
-                  {licenseNote.text}
-                </p>
-              </section>
-            )}
-            {footer}
-          </div>
+          <ScriptureReadingContent
+            darkMode={darkMode}
+            footer={footer}
+            footnotes={footnotes}
+            licenseNote={licenseNote}
+            verses={scriptureVerses}
+          />
         )}
       </div>
       </div>
