@@ -23,7 +23,7 @@ const ScriptureSearchInput = ({ darkMode, onChange, responsiveIcon = false, valu
       } ${
         darkMode
           ? 'border-white/15 bg-white/10 text-stone-100 shadow-lg shadow-black/25 placeholder:text-stone-500 hover:bg-white/15 focus:border-red-300'
-          : 'border-black/10 bg-white/85 text-zinc-950 shadow-lg shadow-zinc-900/15 placeholder:text-zinc-500 hover:bg-[#fffaf0] focus:border-red-800'
+          : 'border-black/10 bg-white/70 text-zinc-950 shadow-lg shadow-zinc-900/15 placeholder:text-zinc-500 hover:bg-white/85 focus:border-red-800'
       }`}
     />
   </label>

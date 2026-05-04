@@ -70,7 +70,9 @@ button {
     overflow: visible;
     padding: 0.75rem 4.75rem 0.75rem 5rem;
     border-bottom: 0;
-    background: transparent;
+    background: transparent !important;
+    box-shadow: none;
+    backdrop-filter: none;
     opacity: 0;
     pointer-events: none;
     transform: translateY(-0.25rem);
@@ -110,13 +112,14 @@ button {
   }
 
   .site-nav-compact .scripture-search-control .scripture-search-icon {
+    top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) !important;
   }
 
   .site-nav-compact .scripture-search-control:focus-within .scripture-search-icon {
     left: 1rem;
-    transform: translateY(-50%);
+    transform: translateY(-50%) !important;
   }
 
   @keyframes scripture-controls-dock {

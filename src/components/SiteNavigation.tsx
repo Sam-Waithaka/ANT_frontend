@@ -170,7 +170,7 @@ const SiteNavigation = ({
             className={`${compactSmallHeader ? 'pointer-events-auto' : 'pointer-events-none'} grid size-11 shrink-0 place-items-center rounded-full border shadow-lg backdrop-blur-xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
               darkMode
                 ? 'border-white/15 bg-white/10 text-stone-100 shadow-black/25 focus:ring-offset-black hover:bg-white/15'
-                : 'border-black/10 bg-white/85 text-zinc-900 shadow-zinc-900/15 focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
+                : 'border-black/10 bg-white/70 text-zinc-900 shadow-zinc-900/15 focus:ring-offset-[#f8f5ef] hover:bg-white/85'
             }`}
             aria-label="Open navigation menu"
           >
