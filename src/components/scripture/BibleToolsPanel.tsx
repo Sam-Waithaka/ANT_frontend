@@ -45,6 +45,8 @@ const markerStatuses: BibleMarkerStatus[] = ['omitted', 'empty_marker', 'source_
 const noteTypes: BibleNoteType[] = ['footnote', 'cross_reference', 'textual_variant'];
 const inputClass =
   'h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-red-800 dark:border-white/15 dark:bg-white/10 dark:text-stone-100 dark:placeholder:text-stone-500';
+const compareSelectClass =
+  'h-11 rounded-full border border-black/10 bg-[#fffaf0] px-4 text-sm font-bold text-zinc-700 shadow-sm outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-700 dark:border-white/15 dark:bg-white/10 dark:text-stone-100';
 
 const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selectedVersion, versions }: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
@@ -263,7 +265,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
               <select
                 value={compareBookId}
                 onChange={(event) => setCompareBookId(event.target.value)}
-                className={inputClass}
+                className={compareSelectClass}
                 aria-label="Comparison book"
               >
                 {books.map((book) => (
@@ -273,7 +275,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
               <select
                 value={compareChapterNumber}
                 onChange={(event) => setCompareChapterNumber(Number(event.target.value))}
-                className={inputClass}
+                className={compareSelectClass}
                 aria-label="Comparison chapter"
               >
                 {compareChapters.map((chapter) => (
@@ -362,7 +364,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
         </button>
       </div>
 
-      <div className={`mt-4 max-h-80 overflow-y-auto rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#fffaf0]'}`}>
+      <div className={`mt-4 max-h-80 overflow-y-auto rounded-2xl p-3 ${darkMode ? 'bg-[#171717]' : 'bg-transparent'}`}>
         {status ? <p className="text-sm leading-6 text-red-800 dark:text-red-200">{status}</p> : null}
         {comparisonHasVerses ? (
           <div className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`}>
@@ -390,7 +392,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
           </div>
         ) : null}
         {!status && !comparison && !verseResult && records.length === 0 ? (
-          <p className={`text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>
+          <p className={`px-1 text-sm leading-6 ${darkMode ? 'text-stone-500' : 'text-zinc-400'}`}>
             Run a tool to view API results here.
           </p>
         ) : null}

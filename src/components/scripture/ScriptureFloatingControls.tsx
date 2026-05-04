@@ -56,14 +56,14 @@ const ScriptureFloatingControls = ({
   const selectedChapter = chapters.find((chapter) => chapter.id === selectedChapterId);
   const filteredBooks = books.filter((book) => bookFilter === 'both' || book.testament === bookFilter);
   const controlSurfaceClass = darkMode
-    ? 'border-white/10 bg-zinc-950/95 text-stone-100 shadow-black/40'
-    : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/15';
+    ? 'border-white/10 bg-zinc-950/10 text-stone-100 shadow-black/40 backdrop-blur-xl'
+    : 'border-black/10 bg-white/10 text-zinc-950 shadow-zinc-900/15 backdrop-blur-xl';
   const menuSurfaceClass = darkMode
     ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/40'
     : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/15';
   const neutralPillClass = darkMode
-    ? 'border-white/15 bg-white/10 text-stone-100 hover:bg-white/15'
-    : 'border-black/10 bg-[#fffaf0] text-zinc-700 hover:bg-white';
+    ? 'border-white/15 bg-white/10 text-stone-100 backdrop-blur-xl hover:bg-white/15'
+    : 'border-black/10 bg-[#fffaf0]/70 text-zinc-700 backdrop-blur-xl hover:bg-white/80';
   const inactiveOptionClass = darkMode
     ? 'text-stone-300 hover:bg-white/10'
     : 'text-zinc-700 hover:bg-[#fffaf0]';
@@ -77,9 +77,7 @@ const ScriptureFloatingControls = ({
           type="button"
           onClick={onPrevious}
           disabled={!canGoPrevious}
-          className={`grid size-11 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-35 ${
-            darkMode ? 'bg-white/10 text-stone-100 hover:bg-white/15' : 'bg-[#f8f5ef] text-zinc-950 hover:bg-[#ece7de]'
-          }`}
+          className="grid size-11 shrink-0 place-items-center rounded-full bg-red-800 text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-35"
           aria-label="Previous chapter"
         >
           <ChevronLeft size={22} />
