@@ -3,21 +3,25 @@ import ScriptureSearchInput from './ScriptureSearchInput';
 import ScriptureVersionSelect from './ScriptureVersionSelect';
 
 type ScriptureReaderTopBarProps = {
+  autoFocusSearch?: boolean;
   compact: boolean;
   darkMode: boolean;
   searchTerm: string;
   selectedVersionId: string;
   versions: BibleVersion[];
   onSearchChange: (value: string) => void;
+  onSearchBlur?: () => void;
   onVersionChange: (value: string) => void;
 };
 
 const ScriptureReaderTopBar = ({
+  autoFocusSearch = false,
   compact,
   darkMode,
   searchTerm,
   selectedVersionId,
   versions,
+  onSearchBlur,
   onSearchChange,
   onVersionChange,
 }: ScriptureReaderTopBarProps) => (
@@ -30,7 +34,13 @@ const ScriptureReaderTopBar = ({
   >
     <div className="flex items-center justify-end gap-2">
       <div className="hidden w-[min(22rem,42vw)] md:block">
-        <ScriptureSearchInput darkMode={darkMode} value={searchTerm} onChange={onSearchChange} />
+        <ScriptureSearchInput
+          autoFocus={autoFocusSearch}
+          darkMode={darkMode}
+          value={searchTerm}
+          onBlur={onSearchBlur}
+          onChange={onSearchChange}
+        />
       </div>
 
       <div className="ml-auto flex max-w-[18rem] min-w-0 flex-1 justify-end gap-2 md:hidden">
@@ -42,8 +52,10 @@ const ScriptureReaderTopBar = ({
         />
         <div className="min-w-0 flex-none">
           <ScriptureSearchInput
+            autoFocus={autoFocusSearch}
             darkMode={darkMode}
             value={searchTerm}
+            onBlur={onSearchBlur}
             onChange={onSearchChange}
           />
         </div>

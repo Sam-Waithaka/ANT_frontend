@@ -2,13 +2,22 @@ import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 type ScriptureSearchInputProps = {
+  autoFocus?: boolean;
   compact?: boolean;
   darkMode: boolean;
+  onBlur?: () => void;
   onChange: (value: string) => void;
   value: string;
 };
 
-const ScriptureSearchInput = ({ compact = false, darkMode, onChange, value }: ScriptureSearchInputProps) => {
+const ScriptureSearchInput = ({
+  autoFocus = false,
+  compact = false,
+  darkMode,
+  onBlur,
+  onChange,
+  value,
+}: ScriptureSearchInputProps) => {
   const [expanded, setExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const surfaceClass = darkMode
@@ -16,10 +25,10 @@ const ScriptureSearchInput = ({ compact = false, darkMode, onChange, value }: Sc
     : 'border-black/10 bg-white text-zinc-900 shadow-zinc-900/10 hover:bg-[#fffaf0] focus:ring-offset-[#f8f5ef]';
 
   useEffect(() => {
-    if (expanded) {
+    if (expanded || autoFocus) {
       inputRef.current?.focus();
     }
-  }, [expanded]);
+  }, [autoFocus, expanded]);
 
   if (compact && !expanded && !value) {
     return (
@@ -48,6 +57,7 @@ const ScriptureSearchInput = ({ compact = false, darkMode, onChange, value }: Sc
           if (compact && !value.trim()) {
             setExpanded(false);
           }
+          onBlur?.();
         }}
         onChange={(event) => onChange(event.target.value)}
         placeholder="Search Scripture..."

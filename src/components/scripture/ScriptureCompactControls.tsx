@@ -1,24 +1,22 @@
+import { Search } from 'lucide-react';
 import type { BibleVersion } from '../../types/scripture';
-import ScriptureSearchInput from './ScriptureSearchInput';
 import ScriptureVersionSelect from './ScriptureVersionSelect';
 
 type ScriptureCompactControlsProps = {
   compact: boolean;
   darkMode: boolean;
-  searchTerm: string;
   selectedVersionId: string;
   versions: BibleVersion[];
-  onSearchChange: (value: string) => void;
+  onSearchOpen: () => void;
   onVersionChange: (value: string) => void;
 };
 
 const ScriptureCompactControls = ({
   compact,
   darkMode,
-  searchTerm,
   selectedVersionId,
   versions,
-  onSearchChange,
+  onSearchOpen,
   onVersionChange,
 }: ScriptureCompactControlsProps) => (
   <div
@@ -35,12 +33,18 @@ const ScriptureCompactControls = ({
         versions={versions}
         onChange={onVersionChange}
       />
-      <ScriptureSearchInput
-        compact
-        darkMode={darkMode}
-        value={searchTerm}
-        onChange={onSearchChange}
-      />
+      <button
+        type="button"
+        onClick={onSearchOpen}
+        className={`grid size-11 place-items-center rounded-full border shadow-lg outline-none transition hover:-translate-y-0.5 focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+          darkMode
+            ? 'border-white/15 bg-zinc-950 text-stone-100 shadow-black/25 hover:bg-[#171717] focus:ring-offset-black'
+            : 'border-black/10 bg-white text-zinc-900 shadow-zinc-900/10 hover:bg-[#fffaf0] focus:ring-offset-[#f8f5ef]'
+        }`}
+        aria-label="Open Scripture search"
+      >
+        <Search size={19} strokeWidth={2.35} />
+      </button>
     </div>
   </div>
 );

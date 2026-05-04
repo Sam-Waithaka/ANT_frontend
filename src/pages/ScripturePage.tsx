@@ -18,6 +18,7 @@ import { useTheme } from '../hooks/useTheme';
 const ScripturePage = () => {
   const { darkMode, toggleTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
+  const [forceSearchBarOpen, setForceSearchBarOpen] = useState(false);
   const compactHeader = useCompactHeader();
   const {
     books,
@@ -65,11 +66,17 @@ const ScripturePage = () => {
             />
           </div>
           <ScriptureReaderTopBar
-            compact={compactHeader}
+            autoFocusSearch={forceSearchBarOpen}
+            compact={compactHeader && !forceSearchBarOpen}
             darkMode={darkMode}
             searchTerm={searchTerm}
             selectedVersionId={selectedVersionId}
             versions={versions}
+            onSearchBlur={() => {
+              if (!searchTerm.trim()) {
+                setForceSearchBarOpen(false);
+              }
+            }}
             onSearchChange={setSearchTerm}
             onVersionChange={setSelectedVersionId}
           />
@@ -132,12 +139,11 @@ const ScripturePage = () => {
         versions={versions}
       />
       <ScriptureCompactControls
-        compact={compactHeader}
+        compact={compactHeader && !forceSearchBarOpen}
         darkMode={darkMode}
-        searchTerm={searchTerm}
         selectedVersionId={selectedVersionId}
         versions={versions}
-        onSearchChange={setSearchTerm}
+        onSearchOpen={() => setForceSearchBarOpen(true)}
         onVersionChange={setSelectedVersionId}
       />
     </div>
