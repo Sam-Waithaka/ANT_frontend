@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
+import ScriptureCompactControls from '../components/scripture/ScriptureCompactControls';
 import ScriptureDisplay from '../components/scripture/ScriptureDisplay';
 import ScriptureFloatingControls from '../components/scripture/ScriptureFloatingControls';
 import ScriptureMobilePanels from '../components/scripture/ScriptureMobilePanels';
@@ -11,11 +12,13 @@ import SiteSideNav from '../components/SiteSideNav';
 import { useScriptureChapterMeta } from '../hooks/useScriptureChapterMeta';
 import { useScriptureReader } from '../hooks/useScriptureReader';
 import { useScriptureSearch } from '../hooks/useScriptureSearch';
+import { useCompactHeader } from '../hooks/useCompactHeader';
 import { useTheme } from '../hooks/useTheme';
 
 const ScripturePage = () => {
   const { darkMode, toggleTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
+  const compactHeader = useCompactHeader();
   const {
     books,
     chapters,
@@ -126,6 +129,15 @@ const ScripturePage = () => {
         selectedChapter={selectedChapter}
         selectedVersion={selectedVersion}
         versions={versions}
+      />
+      <ScriptureCompactControls
+        compact={compactHeader}
+        darkMode={darkMode}
+        searchTerm={searchTerm}
+        selectedVersionId={selectedVersionId}
+        versions={versions}
+        onSearchChange={setSearchTerm}
+        onVersionChange={setSelectedVersionId}
       />
     </div>
   );

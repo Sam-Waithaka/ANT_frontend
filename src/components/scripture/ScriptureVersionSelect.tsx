@@ -7,6 +7,7 @@ type ScriptureVersionSelectProps = {
   darkMode: boolean;
   onChange: (value: string) => void;
   selectedVersionId: string;
+  surface?: 'glass' | 'secondary';
   versions: BibleVersion[];
 };
 
@@ -14,6 +15,7 @@ const ScriptureVersionSelect = ({
   darkMode,
   onChange,
   selectedVersionId,
+  surface = 'glass',
   versions,
 }: ScriptureVersionSelectProps) => {
   const [open, setOpen] = useState(false);
@@ -109,10 +111,14 @@ const ScriptureVersionSelect = ({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`scripture-version-trigger inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-black shadow-lg backdrop-blur-xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
-          darkMode
-            ? 'border-white/15 bg-white/10 text-stone-100 shadow-black/25 focus:ring-offset-black hover:bg-white/15'
-            : 'border-black/10 bg-white/70 text-zinc-900 shadow-zinc-900/15 focus:ring-offset-[#f8f5ef] hover:bg-white/85'
+        className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-black shadow-lg transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+          surface === 'secondary'
+            ? darkMode
+              ? 'border-white/15 bg-zinc-950 text-stone-100 shadow-black/25 focus:ring-offset-black hover:bg-[#171717]'
+              : 'border-black/10 bg-white text-zinc-900 shadow-zinc-900/10 focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
+            : darkMode
+              ? 'border-white/15 bg-white/10 text-stone-100 shadow-black/25 backdrop-blur-xl focus:ring-offset-black hover:bg-white/15'
+              : 'border-black/10 bg-white/70 text-zinc-900 shadow-zinc-900/15 backdrop-blur-xl focus:ring-offset-[#f8f5ef] hover:bg-white/85'
         }`}
         aria-haspopup="dialog"
         aria-expanded={open}

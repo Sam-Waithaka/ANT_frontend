@@ -1,6 +1,7 @@
 import { BookOpen, CalendarDays, Heart, HelpCircle, Home, Menu, Moon, Settings, Sun, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { assetPaths } from '../constants/assets';
+import { useCompactHeader } from '../hooks/useCompactHeader';
 
 export type SiteNavPath = '/' | '/scripture' | '/project52';
 
@@ -29,48 +30,9 @@ const SiteNavigation = ({
   sticky = true,
 }: SiteNavigationProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [compactSmallHeader, setCompactSmallHeader] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const compactSmallHeader = useCompactHeader(layout === 'top');
   const isActive = (href: string) => href === activePath;
-
-  useEffect(() => {
-    if (layout !== 'top') {
-      return;
-    }
-
-    const getScrollTop = (target?: EventTarget | null) => {
-      if (target instanceof Document) {
-        return window.scrollY || target.documentElement.scrollTop || target.body.scrollTop || 0;
-      }
-
-      if (target instanceof Window) {
-        return target.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      }
-
-      if (target instanceof HTMLElement) {
-        return target.scrollTop;
-      }
-
-      return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    };
-
-    const updateCompactState = (event?: Event) => {
-      setCompactSmallHeader(getScrollTop(event?.target) > 24);
-    };
-
-    updateCompactState();
-    window.addEventListener('scroll', updateCompactState, true);
-    return () => window.removeEventListener('scroll', updateCompactState, true);
-  }, [layout]);
-
-  useEffect(() => {
-    if (layout !== 'top') {
-      return;
-    }
-
-    document.documentElement.classList.toggle('site-nav-compact', compactSmallHeader);
-    return () => document.documentElement.classList.remove('site-nav-compact');
-  }, [compactSmallHeader, layout]);
 
   if (layout === 'side') {
     return (
