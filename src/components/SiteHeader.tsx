@@ -8,7 +8,12 @@ type SiteHeaderProps = {
   sticky?: boolean;
 };
 
-const SiteHeader = ({ activePath, darkMode, onToggleTheme, sticky = true }: SiteHeaderProps) => (
+const SiteHeader = ({
+  activePath,
+  darkMode,
+  onToggleTheme,
+  sticky = true,
+}: SiteHeaderProps) => (
   <SiteNavigation
     activePath={activePath}
     darkMode={darkMode}

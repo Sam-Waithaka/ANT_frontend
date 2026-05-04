@@ -1,5 +1,5 @@
 import { BookOpen, CalendarDays, Heart, HelpCircle, Home, Menu, Moon, Settings, Sun, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { assetPaths } from '../constants/assets';
 
 export type SiteNavPath = '/' | '/scripture' | '/project52';
@@ -29,8 +29,39 @@ const SiteNavigation = ({
   sticky = true,
 }: SiteNavigationProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [compactSmallHeader, setCompactSmallHeader] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const isActive = (href: string) => href === activePath;
+
+  useEffect(() => {
+    if (layout !== 'top') {
+      return;
+    }
+
+    const getScrollTop = (target?: EventTarget | null) => {
+      if (target instanceof Document) {
+        return window.scrollY || target.documentElement.scrollTop || target.body.scrollTop || 0;
+      }
+
+      if (target instanceof Window) {
+        return target.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      }
+
+      if (target instanceof HTMLElement) {
+        return target.scrollTop;
+      }
+
+      return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    };
+
+    const updateCompactState = (event?: Event) => {
+      setCompactSmallHeader(getScrollTop(event?.target) > 24);
+    };
+
+    updateCompactState();
+    window.addEventListener('scroll', updateCompactState, true);
+    return () => window.removeEventListener('scroll', updateCompactState, true);
+  }, [layout]);
 
   if (layout === 'side') {
     return (
@@ -103,8 +134,41 @@ const SiteNavigation = ({
 
   return (
     <>
+      {compactSmallHeader ? (
+        <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition lg:hidden">
+          <a
+            href={churchWebsiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700"
+            aria-label="Open the AIC Njoro Town website"
+          >
+            <img
+              src={assetPaths.circleLogo}
+              alt=""
+              className={`size-11 rounded-2xl border object-contain p-1 shadow-md ${
+                darkMode ? 'border-red-400/30 bg-white' : 'border-red-900/15 bg-white'
+              }`}
+            />
+          </a>
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className={`grid size-11 shrink-0 place-items-center rounded-full border shadow-lg backdrop-blur-xl transition focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+              darkMode
+                ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black'
+                : 'border-black/10 bg-white/80 text-zinc-900 focus:ring-offset-[#f8f5ef]'
+            }`}
+            aria-label="Open navigation menu"
+          >
+            <Menu size={21} />
+          </button>
+        </div>
+      ) : null}
       <header
-        className={`${sticky ? 'sticky top-0' : 'relative'} z-30 border-b backdrop-blur-xl transition-colors duration-300 ${
+        className={`${sticky ? 'sticky top-0' : 'relative'} z-30 border-b backdrop-blur-xl transition-all duration-300 ${
+        compactSmallHeader ? 'max-lg:max-h-0 max-lg:-translate-y-full max-lg:overflow-hidden max-lg:border-b-0 max-lg:opacity-0' : 'max-lg:max-h-24 max-lg:translate-y-0 max-lg:opacity-100'
+      } ${
         darkMode ? 'border-white/10 bg-black/75' : 'border-black/10 bg-[#f8f5ef]/85'
       }`}
       >

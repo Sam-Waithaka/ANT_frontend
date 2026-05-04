@@ -55,7 +55,11 @@ const ScripturePage = () => {
 
         <main className="flex h-screen min-w-0 flex-1 flex-col overflow-hidden">
           <div className="lg:hidden">
-            <SiteHeader activePath="/scripture" darkMode={darkMode} onToggleTheme={toggleTheme} />
+            <SiteHeader
+              activePath="/scripture"
+              darkMode={darkMode}
+              onToggleTheme={toggleTheme}
+            />
           </div>
           <ScriptureReaderTopBar
             darkMode={darkMode}
