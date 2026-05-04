@@ -10,8 +10,9 @@ type ScriptureSearchInputProps = {
 const ScriptureSearchInput = ({ darkMode, onChange, responsiveIcon = false, value }: ScriptureSearchInputProps) => (
   <label className="scripture-search-control group relative block">
     <Search
-      className={`scripture-search-icon pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 transition-all ${darkMode ? 'text-stone-100' : 'text-zinc-900'}`}
-      size={17}
+      className={`scripture-search-icon pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 transition-all ${darkMode ? 'text-stone-100' : 'text-zinc-900'}`}
+      size={19}
+      strokeWidth={2.35}
     />
     <input
       value={value}

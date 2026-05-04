@@ -109,7 +109,7 @@ const ScriptureVersionSelect = ({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-black shadow-lg backdrop-blur-xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+        className={`scripture-version-trigger inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-black shadow-lg backdrop-blur-xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
           darkMode
             ? 'border-white/15 bg-white/10 text-stone-100 shadow-black/25 focus:ring-offset-black hover:bg-white/15'
             : 'border-black/10 bg-white/70 text-zinc-900 shadow-zinc-900/15 focus:ring-offset-[#f8f5ef] hover:bg-white/85'
