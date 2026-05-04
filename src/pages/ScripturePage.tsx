@@ -64,8 +64,6 @@ const ScripturePage = () => {
           <ScriptureReaderTopBar
             darkMode={darkMode}
             searchTerm={searchTerm}
-            selectedBook={selectedBook}
-            selectedChapter={selectedChapter}
             selectedVersionId={selectedVersionId}
             versions={versions}
             onSearchChange={setSearchTerm}
