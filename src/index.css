@@ -46,6 +46,87 @@ button {
   color: #fff;
 }
 
+@media (max-width: 1023px) {
+  .scripture-reader-topbar {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .scripture-mobile-controls {
+    max-width: min(100%, 18rem);
+    margin-left: auto;
+    transition:
+      max-width 300ms ease,
+      transform 300ms ease;
+  }
+
+  .site-nav-compact .scripture-reader-topbar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 50;
+    max-height: none;
+    overflow: visible;
+    padding: 0.75rem 4.75rem 0.75rem 5rem;
+    border-bottom: 0;
+    background: transparent;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.25rem);
+    animation: scripture-controls-dock 260ms ease-out 80ms forwards;
+  }
+
+  .site-nav-compact .scripture-reader-topbar > div {
+    justify-content: flex-end;
+  }
+
+  .site-nav-compact .scripture-mobile-controls {
+    max-width: 100%;
+    justify-content: flex-end;
+    margin-right: 0;
+    margin-left: auto;
+    pointer-events: auto;
+  }
+
+  .site-nav-compact .scripture-search-input {
+    width: 2.75rem;
+    cursor: pointer;
+    padding-right: 0;
+    padding-left: 0;
+    color: transparent;
+  }
+
+  .site-nav-compact .scripture-search-input::placeholder {
+    color: transparent;
+  }
+
+  .site-nav-compact .scripture-search-input:focus {
+    width: 11rem;
+    cursor: text;
+    padding-right: 1rem;
+    padding-left: 2.75rem;
+    color: inherit;
+  }
+
+  .site-nav-compact .scripture-search-control .scripture-search-icon {
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .site-nav-compact .scripture-search-control:focus-within .scripture-search-icon {
+    left: 1rem;
+    transform: translateY(-50%);
+  }
+
+  @keyframes scripture-controls-dock {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
 .project52-catchphrase {
   animation: catchphrase-enter 420ms ease both;
 }

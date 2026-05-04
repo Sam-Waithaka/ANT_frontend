@@ -63,6 +63,15 @@ const SiteNavigation = ({
     return () => window.removeEventListener('scroll', updateCompactState, true);
   }, [layout]);
 
+  useEffect(() => {
+    if (layout !== 'top') {
+      return;
+    }
+
+    document.documentElement.classList.toggle('site-nav-compact', compactSmallHeader);
+    return () => document.documentElement.classList.remove('site-nav-compact');
+  }, [compactSmallHeader, layout]);
+
   if (layout === 'side') {
     return (
       <aside
@@ -135,7 +144,7 @@ const SiteNavigation = ({
   return (
     <>
       <div
-        className={`pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition-all duration-300 ease-out lg:hidden ${
+        className={`pointer-events-none fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-4 py-3 transition-all duration-300 ease-out lg:hidden ${
           compactSmallHeader ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
         }`}
         aria-hidden={!compactSmallHeader}

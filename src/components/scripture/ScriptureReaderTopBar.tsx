@@ -20,23 +20,23 @@ const ScriptureReaderTopBar = ({
   onVersionChange,
 }: ScriptureReaderTopBarProps) => (
   <header
-    className={`shrink-0 border-b px-4 py-3 backdrop-blur-xl transition-colors duration-300 max-lg:px-16 ${
+    className={`scripture-reader-topbar shrink-0 border-b px-4 py-2 backdrop-blur-xl transition-all duration-300 ${
       darkMode ? 'border-white/10 bg-[#080808]/92' : 'border-black/10 bg-[#f8f5ef]/92'
     }`}
   >
-    <div className="flex items-center justify-end gap-3">
+    <div className="flex items-center justify-end gap-2">
       <div className="hidden w-[min(22rem,42vw)] md:block">
         <ScriptureSearchInput darkMode={darkMode} value={searchTerm} onChange={onSearchChange} />
       </div>
 
-      <div className="flex min-w-0 flex-1 justify-end gap-2 md:hidden">
+      <div className="scripture-mobile-controls flex min-w-0 flex-1 justify-end gap-2 md:hidden">
         <ScriptureVersionSelect
           darkMode={darkMode}
           selectedVersionId={selectedVersionId}
           versions={versions}
           onChange={onVersionChange}
         />
-        <div className="min-w-0 max-w-[14rem] flex-1 max-[420px]:flex-none">
+        <div className="min-w-0 flex-none">
           <ScriptureSearchInput
             darkMode={darkMode}
             responsiveIcon
