@@ -3,6 +3,7 @@ import ScriptureSearchInput from './ScriptureSearchInput';
 import ScriptureVersionSelect from './ScriptureVersionSelect';
 
 type ScriptureReaderTopBarProps = {
+  compact: boolean;
   darkMode: boolean;
   searchTerm: string;
   selectedVersionId: string;
@@ -12,6 +13,7 @@ type ScriptureReaderTopBarProps = {
 };
 
 const ScriptureReaderTopBar = ({
+  compact,
   darkMode,
   searchTerm,
   selectedVersionId,
@@ -20,7 +22,9 @@ const ScriptureReaderTopBar = ({
   onVersionChange,
 }: ScriptureReaderTopBarProps) => (
   <header
-    className={`shrink-0 border-b px-4 py-2 backdrop-blur-xl transition-all duration-300 ${
+    className={`shrink-0 overflow-hidden border-b px-4 backdrop-blur-xl transition-all duration-300 ${
+      compact ? 'max-h-0 border-b-0 py-0 opacity-0' : 'max-h-20 py-2 opacity-100'
+    } ${
       darkMode ? 'border-white/10 bg-[#080808]/92' : 'border-black/10 bg-[#f8f5ef]/92'
     }`}
   >

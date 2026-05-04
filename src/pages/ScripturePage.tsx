@@ -65,6 +65,7 @@ const ScripturePage = () => {
             />
           </div>
           <ScriptureReaderTopBar
+            compact={compactHeader}
             darkMode={darkMode}
             searchTerm={searchTerm}
             selectedVersionId={selectedVersionId}
