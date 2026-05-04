@@ -20,10 +20,41 @@ export type BibleVerse = {
   id: string;
   number: number;
   text: string;
+  isPresent?: boolean;
+  footnotes?: unknown[];
 };
 
 export type ScriptureSelection = {
   versionId: string;
   bookId: string;
   chapterId: string;
+};
+
+export type BibleResourceType =
+  | 'preface'
+  | 'copyright'
+  | 'study_help'
+  | 'translation_review'
+  | 'glossary'
+  | 'front_matter'
+  | 'other';
+
+export type BibleMarkerStatus = 'omitted' | 'empty_marker' | 'source_unavailable';
+
+export type BibleNoteType = 'footnote' | 'cross_reference' | 'textual_variant';
+
+export type BibleToolRecord = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  body?: string;
+  meta?: string;
+};
+
+export type VerseLookupResult = {
+  reference: string;
+  text: string;
+  isPresent: boolean;
+  display?: string;
+  footnotes?: unknown[];
 };

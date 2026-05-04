@@ -1,4 +1,14 @@
-import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
+import type {
+  BibleBook,
+  BibleChapter,
+  BibleMarkerStatus,
+  BibleNoteType,
+  BibleResourceType,
+  BibleToolRecord,
+  BibleVerse,
+  BibleVersion,
+  VerseLookupResult,
+} from '../types/scripture';
 
 const API_BASE_URL = (
   import.meta.env.VITE_SCRIPTURE_API_BASE_URL ?? (import.meta.env.DEV ? '' : 'https://api.aicnjoro.org')
@@ -90,6 +100,39 @@ const fetchFirstCollection = async (paths: string[]) => {
 
 const encode = (value: string | number) => encodeURIComponent(String(value));
 
+const toQueryString = (params: Record<string, string | number | boolean | undefined>) => {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') {
+      search.set(key, String(value));
+    }
+  });
+
+  const query = search.toString();
+  return query ? `?${query}` : '';
+};
+
+const toToolRecord = (item: unknown, index: number): BibleToolRecord => {
+  const record = asRecord(item);
+  const title = readString(
+    record,
+    ['reference', 'title', 'heading', 'term', 'name', 'type', 'status', 'book', 'verse_reference'],
+    `Result ${index + 1}`,
+  );
+  const subtitle = readString(record, ['subtitle', 'ref', 'location', 'language', 'note_type', 'resource_type']);
+  const body = readString(record, ['text', 'content', 'body', 'definition', 'note', 'description', 'license_notes']);
+  const meta = readString(record, ['version', 'version_abbr', 'source', 'license_type', 'display']);
+
+  return {
+    id: readString(record, ['id', '_id', 'uuid'], `${title}-${index}`),
+    title,
+    subtitle: subtitle || undefined,
+    body: body || undefined,
+    meta: meta || undefined,
+  };
+};
+
 export const getBibleVersions = async (): Promise<BibleVersion[]> => {
   const versions = await fetchFirstCollection(['/v1/bible/versions/']);
 
@@ -155,6 +198,91 @@ export const getBibleVerses = async (
       id: readString(record, ['id', '_id', 'uuid', 'verseId'], `verse-${index + 1}`),
       number: readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1),
       text: readString(record, ['text', 'content', 'verseText', 'body']),
+      isPresent: record.is_present === undefined ? true : Boolean(record.is_present),
+      footnotes: Array.isArray(record.footnotes) ? record.footnotes : undefined,
     };
   });
+};
+
+export const getBibleResources = async (
+  versionId: string,
+  type?: BibleResourceType,
+): Promise<BibleToolRecord[]> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/resources/${toQueryString({ type })}`);
+  return unwrapCollection(payload).map(toToolRecord);
+};
+
+export const getBibleGlossary = async (versionId: string, query?: string): Promise<BibleToolRecord[]> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/glossary/${toQueryString({ q: query })}`);
+  return unwrapCollection(payload).map(toToolRecord);
+};
+
+export const getBibleMarkers = async (
+  versionId: string,
+  status?: BibleMarkerStatus,
+): Promise<BibleToolRecord[]> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/markers/${toQueryString({ status })}`);
+  return unwrapCollection(payload).map(toToolRecord);
+};
+
+export const getBibleNotes = async (versionId: string, type?: BibleNoteType): Promise<BibleToolRecord[]> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/notes/${toQueryString({ type })}`);
+  return unwrapCollection(payload).map(toToolRecord);
+};
+
+export const lookupBibleVerse = async (
+  versionId: string,
+  bookId: string,
+  chapter: number,
+  verse: number,
+): Promise<VerseLookupResult> => {
+  const payload = await fetchJson(
+    `/v1/bible/versions/${encode(versionId)}/verses/${encode(bookId)}/${encode(chapter)}/${encode(verse)}/`,
+  );
+  const record = asRecord(payload);
+
+  return {
+    reference: `${bookId} ${chapter}:${verse}`,
+    text: readString(record, ['text', 'content', 'verseText', 'body']),
+    isPresent: record.is_present === undefined ? true : Boolean(record.is_present),
+    display: readString(record, ['display']) || undefined,
+    footnotes: Array.isArray(record.footnotes) ? record.footnotes : undefined,
+  };
+};
+
+export const compareBibleChapter = async (
+  versions: string[],
+  bookId: string,
+  chapter: number,
+): Promise<BibleToolRecord[]> => {
+  const payload = await fetchJson(
+    `/v1/bible/compare/${toQueryString({ versions: versions.join(','), book: bookId, chapter })}`,
+  );
+  const collection = unwrapCollection(payload);
+
+  if (collection.length > 0) {
+    return collection.map(toToolRecord);
+  }
+
+  return Object.entries(asRecord(payload)).map(([version, value], index) => {
+    const record = asRecord(value);
+    return {
+      id: `${version}-${index}`,
+      title: version,
+      body: readString(record, ['text', 'content', 'body']) || JSON.stringify(value),
+    };
+  });
+};
+
+export const searchBible = async (params: {
+  book?: string;
+  language?: string;
+  language_code?: string;
+  q: string;
+  testament?: string;
+  version?: string;
+  versions?: string;
+}): Promise<BibleToolRecord[]> => {
+  const payload = await fetchJson(`/v1/bible/search/${toQueryString(params)}`);
+  return unwrapCollection(payload).map(toToolRecord);
 };

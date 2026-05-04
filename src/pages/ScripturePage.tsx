@@ -66,7 +66,7 @@ const ScripturePage = () => {
             onVersionChange={setSelectedVersionId}
           />
 
-          <div className="flex min-w-0">
+          <div className="flex min-w-0 flex-col xl:flex-row">
             <button
               type="button"
               onClick={goToPreviousChapter}
@@ -105,6 +105,8 @@ const ScripturePage = () => {
               darkMode={darkMode}
               selectedBook={selectedBook}
               selectedChapter={selectedChapter}
+              selectedVersion={selectedVersion}
+              versions={versions}
               onNext={goToNextChapter}
               onPrevious={goToPreviousChapter}
             />

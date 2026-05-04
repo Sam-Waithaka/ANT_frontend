@@ -1,5 +1,6 @@
 import { BookOpen, CalendarDays, CheckCircle2 } from 'lucide-react';
-import type { BibleBook, BibleChapter } from '../../types/scripture';
+import type { BibleBook, BibleChapter, BibleVersion } from '../../types/scripture';
+import BibleToolsPanel from './BibleToolsPanel';
 import ChapterNavigation from './ChapterNavigation';
 
 type ScriptureSidePanelProps = {
@@ -8,6 +9,8 @@ type ScriptureSidePanelProps = {
   darkMode: boolean;
   selectedBook?: BibleBook;
   selectedChapter?: BibleChapter;
+  selectedVersion?: BibleVersion;
+  versions: BibleVersion[];
   onNext: () => void;
   onPrevious: () => void;
 };
@@ -18,10 +21,20 @@ const ScriptureSidePanel = ({
   darkMode,
   selectedBook,
   selectedChapter,
+  selectedVersion,
+  versions,
   onNext,
   onPrevious,
 }: ScriptureSidePanelProps) => (
-  <aside className="hidden w-72 shrink-0 border-l border-black/10 p-4 dark:border-white/10 xl:grid xl:content-start xl:gap-4">
+  <aside className="w-full shrink-0 border-t border-black/10 p-4 dark:border-white/10 xl:w-80 xl:border-l xl:border-t-0">
+    <div className="grid content-start gap-4">
+    <BibleToolsPanel
+      darkMode={darkMode}
+      selectedBook={selectedBook}
+      selectedChapter={selectedChapter}
+      selectedVersion={selectedVersion}
+      versions={versions}
+    />
     <section
       className={`rounded-[2rem] border p-5 shadow-sm ${
         darkMode ? 'border-white/10 bg-white/[0.055]' : 'border-black/10 bg-white/80'
@@ -80,6 +93,7 @@ const ScriptureSidePanel = ({
         Open Project 52
       </a>
     </section>
+    </div>
   </aside>
 );
 
