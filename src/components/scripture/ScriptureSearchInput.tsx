@@ -8,8 +8,13 @@ type ScriptureSearchInputProps = {
 };
 
 const ScriptureSearchInput = ({ darkMode, onChange, responsiveIcon = false, value }: ScriptureSearchInputProps) => (
-  <label className="relative block">
-    <Search className={`pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 ${darkMode ? 'text-stone-400' : 'text-zinc-500'}`} size={17} />
+  <label className="group relative block">
+    <Search
+      className={`pointer-events-none absolute top-1/2 -translate-y-1/2 transition-all ${
+        responsiveIcon ? 'max-[420px]:left-1/2 max-[420px]:-translate-x-1/2 max-[420px]:group-focus-within:left-4 max-[420px]:group-focus-within:translate-x-0 min-[421px]:left-4' : 'left-4'
+      } ${darkMode ? 'text-stone-400' : 'text-zinc-500'}`}
+      size={17}
+    />
     <input
       value={value}
       onChange={(event) => onChange(event.target.value)}

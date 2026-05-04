@@ -135,12 +135,12 @@ const SiteNavigation = ({
   return (
     <>
       {compactSmallHeader ? (
-        <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition lg:hidden">
+        <div className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-4 py-3 transition lg:hidden">
           <a
             href={churchWebsiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700"
+            className="pointer-events-auto rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700"
             aria-label="Open the AIC Njoro Town website"
           >
             <img
@@ -154,7 +154,7 @@ const SiteNavigation = ({
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
-            className={`grid size-11 shrink-0 place-items-center rounded-full border shadow-lg backdrop-blur-xl transition focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+            className={`pointer-events-auto grid size-11 shrink-0 place-items-center rounded-full border shadow-lg backdrop-blur-xl transition focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
               darkMode
                 ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black'
                 : 'border-black/10 bg-white/80 text-zinc-900 focus:ring-offset-[#f8f5ef]'

@@ -20,7 +20,7 @@ const ScriptureReaderTopBar = ({
   onVersionChange,
 }: ScriptureReaderTopBarProps) => (
   <header
-    className={`shrink-0 border-b px-4 py-3 backdrop-blur-xl transition-colors duration-300 ${
+    className={`shrink-0 border-b px-4 py-3 backdrop-blur-xl transition-colors duration-300 max-lg:px-16 ${
       darkMode ? 'border-white/10 bg-[#080808]/92' : 'border-black/10 bg-[#f8f5ef]/92'
     }`}
   >
