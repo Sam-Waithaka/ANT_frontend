@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import type { BibleBook, BibleChapter, BibleVersion } from '../../types/scripture';
+import type { BibleBook, BibleChapter, BibleVersion, BookFilter } from '../../types/scripture';
 
 type ScriptureFloatingControlsProps = {
   books: BibleBook[];
@@ -20,6 +20,12 @@ type ScriptureFloatingControlsProps = {
 };
 
 type OpenMenu = 'version' | 'book' | 'chapter' | null;
+
+const bookFilters: Array<[BookFilter, string]> = [
+  ['both', 'Both'],
+  ['old', 'OT'],
+  ['new', 'NT'],
+];
 
 const pillBase =
   'relative inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-black shadow-sm transition focus:outline-none focus:ring-2 focus:ring-red-700';
@@ -44,9 +50,11 @@ const ScriptureFloatingControls = ({
   onVersionChange,
 }: ScriptureFloatingControlsProps) => {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [bookFilter, setBookFilter] = useState<BookFilter>('both');
   const selectedVersion = versions.find((version) => version.id === selectedVersionId);
   const selectedBook = books.find((book) => book.id === selectedBookId);
   const selectedChapter = chapters.find((chapter) => chapter.id === selectedChapterId);
+  const filteredBooks = books.filter((book) => bookFilter === 'both' || book.testament === bookFilter);
   const surfaceClass = darkMode
     ? 'border-white/10 bg-[#111111]/95 text-stone-100 shadow-black/40'
     : 'border-black/10 bg-white/95 text-zinc-950 shadow-zinc-900/15';
@@ -122,8 +130,26 @@ const ScriptureFloatingControls = ({
             {openMenu === 'book' && (
               <div className={`${menuBase} ${surfaceClass} left-1/2 w-72 -translate-x-1/2 sm:w-96`}>
                 <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Book</p>
+                <div className={`mb-3 grid grid-cols-3 gap-1 rounded-full border p-1 ${darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-zinc-50'}`}>
+                  {bookFilters.map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setBookFilter(value)}
+                      className={`min-h-9 rounded-full px-3 text-xs font-black transition ${
+                        bookFilter === value
+                          ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                          : darkMode
+                            ? 'text-stone-300 hover:bg-white/10'
+                            : 'text-zinc-600 hover:bg-white'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <div className="grid max-h-80 grid-cols-2 gap-1 overflow-y-auto sm:grid-cols-3">
-                  {books.map((book) => (
+                  {filteredBooks.map((book) => (
                     <button
                       key={book.id}
                       type="button"

@@ -21,7 +21,15 @@ export type BibleVerse = {
   number: number;
   text: string;
   isPresent?: boolean;
-  footnotes?: unknown[];
+  notes?: BibleChapterNote[];
+};
+
+export type BibleChapterNote = {
+  id: string;
+  verseNumber?: number;
+  type: BibleNoteType;
+  text: string;
+  reference?: string;
 };
 
 export type ScriptureSelection = {
@@ -42,6 +50,7 @@ export type BibleResourceType =
 export type BibleMarkerStatus = 'omitted' | 'empty_marker' | 'source_unavailable';
 
 export type BibleNoteType = 'footnote' | 'cross_reference' | 'textual_variant';
+export type BookFilter = 'both' | 'old' | 'new';
 
 export type BibleToolRecord = {
   id: string;

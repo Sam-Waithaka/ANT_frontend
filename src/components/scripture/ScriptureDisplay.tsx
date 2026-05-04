@@ -23,8 +23,23 @@ const ScriptureDisplay = ({
   verses,
 }: ScriptureDisplayProps) => {
   const query = searchTerm.trim().toLowerCase();
-  const filteredVerses = query ? verses.filter((verse) => verse.text.toLowerCase().includes(query)) : verses;
+  const scriptureVerses = verses.filter((verse) => verse.number > 0);
+  const filteredVerses = query ? scriptureVerses.filter((verse) => verse.text.toLowerCase().includes(query)) : scriptureVerses;
   const passageTitle = selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture';
+  const footnotes = scriptureVerses.flatMap((verse) =>
+    (verse.notes || [])
+      .filter((note) => note.type === 'footnote')
+      .map((note) => ({ ...note, verseNumber: note.verseNumber || verse.number })),
+  ).filter((note, index, notes) =>
+    notes.findIndex((candidate) =>
+      candidate.verseNumber === note.verseNumber &&
+      candidate.text === note.text &&
+      candidate.reference === note.reference
+    ) === index,
+  );
+  const licenseNote = verses
+    .flatMap((verse) => verse.notes || [])
+    .find((note) => note.reference === 'license');
 
   return (
     <article className={`min-h-0 min-w-0 flex-1 overflow-y-auto px-5 py-8 sm:px-10 lg:px-16 ${darkMode ? 'bg-[#080808]' : 'bg-[#f8f5ef]'}`}>
@@ -62,11 +77,30 @@ const ScriptureDisplay = ({
             {filteredVerses.map((verse) => (
               <p key={verse.id} className="grid grid-cols-[2rem_1fr] gap-4 font-serif text-xl leading-9 text-zinc-900 dark:text-stone-100 sm:text-2xl sm:leading-10">
                 <span className="pt-1 font-sans text-sm font-bold text-zinc-500 dark:text-stone-400">{verse.number}</span>
-                <span>
-                  {verse.number === 16 ? <span className="text-red-800 dark:text-red-200">{verse.text}</span> : verse.text}
-                </span>
+                <span>{verse.text}</span>
               </p>
             ))}
+            {footnotes.length > 0 && !query && (
+              <section className={`mt-8 border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Footnotes</p>
+                <div className="mt-4 grid gap-3">
+                  {footnotes.map((note) => (
+                    <p key={note.id} className={`text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
+                      <span className="font-black text-red-900 dark:text-red-200">{note.verseNumber}</span>
+                      <span className="ml-2">{note.text}</span>
+                    </p>
+                  ))}
+                </div>
+              </section>
+            )}
+            {licenseNote && !query && (
+              <section className={`border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">License Notes</p>
+                <p className={`mt-4 whitespace-pre-line text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+                  {licenseNote.text}
+                </p>
+              </section>
+            )}
           </div>
         )}
       </div>

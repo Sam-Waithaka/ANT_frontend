@@ -35,6 +35,11 @@ const ScripturePage = () => {
   } = useScriptureReader();
 
   const isLoading = loading.versions || loading.books || loading.chapters || loading.verses;
+  const crossReferences = verses.flatMap((verse) =>
+    (verse.notes || [])
+      .filter((note) => note.type === 'cross_reference')
+      .map((note) => ({ ...note, verseNumber: note.verseNumber || verse.number })),
+  );
 
   return (
     <div className={`h-screen overflow-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
@@ -75,6 +80,7 @@ const ScripturePage = () => {
               selectedChapter={selectedChapter}
               selectedVersion={selectedVersion}
               versions={versions}
+              crossReferences={crossReferences}
               onNext={goToNextChapter}
               onPrevious={goToPreviousChapter}
             />
