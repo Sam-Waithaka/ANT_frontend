@@ -116,6 +116,7 @@ button {
     left: 50%;
     width: 1.25rem;
     height: 1.25rem;
+    color: rgb(24 24 27);
     transform: translate(-50%, -50%) !important;
   }
 
@@ -128,19 +129,22 @@ button {
 
   .site-nav-compact .scripture-version-trigger,
   .site-nav-compact .scripture-search-input {
-    background: rgb(255 255 255 / 0.92);
-    box-shadow:
-      0 14px 30px rgb(24 24 27 / 0.18),
-      0 0 0 1px rgb(0 0 0 / 0.04);
+    border-color: rgb(0 0 0 / 0.1);
+    background: #ffffff;
+    color: rgb(24 24 27);
+    box-shadow: 0 10px 22px rgb(24 24 27 / 0.12);
   }
 
   :root.dark.site-nav-compact .scripture-version-trigger,
   :root.dark.site-nav-compact .scripture-search-input {
-    background: rgb(23 23 23 / 0.94);
     border-color: rgb(255 255 255 / 0.16);
-    box-shadow:
-      0 14px 30px rgb(0 0 0 / 0.38),
-      0 0 0 1px rgb(255 255 255 / 0.04);
+    background: rgb(9 9 11);
+    color: rgb(245 245 244);
+    box-shadow: 0 10px 22px rgb(0 0 0 / 0.32);
+  }
+
+  :root.dark.site-nav-compact .scripture-search-control .scripture-search-icon {
+    color: rgb(245 245 244);
   }
 
   @keyframes scripture-controls-dock {
