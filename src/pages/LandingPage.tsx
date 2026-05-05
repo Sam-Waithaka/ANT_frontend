@@ -26,7 +26,7 @@ const LandingPage = () => {
           <div className={`mx-auto mb-8 inline-flex items-center rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.16em] ${darkMode ? 'border-red-300/20 bg-red-950/30 text-red-100' : 'border-red-900/15 bg-white/70 text-red-950'}`}>
             Full Website Coming soon
           </div>
-          <h1 className="text-5xl font-extrabold leading-tight tracking-normal sm:text-7xl lg:text-8xl">AIC Njoro Town</h1>
+          <h1 className="text-5xl font-extrabold leading-tight tracking-normal sm:text-7xl lg:text-8xl">A.I.C Njoro Town</h1>
           <p className={`mx-auto mt-8 max-w-2xl font-serif text-xl leading-8 sm:text-2xl ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
             Oh Come Let Us Worship — Psalm 95:6
           </p>

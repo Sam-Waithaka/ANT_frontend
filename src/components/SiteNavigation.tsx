@@ -190,7 +190,7 @@ const SiteNavigation = ({
             }`}
           />
           <div className="min-w-0">
-            <p className="truncate text-lg font-extrabold leading-tight sm:text-xl">AIC Njoro Town</p>
+            <p className="truncate text-lg font-extrabold leading-tight sm:text-xl">A.I.C Njoro Town</p>
             <p className={`truncate font-serif text-xs sm:text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
               Oh Come Let Us Worship - Psalm 95:6
             </p>

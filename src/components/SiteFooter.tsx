@@ -109,7 +109,7 @@ const SiteFooter = ({ darkMode }: SiteFooterProps) => {
                 </p>
 
                 <p className="mt-2 max-w-xl leading-6">
-                  Serving AIC Njoro Town through media, worship support, livestreams,
+                  Serving A.I.C Njoro Town through media, worship support, livestreams,
                   sermon archives, and digital communication. To God be the Glory. Amen.
                 </p>
 

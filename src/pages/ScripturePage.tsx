@@ -6,7 +6,6 @@ import ScriptureFloatingControls from '../components/scripture/ScriptureFloating
 import ScriptureMobilePanels from '../components/scripture/ScriptureMobilePanels';
 import ScriptureReaderTopBar from '../components/scripture/ScriptureReaderTopBar';
 import ScriptureSidePanel from '../components/scripture/ScriptureSidePanel';
-import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import SiteSideNav from '../components/SiteSideNav';
 import { useScriptureChapterMeta } from '../hooks/useScriptureChapterMeta';
@@ -96,7 +95,6 @@ const ScripturePage = () => {
               selectedChapter={selectedChapter}
               selectedVersion={selectedVersion}
               verses={verses}
-              footer={<SiteFooter darkMode={darkMode} />}
             />
             <ScriptureSidePanel
               books={books}
