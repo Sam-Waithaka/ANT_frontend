@@ -84,7 +84,7 @@ const ScriptureFloatingControls = ({
   }, [openMenu]);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 px-4 md:left-44 md:right-0 md:px-6 lg:left-[23rem] xl:bottom-6 xl:right-80">
+    <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 px-4 md:left-44 md:right-0 md:px-6 lg:left-[23rem] xl:bottom-6 xl:right-96 2xl:right-[26rem]">
       <div
         ref={controlsRef}
         className={`pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl ${controlSurfaceClass}`}

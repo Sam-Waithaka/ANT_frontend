@@ -44,9 +44,9 @@ const resourceTypes: BibleResourceType[] = ['preface', 'copyright', 'study_help'
 const markerStatuses: BibleMarkerStatus[] = ['omitted', 'empty_marker', 'source_unavailable'];
 const noteTypes: BibleNoteType[] = ['footnote', 'cross_reference', 'textual_variant'];
 const inputClass =
-  'h-11 rounded-full border border-black/10 bg-white px-4 text-sm font-bold text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-red-800 dark:border-white/15 dark:bg-white/10 dark:text-stone-100 dark:placeholder:text-stone-500';
+  'h-11 min-w-0 w-full rounded-full border border-black/10 bg-white px-4 text-sm font-bold text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-red-800 dark:border-white/15 dark:bg-white/10 dark:text-stone-100 dark:placeholder:text-stone-500';
 const compareSelectClass =
-  'h-11 rounded-full border border-black/10 bg-[#fffaf0] px-4 text-sm font-bold text-zinc-700 shadow-sm outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-700 dark:border-white/15 dark:bg-white/10 dark:text-stone-100';
+  'h-11 min-w-0 w-full rounded-full border border-black/10 bg-[#fffaf0] px-4 text-sm font-bold text-zinc-700 shadow-sm outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-700 dark:border-white/15 dark:bg-white/10 dark:text-stone-100';
 
 const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selectedVersion, versions }: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
@@ -210,7 +210,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
       <section
         className={`rounded-[2rem] border p-4 shadow-sm ${
           darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
-        }`}
+        } min-w-0 overflow-hidden`}
       >
       <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Bible tools</p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -261,7 +261,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
 
         {activeTool === 'compare' && (
           <div className="grid gap-3">
-            <div className="grid gap-2 sm:grid-cols-[1fr_7rem]">
+            <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]">
               <select
                 value={compareBookId}
                 onChange={(event) => setCompareBookId(event.target.value)}
@@ -286,7 +286,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
 
             <div>
               <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Versions</p>
-              <div className={`max-h-40 overflow-y-auto rounded-2xl border p-2 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
+              <div className={`max-h-40 overflow-y-auto overflow-x-hidden rounded-2xl border p-2 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
                 <div className="grid gap-1">
                   {versions.map((version) => {
                     const checked = selectedCompareVersions.includes(version.id);
@@ -294,7 +294,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
                     return (
                       <label
                         key={version.id}
-                        className={`flex min-h-10 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
+                        className={`flex min-h-10 min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
                           checked
                             ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
                             : darkMode
@@ -308,8 +308,8 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
                           type="checkbox"
                           className="size-4 accent-red-800"
                         />
-                        <span className="min-w-12 font-black">{version.abbreviation || version.id}</span>
-                        <span className={`text-xs ${checked ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>{version.name}</span>
+                        <span className="min-w-12 shrink-0 font-black">{version.abbreviation || version.id}</span>
+                        <span className={`min-w-0 truncate text-xs ${checked ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>{version.name}</span>
                       </label>
                     );
                   })}
