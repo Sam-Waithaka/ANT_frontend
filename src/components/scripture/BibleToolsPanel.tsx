@@ -6,7 +6,6 @@ import {
   getBibleMarkers,
   getBibleNotes,
   getBibleResources,
-  lookupBibleVerse,
 } from '../../services/scriptureApi';
 import type {
   BibleBook,
@@ -17,11 +16,10 @@ import type {
   BibleResourceType,
   BibleToolRecord,
   BibleVersion,
-  VerseLookupResult,
 } from '../../types/scripture';
 import { ScriptureBookPicker, ScriptureChapterPicker } from './ScriptureReferencePickers';
 
-type ToolKey = 'verse' | 'compare' | 'resources' | 'glossary' | 'markers' | 'notes';
+type ToolKey = 'compare' | 'resources' | 'glossary' | 'markers' | 'notes';
 type ComparePicker = 'book' | 'chapter' | null;
 
 type BibleToolsPanelProps = {
@@ -34,7 +32,6 @@ type BibleToolsPanelProps = {
 };
 
 const tools: Array<[ToolKey, string]> = [
-  ['verse', 'Verse'],
   ['compare', 'Compare'],
   ['resources', 'Resources'],
   ['glossary', 'Glossary'],
@@ -56,14 +53,12 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
   const [openComparePicker, setOpenComparePicker] = useState<ComparePicker>(null);
   const [compareVersionIds, setCompareVersionIds] = useState<string[]>([]);
   const [query, setQuery] = useState('love');
-  const [verseNumber, setVerseNumber] = useState(16);
   const [resourceType, setResourceType] = useState<BibleResourceType | ''>('');
   const [markerStatus, setMarkerStatus] = useState<BibleMarkerStatus | ''>('');
   const [noteType, setNoteType] = useState<BibleNoteType | ''>('');
   const [records, setRecords] = useState<BibleToolRecord[]>([]);
   const [comparison, setComparison] = useState<BibleComparisonChapter | null>(null);
   const [comparisonOpen, setComparisonOpen] = useState(false);
-  const [verseResult, setVerseResult] = useState<VerseLookupResult | null>(null);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -158,13 +153,8 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
     setStatus('');
     setRecords([]);
     setComparison(null);
-    setVerseResult(null);
 
     try {
-      if (activeTool === 'verse') {
-        setVerseResult(await lookupBibleVerse(versionId, bookId, chapterNumber, verseNumber));
-      }
-
       if (activeTool === 'compare') {
         if (selectedCompareVersions.length < 2) {
           setStatus('Choose at least two Bible versions to compare.');
@@ -226,7 +216,6 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
               setRecords([]);
               setComparison(null);
               setComparisonOpen(false);
-              setVerseResult(null);
             }}
             className={`rounded-full px-3 py-2 text-xs font-black transition ${
               activeTool === key
@@ -247,16 +236,6 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Glossary term"
-            className={inputClass}
-          />
-        )}
-
-        {activeTool === 'verse' && (
-          <input
-            value={verseNumber}
-            min={1}
-            onChange={(event) => setVerseNumber(Number(event.target.value))}
-            type="number"
             className={inputClass}
           />
         )}
@@ -393,15 +372,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
             </button>
           </div>
         ) : null}
-        {verseResult ? (
-          <div>
-            <p className="text-sm font-black">{verseResult.reference}</p>
-            <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
-              {verseResult.isPresent ? verseResult.text : verseResult.display || 'This verse is omitted in this version.'}
-            </p>
-          </div>
-        ) : null}
-        {!status && !comparison && !verseResult && records.length === 0 ? (
+        {!status && !comparison && records.length === 0 ? (
           <p className={`px-1 text-sm leading-6 ${darkMode ? 'text-stone-500' : 'text-zinc-400'}`}>
             Run a tool to view API results here.
           </p>
