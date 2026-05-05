@@ -1,8 +1,10 @@
 import { CalendarDays, ArrowRight } from 'lucide-react';
 import type { BibleBook } from '../../types/scripture';
+import type { Project52ReadingBlock } from '../../types/project52';
 import { useProject52 } from '../../contexts/Project52Context';
 import RotatingCatchphrase from '../project52/RotatingCatchphrase';
 import { formatReadingBlock } from '../../utils/project52Schedule';
+import Project52ProgressBar from '../project52/Project52ProgressBar';
 
 type ScriptureProject52CardProps = {
   darkMode: boolean;
@@ -16,7 +18,7 @@ const ScriptureProject52Card = ({ darkMode, books, onBookChange, onChapterChange
 
   const todayItems = weeks.find((w) => w.week === currentWeek)?.items[readingTarget.dayIndex];
 
-  const navigateToReading = (blocks: any[]) => {
+  const navigateToReading = (blocks: Project52ReadingBlock[]) => {
     if (!blocks || blocks.length === 0) return;
     const block = blocks[0];
     const match = books.find(b => b.name === block.book);
@@ -36,16 +38,26 @@ const ScriptureProject52Card = ({ darkMode, books, onBookChange, onChapterChange
         }`}
     >
       <div className="flex items-center gap-3">
-        <span className={`grid size-11 place-items-center rounded-full ${darkMode ? 'bg-red-950/40 text-red-100' : 'bg-red-900/10 text-red-900'}`}>
+        <span className={`grid size-11 place-items-center rounded-full shrink-0 ${darkMode ? 'bg-red-950/40 text-red-100' : 'bg-red-900/10 text-red-900'}`}>
           <CalendarDays size={20} />
         </span>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Project 52</p>
-          <h2 className="mt-1 text-xl font-black">Continue the journey</h2>
+          <h2 className="mt-1 text-xl font-black">
+            {readingTarget.isWeekendCarryover ? "Friday's Catch-Up" : `${readingTarget.day}'s Reading`}
+          </h2>
         </div>
       </div>
 
-      <div className="mt-4">
+      <Project52ProgressBar currentWeek={currentWeek} darkMode={darkMode} className="mt-5" />
+
+      {readingTarget.isWeekendCarryover && (
+        <p className={`mt-5 text-sm font-medium ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+          The plan pauses for the weekend. Catch up on the week's goals or take time to meditate on Friday's readings!
+        </p>
+      )}
+
+      <div className={`mt-5 ${readingTarget.isWeekendCarryover ? 'pt-5 border-t border-red-900/10 dark:border-white/10' : ''}`}>
         <RotatingCatchphrase darkMode={darkMode} />
       </div>
 

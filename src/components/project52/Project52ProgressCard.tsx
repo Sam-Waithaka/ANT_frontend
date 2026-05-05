@@ -1,5 +1,6 @@
 import { BookMarked, CheckCircle2 } from 'lucide-react';
 import type { ReadingTarget } from '../../types/project52';
+import Project52ProgressBar from './Project52ProgressBar';
 
 type Project52ProgressCardProps = {
   currentWeek: number;
@@ -15,9 +16,8 @@ const Project52ProgressCard = ({
   yearProgress,
 }: Project52ProgressCardProps) => (
   <aside
-    className={`rounded-[2rem] border p-5 shadow-2xl sm:p-6 ${
-      darkMode ? 'border-white/10 bg-zinc-950/70 shadow-black/40' : 'border-white bg-white/85 shadow-zinc-900/10'
-    }`}
+    className={`rounded-[2rem] border p-5 shadow-2xl sm:p-6 ${darkMode ? 'border-white/10 bg-zinc-950/70 shadow-black/40' : 'border-white bg-white/85 shadow-zinc-900/10'
+      }`}
     aria-label="Reading plan progress"
   >
     <div className="flex items-center justify-between gap-4">
@@ -29,18 +29,7 @@ const Project52ProgressCard = ({
       </div>
       <BookMarked className={darkMode ? 'text-red-200' : 'text-red-800'} size={34} />
     </div>
-    <div className="mt-6">
-      <div className="mb-2 flex justify-between text-sm font-semibold">
-        <span>Week {currentWeek} of 52</span>
-        <span>{yearProgress}%</span>
-      </div>
-      <div className={`h-3 overflow-hidden rounded-full ${darkMode ? 'bg-white/10' : 'bg-zinc-200'}`}>
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-red-900 via-red-700 to-black transition-all duration-700"
-          style={{ width: `${yearProgress}%` }}
-        />
-      </div>
-    </div>
+    <Project52ProgressBar currentWeek={currentWeek} darkMode={darkMode} yearProgress={yearProgress} className="mt-6" />
     <div className={`mt-6 grid gap-3 text-sm ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
       <div className="flex items-center gap-2">
         <CheckCircle2 size={18} className={darkMode ? 'text-red-200' : 'text-red-800'} />5 readings each week
