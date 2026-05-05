@@ -366,25 +366,101 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
         )}
 
         {activeTool === 'markers' && (
-          <select
-            value={markerStatus}
-            onChange={(event) => setMarkerStatus(event.target.value as BibleMarkerStatus | '')}
-            className={inputClass}
-          >
-            <option value="">All marker statuses</option>
-            {markerStatuses.map((statusOption) => <option key={statusOption} value={statusOption}>{statusOption}</option>)}
-          </select>
+          <div className="grid gap-3">
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Marker status</p>
+                <p className={`text-[11px] font-bold ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>
+                  {selectedVersion?.abbreviation || versionId}
+                </p>
+              </div>
+              <div className={`rounded-[1.35rem] border p-2 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setMarkerStatus('')}
+                    className={`min-h-10 rounded-full px-3 text-xs font-black transition ${
+                      markerStatus === ''
+                        ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                        : darkMode
+                          ? 'bg-white/10 text-stone-300 hover:bg-white/15'
+                          : 'bg-white text-zinc-700 shadow-sm hover:bg-[#ece7de]'
+                    }`}
+                  >
+                    All Statuses
+                  </button>
+                  {markerStatuses.map((statusOption) => (
+                    <button
+                      key={statusOption}
+                      type="button"
+                      onClick={() => setMarkerStatus(statusOption)}
+                      className={`min-h-10 rounded-full px-3 text-xs font-black transition ${
+                        markerStatus === statusOption
+                          ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                          : darkMode
+                            ? 'bg-white/10 text-stone-300 hover:bg-white/15'
+                            : 'bg-white text-zinc-700 shadow-sm hover:bg-[#ece7de]'
+                      }`}
+                    >
+                      {formatToolLabel(statusOption)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className={`mt-2 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+                Review omitted verses, empty markers, and source availability notes for this version.
+              </p>
+            </div>
+          </div>
         )}
 
         {activeTool === 'notes' && (
-          <select
-            value={noteType}
-            onChange={(event) => setNoteType(event.target.value as BibleNoteType | '')}
-            className={inputClass}
-          >
-            <option value="">All note types</option>
-            {noteTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-          </select>
+          <div className="grid gap-3">
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Note type</p>
+                <p className={`text-[11px] font-bold ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>
+                  {selectedVersion?.abbreviation || versionId}
+                </p>
+              </div>
+              <div className={`rounded-[1.35rem] border p-2 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setNoteType('')}
+                    className={`min-h-10 rounded-full px-3 text-xs font-black transition ${
+                      noteType === ''
+                        ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                        : darkMode
+                          ? 'bg-white/10 text-stone-300 hover:bg-white/15'
+                          : 'bg-white text-zinc-700 shadow-sm hover:bg-[#ece7de]'
+                    }`}
+                  >
+                    All Types
+                  </button>
+                  {noteTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setNoteType(type)}
+                      className={`min-h-10 rounded-full px-3 text-xs font-black transition ${
+                        noteType === type
+                          ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                          : darkMode
+                            ? 'bg-white/10 text-stone-300 hover:bg-white/15'
+                            : 'bg-white text-zinc-700 shadow-sm hover:bg-[#ece7de]'
+                      }`}
+                    >
+                      {formatToolLabel(type)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className={`mt-2 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+                Browse footnotes, cross references, and textual variant notes for the selected Bible version.
+              </p>
+            </div>
+          </div>
         )}
 
         <button
@@ -392,7 +468,17 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
           onClick={runTool}
           className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
         >
-          {loading ? 'Loading...' : activeTool === 'compare' ? 'Run comparison' : activeTool === 'resources' ? 'Load resources' : 'Run tool'}
+          {loading
+            ? 'Loading...'
+            : activeTool === 'compare'
+              ? 'Run comparison'
+              : activeTool === 'resources'
+                ? 'Load resources'
+                : activeTool === 'markers'
+                  ? 'Load markers'
+                  : activeTool === 'notes'
+                    ? 'Load notes'
+                    : 'Run tool'}
         </button>
       </div>
 
