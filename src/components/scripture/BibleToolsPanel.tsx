@@ -44,6 +44,11 @@ const markerStatuses: BibleMarkerStatus[] = ['omitted', 'empty_marker', 'source_
 const noteTypes: BibleNoteType[] = ['footnote', 'cross_reference', 'textual_variant'];
 const inputClass =
   'h-11 min-w-0 w-full rounded-full border border-black/10 bg-white px-4 text-sm font-bold text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-red-800 dark:border-white/15 dark:bg-white/10 dark:text-stone-100 dark:placeholder:text-stone-500';
+const formatToolLabel = (value: string) =>
+  value
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 
 const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selectedVersion, versions }: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
@@ -312,14 +317,52 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
         )}
 
         {activeTool === 'resources' && (
-          <select
-            value={resourceType}
-            onChange={(event) => setResourceType(event.target.value as BibleResourceType | '')}
-            className={inputClass}
-          >
-            <option value="">All resource types</option>
-            {resourceTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-          </select>
+          <div className="grid gap-3">
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Resource type</p>
+                <p className={`text-[11px] font-bold ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>
+                  {selectedVersion?.abbreviation || versionId}
+                </p>
+              </div>
+              <div className={`rounded-[1.35rem] border p-2 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setResourceType('')}
+                    className={`min-h-10 rounded-full px-3 text-xs font-black transition ${
+                      resourceType === ''
+                        ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                        : darkMode
+                          ? 'bg-white/10 text-stone-300 hover:bg-white/15'
+                          : 'bg-white text-zinc-700 shadow-sm hover:bg-[#ece7de]'
+                    }`}
+                  >
+                    All Types
+                  </button>
+                  {resourceTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setResourceType(type)}
+                      className={`min-h-10 rounded-full px-3 text-xs font-black transition ${
+                        resourceType === type
+                          ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                          : darkMode
+                            ? 'bg-white/10 text-stone-300 hover:bg-white/15'
+                            : 'bg-white text-zinc-700 shadow-sm hover:bg-[#ece7de]'
+                      }`}
+                    >
+                      {formatToolLabel(type)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className={`mt-2 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+                Load translation notes, copyright, prefaces, and study resources for the selected Bible version.
+              </p>
+            </div>
+          </div>
         )}
 
         {activeTool === 'markers' && (
@@ -349,7 +392,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
           onClick={runTool}
           className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
         >
-          {loading ? 'Loading...' : activeTool === 'compare' ? 'Run comparison' : 'Run tool'}
+          {loading ? 'Loading...' : activeTool === 'compare' ? 'Run comparison' : activeTool === 'resources' ? 'Load resources' : 'Run tool'}
         </button>
       </div>
 
@@ -381,9 +424,9 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
           {records.map((record) => (
             <article key={record.id} className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`}>
               <p className="text-sm font-black">{record.title}</p>
-              {record.subtitle ? <p className="mt-1 text-xs font-bold text-red-800 dark:text-red-200">{record.subtitle}</p> : null}
+              {record.subtitle ? <p className="mt-1 text-xs font-bold text-red-800 dark:text-red-200">{formatToolLabel(record.subtitle)}</p> : null}
               {record.body ? <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>{record.body}</p> : null}
-              {record.meta ? <p className={`mt-2 text-xs ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>{record.meta}</p> : null}
+              {record.meta ? <p className={`mt-2 text-xs ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>{formatToolLabel(record.meta)}</p> : null}
             </article>
           ))}
         </div>

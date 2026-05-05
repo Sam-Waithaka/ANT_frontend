@@ -55,8 +55,8 @@ const getNeutralPillClass = (darkMode: boolean) =>
 
 const getInactiveOptionClass = (darkMode: boolean) =>
   darkMode
-    ? 'text-stone-300 hover:bg-white/10'
-    : 'text-zinc-700 hover:bg-[#fffaf0]';
+    ? 'bg-white/10 text-stone-100 hover:bg-white/15'
+    : 'bg-[#f8f5ef] text-zinc-950 hover:bg-[#ece7de]';
 
 export const ScriptureBookPicker = ({
   books,
