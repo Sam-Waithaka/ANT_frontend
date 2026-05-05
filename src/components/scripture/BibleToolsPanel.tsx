@@ -19,8 +19,10 @@ import type {
   BibleVersion,
   VerseLookupResult,
 } from '../../types/scripture';
+import { ScriptureBookPicker, ScriptureChapterPicker } from './ScriptureReferencePickers';
 
 type ToolKey = 'verse' | 'compare' | 'resources' | 'glossary' | 'markers' | 'notes';
+type ComparePicker = 'book' | 'chapter' | null;
 
 type BibleToolsPanelProps = {
   books: BibleBook[];
@@ -45,14 +47,13 @@ const markerStatuses: BibleMarkerStatus[] = ['omitted', 'empty_marker', 'source_
 const noteTypes: BibleNoteType[] = ['footnote', 'cross_reference', 'textual_variant'];
 const inputClass =
   'h-11 min-w-0 w-full rounded-full border border-black/10 bg-white px-4 text-sm font-bold text-zinc-950 outline-none placeholder:text-zinc-500 focus:border-red-800 dark:border-white/15 dark:bg-white/10 dark:text-stone-100 dark:placeholder:text-stone-500';
-const compareSelectClass =
-  'h-11 min-w-0 w-full rounded-full border border-black/10 bg-[#fffaf0] px-4 text-sm font-bold text-zinc-700 shadow-sm outline-none transition focus:border-red-800 focus:ring-2 focus:ring-red-700 dark:border-white/15 dark:bg-white/10 dark:text-stone-100';
 
 const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selectedVersion, versions }: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
   const [compareBookId, setCompareBookId] = useState('');
   const [compareChapterNumber, setCompareChapterNumber] = useState(1);
   const [compareChapters, setCompareChapters] = useState<BibleChapter[]>([]);
+  const [openComparePicker, setOpenComparePicker] = useState<ComparePicker>(null);
   const [compareVersionIds, setCompareVersionIds] = useState<string[]>([]);
   const [query, setQuery] = useState('love');
   const [verseNumber, setVerseNumber] = useState(16);
@@ -71,6 +72,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
   const chapterNumber = selectedChapter?.number || 3;
   const selectedCompareVersions = compareVersionIds.filter((id) => versions.some((version) => version.id === id));
   const compareBook = books.find((book) => book.id === compareBookId);
+  const compareChapter = compareChapters.find((chapter) => chapter.number === compareChapterNumber);
   const comparisonHasVerses = Boolean(comparison?.verses.length);
   const getVersionLabel = (versionIdToFind: string) =>
     versions.find((version) => version.id.toLowerCase() === versionIdToFind.toLowerCase())?.abbreviation || versionIdToFind;
@@ -210,7 +212,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
       <section
         className={`rounded-[2rem] border p-4 shadow-sm ${
           darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
-        } min-w-0 overflow-hidden`}
+        } min-w-0`}
       >
       <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Bible tools</p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -262,26 +264,34 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
         {activeTool === 'compare' && (
           <div className="grid gap-3">
             <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]">
-              <select
-                value={compareBookId}
-                onChange={(event) => setCompareBookId(event.target.value)}
-                className={compareSelectClass}
-                aria-label="Comparison book"
-              >
-                {books.map((book) => (
-                  <option key={book.id} value={book.id}>{book.name}</option>
-                ))}
-              </select>
-              <select
-                value={compareChapterNumber}
-                onChange={(event) => setCompareChapterNumber(Number(event.target.value))}
-                className={compareSelectClass}
-                aria-label="Comparison chapter"
-              >
-                {compareChapters.map((chapter) => (
-                  <option key={chapter.id} value={chapter.number}>Chapter {chapter.number}</option>
-                ))}
-              </select>
+              <ScriptureBookPicker
+                books={books}
+                darkMode={darkMode}
+                fullWidth
+                gridClassName="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto"
+                menuClassName="left-0 w-[min(20rem,calc(100vw-3rem))]"
+                open={openComparePicker === 'book'}
+                placement="bottom"
+                selectedBookId={compareBookId}
+                onBookChange={setCompareBookId}
+                onOpenChange={(open) => setOpenComparePicker(open ? 'book' : null)}
+              />
+              <ScriptureChapterPicker
+                chapters={compareChapters}
+                darkMode={darkMode}
+                fullWidth
+                gridClassName="grid max-h-64 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-4"
+                labelStyle="chapter"
+                menuClassName="right-0 w-[min(18rem,calc(100vw-3rem))]"
+                open={openComparePicker === 'chapter'}
+                placement="bottom"
+                selectedChapterId={compareChapter?.id || ''}
+                onChapterChange={(chapterId) => {
+                  const nextChapter = compareChapters.find((chapter) => chapter.id === chapterId);
+                  setCompareChapterNumber(nextChapter?.number || 1);
+                }}
+                onOpenChange={(open) => setOpenComparePicker(open ? 'chapter' : null)}
+              />
             </div>
 
             <div>
