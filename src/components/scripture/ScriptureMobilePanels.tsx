@@ -11,6 +11,8 @@ type ScriptureMobilePanelsProps = {
   selectedChapter?: BibleChapter;
   selectedVersion?: BibleVersion;
   versions: BibleVersion[];
+  onBookChange: (id: string) => void;
+  onChapterChange: (id: string) => void;
 };
 
 type ActivePanel = 'tools' | 'project52' | null;
@@ -22,6 +24,8 @@ const ScriptureMobilePanels = ({
   selectedChapter,
   selectedVersion,
   versions,
+  onBookChange,
+  onChapterChange,
 }: ScriptureMobilePanelsProps) => {
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
@@ -79,9 +83,8 @@ const ScriptureMobilePanels = ({
           aria-labelledby="scripture-mobile-panel-title"
         >
           <div
-            className={`max-h-[86vh] w-full max-w-2xl overflow-hidden rounded-[2rem] border shadow-2xl ${
-              darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
-            }`}
+            className={`max-h-[86vh] w-full max-w-2xl overflow-hidden rounded-[2rem] border shadow-2xl ${darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
+              }`}
           >
             <div className={`flex items-center justify-between gap-4 border-b p-4 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
               <div>
@@ -91,9 +94,8 @@ const ScriptureMobilePanels = ({
               <button
                 type="button"
                 onClick={() => setActivePanel(null)}
-                className={`grid size-11 place-items-center rounded-full border transition ${
-                  darkMode ? 'border-white/10 bg-white/10 hover:bg-white/15' : 'border-black/10 bg-white hover:bg-[#fffaf0]'
-                }`}
+                className={`grid size-11 place-items-center rounded-full border transition ${darkMode ? 'border-white/10 bg-white/10 hover:bg-white/15' : 'border-black/10 bg-white hover:bg-[#fffaf0]'
+                  }`}
                 aria-label={`Close ${modalTitle}`}
               >
                 <X size={20} />
@@ -110,7 +112,7 @@ const ScriptureMobilePanels = ({
                   selectedVersion={selectedVersion}
                   versions={versions}
                 />
-              ) : <ScriptureProject52Card darkMode={darkMode} />}
+              ) : <ScriptureProject52Card darkMode={darkMode} books={books} onBookChange={onBookChange} onChapterChange={onChapterChange} />}
             </div>
           </div>
         </div>

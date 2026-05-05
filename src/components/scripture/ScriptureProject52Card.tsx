@@ -1,42 +1,84 @@
-import { CalendarDays, CheckCircle2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { CalendarDays, ArrowRight } from 'lucide-react';
+import type { BibleBook } from '../../types/scripture';
+import { useProject52 } from '../../contexts/Project52Context';
+import RotatingCatchphrase from '../project52/RotatingCatchphrase';
 
 type ScriptureProject52CardProps = {
   darkMode: boolean;
+  books: BibleBook[];
+  onBookChange: (id: string) => void;
+  onChapterChange: (id: string) => void;
 };
 
-const ScriptureProject52Card = ({ darkMode }: ScriptureProject52CardProps) => (
-  <section
-    className={`rounded-[2rem] border p-5 shadow-sm ${
-      darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
-    }`}
-  >
-    <div className="flex items-center gap-3">
-      <span className={`grid size-11 place-items-center rounded-full ${darkMode ? 'bg-red-950/40 text-red-100' : 'bg-red-900/10 text-red-900'}`}>
-        <CalendarDays size={20} />
-      </span>
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Project 52</p>
-        <h2 className="mt-1 text-xl font-black">Continue the journey</h2>
-      </div>
-    </div>
-    <div className={`mt-4 grid gap-3 text-sm ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
-      <div className="flex items-center gap-2">
-        <CheckCircle2 size={17} className={darkMode ? 'text-red-200' : 'text-red-800'} />
-        Read alongside the weekly plan
-      </div>
-      <div className="flex items-center gap-2">
-        <CheckCircle2 size={17} className={darkMode ? 'text-red-200' : 'text-red-800'} />
-        Switch chapters without losing focus
-      </div>
-    </div>
-    <Link
-      to="/project52"
-      className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 dark:focus:ring-offset-black"
+const ScriptureProject52Card = ({ darkMode, books, onBookChange, onChapterChange }: ScriptureProject52CardProps) => {
+  const { currentWeek, weeks, readingTarget } = useProject52();
+
+  const todayItems = weeks.find((w) => w.week === currentWeek)?.items[readingTarget.dayIndex];
+
+  const parseAndNavigate = (readingText: string) => {
+    if (!readingText) return;
+    const match = [...books].sort((a, b) => b.name.length - a.name.length).find(b => readingText.startsWith(b.name));
+    if (!match) return;
+
+    const chapterNumberStr = readingText.slice(match.name.length).trim();
+    if (!chapterNumberStr) return;
+
+    onBookChange(match.id);
+    onChapterChange(`${match.id}.${chapterNumberStr}`);
+  };
+
+  const secondaryButtonClass = darkMode
+    ? 'border-white/15 bg-white/10 text-stone-100 shadow-black/25 hover:bg-white/15'
+    : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]';
+
+  return (
+    <section
+      className={`rounded-[2rem] border p-5 shadow-sm ${darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
+        }`}
     >
-      Open Project 52
-    </Link>
-  </section>
-);
+      <div className="flex items-center gap-3">
+        <span className={`grid size-11 place-items-center rounded-full ${darkMode ? 'bg-red-950/40 text-red-100' : 'bg-red-900/10 text-red-900'}`}>
+          <CalendarDays size={20} />
+        </span>
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Project 52</p>
+          <h2 className="mt-1 text-xl font-black">Continue the journey</h2>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <RotatingCatchphrase darkMode={darkMode} />
+      </div>
+
+      <div className="mt-1 grid gap-3">
+        {todayItems?.oldTestament && (
+          <button
+            onClick={() => parseAndNavigate(todayItems.oldTestament)}
+            className={`flex min-h-11 items-center justify-between gap-2 rounded-2xl border px-4 py-2 text-left text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${secondaryButtonClass} ${darkMode ? 'focus:ring-offset-black' : 'focus:ring-offset-white'}`}
+          >
+            <span className="flex items-center gap-3">
+              <span className={`rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${darkMode ? 'bg-zinc-800 text-stone-300' : 'bg-zinc-100 text-zinc-600'}`}>OT</span>
+              {todayItems.oldTestament}
+            </span>
+            <ArrowRight size={16} className="opacity-50" />
+          </button>
+        )}
+
+        {todayItems?.newTestament && (
+          <button
+            onClick={() => parseAndNavigate(todayItems.newTestament)}
+            className={`flex min-h-11 items-center justify-between gap-2 rounded-2xl border px-4 py-2 text-left text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${secondaryButtonClass} ${darkMode ? 'focus:ring-offset-black' : 'focus:ring-offset-white'}`}
+          >
+            <span className="flex items-center gap-3">
+              <span className={`rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${darkMode ? 'bg-zinc-800 text-stone-300' : 'bg-zinc-100 text-zinc-600'}`}>NT</span>
+              {todayItems.newTestament}
+            </span>
+            <ArrowRight size={16} className="opacity-50" />
+          </button>
+        )}
+      </div>
+    </section>
+  );
+};
 
 export default ScriptureProject52Card;

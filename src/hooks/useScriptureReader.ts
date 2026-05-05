@@ -33,7 +33,12 @@ export const useScriptureReader = () => {
   );
   const selectedBook = useMemo(() => books.find((book) => book.id === selectedBookId), [books, selectedBookId]);
   const selectedChapter = useMemo(
-    () => chapters.find((chapter) => chapter.id === selectedChapterId),
+    () => chapters.find(
+      (chapter) =>
+        chapter.id === selectedChapterId ||
+        String(chapter.number) === selectedChapterId ||
+        selectedChapterId.endsWith(`.${chapter.number}`)
+    ),
     [chapters, selectedChapterId],
   );
   const selectedChapterIndex = chapters.findIndex((chapter) => chapter.id === selectedChapterId);
@@ -168,7 +173,13 @@ export const useScriptureReader = () => {
             }
           }
 
-          return nextChapters.some((chapter) => chapter.id === current) ? current : nextChapters[0]?.id || '';
+          const match = nextChapters.find((chapter) =>
+            chapter.id === current ||
+            String(chapter.number) === current ||
+            current.endsWith(`.${chapter.number}`)
+          );
+
+          return match ? match.id : nextChapters[0]?.id || '';
         });
       } catch {
         if (!cancelled) {
