@@ -82,7 +82,7 @@ const SiteFooter = ({ darkMode }: SiteFooterProps) => {
           <div className="order-2 md:order-1">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:gap-6">
               <a
-                href="https://media-crew.aicnjorotown.org"
+                href="https://media-crew.aicnjoro.org"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Visit AIC Njoro Town Media Crew"
