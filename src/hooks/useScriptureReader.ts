@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getBibleBooks, getBibleChapters, getBibleVersions, getBibleVerses } from '../services/scriptureApi';
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
 import { normalizeReferenceValue } from '../utils/scriptureReference';
@@ -6,15 +7,14 @@ import { normalizeReferenceValue } from '../utils/scriptureReference';
 const DEFAULT_VERSION_ABBR = 'BSB';
 
 export const useScriptureReader = () => {
+  const [searchParams] = useSearchParams();
   const initialReference = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-
     return {
-      book: params.get('book') || '',
-      chapter: Number(params.get('chapter') || 0),
-      version: params.get('version') || '',
+      book: searchParams.get('book') || '',
+      chapter: Number(searchParams.get('chapter') || 0),
+      version: searchParams.get('version') || '',
     };
-  }, []);
+  }, [searchParams]);
   const hasAppliedInitialBook = useRef(false);
   const hasAppliedInitialChapter = useRef(false);
   const [versions, setVersions] = useState<BibleVersion[]>([]);

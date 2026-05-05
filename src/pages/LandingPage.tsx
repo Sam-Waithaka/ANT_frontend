@@ -1,4 +1,5 @@
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { assetPaths } from '../constants/assets';
@@ -38,13 +39,13 @@ const LandingPage = () => {
                   Read through the Bible week by week with our church community.
                 </p>
               </div>
-              <a
-                href="/project52"
+              <Link
+                to="/project52"
                 className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-red-800 px-6 py-3 font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2"
               >
                 Open Project 52
                 <ArrowRight size={19} />
-              </a>
+              </Link>
             </div>
           </div>
         </section>

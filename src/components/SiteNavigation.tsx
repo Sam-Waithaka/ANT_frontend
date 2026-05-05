@@ -1,5 +1,6 @@
 import { BookOpen, CalendarDays, Heart, HelpCircle, Home, Menu, Moon, Settings, Sun, X } from 'lucide-react';
 import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import { assetPaths } from '../constants/assets';
 import { useCompactHeader } from '../hooks/useCompactHeader';
 
@@ -21,6 +22,7 @@ const navItems = [
 ] as const;
 
 const churchWebsiteUrl = 'https://aicnjoro.org';
+const isRouteHref = (href: string) => href.startsWith('/');
 
 const SiteNavigation = ({
   activePath,
@@ -33,6 +35,47 @@ const SiteNavigation = ({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const compactSmallHeader = useCompactHeader(layout === 'top');
   const isActive = (href: string) => href === activePath;
+  const getNavItemClass = (active: boolean, shape: 'side' | 'top' | 'drawer') => {
+    const shapeClass = {
+      side: 'flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition',
+      top: 'inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-bold transition',
+      drawer: 'flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-bold transition',
+    }[shape];
+    const stateClass = active
+      ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+      : darkMode
+        ? 'text-stone-300 hover:bg-white/10'
+        : 'text-zinc-700 hover:bg-white';
+
+    return `${shapeClass} ${stateClass}`;
+  };
+  const renderNavItem = (
+    { href, icon: Icon, label }: (typeof navItems)[number],
+    shape: 'side' | 'top' | 'drawer',
+    onClick?: () => void,
+  ) => {
+    if (isRouteHref(href)) {
+      return (
+        <NavLink
+          key={label}
+          to={href}
+          end={href === '/'}
+          onClick={onClick}
+          className={({ isActive: routeActive }) => getNavItemClass(routeActive, shape)}
+        >
+          <Icon size={shape === 'top' ? 16 : shape === 'drawer' ? 18 : 17} />
+          {label}
+        </NavLink>
+      );
+    }
+
+    return (
+      <a key={label} href={href} onClick={onClick} className={getNavItemClass(isActive(href), shape)}>
+        <Icon size={shape === 'top' ? 16 : shape === 'drawer' ? 18 : 17} />
+        {label}
+      </a>
+    );
+  };
 
   if (layout === 'side') {
     return (
@@ -61,22 +104,7 @@ const SiteNavigation = ({
         </a>
 
         <nav className="mt-10 grid gap-2" aria-label="Site navigation">
-          {navItems.map(({ href, icon: Icon, label }) => (
-            <a
-              key={label}
-              href={href}
-              className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
-                isActive(href)
-                  ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                  : darkMode
-                    ? 'text-stone-300 hover:bg-white/10'
-                    : 'text-zinc-700 hover:bg-white'
-              }`}
-            >
-              <Icon size={17} />
-              {label}
-            </a>
-          ))}
+          {navItems.map((item) => renderNavItem(item, 'side'))}
         </nav>
 
         <div className="mt-auto grid gap-2">
@@ -170,22 +198,7 @@ const SiteNavigation = ({
         </a>
         <div className="flex shrink-0 items-center gap-3">
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Site navigation">
-            {navItems.map(({ href, icon: Icon, label }) => (
-              <a
-                key={label}
-                href={href}
-                className={`inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-bold transition ${
-                  isActive(href)
-                    ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                    : darkMode
-                      ? 'text-stone-300 hover:bg-white/10'
-                      : 'text-zinc-700 hover:bg-white'
-                }`}
-              >
-                <Icon size={16} />
-                {label}
-              </a>
-            ))}
+            {navItems.map((item) => renderNavItem(item, 'top'))}
           </nav>
           <div className="relative">
             <button
@@ -301,23 +314,7 @@ const SiteNavigation = ({
             </div>
 
             <nav className="mt-8 grid gap-2" aria-label="Mobile site navigation">
-              {navItems.map(({ href, icon: Icon, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  onClick={() => setDrawerOpen(false)}
-                  className={`flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-bold transition ${
-                    isActive(href)
-                      ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                      : darkMode
-                        ? 'text-stone-300 hover:bg-white/10'
-                        : 'text-zinc-700 hover:bg-white'
-                  }`}
-                >
-                  <Icon size={18} />
-                  {label}
-                </a>
-              ))}
+              {navItems.map((item) => renderNavItem(item, 'drawer', () => setDrawerOpen(false)))}
             </nav>
 
             <div className="mt-auto grid gap-2 border-t border-black/10 pt-4 dark:border-white/10">

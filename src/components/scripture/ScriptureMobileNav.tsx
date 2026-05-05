@@ -1,4 +1,5 @@
 import { BookOpen, CalendarDays, Home, Search } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 const items = [
   { label: 'Read', href: '/scripture', icon: BookOpen, active: true },
@@ -19,16 +20,30 @@ const ScriptureMobileNav = ({ darkMode }: ScriptureMobileNavProps) => (
     aria-label="Mobile Scripture navigation"
   >
     {items.map(({ active, href, icon: Icon, label }) => (
-      <a
+      href.startsWith('/') ? (
+      <NavLink
         key={label}
-        href={href}
-        className={`grid justify-items-center gap-1 rounded-2xl px-2 py-1.5 text-[11px] font-bold ${
-          active ? 'text-red-800 dark:text-red-200' : darkMode ? 'text-stone-400' : 'text-zinc-500'
+        to={href}
+        end={href === '/'}
+        className={({ isActive }) => `grid justify-items-center gap-1 rounded-2xl px-2 py-1.5 text-[11px] font-bold ${
+          isActive ? 'text-red-800 dark:text-red-200' : darkMode ? 'text-stone-400' : 'text-zinc-500'
         }`}
       >
         <Icon size={19} />
         {label}
-      </a>
+      </NavLink>
+      ) : (
+        <a
+          key={label}
+          href={href}
+          className={`grid justify-items-center gap-1 rounded-2xl px-2 py-1.5 text-[11px] font-bold ${
+            active ? 'text-red-800 dark:text-red-200' : darkMode ? 'text-stone-400' : 'text-zinc-500'
+          }`}
+        >
+          <Icon size={19} />
+          {label}
+        </a>
+      )
     ))}
   </nav>
 );

@@ -1,19 +1,17 @@
+import { Route, Routes } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Project52Page from './pages/Project52Page';
 import ScripturePage from './pages/ScripturePage';
 
 function App() {
-  const path = window.location.pathname;
-
-  if (path === '/project52') {
-    return <Project52Page />;
-  }
-
-  if (path === '/scripture') {
-    return <ScripturePage />;
-  }
-
-  return <LandingPage />;
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/project52" element={<Project52Page />} />
+      <Route path="/scripture" element={<ScripturePage />} />
+      <Route path="*" element={<LandingPage />} />
+    </Routes>
+  );
 }
 
 export default App;

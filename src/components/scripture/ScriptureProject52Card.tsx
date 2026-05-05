@@ -1,4 +1,5 @@
 import { CalendarDays, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 type ScriptureProject52CardProps = {
   darkMode: boolean;
@@ -29,12 +30,12 @@ const ScriptureProject52Card = ({ darkMode }: ScriptureProject52CardProps) => (
         Switch chapters without losing focus
       </div>
     </div>
-    <a
-      href="/project52"
+    <Link
+      to="/project52"
       className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 dark:focus:ring-offset-black"
     >
       Open Project 52
-    </a>
+    </Link>
   </section>
 );
 
