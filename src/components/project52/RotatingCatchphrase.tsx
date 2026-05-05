@@ -1,34 +1,17 @@
-import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
-import { project52Catchphrases } from '../../data/project52Catchphrases';
-import type { Catchphrase } from '../../types/project52';
+import { useProject52 } from '../../contexts/Project52Context';
 
 type RotatingCatchphraseProps = {
   darkMode: boolean;
-  onPhraseChange?: (phrase: Catchphrase) => void;
 };
 
-const RotatingCatchphrase = ({ darkMode, onPhraseChange }: RotatingCatchphraseProps) => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activePhrase = project52Catchphrases[activeIndex];
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % project52Catchphrases.length);
-    }, 4200);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    onPhraseChange?.(activePhrase);
-  }, [activePhrase, onPhraseChange]);
+const RotatingCatchphrase = ({ darkMode }: RotatingCatchphraseProps) => {
+  const { activeCatchphrase: activePhrase } = useProject52();
 
   return (
     <div
-      className={`mb-6 inline-flex min-h-14 max-w-full items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-bold tracking-[0.14em] sm:min-h-9 sm:text-xs ${
-        darkMode ? 'border-red-300/20 bg-red-950/30 text-red-100' : 'border-red-900/15 bg-white/70 text-red-950'
-      }`}
+      className={`mb-6 inline-flex min-h-14 max-w-full items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-bold tracking-[0.14em] sm:min-h-9 sm:text-xs ${darkMode ? 'border-red-300/20 bg-red-950/30 text-red-100' : 'border-red-900/15 bg-white/70 text-red-950'
+        }`}
     >
       <Sparkles size={14} className="shrink-0" />
       <span key={activePhrase.label} className="project52-catchphrase inline-flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">

@@ -5,24 +5,20 @@ import ReadingPlanSection from '../components/project52/ReadingPlanSection';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import SiteSideNav from '../components/SiteSideNav';
-import { readings } from '../data/project52Readings';
 import { useTheme } from '../hooks/useTheme';
-import type { Catchphrase, TestamentFilter } from '../types/project52';
+import type { TestamentFilter } from '../types/project52';
 import { createProject52Pdf } from '../utils/project52Pdf';
-import { buildReadingWeeks, getCurrentReadingTarget } from '../utils/project52Schedule';
+import { useProject52 } from '../contexts/Project52Context';
 
 const Project52Page = () => {
   const [status, setStatus] = useState('');
   const { darkMode, toggleTheme } = useTheme();
-  const [readingTarget, setReadingTarget] = useState(() => getCurrentReadingTarget());
-  const [activeWeek, setActiveWeek] = useState(() => readingTarget.week);
-  const [activeFilter, setActiveFilter] = useState<TestamentFilter>('both');
-  const [activeCatchphrase, setActiveCatchphrase] = useState<Catchphrase>({ label: 'Let The Text Speak' });
-  const [searchTerm, setSearchTerm] = useState('');
-  const currentWeek = readingTarget.week;
-  const currentWeekRef = useRef<HTMLElement | null>(null);
+  const { readingTarget, currentWeek, weeks, activeCatchphrase } = useProject52();
 
-  const weeks = useMemo(() => buildReadingWeeks(readings, currentWeek), [currentWeek]);
+  const [activeWeek, setActiveWeek] = useState(() => currentWeek);
+  const [activeFilter, setActiveFilter] = useState<TestamentFilter>('both');
+  const [searchTerm, setSearchTerm] = useState('');
+  const currentWeekRef = useRef<HTMLElement | null>(null);
 
   const filteredWeeks = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -54,53 +50,8 @@ const Project52Page = () => {
   };
 
   useEffect(() => {
-    let timeoutId: number;
-
-    const refreshReadingTarget = () => {
-      const nextTarget = getCurrentReadingTarget();
-
-      setReadingTarget((currentTarget) => {
-        const targetChanged =
-          currentTarget.week !== nextTarget.week ||
-          currentTarget.dayIndex !== nextTarget.dayIndex ||
-          currentTarget.isWeekendCarryover !== nextTarget.isWeekendCarryover;
-
-        if (targetChanged) {
-          setActiveWeek(nextTarget.week);
-        }
-
-        return targetChanged ? nextTarget : currentTarget;
-      });
-    };
-
-    const scheduleNextRefresh = () => {
-      window.clearTimeout(timeoutId);
-
-      const now = new Date();
-      const nextMidnight = new Date(now);
-      nextMidnight.setHours(24, 0, 0, 0);
-
-      timeoutId = window.setTimeout(() => {
-        refreshReadingTarget();
-        scheduleNextRefresh();
-      }, Math.max(1000, nextMidnight.getTime() - now.getTime()));
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        refreshReadingTarget();
-        scheduleNextRefresh();
-      }
-    };
-
-    scheduleNextRefresh();
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
+    setActiveWeek(currentWeek);
+  }, [currentWeek]);
 
   useEffect(() => {
     scrollToCurrentWeek(450);
@@ -190,7 +141,6 @@ const Project52Page = () => {
                 <Project52Hero
                   darkMode={darkMode}
                   status={status}
-                  onCatchphraseChange={setActiveCatchphrase}
                   onJumpToCurrentWeek={jumpToCurrentWeek}
                   onDownloadPdf={generatePdf}
                 />
