@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 import { Link } from 'react-router-dom';
 import type { ReadingTarget, ReadingWeek, TestamentFilter } from '../../types/project52';
 import { buildScriptureHref } from '../../utils/scriptureReference';
+import { formatReadingBlock } from '../../utils/project52Schedule';
 
 type ReadingPlanSectionProps = {
   activeFilter: TestamentFilter;
@@ -115,16 +116,16 @@ const ReadingPlanSection = ({
 
                         return (
                           <div key={`${week.week}-${item.day}`} className={`grid gap-3 rounded-3xl sm:grid-cols-2 ${isCurrentReading ? 'ring-2 ring-red-700/70 ring-offset-2 ring-offset-transparent' : ''}`}>
-                            {(activeFilter === 'both' || activeFilter === 'old') && (
-                              <Link to={buildScriptureHref(item.oldTestament)} className={`block rounded-2xl border p-4 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${isCurrentReading ? darkMode ? 'border-red-200/60 bg-red-950/45 shadow-lg shadow-red-950/25' : 'border-red-800/35 bg-white shadow-lg shadow-red-950/10' : darkMode ? 'border-red-300/20 bg-black/30' : 'border-red-900/15 bg-[#fffaf4]'}`}>
-                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${isCurrentReading ? 'bg-red-800 text-white' : darkMode ? 'bg-red-300/10 text-red-100' : 'bg-red-900/10 text-red-950'}`}>OT / {item.day}</span>
-                                <p className="mt-3 text-lg font-extrabold leading-snug">{item.oldTestament}</p>
+                            {(activeFilter === 'both' || activeFilter === 'old') && item.oldTestament.length > 0 && (
+                              <Link to={buildScriptureHref(formatReadingBlock(item.oldTestament))} className={`block rounded-2xl border p-4 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${isCurrentReading ? darkMode ? 'border-red-200/60 bg-red-950/45 shadow-lg shadow-red-950/25' : 'border-red-800/35 bg-white shadow-lg shadow-red-950/10' : darkMode ? 'border-red-300/20 bg-black/30' : 'border-red-900/15 bg-[#fffaf4]'}`}>
+                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${isCurrentReading ? 'bg-red-800 text-white' : darkMode ? 'bg-red-300/10 text-red-100' : 'bg-red-900/10 text-red-950'}`}>OT / {item.dayLabel}</span>
+                                <p className="mt-3 text-lg font-extrabold leading-snug">{formatReadingBlock(item.oldTestament)}</p>
                               </Link>
                             )}
-                            {(activeFilter === 'both' || activeFilter === 'new') && (
-                              <Link to={buildScriptureHref(item.newTestament)} className={`block rounded-2xl border p-4 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${isCurrentReading ? darkMode ? 'border-red-200/60 bg-white/15 shadow-lg shadow-red-950/25' : 'border-red-800/35 bg-zinc-950 text-white shadow-lg shadow-red-950/10' : darkMode ? 'border-white/15 bg-white/10' : 'border-zinc-900/10 bg-zinc-50'}`}>
-                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${isCurrentReading ? darkMode ? 'bg-red-800 text-white' : 'bg-white text-red-900' : darkMode ? 'bg-white/10 text-stone-100' : 'bg-zinc-950 text-white'}`}>NT / {item.day}</span>
-                                <p className="mt-3 text-lg font-extrabold leading-snug">{item.newTestament}</p>
+                            {(activeFilter === 'both' || activeFilter === 'new') && item.newTestament.length > 0 && (
+                              <Link to={buildScriptureHref(formatReadingBlock(item.newTestament))} className={`block rounded-2xl border p-4 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${isCurrentReading ? darkMode ? 'border-red-200/60 bg-white/15 shadow-lg shadow-red-950/25' : 'border-red-800/35 bg-zinc-950 text-white shadow-lg shadow-red-950/10' : darkMode ? 'border-white/15 bg-white/10' : 'border-zinc-900/10 bg-zinc-50'}`}>
+                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.14em] ${isCurrentReading ? darkMode ? 'bg-red-800 text-white' : 'bg-white text-red-900' : darkMode ? 'bg-white/10 text-stone-100' : 'bg-zinc-950 text-white'}`}>NT / {item.dayLabel}</span>
+                                <p className="mt-3 text-lg font-extrabold leading-snug">{formatReadingBlock(item.newTestament)}</p>
                               </Link>
                             )}
                           </div>

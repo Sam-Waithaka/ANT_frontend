@@ -1,6 +1,6 @@
-import { readingDays, splitReading } from './project52Schedule';
+import { readingDays, formatReadingBlock } from './project52Schedule';
 import { assetPaths } from '../constants/assets';
-import { readings } from '../data/project52Readings';
+import { project52Readings } from '../data/project52Readings';
 import type { Catchphrase } from '../types/project52';
 
 const escapePdfText = (value: string) => value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
@@ -172,8 +172,10 @@ export const createProject52Pdf = async (footerCatchphrase: Catchphrase = { labe
     addPdfText(commands, 'New Testament', margin + 336, y - 7, 8);
     y -= 21;
 
-    readings[week].forEach((reading, index) => {
-      const { oldTestament, newTestament } = splitReading(reading);
+    const currentWeekSchedule = project52Readings[week - 1];
+    currentWeekSchedule.days.forEach((daySchedule, index) => {
+      const oldTestament = formatReadingBlock(daySchedule.oldTestament);
+      const newTestament = formatReadingBlock(daySchedule.newTestament);
       const day = readingDays[index];
       const rowLines = Math.max(
         1,

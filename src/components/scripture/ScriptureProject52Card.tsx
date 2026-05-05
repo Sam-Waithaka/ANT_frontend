@@ -2,6 +2,7 @@ import { CalendarDays, ArrowRight } from 'lucide-react';
 import type { BibleBook } from '../../types/scripture';
 import { useProject52 } from '../../contexts/Project52Context';
 import RotatingCatchphrase from '../project52/RotatingCatchphrase';
+import { formatReadingBlock } from '../../utils/project52Schedule';
 
 type ScriptureProject52CardProps = {
   darkMode: boolean;
@@ -15,16 +16,14 @@ const ScriptureProject52Card = ({ darkMode, books, onBookChange, onChapterChange
 
   const todayItems = weeks.find((w) => w.week === currentWeek)?.items[readingTarget.dayIndex];
 
-  const parseAndNavigate = (readingText: string) => {
-    if (!readingText) return;
-    const match = [...books].sort((a, b) => b.name.length - a.name.length).find(b => readingText.startsWith(b.name));
+  const navigateToReading = (blocks: any[]) => {
+    if (!blocks || blocks.length === 0) return;
+    const block = blocks[0];
+    const match = books.find(b => b.name === block.book);
     if (!match) return;
 
-    const chapterNumberStr = readingText.slice(match.name.length).trim();
-    if (!chapterNumberStr) return;
-
     onBookChange(match.id);
-    onChapterChange(`${match.id}.${chapterNumberStr}`);
+    onChapterChange(String(block.startChapter));
   };
 
   const secondaryButtonClass = darkMode
@@ -51,27 +50,27 @@ const ScriptureProject52Card = ({ darkMode, books, onBookChange, onChapterChange
       </div>
 
       <div className="mt-1 grid gap-3">
-        {todayItems?.oldTestament && (
+        {todayItems?.oldTestament && todayItems.oldTestament.length > 0 && (
           <button
-            onClick={() => parseAndNavigate(todayItems.oldTestament)}
+            onClick={() => navigateToReading(todayItems.oldTestament)}
             className={`flex min-h-11 items-center justify-between gap-2 rounded-2xl border px-4 py-2 text-left text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${secondaryButtonClass} ${darkMode ? 'focus:ring-offset-black' : 'focus:ring-offset-white'}`}
           >
             <span className="flex items-center gap-3">
               <span className={`rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${darkMode ? 'bg-zinc-800 text-stone-300' : 'bg-zinc-100 text-zinc-600'}`}>OT</span>
-              {todayItems.oldTestament}
+              {formatReadingBlock(todayItems.oldTestament)}
             </span>
             <ArrowRight size={16} className="opacity-50" />
           </button>
         )}
 
-        {todayItems?.newTestament && (
+        {todayItems?.newTestament && todayItems.newTestament.length > 0 && (
           <button
-            onClick={() => parseAndNavigate(todayItems.newTestament)}
+            onClick={() => navigateToReading(todayItems.newTestament)}
             className={`flex min-h-11 items-center justify-between gap-2 rounded-2xl border px-4 py-2 text-left text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${secondaryButtonClass} ${darkMode ? 'focus:ring-offset-black' : 'focus:ring-offset-white'}`}
           >
             <span className="flex items-center gap-3">
               <span className={`rounded-xl px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${darkMode ? 'bg-zinc-800 text-stone-300' : 'bg-zinc-100 text-zinc-600'}`}>NT</span>
-              {todayItems.newTestament}
+              {formatReadingBlock(todayItems.newTestament)}
             </span>
             <ArrowRight size={16} className="opacity-50" />
           </button>

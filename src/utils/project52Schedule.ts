@@ -1,4 +1,4 @@
-import type { ReadingTarget, ReadingWeek } from '../types/project52';
+import type { ReadingTarget, ReadingWeek, Project52WeeklySchedule, Project52ReadingBlock } from '../types/project52';
 
 export const readingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -30,24 +30,24 @@ export const getCurrentReadingTarget = (date = new Date()): ReadingTarget => {
   };
 };
 
-export const splitReading = (reading: string) => {
-  const [oldTestament = '', newTestament = ''] = reading.split('|').map((part) => part.trim());
-  return { oldTestament, newTestament };
-};
+export const formatReadingBlock = (blocks: Project52ReadingBlock[]) =>
+  blocks.map(b => `${b.book} ${b.startChapter}${b.startChapter !== b.endChapter ? `-${b.endChapter}` : ''}`).join('; ');
 
 export const buildReadingWeeks = (
-  readings: Record<number, string[]>,
+  readings: Project52WeeklySchedule[],
   currentWeek: number,
 ): ReadingWeek[] =>
-  Object.entries(readings).map(([weekKey, weekReadings]) => {
-    const week = Number(weekKey);
-    const items = weekReadings.map((reading, index) => {
-      const parts = splitReading(reading);
+  readings.map((weeklySchedule) => {
+    const week = weeklySchedule.week;
+    const items = weeklySchedule.days.map((daySchedule, index) => {
+      const otString = formatReadingBlock(daySchedule.oldTestament);
+      const ntString = formatReadingBlock(daySchedule.newTestament);
+
       return {
-        day: readingDays[index],
+        ...daySchedule,
+        dayLabel: readingDays[index],
         dayIndex: index,
-        ...parts,
-        searchable: `${parts.oldTestament} ${parts.newTestament}`.toLowerCase(),
+        searchable: `${otString} ${ntString}`.toLowerCase(),
       };
     });
 

@@ -9,6 +9,7 @@ import { useTheme } from '../hooks/useTheme';
 import type { TestamentFilter } from '../types/project52';
 import { createProject52Pdf } from '../utils/project52Pdf';
 import { useProject52 } from '../contexts/Project52Context';
+import { formatReadingBlock } from '../utils/project52Schedule';
 
 const Project52Page = () => {
   const [status, setStatus] = useState('');
@@ -29,8 +30,8 @@ const Project52Page = () => {
           const matchesSearch = !query || item.searchable.includes(query);
           const matchesFilter =
             activeFilter === 'both' ||
-            (activeFilter === 'old' && item.oldTestament) ||
-            (activeFilter === 'new' && item.newTestament);
+            (activeFilter === 'old' && item.oldTestament.length > 0) ||
+            (activeFilter === 'new' && item.newTestament.length > 0);
 
           return matchesSearch && matchesFilter;
         });
@@ -78,10 +79,10 @@ const Project52Page = () => {
     }
 
     const hasOldTestamentMatch = weeks.some((week) =>
-      week.items.some((item) => item.oldTestament.toLowerCase().includes(query)),
+      week.items.some((item) => formatReadingBlock(item.oldTestament).toLowerCase().includes(query)),
     );
     const hasNewTestamentMatch = weeks.some((week) =>
-      week.items.some((item) => item.newTestament.toLowerCase().includes(query)),
+      week.items.some((item) => formatReadingBlock(item.newTestament).toLowerCase().includes(query)),
     );
 
     if (hasOldTestamentMatch && !hasNewTestamentMatch) {

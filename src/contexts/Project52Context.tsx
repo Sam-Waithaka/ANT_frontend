@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Catchphrase, ReadingTarget, ReadingWeek } from '../types/project52';
 import { getCurrentReadingTarget, buildReadingWeeks } from '../utils/project52Schedule';
-import { readings } from '../data/project52Readings';
+import { project52Readings } from '../data/project52Readings';
 import { project52Catchphrases } from '../data/project52Catchphrases';
 
 type Project52ContextType = {
@@ -19,7 +19,7 @@ export const Project52Provider = ({ children }: { children: ReactNode }) => {
     const [catchphraseIndex, setCatchphraseIndex] = useState(0);
 
     const currentWeek = readingTarget.week;
-    const weeks = useMemo(() => buildReadingWeeks(readings, currentWeek), [currentWeek]);
+    const weeks = useMemo(() => buildReadingWeeks(project52Readings, currentWeek), [currentWeek]);
     const activeCatchphrase = project52Catchphrases[catchphraseIndex];
 
     useEffect(() => {

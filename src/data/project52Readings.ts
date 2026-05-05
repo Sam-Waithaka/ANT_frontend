@@ -1,54 +1,4819 @@
-export const readings: Record<number, string[]> = {
-  1: ['Genesis 1-3 | Matthew 1', 'Genesis 4-8 | Matthew 2', 'Genesis 9-12 | Matthew 3', 'Genesis 13-16 | Matthew 4', 'Genesis 17-19 | Matthew 5'],
-  2: ['Genesis 20-23 | Matthew 6', 'Genesis 24-25 | Matthew 7', 'Genesis 26-27 | Matthew 8', 'Genesis 28-30 | Matthew 9', 'Genesis 31-33 | Matthew 10'],
-  3: ['Genesis 34-36 | Matthew 11', 'Genesis 37-39 | Matthew 12', 'Genesis 40-41 | Matthew 13', 'Genesis 42-44 | Matthew 14', 'Genesis 45-47 | Matthew 15'],
-  4: ['Genesis 48-50 | Matthew 16', 'Exodus 1-4 | Matthew 17', 'Exodus 5-7 | Matthew 18', 'Exodus 8-10 | Matthew 19', 'Exodus 11-12 | Matthew 20'],
-  5: ['Exodus 13-15 | Matthew 21', 'Exodus 16-19 | Matthew 22', 'Exodus 20-22 | Matthew 23', 'Exodus 23-25 | Matthew 24', 'Exodus 26-28 | Matthew 25'],
-  6: ['Exodus 29-30 | Matthew 26', 'Exodus 31-33 | Matthew 27', 'Exodus 34-35 | Matthew 28', 'Exodus 36-38 | Mark 1', 'Exodus 39-40; Leviticus 1-2 | Mark 2'],
-  7: ['Leviticus 3-5 | Mark 3', 'Leviticus 6-7 | Mark 4', 'Leviticus 8-10 | Mark 5', 'Leviticus 11-13 | Mark 6', 'Leviticus 14 | Mark 7'],
-  8: ['Leviticus 15-17 | Mark 8', 'Leviticus 18-20 | Mark 9', 'Leviticus 21-23 | Mark 10', 'Leviticus 24-25 | Mark 11', 'Leviticus 26-27 | Mark 12'],
-  9: ['Numbers 1-2 | Mark 13', 'Numbers 3-4 | Mark 14', 'Numbers 5-6 | Mark 15', 'Numbers 7-9 | Mark 16', 'Numbers 10-12 | Luke 1'],
-  10: ['Numbers 13-14 | Luke 2', 'Numbers 15-17 | Luke 3', 'Numbers 18-20 | Luke 4', 'Numbers 21-22 | Luke 5', 'Numbers 23-25 | Luke 6'],
-  11: ['Numbers 26-28 | Luke 7', 'Numbers 29-31 | Luke 8', 'Numbers 32-33 | Luke 9', 'Numbers 34-36 | Luke 10', 'Deuteronomy 1-2 | Luke 11'],
-  12: ['Deuteronomy 3-4 | Luke 12', 'Deuteronomy 5-7 | Luke 13', 'Deuteronomy 8-10 | Luke 14', 'Deuteronomy 11-13 | Luke 15', 'Deuteronomy 14-16 | Luke 16'],
-  13: ['Deuteronomy 17-20 | Luke 17', 'Deuteronomy 21-23 | Luke 18', 'Deuteronomy 24-27 | Luke 19', 'Deuteronomy 28 | Luke 20', 'Deuteronomy 29-31 | Luke 21'],
-  14: ['Deuteronomy 32-33 | Luke 22', 'Deuteronomy 34; Joshua 1-3 | Luke 23', 'Joshua 4-6 | Luke 24', 'Joshua 7-9 | John 1', 'Joshua 10-11 | John 2'],
-  15: ['Joshua 12-15 | John 3', 'Joshua 16-18 | John 4', 'Joshua 19-21 | John 5', 'Joshua 22-24 | John 6', 'Judges 1-3 | John 7'],
-  16: ['Judges 4-5 | John 8', 'Judges 6-8 | John 9', 'Judges 9-10 | John 10', 'Judges 11-13 | John 11', 'Judges 14-16 | John 12'],
-  17: ['Judges 17-19 | John 13', 'Judges 20-21 | John 14', 'Ruth 1-3 | John 15', 'Ruth 4; 1 Samuel 1-2 | John 16', '1 Samuel 3-6 | John 17'],
-  18: ['1 Samuel 7-9 | John 18', '1 Samuel 10-13 | John 19', '1 Samuel 14-15 | John 20', '1 Samuel 16-17 | John 21', '1 Samuel 18-19 | Acts 1'],
-  19: ['1 Samuel 20-22 | Acts 2', '1 Samuel 23-25 | Acts 3', '1 Samuel 26-28 | Acts 4', '1 Samuel 29-31; 2 Samuel 1 | Acts 5', '2 Samuel 2-3 | Acts 6'],
-  20: ['2 Samuel 4-7 | Acts 7', '2 Samuel 8-11 | Acts 8', '2 Samuel 12-13 | Acts 9', '2 Samuel 14-15 | Acts 10', '2 Samuel 16-18 | Acts 11'],
-  21: ['2 Samuel 19-20 | Acts 12', '2 Samuel 21-22 | Acts 13', '2 Samuel 23-24; 1 Kings 1 | Acts 14', '1 Kings 2 | Acts 15', '1 Kings 3-6 | Acts 16'],
-  22: ['1 Kings 7 | Acts 17', '1 Kings 8-9 | Acts 18', '1 Kings 10-11 | Acts 19', '1 Kings 12-13 | Acts 20', '1 Kings 14-16 | Acts 21'],
-  23: ['1 Kings 17-18 | Acts 22', '1 Kings 19-20 | Acts 23', '1 Kings 21-22 | Acts 24', '2 Kings 1-3 | Acts 25', '2 Kings 4-5 | Acts 26'],
-  24: ['2 Kings 6-8 | Acts 27', '2 Kings 9-10 | Acts 28', '2 Kings 11-13 | Romans 1', '2 Kings 14-15 | Romans 2', '2 Kings 16-17 | Romans 3'],
-  25: ['2 Kings 18-20 | Romans 4', '2 Kings 21-22 | Romans 5', '2 Kings 23-25 | Romans 6', '1 Chronicles 1-3 | Romans 7', '1 Chronicles 4-6 | Romans 8'],
-  26: ['1 Chronicles 7-9 | Romans 9', '1 Chronicles 10-12 | Romans 10', '1 Chronicles 13-16 | Romans 11', '1 Chronicles 17-20 | Romans 12', '1 Chronicles 21-23 | Romans 13'],
-  27: ['1 Chronicles 24-27 | Romans 14', '1 Chronicles 28-29; 2 Chronicles 1 | Romans 15', '2 Chronicles 2-5 | Romans 16', '2 Chronicles 6-7 | 1 Corinthians 1', '2 Chronicles 8-11 | 1 Corinthians 2'],
-  28: ['2 Chronicles 12-16 | 1 Corinthians 3', '2 Chronicles 17-19 | 1 Corinthians 4', '2 Chronicles 20-23 | 1 Corinthians 5', '2 Chronicles 24-25 | 1 Corinthians 6', '2 Chronicles 26-28 | 1 Corinthians 7'],
-  29: ['2 Chronicles 29-31 | 1 Corinthians 8', '2 Chronicles 32-33 | 1 Corinthians 9', '2 Chronicles 34-36 | 1 Corinthians 10', 'Ezra 1-4 | 1 Corinthians 11', 'Ezra 5-7 | 1 Corinthians 12'],
-  30: ['Ezra 8-10 | 1 Corinthians 13', 'Nehemiah 1-3 | 1 Corinthians 14', 'Nehemiah 4-6 | 1 Corinthians 15', 'Nehemiah 7-9 | 1 Corinthians 16', 'Nehemiah 10-11 | 2 Corinthians 1'],
-  31: ['Nehemiah 12-13; Esther 1 | 2 Corinthians 2', 'Esther 2-5 | 2 Corinthians 3', 'Esther 6-9 | 2 Corinthians 4', 'Esther 10; Job 1-5 | 2 Corinthians 5', 'Job 6-10 | 2 Corinthians 6'],
-  32: ['Job 11-16 | 2 Corinthians 7', 'Job 17-21 | 2 Corinthians 8', 'Job 22-28 | 2 Corinthians 9', 'Job 29-32 | 2 Corinthians 10', 'Job 33-37 | 2 Corinthians 11'],
-  33: ['Job 38-42; Psalms 1 | 2 Corinthians 12', 'Psalms 2-11 | 2 Corinthians 13', 'Psalms 12-20 | Galatians 1', 'Psalms 21-29 | Galatians 2', 'Psalms 30-35 | Galatians 3'],
-  34: ['Psalms 36-42 | Galatians 4', 'Psalms 43-50 | Galatians 5', 'Psalms 51-59 | Galatians 6', 'Psalms 60-68 | Ephesians 1', 'Psalms 69-73 | Ephesians 2'],
-  35: ['Psalms 74-79 | Ephesians 3', 'Psalms 80-88 | Ephesians 4', 'Psalms 89-95 | Ephesians 5', 'Psalms 96-104 | Ephesians 6', 'Psalms 105-108 | Philippians 1'],
-  36: ['Psalms 109-118 | Philippians 2', 'Psalms 119 | Philippians 3', 'Psalms 120-136 | Philippians 4', 'Psalms 137-146 | Colossians 1', 'Psalms 147-150; Proverbs 1-3 | Colossians 2'],
-  37: ['Proverbs 4-9 | Colossians 3', 'Proverbs 10-14 | Colossians 4', 'Proverbs 15-18 | 1 Thessalonians 1', 'Proverbs 19-23 | 1 Thessalonians 2', 'Proverbs 24-28 | 1 Thessalonians 3'],
-  38: ['Proverbs 29-31; Ecclesiastes 1 | 1 Thessalonians 4', 'Ecclesiastes 2-6 | 1 Thessalonians 5', 'Ecclesiastes 7-11 | 2 Thessalonians 1', 'Ecclesiastes 12; Song of Solomon 1-6 | 2 Thessalonians 2', 'Song of Solomon 7-8; Isaiah 1-3 | 2 Thessalonians 3'],
-  39: ['Isaiah 4-7 | 1 Timothy 1', 'Isaiah 8-11 | 1 Timothy 2', 'Isaiah 12-16 | 1 Timothy 3', 'Isaiah 17-21 | 1 Timothy 4', 'Isaiah 22-26 | 1 Timothy 5'],
-  40: ['Isaiah 27-29 | 1 Timothy 6', 'Isaiah 30-34 | 2 Timothy 1', 'Isaiah 35-37 | 2 Timothy 2', 'Isaiah 38-41 | 2 Timothy 3', 'Isaiah 42-44 | 2 Timothy 4'],
-  41: ['Isaiah 45-48 | Titus 1', 'Isaiah 49-52 | Titus 2', 'Isaiah 53-57 | Titus 3', 'Isaiah 58-62 | Philemon', 'Isaiah 63-66 | Hebrews 1'],
-  42: ['Jeremiah 1-3 | Hebrews 2', 'Jeremiah 4-5 | Hebrews 3', 'Jeremiah 6-8 | Hebrews 4', 'Jeremiah 9-11 | Hebrews 5', 'Jeremiah 12-15 | Hebrews 6'],
-  43: ['Jeremiah 16-18 | Hebrews 7', 'Jeremiah 19-22 | Hebrews 8', 'Jeremiah 23-25 | Hebrews 9', 'Jeremiah 26-27 | Hebrews 10', 'Jeremiah 28-30 | Hebrews 11'],
-  44: ['Jeremiah 31-32 | Hebrews 12', 'Jeremiah 33-35 | Hebrews 13', 'Jeremiah 36-37 | James 1', 'Jeremiah 38-41 | James 2', 'Jeremiah 42-44 | James 3'],
-  45: ['Jeremiah 45-48 | James 4', 'Jeremiah 49-50 | James 5', 'Jeremiah 51 | 1 Peter 1', 'Jeremiah 52; Lamentations 1 | 1 Peter 2', 'Lamentations 2-5 | 1 Peter 3'],
-  46: ['Ezekiel 1-3 | 1 Peter 4', 'Ezekiel 4-7 | 1 Peter 5', 'Ezekiel 8-11 | 2 Peter 1', 'Ezekiel 12-14 | 2 Peter 2', 'Ezekiel 15-16 | 2 Peter 3'],
-  47: ['Ezekiel 17-19 | 1 John 1', 'Ezekiel 20-21 | 1 John 2', 'Ezekiel 22-24 | 1 John 3', 'Ezekiel 25-27 | 1 John 4', 'Ezekiel 28-30 | 1 John 5'],
-  48: ['Ezekiel 31-32 | 2 John', 'Ezekiel 33-35 | 3 John', 'Ezekiel 36-38 | Jude', 'Ezekiel 39-40 | Revelation 1', 'Ezekiel 41-43 | Revelation 2'],
-  49: ['Ezekiel 44-45 | Revelation 3', 'Ezekiel 46-48 | Revelation 4', 'Daniel 1-2 | Revelation 5', 'Daniel 3-4 | Revelation 6', 'Daniel 5-6 | Revelation 7'],
-  50: ['Daniel 7-9 | Revelation 8', 'Daniel 10-11 | Revelation 9', 'Daniel 12; Hosea 1-4 | Revelation 10', 'Hosea 5-10 | Revelation 11', 'Hosea 11-14; Joel 1-2 | Revelation 12'],
-  51: ['Joel 3; Amos 1-4 | Revelation 13', 'Amos 5-8 | Revelation 14', 'Amos 9; Obadiah; Jonah 1-4 | Revelation 15', 'Micah 1-6 | Revelation 16', 'Micah 7; Nahum 1-3; Habakkuk 1 | Revelation 17'],
-  52: ['Habakkuk 2-3; Zephaniah 1-3 | Revelation 18', 'Haggai 1-2; Zechariah 1-2 | Revelation 19', 'Zechariah 3-8 | Revelation 20', 'Zechariah 9-13 | Revelation 21', 'Zechariah 14; Malachi 1-4 | Revelation 22'],
+export type ReadingBlock = {
+  book: string;
+  startChapter: number;
+  endChapter: number;
 };
+
+export type DailySchedule = {
+  day: number;
+  oldTestament: ReadingBlock[];
+  newTestament: ReadingBlock[];
+};
+
+export type WeeklySchedule = {
+  week: number;
+  days: DailySchedule[];
+};
+
+export const project52Readings: WeeklySchedule[] = [
+  {
+    "week": 1,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 4,
+            "endChapter": 8
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 9,
+            "endChapter": 12
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 13,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 17,
+            "endChapter": 19
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 2,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 20,
+            "endChapter": 23
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 24,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 26,
+            "endChapter": 27
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 28,
+            "endChapter": 30
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 31,
+            "endChapter": 33
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 3,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 34,
+            "endChapter": 36
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 37,
+            "endChapter": 39
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 40,
+            "endChapter": 41
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 42,
+            "endChapter": 44
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 45,
+            "endChapter": 47
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 4,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Genesis",
+            "startChapter": 48,
+            "endChapter": 50
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 1,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 17,
+            "endChapter": 17
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 5,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 18,
+            "endChapter": 18
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 8,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 19,
+            "endChapter": 19
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 11,
+            "endChapter": 12
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 20,
+            "endChapter": 20
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 5,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 13,
+            "endChapter": 15
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 21,
+            "endChapter": 21
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 16,
+            "endChapter": 19
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 22,
+            "endChapter": 22
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 20,
+            "endChapter": 22
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 23,
+            "endChapter": 23
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 23,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 24,
+            "endChapter": 24
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 26,
+            "endChapter": 28
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 25,
+            "endChapter": 25
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 6,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 29,
+            "endChapter": 30
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 26,
+            "endChapter": 26
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 31,
+            "endChapter": 33
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 27,
+            "endChapter": 27
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 34,
+            "endChapter": 35
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Matthew",
+            "startChapter": 28,
+            "endChapter": 28
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 36,
+            "endChapter": 38
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Exodus",
+            "startChapter": 39,
+            "endChapter": 40
+          },
+          {
+            "book": "Leviticus",
+            "startChapter": 1,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 7,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 3,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 6,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 8,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 11,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 8,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 15,
+            "endChapter": 17
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 18,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 21,
+            "endChapter": 23
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 24,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Leviticus",
+            "startChapter": 26,
+            "endChapter": 27
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 9,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 1,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 3,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 5,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 7,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Mark",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 10,
+            "endChapter": 12
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 10,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 13,
+            "endChapter": 14
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 15,
+            "endChapter": 17
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 18,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 21,
+            "endChapter": 22
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 23,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 11,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 26,
+            "endChapter": 28
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 29,
+            "endChapter": 31
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 32,
+            "endChapter": 33
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Numbers",
+            "startChapter": 34,
+            "endChapter": 36
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 1,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 12,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 3,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 5,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 8,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 11,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 14,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 13,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 17,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 17,
+            "endChapter": 17
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 21,
+            "endChapter": 23
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 18,
+            "endChapter": 18
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 24,
+            "endChapter": 27
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 19,
+            "endChapter": 19
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 28,
+            "endChapter": 28
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 20,
+            "endChapter": 20
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 29,
+            "endChapter": 31
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 21,
+            "endChapter": 21
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 14,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 32,
+            "endChapter": 33
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 22,
+            "endChapter": 22
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Deuteronomy",
+            "startChapter": 34,
+            "endChapter": 34
+          },
+          {
+            "book": "Joshua",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 23,
+            "endChapter": 23
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Joshua",
+            "startChapter": 4,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Luke",
+            "startChapter": 24,
+            "endChapter": 24
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Joshua",
+            "startChapter": 7,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Joshua",
+            "startChapter": 10,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 15,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Joshua",
+            "startChapter": 12,
+            "endChapter": 15
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Joshua",
+            "startChapter": 16,
+            "endChapter": 18
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Joshua",
+            "startChapter": 19,
+            "endChapter": 21
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Joshua",
+            "startChapter": 22,
+            "endChapter": 24
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 16,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 4,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 6,
+            "endChapter": 8
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 9,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 11,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 14,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 17,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 17,
+            "endChapter": 19
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Judges",
+            "startChapter": 20,
+            "endChapter": 21
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Ruth",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Ruth",
+            "startChapter": 4,
+            "endChapter": 4
+          },
+          {
+            "book": "1 Samuel",
+            "startChapter": 1,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 3,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 17,
+            "endChapter": 17
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 18,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 7,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 18,
+            "endChapter": 18
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 10,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 19,
+            "endChapter": 19
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 14,
+            "endChapter": 15
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 20,
+            "endChapter": 20
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 16,
+            "endChapter": 17
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "John",
+            "startChapter": 21,
+            "endChapter": 21
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 18,
+            "endChapter": 19
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 19,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 20,
+            "endChapter": 22
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 23,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 26,
+            "endChapter": 28
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "1 Samuel",
+            "startChapter": 29,
+            "endChapter": 31
+          },
+          {
+            "book": "2 Samuel",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 2,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 20,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 4,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 8,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 12,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 14,
+            "endChapter": 15
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 16,
+            "endChapter": 18
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 21,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 19,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 21,
+            "endChapter": 22
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "2 Samuel",
+            "startChapter": 23,
+            "endChapter": 24
+          },
+          {
+            "book": "1 Kings",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 3,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 22,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 17,
+            "endChapter": 17
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 8,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 18,
+            "endChapter": 18
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 10,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 19,
+            "endChapter": 19
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 12,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 20,
+            "endChapter": 20
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 14,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 21,
+            "endChapter": 21
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 23,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 17,
+            "endChapter": 18
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 22,
+            "endChapter": 22
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 19,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 23,
+            "endChapter": 23
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "1 Kings",
+            "startChapter": 21,
+            "endChapter": 22
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 24,
+            "endChapter": 24
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 25,
+            "endChapter": 25
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 4,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 26,
+            "endChapter": 26
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 24,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 6,
+            "endChapter": 8
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 27,
+            "endChapter": 27
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 9,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Acts",
+            "startChapter": 28,
+            "endChapter": 28
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 11,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 14,
+            "endChapter": 15
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 16,
+            "endChapter": 17
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 25,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 18,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 21,
+            "endChapter": 22
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "2 Kings",
+            "startChapter": 23,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 4,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 26,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 7,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 10,
+            "endChapter": 12
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 13,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 17,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 21,
+            "endChapter": 23
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 27,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 24,
+            "endChapter": 27
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "1 Chronicles",
+            "startChapter": 28,
+            "endChapter": 29
+          },
+          {
+            "book": "2 Chronicles",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 2,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Romans",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 6,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 8,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 28,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 12,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 17,
+            "endChapter": 19
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 20,
+            "endChapter": 23
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 24,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 26,
+            "endChapter": 28
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 29,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 29,
+            "endChapter": 31
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 32,
+            "endChapter": 33
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "2 Chronicles",
+            "startChapter": 34,
+            "endChapter": 36
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Ezra",
+            "startChapter": 1,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Ezra",
+            "startChapter": 5,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 30,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Ezra",
+            "startChapter": 8,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Nehemiah",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Nehemiah",
+            "startChapter": 4,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Nehemiah",
+            "startChapter": 7,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Corinthians",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Nehemiah",
+            "startChapter": 10,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 31,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Nehemiah",
+            "startChapter": 12,
+            "endChapter": 13
+          },
+          {
+            "book": "Esther",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Esther",
+            "startChapter": 2,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Esther",
+            "startChapter": 6,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Esther",
+            "startChapter": 10,
+            "endChapter": 10
+          },
+          {
+            "book": "Job",
+            "startChapter": 1,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Job",
+            "startChapter": 6,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 32,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Job",
+            "startChapter": 11,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Job",
+            "startChapter": 17,
+            "endChapter": 21
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Job",
+            "startChapter": 22,
+            "endChapter": 28
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Job",
+            "startChapter": 29,
+            "endChapter": 32
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Job",
+            "startChapter": 33,
+            "endChapter": 37
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 33,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Job",
+            "startChapter": 38,
+            "endChapter": 42
+          },
+          {
+            "book": "Psalms",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 2,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Corinthians",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 12,
+            "endChapter": 20
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Galatians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 21,
+            "endChapter": 29
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Galatians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 30,
+            "endChapter": 35
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Galatians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 34,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 36,
+            "endChapter": 42
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Galatians",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 43,
+            "endChapter": 50
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Galatians",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 51,
+            "endChapter": 59
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Galatians",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 60,
+            "endChapter": 68
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Ephesians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 69,
+            "endChapter": 73
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Ephesians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 35,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 74,
+            "endChapter": 79
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Ephesians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 80,
+            "endChapter": 88
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Ephesians",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 89,
+            "endChapter": 95
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Ephesians",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 96,
+            "endChapter": 104
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Ephesians",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 105,
+            "endChapter": 108
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Philippians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 36,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 109,
+            "endChapter": 118
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Philippians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 119,
+            "endChapter": 119
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Philippians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 120,
+            "endChapter": 136
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Philippians",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 137,
+            "endChapter": 146
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Colossians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Psalms",
+            "startChapter": 147,
+            "endChapter": 150
+          },
+          {
+            "book": "Proverbs",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Colossians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 37,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Proverbs",
+            "startChapter": 4,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Colossians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Proverbs",
+            "startChapter": 10,
+            "endChapter": 14
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Colossians",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Proverbs",
+            "startChapter": 15,
+            "endChapter": 18
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Thessalonians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Proverbs",
+            "startChapter": 19,
+            "endChapter": 23
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Thessalonians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Proverbs",
+            "startChapter": 24,
+            "endChapter": 28
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Thessalonians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 38,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Proverbs",
+            "startChapter": 29,
+            "endChapter": 31
+          },
+          {
+            "book": "Ecclesiastes",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Thessalonians",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Ecclesiastes",
+            "startChapter": 2,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Thessalonians",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Ecclesiastes",
+            "startChapter": 7,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Thessalonians",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Ecclesiastes",
+            "startChapter": 12,
+            "endChapter": 12
+          },
+          {
+            "book": "Song of Solomon",
+            "startChapter": 1,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Thessalonians",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Song of Solomon",
+            "startChapter": 7,
+            "endChapter": 8
+          },
+          {
+            "book": "Isaiah",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Thessalonians",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 39,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 4,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Timothy",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 8,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Timothy",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 12,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Timothy",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 17,
+            "endChapter": 21
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Timothy",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 22,
+            "endChapter": 26
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Timothy",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 40,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 27,
+            "endChapter": 29
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Timothy",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 30,
+            "endChapter": 34
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Timothy",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 35,
+            "endChapter": 37
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Timothy",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 38,
+            "endChapter": 41
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Timothy",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 42,
+            "endChapter": 44
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Timothy",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 41,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 45,
+            "endChapter": 48
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Titus",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 49,
+            "endChapter": 52
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Titus",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 53,
+            "endChapter": 57
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Titus",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 58,
+            "endChapter": 62
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Philemon",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Isaiah",
+            "startChapter": 63,
+            "endChapter": 66
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 42,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 4,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 6,
+            "endChapter": 8
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 9,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 12,
+            "endChapter": 15
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 43,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 16,
+            "endChapter": 18
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 19,
+            "endChapter": 22
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 23,
+            "endChapter": 25
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 26,
+            "endChapter": 27
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 28,
+            "endChapter": 30
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 44,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 31,
+            "endChapter": 32
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 33,
+            "endChapter": 35
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Hebrews",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 36,
+            "endChapter": 37
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "James",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 38,
+            "endChapter": 41
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "James",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 42,
+            "endChapter": 44
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "James",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 45,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 45,
+            "endChapter": 48
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "James",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 49,
+            "endChapter": 50
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "James",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 51,
+            "endChapter": 51
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Peter",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Jeremiah",
+            "startChapter": 52,
+            "endChapter": 52
+          },
+          {
+            "book": "Lamentations",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Peter",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Lamentations",
+            "startChapter": 2,
+            "endChapter": 5
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Peter",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 46,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Peter",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 4,
+            "endChapter": 7
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 Peter",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 8,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Peter",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 12,
+            "endChapter": 14
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Peter",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 15,
+            "endChapter": 16
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 Peter",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 47,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 17,
+            "endChapter": 19
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 John",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 20,
+            "endChapter": 21
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 John",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 22,
+            "endChapter": 24
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 John",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 25,
+            "endChapter": 27
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 John",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 28,
+            "endChapter": 30
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "1 John",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 48,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 31,
+            "endChapter": 32
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "2 John",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 33,
+            "endChapter": 35
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "3 John",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 36,
+            "endChapter": 38
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Jude",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 39,
+            "endChapter": 40
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 41,
+            "endChapter": 43
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 2,
+            "endChapter": 2
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 49,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 44,
+            "endChapter": 45
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 3,
+            "endChapter": 3
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Ezekiel",
+            "startChapter": 46,
+            "endChapter": 48
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 4,
+            "endChapter": 4
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Daniel",
+            "startChapter": 1,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 5,
+            "endChapter": 5
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Daniel",
+            "startChapter": 3,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 6,
+            "endChapter": 6
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Daniel",
+            "startChapter": 5,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 7,
+            "endChapter": 7
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 50,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Daniel",
+            "startChapter": 7,
+            "endChapter": 9
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 8,
+            "endChapter": 8
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Daniel",
+            "startChapter": 10,
+            "endChapter": 11
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 9,
+            "endChapter": 9
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Daniel",
+            "startChapter": 12,
+            "endChapter": 12
+          },
+          {
+            "book": "Hosea",
+            "startChapter": 1,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 10,
+            "endChapter": 10
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Hosea",
+            "startChapter": 5,
+            "endChapter": 10
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 11,
+            "endChapter": 11
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Hosea",
+            "startChapter": 11,
+            "endChapter": 14
+          },
+          {
+            "book": "Joel",
+            "startChapter": 1,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 12,
+            "endChapter": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 51,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Joel",
+            "startChapter": 3,
+            "endChapter": 3
+          },
+          {
+            "book": "Amos",
+            "startChapter": 1,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 13,
+            "endChapter": 13
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Amos",
+            "startChapter": 5,
+            "endChapter": 8
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 14,
+            "endChapter": 14
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Amos",
+            "startChapter": 9,
+            "endChapter": 9
+          },
+          {
+            "book": "Obadiah",
+            "startChapter": 1,
+            "endChapter": 1
+          },
+          {
+            "book": "Jonah",
+            "startChapter": 1,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 15,
+            "endChapter": 15
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Micah",
+            "startChapter": 1,
+            "endChapter": 6
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 16,
+            "endChapter": 16
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Micah",
+            "startChapter": 7,
+            "endChapter": 7
+          },
+          {
+            "book": "Nahum",
+            "startChapter": 1,
+            "endChapter": 3
+          },
+          {
+            "book": "Habakkuk",
+            "startChapter": 1,
+            "endChapter": 1
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 17,
+            "endChapter": 17
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "week": 52,
+    "days": [
+      {
+        "day": 1,
+        "oldTestament": [
+          {
+            "book": "Habakkuk",
+            "startChapter": 2,
+            "endChapter": 3
+          },
+          {
+            "book": "Zephaniah",
+            "startChapter": 1,
+            "endChapter": 3
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 18,
+            "endChapter": 18
+          }
+        ]
+      },
+      {
+        "day": 2,
+        "oldTestament": [
+          {
+            "book": "Haggai",
+            "startChapter": 1,
+            "endChapter": 2
+          },
+          {
+            "book": "Zechariah",
+            "startChapter": 1,
+            "endChapter": 2
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 19,
+            "endChapter": 19
+          }
+        ]
+      },
+      {
+        "day": 3,
+        "oldTestament": [
+          {
+            "book": "Zechariah",
+            "startChapter": 3,
+            "endChapter": 8
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 20,
+            "endChapter": 20
+          }
+        ]
+      },
+      {
+        "day": 4,
+        "oldTestament": [
+          {
+            "book": "Zechariah",
+            "startChapter": 9,
+            "endChapter": 13
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 21,
+            "endChapter": 21
+          }
+        ]
+      },
+      {
+        "day": 5,
+        "oldTestament": [
+          {
+            "book": "Zechariah",
+            "startChapter": 14,
+            "endChapter": 14
+          },
+          {
+            "book": "Malachi",
+            "startChapter": 1,
+            "endChapter": 4
+          }
+        ],
+        "newTestament": [
+          {
+            "book": "Revelation",
+            "startChapter": 22,
+            "endChapter": 22
+          }
+        ]
+      }
+    ]
+  }
+];
