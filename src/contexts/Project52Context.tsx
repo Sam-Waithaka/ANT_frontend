@@ -16,7 +16,7 @@ const Project52Context = createContext<Project52ContextType | undefined>(undefin
 
 export const Project52Provider = ({ children }: { children: ReactNode }) => {
     const [readingTarget, setReadingTarget] = useState(() => getCurrentReadingTarget());
-    const [catchphraseIndex, setCatchphraseIndex] = useState(0);
+    const [catchphraseIndex, setCatchphraseIndex] = useState(() => Math.floor(Math.random() * project52Catchphrases.length));
 
     const currentWeek = readingTarget.week;
     const weeks = useMemo(() => buildReadingWeeks(project52Readings, currentWeek), [currentWeek]);
@@ -69,8 +69,14 @@ export const Project52Provider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const interval = window.setInterval(() => {
-            setCatchphraseIndex((current) => (current + 1) % project52Catchphrases.length);
-        }, 4200);
+            setCatchphraseIndex((current) => {
+                let nextIndex;
+                do {
+                    nextIndex = Math.floor(Math.random() * project52Catchphrases.length);
+                } while (nextIndex === current && project52Catchphrases.length > 1);
+                return nextIndex;
+            });
+        }, 4400);
 
         return () => window.clearInterval(interval);
     }, []);

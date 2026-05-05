@@ -54,11 +54,11 @@ const ScriptureProject52Card = ({ darkMode, books, onBookChange, onChapterChange
 
       {readingTarget.isWeekendCarryover && (
         <p className={`mt-5 text-sm font-medium ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
-          The plan pauses for the weekend. Catch up on the week's goals or take time to meditate on Friday's readings!
+          The plan pauses for the weekend. Catch up on the week's goals or take time to meditate on the week's readings!
         </p>
       )}
 
-      <div className={`mt-5 ${readingTarget.isWeekendCarryover ? 'pt-5 border-t border-red-900/10 dark:border-white/10' : ''}`}>
+      <div className={`mt-5 flex min-h-[116px] items-center sm:min-h-[82px] ${readingTarget.isWeekendCarryover ? 'pt-5 border-t border-black/10 dark:border-white/10' : ''}`}>
         <RotatingCatchphrase darkMode={darkMode} />
       </div>
 
