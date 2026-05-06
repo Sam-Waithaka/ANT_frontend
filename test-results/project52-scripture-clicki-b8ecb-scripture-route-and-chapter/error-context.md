@@ -78,82 +78,86 @@ Call log:
         - searchbox [ref=e48]
       - generic [ref=e49]:
         - article [ref=e50]:
-          - generic [ref=e52]:
-            - paragraph [ref=e53]: BSB
-            - heading "John 1" [level=1] [ref=e54]
-        - complementary [ref=e82]:
-          - generic [ref=e83]:
-            - generic [ref=e84]:
-              - paragraph [ref=e85]: Bible tools
-              - generic [ref=e86]:
-                - button "Compare" [ref=e87] [cursor=pointer]
-                - button "Resources" [ref=e88] [cursor=pointer]
-                - button "Glossary" [ref=e89] [cursor=pointer]
-                - button "Markers" [ref=e90] [cursor=pointer]
-                - button "Notes" [ref=e91] [cursor=pointer]
-              - generic [ref=e92]:
-                - generic [ref=e93]:
-                  - generic [ref=e94]:
-                    - button "John" [ref=e96] [cursor=pointer]:
-                      - generic [ref=e97]: John
-                      - img [ref=e98]
-                    - button "1" [ref=e101] [cursor=pointer]:
-                      - generic [ref=e102]: "1"
-                      - img [ref=e103]
-                  - generic [ref=e105]:
-                    - paragraph [ref=e106]: Versions
-                    - generic [ref=e108]:
-                      - generic [ref=e109] [cursor=pointer]:
-                        - checkbox "BSB Berean Standard Bible" [checked] [ref=e110]
-                        - generic [ref=e111]: BSB
-                        - generic [ref=e112]: Berean Standard Bible
-                      - generic [ref=e113] [cursor=pointer]:
-                        - checkbox "ASV American Standard Version" [checked] [ref=e114]
-                        - generic [ref=e115]: ASV
-                        - generic [ref=e116]: American Standard Version
-                    - paragraph [ref=e117]: Comparing John 1.
-                - button "Run comparison" [ref=e118] [cursor=pointer]
-              - paragraph [ref=e120]: Run a tool to view API results here.
-            - generic [ref=e121]:
-              - generic [ref=e122]:
-                - img [ref=e124]
-                - generic [ref=e126]:
-                  - paragraph [ref=e127]: Project 52
-                  - heading "Wednesday's Reading" [level=2] [ref=e128]
-              - generic [ref=e130]:
-                - generic [ref=e131]: Week 18 of 52
-                - generic [ref=e132]: 35%
-              - generic [ref=e136]:
-                - img [ref=e137]
-                - generic [ref=e141]: Still Reading. Still Believing.
-              - generic [ref=e142]:
-                - button "OT 1 Samuel 14-15" [ref=e143] [cursor=pointer]:
-                  - generic [ref=e144]:
-                    - generic [ref=e145]: OT
-                    - generic [ref=e146]: 1 Samuel 14-15
-                - button "NT John 20" [ref=e147] [cursor=pointer]:
-                  - generic [ref=e148]:
-                    - generic [ref=e149]: NT
-                    - generic [ref=e150]: John 20
-              - link "Open Project 52" [ref=e152] [cursor=pointer]:
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - paragraph [ref=e53]: BSB
+              - heading "John 1" [level=1] [ref=e54]
+            - status [ref=e56]:
+              - paragraph [ref=e57]: No verses found
+              - paragraph [ref=e58]: Select a chapter to begin reading.
+        - complementary [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - paragraph [ref=e62]: Bible tools
+              - generic [ref=e63]:
+                - button "Compare" [ref=e64] [cursor=pointer]
+                - button "Resources" [ref=e65] [cursor=pointer]
+                - button "Glossary" [ref=e66] [cursor=pointer]
+                - button "Markers" [ref=e67] [cursor=pointer]
+                - button "Notes" [ref=e68] [cursor=pointer]
+              - generic [ref=e69]:
+                - generic [ref=e70]:
+                  - generic [ref=e71]:
+                    - button "John" [ref=e73] [cursor=pointer]:
+                      - generic [ref=e74]: John
+                      - img [ref=e75]
+                    - button "1" [ref=e78] [cursor=pointer]:
+                      - generic [ref=e79]: "1"
+                      - img [ref=e80]
+                  - generic [ref=e82]:
+                    - paragraph [ref=e83]: Versions
+                    - generic [ref=e85]:
+                      - generic [ref=e86] [cursor=pointer]:
+                        - checkbox "BSB Berean Standard Bible" [checked] [ref=e87]
+                        - generic [ref=e88]: BSB
+                        - generic [ref=e89]: Berean Standard Bible
+                      - generic [ref=e90] [cursor=pointer]:
+                        - checkbox "ASV American Standard Version" [checked] [ref=e91]
+                        - generic [ref=e92]: ASV
+                        - generic [ref=e93]: American Standard Version
+                    - paragraph [ref=e94]: Comparing John 1.
+                - button "Run comparison" [ref=e95] [cursor=pointer]
+              - paragraph [ref=e97]: Run a tool to view API results here.
+            - generic [ref=e98]:
+              - generic [ref=e99]:
+                - img [ref=e101]
+                - generic [ref=e103]:
+                  - paragraph [ref=e104]: Project 52
+                  - heading "Wednesday's Reading" [level=2] [ref=e105]
+              - generic [ref=e107]:
+                - generic [ref=e108]: Week 18 of 52
+                - generic [ref=e109]: 35%
+              - generic [ref=e113]:
+                - img [ref=e114]
+                - generic [ref=e118]: Open. Read. Obey.
+              - generic [ref=e119]:
+                - button "OT 1 Samuel 14-15" [ref=e120] [cursor=pointer]:
+                  - generic [ref=e121]:
+                    - generic [ref=e122]: OT
+                    - generic [ref=e123]: 1 Samuel 14-15
+                - button "NT John 20" [ref=e124] [cursor=pointer]:
+                  - generic [ref=e125]:
+                    - generic [ref=e126]: NT
+                    - generic [ref=e127]: John 20
+              - link "Open Project 52" [ref=e129] [cursor=pointer]:
                 - /url: /project52
                 - text: Open Project 52
-                - img [ref=e153]
-  - generic [ref=e155]:
-    - button "Previous chapter" [ref=e156] [cursor=pointer]:
-      - img [ref=e157]
-    - generic [ref=e159]:
-      - button "BSB" [ref=e161] [cursor=pointer]:
-        - generic [ref=e162]: BSB
-        - img [ref=e163]
-      - button "John" [ref=e166] [cursor=pointer]:
-        - generic [ref=e167]: John
-        - img [ref=e168]
-      - button "1" [ref=e171] [cursor=pointer]:
-        - generic [ref=e172]: "1"
-        - img [ref=e173]
-    - button "Next chapter" [ref=e175] [cursor=pointer]:
-      - img [ref=e176]
+                - img [ref=e130]
+  - generic [ref=e132]:
+    - button "Previous chapter" [ref=e133] [cursor=pointer]:
+      - img [ref=e134]
+    - generic [ref=e136]:
+      - button "BSB" [ref=e138] [cursor=pointer]:
+        - generic [ref=e139]: BSB
+        - img [ref=e140]
+      - button "John" [ref=e143] [cursor=pointer]:
+        - generic [ref=e144]: John
+        - img [ref=e145]
+      - button "1" [ref=e148] [cursor=pointer]:
+        - generic [ref=e149]: "1"
+        - img [ref=e150]
+    - button "Next chapter" [ref=e152] [cursor=pointer]:
+      - img [ref=e153]
 ```
 
 # Test source
@@ -288,4 +292,14 @@ Call log:
   154 |   await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
   155 | });
   156 | 
+  157 | test('clicking a verse opens the scripture action sheet', async ({ page }) => {
+  158 |   await page.goto('/scripture');
+  159 | 
+  160 |   await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+  161 | 
+  162 |   await expect(page.getByRole('dialog')).toBeVisible();
+  163 |   await expect(page.getByRole('button', { name: /share verse/i })).toBeVisible();
+  164 |   await expect(page.getByRole('button', { name: /copy chapter/i })).toBeVisible();
+  165 | });
+  166 | 
 ```
