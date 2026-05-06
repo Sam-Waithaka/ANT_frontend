@@ -24,11 +24,12 @@ const ScriptureReaderTopBar = ({
   onSearchBlur,
   onSearchChange,
   onVersionChange,
-}: ScriptureReaderTopBarProps) => (
+}: ScriptureReaderTopBarProps) => {
+  return (
   <header
     className={`shrink-0 overflow-hidden border-b px-4 backdrop-blur-xl transition-[max-height,opacity,transform,padding,border-color] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
       compact
-        ? 'max-h-20 translate-y-0 py-2 opacity-100 max-md:max-h-0 max-md:-translate-y-3 max-md:border-b-0 max-md:py-0 max-md:opacity-0'
+        ? 'max-h-20 translate-y-0 py-2 opacity-100 max-lg:max-h-0 max-lg:-translate-y-3 max-lg:border-b-0 max-lg:py-0 max-lg:opacity-0'
         : 'max-h-20 translate-y-0 py-2 opacity-100'
     } ${
       darkMode ? 'border-white/10 bg-[#080808]/92' : 'border-black/10 bg-[#f8f5ef]/92'
@@ -70,6 +71,7 @@ const ScriptureReaderTopBar = ({
       </div>
     </div>
   </header>
-);
+  );
+};
 
 export default ScriptureReaderTopBar;

@@ -134,7 +134,7 @@ const SiteNavigation = ({
   return (
     <>
       <div
-        className={`pointer-events-none fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-4 py-3 transition-all duration-300 ease-out lg:hidden ${
+        className={`pointer-events-none fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-4 py-3 transition-all duration-300 ease-out md:hidden ${
           drawerOpen
             ? '-translate-y-3 opacity-0'
             : compactSmallHeader
@@ -174,10 +174,10 @@ const SiteNavigation = ({
       <header
         className={`${sticky ? 'sticky top-0' : 'relative'} z-30 border-b backdrop-blur-xl transition-all duration-300 ease-out ${
         drawerOpen
-          ? 'max-lg:max-h-0 max-lg:-translate-y-full max-lg:overflow-hidden max-lg:border-b-0 max-lg:opacity-0'
+          ? 'max-md:max-h-0 max-md:-translate-y-full max-md:overflow-hidden max-md:border-b-0 max-md:opacity-0'
           : compactSmallHeader
-            ? 'max-lg:max-h-0 max-lg:-translate-y-full max-lg:overflow-hidden max-lg:border-b-0 max-lg:opacity-0'
-            : 'max-lg:max-h-24 max-lg:translate-y-0 max-lg:opacity-100'
+            ? 'max-md:max-h-0 max-md:-translate-y-full max-md:overflow-hidden max-md:border-b-0 max-md:opacity-0'
+            : 'max-md:max-h-24 max-md:translate-y-0 max-md:opacity-100'
       } ${
         darkMode ? 'border-white/10 bg-black/75' : 'border-black/10 bg-[#f8f5ef]/85'
       }`}
