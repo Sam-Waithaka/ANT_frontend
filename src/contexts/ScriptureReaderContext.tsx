@@ -2,6 +2,8 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import type { ScriptureReferenceIntent } from '../types/scripture';
 
+const DEFAULT_VERSION_ABBR = 'BSB';
+
 type ScriptureReaderContextType = {
   pendingReference: ScriptureReferenceIntent | null;
   selectedBookId: string;
@@ -17,7 +19,7 @@ type ScriptureReaderContextType = {
 const ScriptureReaderContext = createContext<ScriptureReaderContextType | undefined>(undefined);
 
 export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) => {
-  const [selectedVersionId, setSelectedVersionIdState] = useState('');
+  const [selectedVersionId, setSelectedVersionIdState] = useState(DEFAULT_VERSION_ABBR);
   const [selectedBookId, setSelectedBookIdState] = useState('');
   const [selectedChapterId, setSelectedChapterIdState] = useState('');
   const [pendingReference, setPendingReference] = useState<ScriptureReferenceIntent | null>(null);
@@ -31,9 +33,7 @@ export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) =
       clearPendingReference: () => setPendingReference(null),
       openReference: (reference) => {
         setPendingReference(reference);
-        if (reference.versionId) {
-          setSelectedVersionIdState(reference.versionId);
-        }
+        setSelectedVersionIdState(reference.versionId || selectedVersionId || DEFAULT_VERSION_ABBR);
       },
       setSelectedBookId: (value) => {
         setSelectedBookIdState(value);
