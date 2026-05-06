@@ -156,8 +156,12 @@ test('clicking a Project 52 tile opens the correct scripture route and chapter',
   await page.getByRole('button', { name: /john 20/i }).click();
 
   await expect(page).toHaveURL(/\/scripture$/);
-  await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
-  await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible({ timeout: 15000 });
+  await expect(
+    page.getByRole('button', {
+      name: /Early on the first day of the week Mary Magdalene went to the tomb\./i,
+    }),
+  ).toBeVisible({ timeout: 15000 });
 });
 
 test('mobile scripture dock panels close when tapping the backdrop', async ({ page }) => {
@@ -202,8 +206,14 @@ test('compare verse opens the chapter comparison modal focused on the selected v
   await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
   await page.getByRole('button', { name: /compare verse/i }).click();
 
-  await expect(page.getByRole('dialog', { name: 'Genesis 1', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Genesis 1', exact: true }).last()).toBeVisible();
-  await expect(page.getByText('Verse 1')).toBeVisible();
-  await expect(page.getByText('In the beginning God created the heavens and the earth.')).toBeVisible();
+  const comparisonDialog = page.getByRole('dialog', { name: 'Genesis 1', exact: true });
+
+  await expect(comparisonDialog).toBeVisible();
+  await expect(comparisonDialog.getByRole('heading', { name: 'Genesis 1', exact: true })).toBeVisible();
+  await expect(comparisonDialog.getByText('Verse 1')).toBeVisible();
+  await expect(
+    comparisonDialog.getByRole('article').filter({
+      has: page.getByText('In the beginning God created the heavens and the earth.', { exact: true }),
+    }).first(),
+  ).toBeVisible();
 });

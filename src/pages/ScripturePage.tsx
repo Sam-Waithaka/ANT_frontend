@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ScriptureActionSheet from '../components/scripture/ScriptureActionSheet';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
 import ScriptureComparisonModal from '../components/scripture/ScriptureComparisonModal';
@@ -68,7 +68,10 @@ const ScripturePage = () => {
     loading.verses;
   const { crossReferences, footnotes, licenseNote } = useScriptureChapterMeta(verses);
   const scriptureSearch = useScriptureSearch(searchTerm, selectedVersionId);
-  const chapterVerses = verses.filter((verse) => verse.number > 0);
+  const chapterVerses = useMemo(
+    () => verses.filter((verse) => verse.number > 0),
+    [verses],
+  );
   const chapterSharePayload = buildChapterSharePayload({
     book: selectedBook,
     chapter: selectedChapter,
@@ -106,7 +109,16 @@ const ScripturePage = () => {
 
   useEffect(() => {
     setSelectedVerses((current) =>
-      current.filter((verse) => chapterVerses.some((chapterVerse) => chapterVerse.id === verse.id)),
+      {
+        const next = current.filter((verse) =>
+          chapterVerses.some((chapterVerse) => chapterVerse.id === verse.id),
+        );
+
+        return next.length === current.length &&
+          next.every((verse, index) => verse.id === current[index]?.id)
+          ? current
+          : next;
+      },
     );
 
     if (selectedVerseNumber && !chapterVerses.some((verse) => verse.number === selectedVerseNumber)) {
@@ -126,7 +138,18 @@ const ScripturePage = () => {
 
   const closeActionSheet = () => {
     setSelectedVerses([]);
-    setFocusVerseNumber(selectedVerseNumber ?? null);
+    setFocusVerseNumber(null);
+  };
+
+  const handleVerseSelect = (verse: BibleVerse) => {
+    const exists = selectedVerses.some((item) => item.id === verse.id);
+    const next = exists
+      ? selectedVerses.filter((item) => item.id !== verse.id)
+      : [...selectedVerses, verse].sort((left, right) => left.number - right.number);
+
+    setSelectedVerses(next);
+    setSelectedVerseNumber(next.length > 0 ? next[0].number : null);
+    setFocusVerseNumber(null);
   };
 
   const writeToClipboard = async (text: string) => {
@@ -233,20 +256,7 @@ const ScripturePage = () => {
               searchLoading={scriptureSearch.loading}
               searchResults={scriptureSearch.results}
               searchTerm={searchTerm}
-              onVerseSelect={(verse) => {
-                setSelectedVerses((current) => {
-                  const exists = current.some((item) => item.id === verse.id);
-                  const next = exists
-                    ? current.filter((item) => item.id !== verse.id)
-                    : [...current, verse].sort((left, right) => left.number - right.number);
-
-                  const nextFocus = next.length > 0 ? next[next.length - 1].number : null;
-                  setFocusVerseNumber(nextFocus);
-                  setSelectedVerseNumber(next.length > 0 ? next[0].number : null);
-
-                  return next;
-                });
-              }}
+              onVerseSelect={handleVerseSelect}
               selectedVerseNumbers={selectedVerses.map((verse) => verse.number)}
               selectedBook={selectedBook}
               selectedChapter={selectedChapter}

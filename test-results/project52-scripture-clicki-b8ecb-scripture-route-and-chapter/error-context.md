@@ -14,14 +14,14 @@
 ```
 Error: expect(locator).toBeVisible() failed
 
-Locator: getByText('Early on the first day of the week Mary Magdalene went to the tomb.')
+Locator: getByRole('button', { name: /Early on the first day of the week Mary Magdalene went to the tomb\./i })
 Expected: visible
-Timeout: 5000ms
+Timeout: 15000ms
 Error: element(s) not found
 
 Call log:
-  - Expect "toBeVisible" with timeout 5000ms
-  - waiting for getByText('Early on the first day of the week Mary Magdalene went to the tomb.')
+  - Expect "toBeVisible" with timeout 15000ms
+  - waiting for getByRole('button', { name: /Early on the first day of the week Mary Magdalene went to the tomb\./i })
 
 ```
 
@@ -129,7 +129,7 @@ Call log:
                 - generic [ref=e109]: 35%
               - generic [ref=e113]:
                 - img [ref=e114]
-                - generic [ref=e118]: Truth That Transforms
+                - generic [ref=e118]: Growing Through Scripture
               - generic [ref=e119]:
                 - button "OT 1 Samuel 14-15" [ref=e120] [cursor=pointer]:
                   - generic [ref=e121]:
@@ -163,10 +163,6 @@ Call log:
 # Test source
 
 ```ts
-  60  | 
-  61  | const fulfillJson = async (route: Route, payload: unknown) => {
-  62  |   await route.fulfill({
-  63  |     status: 200,
   64  |     contentType: 'application/json',
   65  |     body: JSON.stringify(payload),
   66  |   });
@@ -262,57 +258,67 @@ Call log:
   156 |   await page.getByRole('button', { name: /john 20/i }).click();
   157 | 
   158 |   await expect(page).toHaveURL(/\/scripture$/);
-  159 |   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
-> 160 |   await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
-      |                                                                                                       ^ Error: expect(locator).toBeVisible() failed
-  161 | });
-  162 | 
-  163 | test('mobile scripture dock panels close when tapping the backdrop', async ({ page }) => {
-  164 |   await page.setViewportSize({ width: 390, height: 844 });
-  165 |   await page.goto('/scripture');
+  159 |   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible({ timeout: 15000 });
+  160 |   await expect(
+  161 |     page.getByRole('button', {
+  162 |       name: /Early on the first day of the week Mary Magdalene went to the tomb\./i,
+  163 |     }),
+> 164 |   ).toBeVisible({ timeout: 15000 });
+      |     ^ Error: expect(locator).toBeVisible() failed
+  165 | });
   166 | 
-  167 |   await page.getByRole('button', { name: /project 52/i }).click();
-  168 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toBeVisible();
-  169 | 
-  170 |   await page.mouse.click(12, 12);
-  171 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toHaveCount(0);
-  172 | });
+  167 | test('mobile scripture dock panels close when tapping the backdrop', async ({ page }) => {
+  168 |   await page.setViewportSize({ width: 390, height: 844 });
+  169 |   await page.goto('/scripture');
+  170 | 
+  171 |   await page.getByRole('button', { name: /project 52/i }).click();
+  172 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toBeVisible();
   173 | 
-  174 | test('mobile project 52 panel closes after opening a reading', async ({ page }) => {
-  175 |   await page.setViewportSize({ width: 390, height: 844 });
-  176 |   await page.goto('/scripture');
+  174 |   await page.mouse.click(12, 12);
+  175 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toHaveCount(0);
+  176 | });
   177 | 
-  178 |   await page.getByRole('button', { name: /project 52/i }).click();
-  179 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toBeVisible();
-  180 | 
-  181 |   await page.getByRole('button', { name: /john 20/i }).click();
-  182 | 
-  183 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toHaveCount(0);
-  184 |   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
-  185 |   await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
-  186 | });
-  187 | 
-  188 | test('clicking a verse opens the scripture action sheet', async ({ page }) => {
-  189 |   await page.goto('/scripture');
-  190 | 
-  191 |   await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
-  192 | 
-  193 |   await expect(page.getByRole('dialog')).toBeVisible();
-  194 |   await expect(page.getByRole('button', { name: /copy verse/i })).toBeVisible();
-  195 |   await expect(page.getByRole('button', { name: /compare verse/i })).toBeVisible();
-  196 |   await expect(page.getByRole('button', { name: /collapse scripture actions|expand scripture actions/i })).toBeVisible();
-  197 | });
-  198 | 
-  199 | test('compare verse opens the chapter comparison modal focused on the selected verse', async ({ page }) => {
-  200 |   await page.goto('/scripture');
-  201 | 
-  202 |   await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
-  203 |   await page.getByRole('button', { name: /compare verse/i }).click();
-  204 | 
-  205 |   await expect(page.getByRole('dialog', { name: 'Genesis 1' })).toBeVisible();
-  206 |   await expect(page.getByRole('heading', { name: 'Genesis 1', exact: true }).last()).toBeVisible();
-  207 |   await expect(page.getByText('Verse 1')).toBeVisible();
-  208 |   await expect(page.getByText('In the beginning God created the heavens and the earth.')).toBeVisible();
-  209 | });
+  178 | test('mobile project 52 panel closes after opening a reading', async ({ page }) => {
+  179 |   await page.setViewportSize({ width: 390, height: 844 });
+  180 |   await page.goto('/scripture');
+  181 | 
+  182 |   await page.getByRole('button', { name: /project 52/i }).click();
+  183 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toBeVisible();
+  184 | 
+  185 |   await page.getByRole('button', { name: /john 20/i }).click();
+  186 | 
+  187 |   await expect(page.getByRole('dialog', { name: /project 52/i })).toHaveCount(0);
+  188 |   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
+  189 |   await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
+  190 | });
+  191 | 
+  192 | test('clicking a verse opens the scripture action sheet', async ({ page }) => {
+  193 |   await page.goto('/scripture');
+  194 | 
+  195 |   await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+  196 | 
+  197 |   await expect(page.getByRole('dialog')).toBeVisible();
+  198 |   await expect(page.getByRole('button', { name: /copy verse/i })).toBeVisible();
+  199 |   await expect(page.getByRole('button', { name: /compare verse/i })).toBeVisible();
+  200 |   await expect(page.getByRole('button', { name: /collapse scripture actions|expand scripture actions/i })).toBeVisible();
+  201 | });
+  202 | 
+  203 | test('compare verse opens the chapter comparison modal focused on the selected verse', async ({ page }) => {
+  204 |   await page.goto('/scripture');
+  205 | 
+  206 |   await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+  207 |   await page.getByRole('button', { name: /compare verse/i }).click();
+  208 | 
+  209 |   const comparisonDialog = page.getByRole('dialog', { name: 'Genesis 1', exact: true });
   210 | 
+  211 |   await expect(comparisonDialog).toBeVisible();
+  212 |   await expect(comparisonDialog.getByRole('heading', { name: 'Genesis 1', exact: true })).toBeVisible();
+  213 |   await expect(comparisonDialog.getByText('Verse 1')).toBeVisible();
+  214 |   await expect(
+  215 |     comparisonDialog.getByRole('article').filter({
+  216 |       has: page.getByText('In the beginning God created the heavens and the earth.', { exact: true }),
+  217 |     }).first(),
+  218 |   ).toBeVisible();
+  219 | });
+  220 | 
 ```
