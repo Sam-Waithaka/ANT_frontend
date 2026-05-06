@@ -129,7 +129,7 @@ Call log:
                 - generic [ref=e109]: 35%
               - generic [ref=e113]:
                 - img [ref=e114]
-                - generic [ref=e118]: Growing Through Scripture
+                - generic [ref=e118]: Through The Bible. Through The Year.
               - generic [ref=e119]:
                 - button "OT 1 Samuel 14-15" [ref=e120] [cursor=pointer]:
                   - generic [ref=e121]:

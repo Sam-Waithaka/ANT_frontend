@@ -133,8 +133,9 @@ const ScripturePage = () => {
   useEffect(() => {
     if (selectedVerseNumber && selectedVerses.length === 0) {
       setFocusVerseNumber(selectedVerseNumber);
+      setSelectedVerseNumber(null);
     }
-  }, [selectedVerseNumber, selectedVerses.length]);
+  }, [selectedVerseNumber, selectedVerses.length, setSelectedVerseNumber]);
 
   const closeActionSheet = () => {
     setSelectedVerses([]);
@@ -148,7 +149,6 @@ const ScripturePage = () => {
       : [...selectedVerses, verse].sort((left, right) => left.number - right.number);
 
     setSelectedVerses(next);
-    setSelectedVerseNumber(next.length > 0 ? next[0].number : null);
     setFocusVerseNumber(null);
   };
 
