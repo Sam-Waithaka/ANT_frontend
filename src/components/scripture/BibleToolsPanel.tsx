@@ -265,7 +265,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
                 darkMode={darkMode}
                 fullWidth
                 gridClassName="grid max-h-64 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-4"
-                labelStyle="chapter"
+                labelStyle="number"
                 menuClassName="right-0 w-[min(18rem,calc(100vw-3rem))]"
                 open={openComparePicker === 'chapter'}
                 placement="bottom"

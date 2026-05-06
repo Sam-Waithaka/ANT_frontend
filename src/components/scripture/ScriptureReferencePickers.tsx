@@ -160,7 +160,7 @@ export const ScriptureChapterPicker = ({
         type="button"
         onClick={() => onOpenChange(!open)}
         className={`${pillBase} ${getNeutralPillClass(darkMode)} ${
-          fullWidth ? 'w-full justify-between' : 'min-w-[4.75rem]'
+          fullWidth ? 'w-full justify-between' : 'min-w-[4.1rem] px-3'
         }`}
       >
         <span>{label}</span>
