@@ -25,6 +25,7 @@ const ScripturePage = () => {
     error,
     goToNextChapter,
     goToPreviousChapter,
+    isResolvingReference,
     loading,
     canGoNext,
     canGoPrevious,
@@ -41,7 +42,12 @@ const ScripturePage = () => {
     verses,
   } = useScriptureReader();
 
-  const isLoading = loading.versions || loading.books || loading.chapters || loading.verses;
+  const isLoading =
+    isResolvingReference ||
+    loading.versions ||
+    loading.books ||
+    loading.chapters ||
+    loading.verses;
   const { crossReferences, footnotes, licenseNote } = useScriptureChapterMeta(verses);
   const scriptureSearch = useScriptureSearch(searchTerm, selectedVersionId);
 

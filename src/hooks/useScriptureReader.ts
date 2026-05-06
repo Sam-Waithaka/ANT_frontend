@@ -63,6 +63,20 @@ export const useScriptureReader = () => {
     (selectedChapterIndex === chapters.length - 1 &&
       selectedBookIndex >= 0 &&
       selectedBookIndex < books.length - 1);
+  const pendingBookMatch = pendingReference
+    ? books.find((book) => {
+        const requested = normalizeReferenceValue(pendingReference.book);
+        return (
+          normalizeReferenceValue(book.id) === requested ||
+          normalizeReferenceValue(book.name) === requested ||
+          normalizeReferenceValue(book.abbreviation || '') === requested
+        );
+      })
+    : undefined;
+  const pendingChapterMatch = pendingReference
+    ? chapters.find((chapter) => chapter.number === pendingReference.chapter)
+    : undefined;
+  const isResolvingReference = Boolean(pendingReference);
 
   useEffect(() => {
     if (!pendingReference || books.length === 0) {
@@ -235,23 +249,6 @@ export const useScriptureReader = () => {
   }, [pendingReference?.chapter, selectedBookId, selectedVersionId, setSelectedChapterId]);
 
   useEffect(() => {
-    if (!pendingReference || !selectedBook || !selectedChapter) {
-      return;
-    }
-
-    const requested = normalizeReferenceValue(pendingReference.book);
-    const matchesBook =
-      normalizeReferenceValue(selectedBook.id) === requested ||
-      normalizeReferenceValue(selectedBook.name) === requested ||
-      normalizeReferenceValue(selectedBook.abbreviation || '') === requested;
-    const matchesChapter = selectedChapter.number === pendingReference.chapter;
-
-    if (matchesBook && matchesChapter) {
-      clearPendingReference();
-    }
-  }, [clearPendingReference, pendingReference, selectedBook, selectedChapter]);
-
-  useEffect(() => {
     if (!selectedVersionId || !selectedBookId || !selectedChapter) return;
 
     let cancelled = false;
@@ -270,6 +267,13 @@ export const useScriptureReader = () => {
         );
         if (!cancelled) {
           setVerses(nextVerses);
+          if (
+            pendingReference &&
+            pendingBookMatch?.id === selectedBookId &&
+            pendingChapterMatch?.id === selectedChapter.id
+          ) {
+            clearPendingReference();
+          }
         }
       } catch {
         if (!cancelled) {
@@ -287,7 +291,15 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedBookId, selectedChapter, selectedVersionId]);
+  }, [
+    clearPendingReference,
+    pendingBookMatch?.id,
+    pendingChapterMatch?.id,
+    pendingReference,
+    selectedBookId,
+    selectedChapter,
+    selectedVersionId,
+  ]);
 
   const goToPreviousChapter = () => {
     if (selectedChapterIndex > 0) {
@@ -323,6 +335,7 @@ export const useScriptureReader = () => {
     canGoPrevious,
     chapters,
     error,
+    isResolvingReference,
     loading,
     selectedBook,
     selectedBookId,
