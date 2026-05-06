@@ -1,30 +1,34 @@
 import { BookText, Copy, Share2, X } from 'lucide-react';
 
 type ScriptureActionSheetProps = {
+  copySelectionLabel?: string;
   darkMode: boolean;
   description: string;
   open: boolean;
+  onCopySelection: () => void;
   title: string;
   onClose: () => void;
   onCopyChapter: () => void;
-  onCopyVerse: () => void;
+  onShareSelection: () => void;
   onShareChapter: () => void;
-  onShareVerse: () => void;
+  shareSelectionLabel?: string;
 };
 
 const actionButtonBase =
   'flex min-h-12 w-full items-center gap-3 rounded-2xl border px-4 text-left text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700';
 
 const ScriptureActionSheet = ({
+  copySelectionLabel = 'Copy verse',
   darkMode,
   description,
   open,
+  onCopySelection,
   title,
   onClose,
   onCopyChapter,
-  onCopyVerse,
+  onShareSelection,
   onShareChapter,
-  onShareVerse,
+  shareSelectionLabel = 'Share verse',
 }: ScriptureActionSheetProps) => {
   if (!open) {
     return null;
@@ -72,13 +76,13 @@ const ScriptureActionSheet = ({
         </div>
 
         <div className="grid gap-3 p-5">
-          <button type="button" onClick={onShareVerse} className={`${actionButtonBase} ${buttonClass}`}>
+          <button type="button" onClick={onShareSelection} className={`${actionButtonBase} ${buttonClass}`}>
             <Share2 size={18} />
-            Share verse
+            {shareSelectionLabel}
           </button>
-          <button type="button" onClick={onCopyVerse} className={`${actionButtonBase} ${buttonClass}`}>
+          <button type="button" onClick={onCopySelection} className={`${actionButtonBase} ${buttonClass}`}>
             <Copy size={18} />
-            Copy verse
+            {copySelectionLabel}
           </button>
           <button type="button" onClick={onShareChapter} className={`${actionButtonBase} ${buttonClass}`}>
             <BookText size={18} />

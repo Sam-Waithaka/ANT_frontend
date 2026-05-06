@@ -17,6 +17,7 @@ import { useTheme } from '../hooks/useTheme';
 import type { BibleVerse } from '../types/scripture';
 import {
   buildChapterSharePayload,
+  buildSelectionSharePayload,
   buildVerseSharePayload,
 } from '../utils/scriptureShare';
 
@@ -24,7 +25,8 @@ const ScripturePage = () => {
   const { darkMode, toggleTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
   const [forceSearchBarOpen, setForceSearchBarOpen] = useState(false);
-  const [activeVerse, setActiveVerse] = useState<BibleVerse | null>(null);
+  const [selectedVerses, setSelectedVerses] = useState<BibleVerse[]>([]);
+  const [focusVerseNumber, setFocusVerseNumber] = useState<number | null>(null);
   const [actionMessage, setActionMessage] = useState('');
   const compactHeader = useCompactHeader();
   const {
@@ -71,7 +73,13 @@ const ScripturePage = () => {
   const verseSharePayload = buildVerseSharePayload({
     book: selectedBook,
     chapter: selectedChapter,
-    verse: activeVerse || undefined,
+    verse: selectedVerses[0] || undefined,
+    version: selectedVersion,
+  });
+  const selectionSharePayload = buildSelectionSharePayload({
+    book: selectedBook,
+    chapter: selectedChapter,
+    verses: selectedVerses,
     version: selectedVersion,
   });
 
@@ -85,19 +93,29 @@ const ScripturePage = () => {
   }, [actionMessage]);
 
   useEffect(() => {
-    if (activeVerse && !chapterVerses.some((verse) => verse.id === activeVerse.id)) {
-      setActiveVerse(null);
-    }
+    setSelectedVerses((current) =>
+      current.filter((verse) => chapterVerses.some((chapterVerse) => chapterVerse.id === verse.id)),
+    );
 
-    if (
-      selectedVerseNumber &&
-      !chapterVerses.some((verse) => verse.number === selectedVerseNumber)
-    ) {
+    if (selectedVerseNumber && !chapterVerses.some((verse) => verse.number === selectedVerseNumber)) {
       setSelectedVerseNumber(null);
     }
-  }, [activeVerse, chapterVerses, selectedVerseNumber, setSelectedVerseNumber]);
 
-  const closeActionSheet = () => setActiveVerse(null);
+    if (focusVerseNumber && !chapterVerses.some((verse) => verse.number === focusVerseNumber)) {
+      setFocusVerseNumber(null);
+    }
+  }, [chapterVerses, focusVerseNumber, selectedVerseNumber, setSelectedVerseNumber]);
+
+  useEffect(() => {
+    if (selectedVerseNumber && selectedVerses.length === 0) {
+      setFocusVerseNumber(selectedVerseNumber);
+    }
+  }, [selectedVerseNumber, selectedVerses.length]);
+
+  const closeActionSheet = () => {
+    setSelectedVerses([]);
+    setFocusVerseNumber(selectedVerseNumber ?? null);
+  };
 
   const writeToClipboard = async (text: string) => {
     if (navigator.clipboard?.writeText) {
@@ -155,6 +173,15 @@ const ScripturePage = () => {
     await copyText(payload.copyText, `${successMessage} Copied instead.`);
   };
 
+  const selectionDescription =
+    selectedVerses.length > 0 && selectedBook && selectedChapter
+      ? `${selectedVerses
+          .slice()
+          .sort((left, right) => left.number - right.number)
+          .map((verse) => `${verse.number}. ${verse.text}`)
+          .join('\n\n')}\n\n${selectedBook.name} ${selectedChapter.number}`
+      : 'Choose what you would like to do with this passage.';
+
   return (
     <div className={`h-screen overflow-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <div className="flex h-screen overflow-hidden">
@@ -192,10 +219,10 @@ const ScripturePage = () => {
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden xl:flex-row">
             <ScriptureDisplay
-              activeVerseNumber={selectedVerseNumber}
               darkMode={darkMode}
               displayPassageTitle={displayPassageTitle}
               error={error}
+              focusVerseNumber={focusVerseNumber}
               footnotes={footnotes}
               licenseNote={licenseNote}
               loading={isLoading}
@@ -204,9 +231,20 @@ const ScripturePage = () => {
               searchResults={scriptureSearch.results}
               searchTerm={searchTerm}
               onVerseSelect={(verse) => {
-                setSelectedVerseNumber(verse.number);
-                setActiveVerse(verse);
+                setSelectedVerses((current) => {
+                  const exists = current.some((item) => item.id === verse.id);
+                  const next = exists
+                    ? current.filter((item) => item.id !== verse.id)
+                    : [...current, verse].sort((left, right) => left.number - right.number);
+
+                  const nextFocus = next.length > 0 ? next[next.length - 1].number : null;
+                  setFocusVerseNumber(nextFocus);
+                  setSelectedVerseNumber(next.length > 0 ? next[0].number : null);
+
+                  return next;
+                });
               }}
+              selectedVerseNumbers={selectedVerses.map((verse) => verse.number)}
               selectedBook={selectedBook}
               selectedChapter={selectedChapter}
               selectedVersion={selectedVersion}
@@ -262,34 +300,37 @@ const ScripturePage = () => {
       />
       <ScriptureActionSheet
         darkMode={darkMode}
-        description={
-          activeVerse && selectedBook && selectedChapter
-            ? `${activeVerse.text}\n\n${selectedBook.name} ${selectedChapter.number}:${activeVerse.number}`
-            : 'Choose what you would like to do with this passage.'
-        }
-        open={Boolean(activeVerse)}
+        copySelectionLabel={selectedVerses.length > 1 ? 'Copy selection' : 'Copy verse'}
+        description={selectionDescription}
+        open={selectedVerses.length > 0}
+        onCopySelection={async () => {
+          await copyText(
+            (selectedVerses.length > 1 ? selectionSharePayload : verseSharePayload)?.copyText,
+            selectedVerses.length > 1 ? 'Selection copied.' : 'Verse copied.',
+          );
+          closeActionSheet();
+        }}
         title={
-          activeVerse && selectedBook && selectedChapter
-            ? `${selectedBook.name} ${selectedChapter.number}:${activeVerse.number}`
-            : 'Scripture actions'
+          selectionSharePayload?.title ||
+          (selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture actions')
         }
         onClose={closeActionSheet}
         onCopyChapter={async () => {
           await copyText(chapterSharePayload?.copyText, 'Chapter copied.');
           closeActionSheet();
         }}
-        onCopyVerse={async () => {
-          await copyText(verseSharePayload?.copyText, 'Verse copied.');
-          closeActionSheet();
-        }}
         onShareChapter={async () => {
           await sharePayload(chapterSharePayload, 'Chapter shared.');
           closeActionSheet();
         }}
-        onShareVerse={async () => {
-          await sharePayload(verseSharePayload, 'Verse shared.');
+        onShareSelection={async () => {
+          await sharePayload(
+            selectedVerses.length > 1 ? selectionSharePayload : verseSharePayload,
+            selectedVerses.length > 1 ? 'Selection shared.' : 'Verse shared.',
+          );
           closeActionSheet();
         }}
+        shareSelectionLabel={selectedVerses.length > 1 ? 'Share selection' : 'Share verse'}
       />
       {actionMessage ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-28 z-[75] flex justify-center px-4">

@@ -5,15 +5,16 @@ import ScriptureSearchResults from './ScriptureSearchResults';
 import ScriptureStatus from './ScriptureStatus';
 
 type ScriptureDisplayProps = {
-  activeVerseNumber?: number | null;
   darkMode: boolean;
   displayPassageTitle?: string;
   error: string;
   footer?: ReactNode;
+  focusVerseNumber?: number | null;
   footnotes: BibleChapterNote[];
   licenseNote?: BibleChapterNote;
   loading: boolean;
   onVerseSelect?: (verse: BibleVerse) => void;
+  selectedVerseNumbers?: number[];
   searchError?: string;
   searchLoading?: boolean;
   searchResults?: BibleToolRecord[];
@@ -25,15 +26,16 @@ type ScriptureDisplayProps = {
 };
 
 const ScriptureDisplay = ({
-  activeVerseNumber,
   darkMode,
   displayPassageTitle,
   error,
   footer,
+  focusVerseNumber,
   footnotes,
   licenseNote,
   loading,
   onVerseSelect,
+  selectedVerseNumbers = [],
   searchError = '',
   searchLoading = false,
   searchResults = [],
@@ -98,12 +100,13 @@ const ScriptureDisplay = ({
           />
         ) : (
           <ScriptureReadingContent
-            activeVerseNumber={activeVerseNumber}
             darkMode={darkMode}
             footer={footer}
+            focusVerseNumber={focusVerseNumber}
             footnotes={footnotes}
             licenseNote={licenseNote}
             onVerseSelect={onVerseSelect}
+            selectedVerseNumbers={selectedVerseNumbers}
             verses={scriptureVerses}
           />
         )}

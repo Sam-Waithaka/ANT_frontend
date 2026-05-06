@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildChapterSharePayload,
   buildChapterShareText,
+  buildSelectionSharePayload,
   buildScriptureShareLink,
   buildVerseSharePayload,
   buildVerseShareText,
@@ -53,6 +54,17 @@ describe('scriptureShare', () => {
     expect(buildChapterSharePayload({ book, chapter, chapterVerses, version })).toMatchObject({
       title: 'John 20 (BSB)',
       url: 'https://aicnjoro.org/scripture?book=John&chapter=20&version=BSB',
+    });
+  });
+
+  it('builds a multi-verse share payload anchored to the first selected verse', () => {
+    expect(buildSelectionSharePayload({ book, chapter, verses: chapterVerses, version })).toEqual({
+      title: 'John 20:1-2 (BSB)',
+      text:
+        '1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nJohn 20:1-2 (BSB)',
+      url: 'https://aicnjoro.org/scripture?book=John&chapter=20&verse=1&version=BSB',
+      copyText:
+        'John 20:1-2 (BSB)\n\n1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nRead on AIC Njoro Town:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verse=1&version=BSB',
     });
   });
 });
