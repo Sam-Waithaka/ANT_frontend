@@ -5,6 +5,7 @@ import {
   getBibleChapters,
   getBibleVersions,
   getBibleVerses,
+  getBibleVersesByReference,
 } from '../services/scriptureApi';
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
 import { normalizeReferenceValue } from '../utils/scriptureReference';
@@ -27,6 +28,7 @@ export const useScriptureReader = () => {
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
+  const [loadedReferenceKey, setLoadedReferenceKey] = useState('');
   const [loading, setLoading] = useState({
     versions: true,
     books: false,
@@ -82,6 +84,14 @@ export const useScriptureReader = () => {
     : selectedBook && selectedChapter
       ? `${selectedBook.name} ${selectedChapter.number}`
       : 'Scripture';
+  const currentReferenceKey =
+    selectedVersionId && selectedBook && selectedChapter
+      ? `${selectedVersionId}:${normalizeReferenceValue(selectedBook.name)}:${selectedChapter.number}`
+      : '';
+  const pendingReferenceKey =
+    pendingReference && selectedVersionId
+      ? `${selectedVersionId}:${normalizeReferenceValue(pendingReference.book)}:${pendingReference.chapter}`
+      : '';
 
   useEffect(() => {
     if (!pendingReference || books.length === 0) {
@@ -249,7 +259,47 @@ export const useScriptureReader = () => {
   }, [pendingReference?.chapter, selectedBookId, selectedVersionId, setSelectedChapterId]);
 
   useEffect(() => {
-    if (!selectedVersionId || !selectedBookId || !selectedChapter) return;
+    if (!pendingReference || !selectedVersionId || loadedReferenceKey === pendingReferenceKey) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadPendingVerses = async () => {
+      setLoading((current) => ({ ...current, verses: true }));
+      setError('');
+
+      try {
+        const nextVerses = await getBibleVersesByReference(
+          selectedVersionId,
+          pendingReference.book,
+          pendingReference.chapter,
+        );
+        if (!cancelled) {
+          setVerses(nextVerses);
+          setLoadedReferenceKey(pendingReferenceKey);
+        }
+      } catch {
+        if (!cancelled) {
+          setError('We could not load verses for this chapter.');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading((current) => ({ ...current, verses: false }));
+        }
+      }
+    };
+
+    loadPendingVerses();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadedReferenceKey, pendingReference, pendingReferenceKey, selectedVersionId]);
+
+  useEffect(() => {
+    if (!selectedVersionId || !selectedBookId || !selectedChapter || pendingReference) return;
+    if (loadedReferenceKey === currentReferenceKey) return;
 
     let cancelled = false;
 
@@ -266,13 +316,7 @@ export const useScriptureReader = () => {
         );
         if (!cancelled) {
           setVerses(nextVerses);
-          if (
-            pendingReference &&
-            pendingBookMatch?.id === selectedBookId &&
-            pendingChapterMatch?.id === selectedChapter.id
-          ) {
-            clearPendingReference();
-          }
+          setLoadedReferenceKey(currentReferenceKey);
         }
       } catch {
         if (!cancelled) {
@@ -292,12 +336,31 @@ export const useScriptureReader = () => {
     };
   }, [
     clearPendingReference,
-    pendingBookMatch?.id,
-    pendingChapterMatch?.id,
-    pendingReference,
+    currentReferenceKey,
+    loadedReferenceKey,
     selectedBookId,
     selectedChapter,
     selectedVersionId,
+  ]);
+
+  useEffect(() => {
+    if (
+      pendingReference &&
+      pendingBookMatch?.id === selectedBookId &&
+      pendingChapterMatch?.id === selectedChapter?.id &&
+      loadedReferenceKey === pendingReferenceKey
+    ) {
+      clearPendingReference();
+    }
+  }, [
+    clearPendingReference,
+    loadedReferenceKey,
+    pendingBookMatch?.id,
+    pendingChapterMatch?.id,
+    pendingReference,
+    pendingReferenceKey,
+    selectedBookId,
+    selectedChapter?.id,
   ]);
 
   const goToPreviousChapter = () => {

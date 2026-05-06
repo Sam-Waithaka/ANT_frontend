@@ -12,6 +12,7 @@ import type {
   BibleVersion,
   VerseLookupResult,
 } from '../types/scripture';
+import { resolveApiBookReference } from '../utils/scriptureIntent';
 
 const API_BASE_URL = (
   import.meta.env.VITE_SCRIPTURE_API_BASE_URL ?? (import.meta.env.DEV ? '' : 'https://api.aicnjoro.org')
@@ -247,6 +248,64 @@ const getLicenseNote = (payload: unknown): BibleChapterNote | null => {
   };
 };
 
+const toBibleVersesFromChapterPayload = (payload: unknown): BibleVerse[] => {
+  const verses = unwrapCollection(payload);
+  const chapterNotes = collectChapterNotes(payload);
+  const licenseNote = getLicenseNote(payload);
+
+  return verses
+    .map((item, index) => {
+      const record = asRecord(item);
+      const verseNumber = readNumber(
+        record,
+        ['verse_number', 'number', 'verse', 'verseNumber', 'order'],
+        index + 1,
+      );
+      const verseNotes: BibleChapterNote[] = [];
+
+      [
+        [record.footnotes, 'footnote'],
+        [record.notes, 'footnote'],
+        [record.cross_references, 'cross_reference'],
+        [record.crossReferences, 'cross_reference'],
+        [record.textual_variants, 'textual_variant'],
+      ].forEach(([collection, fallbackType]) => {
+        if (Array.isArray(collection)) {
+          collection.forEach((note, noteIndex) => {
+            verseNotes.push(
+              toChapterNote(note, noteIndex, fallbackType as BibleNoteType, verseNumber),
+            );
+          });
+        }
+      });
+
+      const matchingChapterNotes = chapterNotes.filter(
+        (note) => note.verseNumber === verseNumber,
+      );
+
+      return {
+        id: readString(record, ['id', '_id', 'uuid', 'verseId'], `verse-${index + 1}`),
+        number: verseNumber,
+        text: readString(record, ['text', 'content', 'verseText', 'body']),
+        isPresent: record.is_present === undefined ? true : Boolean(record.is_present),
+        notes: dedupeChapterNotes([...verseNotes, ...matchingChapterNotes]),
+      };
+    })
+    .concat(
+      licenseNote
+        ? [
+            {
+              id: '__chapter_meta__',
+              number: 0,
+              text: '',
+              isPresent: false,
+              notes: [licenseNote],
+            },
+          ]
+        : [],
+    );
+};
+
 export const getBibleVersions = async (): Promise<BibleVersion[]> => {
   const versions = await fetchFirstCollection(['/v1/bible/versions/']);
 
@@ -302,50 +361,25 @@ export const getBibleVerses = async (
   _chapterId: string,
   chapterNumber: number,
 ): Promise<BibleVerse[]> => {
-  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/books/${encode(bookId)}/chapters/${encode(chapterNumber)}/`);
-  const verses = unwrapCollection(payload);
-  const chapterNotes = collectChapterNotes(payload);
-  const licenseNote = getLicenseNote(payload);
-
-  return verses.map((item, index) => {
-    const record = asRecord(item);
-    const verseNumber = readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1);
-    const verseNotes: BibleChapterNote[] = [];
-
-    [
-      [record.footnotes, 'footnote'],
-      [record.notes, 'footnote'],
-      [record.cross_references, 'cross_reference'],
-      [record.crossReferences, 'cross_reference'],
-      [record.textual_variants, 'textual_variant'],
-    ].forEach(([collection, fallbackType]) => {
-      if (Array.isArray(collection)) {
-        collection.forEach((note, noteIndex) => {
-          verseNotes.push(toChapterNote(note, noteIndex, fallbackType as BibleNoteType, verseNumber));
-        });
-      }
-    });
-
-    const matchingChapterNotes = chapterNotes.filter((note) => note.verseNumber === verseNumber);
-
-    return {
-      id: readString(record, ['id', '_id', 'uuid', 'verseId'], `verse-${index + 1}`),
-      number: verseNumber,
-      text: readString(record, ['text', 'content', 'verseText', 'body']),
-      isPresent: record.is_present === undefined ? true : Boolean(record.is_present),
-      notes: dedupeChapterNotes([...verseNotes, ...matchingChapterNotes]),
-    };
-  }).concat(
-    licenseNote
-      ? [{
-          id: '__chapter_meta__',
-          number: 0,
-          text: '',
-          isPresent: false,
-          notes: [licenseNote],
-        }]
-      : [],
+  const payload = await fetchJson(
+    `/v1/bible/versions/${encode(versionId)}/books/${encode(bookId)}/chapters/${encode(
+      chapterNumber,
+    )}/`,
   );
+  return toBibleVersesFromChapterPayload(payload);
+};
+
+export const getBibleVersesByReference = async (
+  versionId: string,
+  book: string,
+  chapterNumber: number,
+): Promise<BibleVerse[]> => {
+  const payload = await fetchJson(
+    `/v1/bible/versions/${encode(versionId)}/books/${encode(
+      resolveApiBookReference(book),
+    )}/chapters/${encode(chapterNumber)}/`,
+  );
+  return toBibleVersesFromChapterPayload(payload);
 };
 
 export const getBibleResources = async (

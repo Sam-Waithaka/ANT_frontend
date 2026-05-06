@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { BibleBook, BibleChapter, ScriptureReferenceIntent } from '../types/scripture';
-import { findBookIdForIntent, findChapterIdForIntent } from './scriptureIntent';
+import {
+  findBookIdForIntent,
+  findChapterIdForIntent,
+  resolveApiBookReference,
+} from './scriptureIntent';
 
 const books: BibleBook[] = [
   { id: 'Genesis', name: 'Genesis', testament: 'old' },
@@ -32,5 +36,11 @@ describe('scripture intent resolution', () => {
 
     expect(findBookIdForIntent(books, intent)).toBe('');
     expect(findChapterIdForIntent(chapters, intent)).toBe('');
+  });
+
+  it('maps canonical Project 52 book names to API book references', () => {
+    expect(resolveApiBookReference('1 Samuel')).toBe('1Sam');
+    expect(resolveApiBookReference('John')).toBe('John');
+    expect(resolveApiBookReference('Psalms')).toBe('Ps');
   });
 });
