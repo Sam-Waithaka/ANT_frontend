@@ -172,21 +172,13 @@ export const useScriptureReader = () => {
 
         setBooks(nextBooks);
         setSelectedBookId((current) => {
-          if (pendingReference?.book) {
-            const requested = normalizeReferenceValue(pendingReference.book);
-            const requestedBook = nextBooks.find(
-              (book) =>
-                normalizeReferenceValue(book.id) === requested ||
-                normalizeReferenceValue(book.name) === requested ||
-                normalizeReferenceValue(book.abbreviation || '') === requested,
-            );
-
-            if (requestedBook) {
-              return requestedBook.id;
-            }
+          if (nextBooks.some((book) => book.id === current)) {
+            return current;
           }
 
-          return nextBooks.some((book) => book.id === current) ? current : nextBooks[0]?.id || '';
+          const requestedBookId = findBookIdForIntent(nextBooks, pendingReference);
+
+          return requestedBookId || nextBooks[0]?.id || '';
         });
       } catch {
         if (!cancelled) {
@@ -204,7 +196,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [pendingReference?.book, selectedVersionId, setSelectedBookId]);
+  }, [pendingReference, selectedVersionId, setSelectedBookId]);
 
   useEffect(() => {
     if (!selectedVersionId || !selectedBookId) return;
@@ -221,16 +213,6 @@ export const useScriptureReader = () => {
 
         setChapters(nextChapters);
         setSelectedChapterId((current) => {
-          if (pendingReference?.chapter) {
-            const requestedChapter = nextChapters.find(
-              (chapter) => chapter.number === pendingReference.chapter,
-            );
-
-            if (requestedChapter) {
-              return requestedChapter.id;
-            }
-          }
-
           const match = nextChapters.find(
             (chapter) =>
               chapter.id === current ||
@@ -238,7 +220,13 @@ export const useScriptureReader = () => {
               current.endsWith(`.${chapter.number}`),
           );
 
-          return match ? match.id : nextChapters[0]?.id || '';
+          if (match) {
+            return match.id;
+          }
+
+          const requestedChapterId = findChapterIdForIntent(nextChapters, pendingReference);
+
+          return requestedChapterId || nextChapters[0]?.id || '';
         });
       } catch {
         if (!cancelled) {
@@ -256,7 +244,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [pendingReference?.chapter, selectedBookId, selectedVersionId, setSelectedChapterId]);
+  }, [pendingReference, selectedBookId, selectedVersionId, setSelectedChapterId]);
 
   useEffect(() => {
     if (!pendingReference || !selectedVersionId || loadedReferenceKey === pendingReferenceKey) {
@@ -335,7 +323,6 @@ export const useScriptureReader = () => {
       cancelled = true;
     };
   }, [
-    clearPendingReference,
     currentReferenceKey,
     loadedReferenceKey,
     selectedBookId,
@@ -361,6 +348,30 @@ export const useScriptureReader = () => {
     pendingReferenceKey,
     selectedBookId,
     selectedChapter?.id,
+  ]);
+
+  useEffect(() => {
+    if (!pendingReference || !selectedBookId || !selectedChapterId) {
+      return;
+    }
+
+    const requestedBookId = findBookIdForIntent(books, pendingReference);
+    const requestedChapterId = findChapterIdForIntent(chapters, pendingReference);
+
+    if (
+      requestedBookId === selectedBookId &&
+      requestedChapterId &&
+      requestedChapterId !== selectedChapterId
+    ) {
+      setSelectedChapterId(requestedChapterId);
+    }
+  }, [
+    books,
+    chapters,
+    pendingReference,
+    selectedBookId,
+    selectedChapterId,
+    setSelectedChapterId,
   ]);
 
   const goToPreviousChapter = () => {
