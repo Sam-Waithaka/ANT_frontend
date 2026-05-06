@@ -1,6 +1,7 @@
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
 
-const SCRIPTURE_SHARE_BASE_URL = 'https://aicnjoro.org/scripture';
+const FALLBACK_PUBLIC_SITE_URL = 'https://aicnjoro.org';
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
 type ShareReferenceOptions = {
   book?: BibleBook;
@@ -10,7 +11,35 @@ type ShareReferenceOptions = {
   version?: BibleVersion;
 };
 
+export type ScriptureSharePayload = {
+  copyText: string;
+  text: string;
+  title: string;
+  url: string;
+};
+
 const getVersionValue = (version?: BibleVersion) => version?.abbreviation || version?.id || '';
+
+const getPublicSiteUrl = () => {
+  const configuredUrl = (import.meta.env as ImportMeta['env'] & { VITE_PUBLIC_SITE_URL?: string })
+    .VITE_PUBLIC_SITE_URL?.trim();
+
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/+$/, '');
+  }
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    const { hostname, origin } = window.location;
+
+    if (!LOCAL_HOSTNAMES.has(hostname)) {
+      return origin.replace(/\/+$/, '');
+    }
+  }
+
+  return FALLBACK_PUBLIC_SITE_URL;
+};
+
+const getScriptureShareBaseUrl = () => `${getPublicSiteUrl()}/scripture`;
 
 export const buildScriptureShareLink = ({
   book,
@@ -38,7 +67,8 @@ export const buildScriptureShareLink = ({
   }
 
   const query = params.toString();
-  return query ? `${SCRIPTURE_SHARE_BASE_URL}?${query}` : SCRIPTURE_SHARE_BASE_URL;
+  const baseUrl = getScriptureShareBaseUrl();
+  return query ? `${baseUrl}?${query}` : baseUrl;
 };
 
 export const buildVerseShareText = ({
@@ -76,4 +106,54 @@ export const buildChapterShareText = ({
   const chapterText = chapterVerses.map((item) => `${item.number}. ${item.text}`).join('\n');
 
   return `${reference}${versionSuffix}\n\n${chapterText}\n\nRead this chapter on AIC Njoro Town:\n${link}`;
+};
+
+export const buildVerseSharePayload = ({
+  book,
+  chapter,
+  verse,
+  version,
+}: ShareReferenceOptions): ScriptureSharePayload | null => {
+  if (!book || !chapter || !verse) {
+    return null;
+  }
+
+  const reference = `${book.name} ${chapter.number}:${verse.number}`;
+  const versionValue = getVersionValue(version);
+  const versionSuffix = versionValue ? ` (${versionValue})` : '';
+  const url = buildScriptureShareLink({ book, chapter, verse, version });
+  const title = `${reference}${versionSuffix}`;
+  const text = `${verse.text}\n\n${reference}${versionSuffix}`;
+
+  return {
+    title,
+    text,
+    url,
+    copyText: `${title}\n\n${verse.text}\n\nRead on AIC Njoro Town:\n${url}`,
+  };
+};
+
+export const buildChapterSharePayload = ({
+  book,
+  chapter,
+  chapterVerses = [],
+  version,
+}: ShareReferenceOptions): ScriptureSharePayload | null => {
+  if (!book || !chapter) {
+    return null;
+  }
+
+  const reference = `${book.name} ${chapter.number}`;
+  const versionValue = getVersionValue(version);
+  const versionSuffix = versionValue ? ` (${versionValue})` : '';
+  const url = buildScriptureShareLink({ book, chapter, version });
+  const chapterText = chapterVerses.map((item) => `${item.number}. ${item.text}`).join('\n');
+  const title = `${reference}${versionSuffix}`;
+
+  return {
+    title,
+    text: `${reference}${versionSuffix}\n\n${chapterText}`,
+    url,
+    copyText: `${reference}${versionSuffix}\n\n${chapterText}\n\nRead this chapter on AIC Njoro Town:\n${url}`,
+  };
 };

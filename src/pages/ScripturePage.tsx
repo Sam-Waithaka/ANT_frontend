@@ -15,7 +15,10 @@ import { useScriptureSearch } from '../hooks/useScriptureSearch';
 import { useCompactHeader } from '../hooks/useCompactHeader';
 import { useTheme } from '../hooks/useTheme';
 import type { BibleVerse } from '../types/scripture';
-import { buildChapterShareText, buildVerseShareText } from '../utils/scriptureShare';
+import {
+  buildChapterSharePayload,
+  buildVerseSharePayload,
+} from '../utils/scriptureShare';
 
 const ScripturePage = () => {
   const { darkMode, toggleTheme } = useTheme();
@@ -59,13 +62,13 @@ const ScripturePage = () => {
   const { crossReferences, footnotes, licenseNote } = useScriptureChapterMeta(verses);
   const scriptureSearch = useScriptureSearch(searchTerm, selectedVersionId);
   const chapterVerses = verses.filter((verse) => verse.number > 0);
-  const chapterShareText = buildChapterShareText({
+  const chapterSharePayload = buildChapterSharePayload({
     book: selectedBook,
     chapter: selectedChapter,
     chapterVerses,
     version: selectedVersion,
   });
-  const verseShareText = buildVerseShareText({
+  const verseSharePayload = buildVerseSharePayload({
     book: selectedBook,
     chapter: selectedChapter,
     verse: activeVerse || undefined,
@@ -113,7 +116,7 @@ const ScripturePage = () => {
     document.body.removeChild(textArea);
   };
 
-  const copyText = async (text: string, successMessage: string) => {
+  const copyText = async (text: string | null | undefined, successMessage: string) => {
     if (!text) {
       return;
     }
@@ -122,18 +125,34 @@ const ScripturePage = () => {
     setActionMessage(successMessage);
   };
 
-  const shareText = async (text: string, title: string, fallbackMessage: string) => {
-    if (!text) {
+  const sharePayload = async (
+    payload: { title: string; text: string; url: string; copyText: string } | null,
+    successMessage: string,
+  ) => {
+    if (!payload) {
       return;
     }
 
     if (navigator.share) {
-      await navigator.share({ text, title });
-      setActionMessage(fallbackMessage);
-      return;
+      try {
+        await navigator.share({
+          title: payload.title,
+          text: payload.text,
+          url: payload.url,
+        });
+        setActionMessage(successMessage);
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+
+        await copyText(payload.copyText, `${successMessage} Copied instead.`);
+        return;
+      }
     }
 
-    await copyText(text, `${fallbackMessage} Copied instead.`);
+    await copyText(payload.copyText, `${successMessage} Copied instead.`);
   };
 
   return (
@@ -256,29 +275,19 @@ const ScripturePage = () => {
         }
         onClose={closeActionSheet}
         onCopyChapter={async () => {
-          await copyText(chapterShareText, 'Chapter copied.');
+          await copyText(chapterSharePayload?.copyText, 'Chapter copied.');
           closeActionSheet();
         }}
         onCopyVerse={async () => {
-          await copyText(verseShareText, 'Verse copied.');
+          await copyText(verseSharePayload?.copyText, 'Verse copied.');
           closeActionSheet();
         }}
         onShareChapter={async () => {
-          await shareText(
-            chapterShareText,
-            selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture chapter',
-            'Chapter shared.',
-          );
+          await sharePayload(chapterSharePayload, 'Chapter shared.');
           closeActionSheet();
         }}
         onShareVerse={async () => {
-          await shareText(
-            verseShareText,
-            activeVerse && selectedBook && selectedChapter
-              ? `${selectedBook.name} ${selectedChapter.number}:${activeVerse.number}`
-              : 'Scripture verse',
-            'Verse shared.',
-          );
+          await sharePayload(verseSharePayload, 'Verse shared.');
           closeActionSheet();
         }}
       />

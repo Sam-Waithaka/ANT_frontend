@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildChapterShareText, buildScriptureShareLink, buildVerseShareText } from './scriptureShare';
+import {
+  buildChapterSharePayload,
+  buildChapterShareText,
+  buildScriptureShareLink,
+  buildVerseSharePayload,
+  buildVerseShareText,
+} from './scriptureShare';
 
 const book = { id: 'John', name: 'John' };
 const chapter = { id: '20', number: 20, label: 'Chapter 20' };
@@ -31,5 +37,22 @@ describe('scriptureShare', () => {
     expect(buildChapterShareText({ book, chapter, chapterVerses, version })).toContain(
       '1. Early on the first day of the week Mary Magdalene went to the tomb.',
     );
+  });
+
+  it('builds a verse share payload with separate text and url fields', () => {
+    expect(buildVerseSharePayload({ book, chapter, verse, version })).toEqual({
+      title: 'John 20:1 (BSB)',
+      text: 'Early on the first day of the week Mary Magdalene went to the tomb.\n\nJohn 20:1 (BSB)',
+      url: 'https://aicnjoro.org/scripture?book=John&chapter=20&verse=1&version=BSB',
+      copyText:
+        'John 20:1 (BSB)\n\nEarly on the first day of the week Mary Magdalene went to the tomb.\n\nRead on AIC Njoro Town:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verse=1&version=BSB',
+    });
+  });
+
+  it('builds a chapter share payload with a canonical chapter url', () => {
+    expect(buildChapterSharePayload({ book, chapter, chapterVerses, version })).toMatchObject({
+      title: 'John 20 (BSB)',
+      url: 'https://aicnjoro.org/scripture?book=John&chapter=20&version=BSB',
+    });
   });
 });
