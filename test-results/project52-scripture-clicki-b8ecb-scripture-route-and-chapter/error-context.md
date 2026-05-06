@@ -14,14 +14,14 @@
 ```
 Error: expect(locator).toBeVisible() failed
 
-Locator: getByRole('button', { name: /Early on the first day of the week Mary Magdalene went to the tomb\./i })
+Locator: getByRole('heading', { name: 'John 20' })
 Expected: visible
 Timeout: 15000ms
 Error: element(s) not found
 
 Call log:
   - Expect "toBeVisible" with timeout 15000ms
-  - waiting for getByRole('button', { name: /Early on the first day of the week Mary Magdalene went to the tomb\./i })
+  - waiting for getByRole('heading', { name: 'John 20' })
 
 ```
 
@@ -129,7 +129,7 @@ Call log:
                 - generic [ref=e109]: 35%
               - generic [ref=e113]:
                 - img [ref=e114]
-                - generic [ref=e118]: Through The Bible. Through The Year.
+                - generic [ref=e118]: Week By Week In Grace
               - generic [ref=e119]:
                 - button "OT 1 Samuel 14-15" [ref=e120] [cursor=pointer]:
                   - generic [ref=e121]:
@@ -163,6 +163,11 @@ Call log:
 # Test source
 
 ```ts
+  59  | };
+  60  | 
+  61  | const fulfillJson = async (route: Route, payload: unknown) => {
+  62  |   await route.fulfill({
+  63  |     status: 200,
   64  |     contentType: 'application/json',
   65  |     body: JSON.stringify(payload),
   66  |   });
@@ -258,13 +263,13 @@ Call log:
   156 |   await page.getByRole('button', { name: /john 20/i }).click();
   157 | 
   158 |   await expect(page).toHaveURL(/\/scripture$/);
-  159 |   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible({ timeout: 15000 });
+> 159 |   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible({ timeout: 15000 });
+      |                                                                ^ Error: expect(locator).toBeVisible() failed
   160 |   await expect(
   161 |     page.getByRole('button', {
   162 |       name: /Early on the first day of the week Mary Magdalene went to the tomb\./i,
   163 |     }),
-> 164 |   ).toBeVisible({ timeout: 15000 });
-      |     ^ Error: expect(locator).toBeVisible() failed
+  164 |   ).toBeVisible({ timeout: 15000 });
   165 | });
   166 | 
   167 | test('mobile scripture dock panels close when tapping the backdrop', async ({ page }) => {
@@ -321,4 +326,12 @@ Call log:
   218 |   ).toBeVisible();
   219 | });
   220 | 
+  221 | test('shared verses link opens the chapter and selects the requested verses', async ({ page }) => {
+  222 |   await page.goto('/scripture?book=John&chapter=20&verses=1-2&version=BSB');
+  223 | 
+  224 |   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
+  225 |   await expect(page.getByRole('dialog', { name: 'John 20:1-2 (BSB)' })).toBeVisible();
+  226 |   await expect(page.getByRole('button', { name: /copy selection/i })).toBeVisible();
+  227 | });
+  228 | 
 ```
