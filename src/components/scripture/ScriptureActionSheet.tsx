@@ -56,15 +56,15 @@ const ScriptureActionSheet = ({
   return (
     <>
       <div
-        className="fixed inset-0 z-[70] hidden items-end justify-center bg-black/55 p-3 backdrop-blur-sm md:flex"
-        onClick={onClose}
+        className="pointer-events-none fixed inset-x-0 bottom-6 z-[70] hidden justify-center px-4 md:flex"
         role="dialog"
-        aria-modal="true"
+        aria-modal="false"
         aria-labelledby="scripture-action-sheet-title"
       >
         <div
-          onClick={(event) => event.stopPropagation()}
-          className={`w-full max-w-xl rounded-[2rem] border shadow-2xl ${surfaceClass}`}
+          className={`pointer-events-auto w-full max-w-xl rounded-[2rem] border shadow-2xl backdrop-blur-xl ${
+            darkMode ? 'bg-[#080808]/96' : 'bg-[#f8f5ef]/96'
+          } ${surfaceClass}`}
         >
           <div className={`flex items-start justify-between gap-4 border-b px-5 py-4 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
             <div className="min-w-0">
@@ -109,7 +109,7 @@ const ScriptureActionSheet = ({
         </div>
       </div>
       <div
-        className="pointer-events-none fixed inset-x-0 bottom-24 z-[70] px-3 md:hidden"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-[70] px-3 pb-3 md:hidden"
         role="dialog"
         aria-modal="false"
         aria-labelledby="scripture-action-sheet-title-mobile"
