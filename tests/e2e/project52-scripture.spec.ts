@@ -153,3 +153,13 @@ test('mobile project 52 panel closes after opening a reading', async ({ page }) 
   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
   await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
 });
+
+test('clicking a verse opens the scripture action sheet', async ({ page }) => {
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.getByRole('button', { name: /share verse/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /copy chapter/i })).toBeVisible();
+});

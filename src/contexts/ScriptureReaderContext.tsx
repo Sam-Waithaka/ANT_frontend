@@ -6,10 +6,12 @@ const DEFAULT_VERSION_ABBR = 'BSB';
 
 type ScriptureReaderContextType = {
   pendingReference: ScriptureReferenceIntent | null;
+  selectedVerseNumber: number | null;
   selectedBookId: string;
   selectedChapterId: string;
   selectedVersionId: string;
   clearPendingReference: () => void;
+  setSelectedVerseNumber: Dispatch<SetStateAction<number | null>>;
   openReference: (reference: ScriptureReferenceIntent) => void;
   setSelectedBookId: Dispatch<SetStateAction<string>>;
   setSelectedChapterId: Dispatch<SetStateAction<string>>;
@@ -22,11 +24,13 @@ export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) =
   const [selectedVersionId, setSelectedVersionIdState] = useState(DEFAULT_VERSION_ABBR);
   const [selectedBookId, setSelectedBookIdState] = useState('');
   const [selectedChapterId, setSelectedChapterIdState] = useState('');
+  const [selectedVerseNumber, setSelectedVerseNumber] = useState<number | null>(null);
   const [pendingReference, setPendingReference] = useState<ScriptureReferenceIntent | null>(null);
 
   const value = useMemo<ScriptureReaderContextType>(
     () => ({
       pendingReference,
+      selectedVerseNumber,
       selectedBookId,
       selectedChapterId,
       selectedVersionId,
@@ -34,7 +38,9 @@ export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) =
       openReference: (reference) => {
         setPendingReference(reference);
         setSelectedVersionIdState(reference.versionId || selectedVersionId || DEFAULT_VERSION_ABBR);
+        setSelectedVerseNumber(reference.verse ?? null);
       },
+      setSelectedVerseNumber,
       setSelectedBookId: (value) => {
         setSelectedBookIdState(value);
       },
@@ -45,7 +51,7 @@ export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) =
         setSelectedVersionIdState(value);
       },
     }),
-    [pendingReference, selectedBookId, selectedChapterId, selectedVersionId],
+    [pendingReference, selectedVerseNumber, selectedBookId, selectedChapterId, selectedVersionId],
   );
 
   return <ScriptureReaderContext.Provider value={value}>{children}</ScriptureReaderContext.Provider>;

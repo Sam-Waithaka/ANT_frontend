@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useScriptureReaderContext } from '../contexts/ScriptureReaderContext';
 import {
   getBibleBooks,
@@ -16,14 +17,19 @@ const DEFAULT_VERSION_ABBR = 'BSB';
 export const useScriptureReader = () => {
   const {
     pendingReference,
+    openReference,
+    selectedVerseNumber,
     selectedBookId,
     selectedChapterId,
     selectedVersionId,
     clearPendingReference,
+    setSelectedVerseNumber,
     setSelectedBookId,
     setSelectedChapterId,
     setSelectedVersionId,
   } = useScriptureReaderContext();
+  const [searchParams] = useSearchParams();
+  const lastUrlReferenceKey = useRef('');
   const [versions, setVersions] = useState<BibleVersion[]>([]);
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
@@ -92,6 +98,33 @@ export const useScriptureReader = () => {
     pendingReference && selectedVersionId
       ? `${selectedVersionId}:${normalizeReferenceValue(pendingReference.book)}:${pendingReference.chapter}`
       : '';
+
+  useEffect(() => {
+    const book = searchParams.get('book');
+    const chapterValue = Number(searchParams.get('chapter'));
+    const verseValue = Number(searchParams.get('verse'));
+    const versionId = searchParams.get('version') || undefined;
+
+    if (!book || !Number.isFinite(chapterValue) || chapterValue <= 0) {
+      return;
+    }
+
+    const nextKey = [book, chapterValue, versionId || '', Number.isFinite(verseValue) ? verseValue : '']
+      .map((value) => String(value))
+      .join('|');
+
+    if (lastUrlReferenceKey.current === nextKey) {
+      return;
+    }
+
+    lastUrlReferenceKey.current = nextKey;
+    openReference({
+      book,
+      chapter: chapterValue,
+      verse: Number.isFinite(verseValue) && verseValue > 0 ? verseValue : undefined,
+      versionId,
+    });
+  }, [openReference, searchParams]);
 
   useEffect(() => {
     if (!pendingReference || books.length === 0) {
@@ -411,6 +444,7 @@ export const useScriptureReader = () => {
     displayPassageTitle,
     isResolvingReference,
     loading,
+    selectedVerseNumber,
     selectedBook,
     selectedBookId,
     selectedChapter,
@@ -424,6 +458,7 @@ export const useScriptureReader = () => {
     goToPreviousChapter,
     setSelectedBookId,
     setSelectedChapterId,
+    setSelectedVerseNumber,
     setSelectedVersionId,
   };
 };
