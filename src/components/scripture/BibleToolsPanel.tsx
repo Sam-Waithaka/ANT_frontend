@@ -25,6 +25,7 @@ type ComparePicker = 'book' | 'chapter' | null;
 type BibleToolsPanelProps = {
   books: BibleBook[];
   darkMode: boolean;
+  embedded?: boolean;
   selectedBook?: BibleBook;
   selectedChapter?: BibleChapter;
   selectedVersion?: BibleVersion;
@@ -50,7 +51,15 @@ const formatToolLabel = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
-const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selectedVersion, versions }: BibleToolsPanelProps) => {
+const BibleToolsPanel = ({
+  books,
+  darkMode,
+  embedded = false,
+  selectedBook,
+  selectedChapter,
+  selectedVersion,
+  versions,
+}: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
   const [compareBookId, setCompareBookId] = useState('');
   const [compareChapterNumber, setCompareChapterNumber] = useState(1);
@@ -76,6 +85,14 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
   const comparisonHasVerses = Boolean(comparison?.verses.length);
   const getVersionLabel = (versionIdToFind: string) =>
     versions.find((version) => version.id.toLowerCase() === versionIdToFind.toLowerCase())?.abbreviation || versionIdToFind;
+  const panelSurfaceClass = embedded
+    ? 'min-w-0 p-0 shadow-none border-0 rounded-none bg-transparent'
+    : `rounded-[2rem] border p-4 shadow-sm ${
+        darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
+      } min-w-0`;
+  const resultsClass = embedded
+    ? 'mt-3'
+    : `mt-4 max-h-80 overflow-y-auto rounded-2xl p-3 ${darkMode ? 'bg-[#171717]' : 'bg-transparent'}`;
 
   useEffect(() => {
     if (versions.length === 0 || compareVersionIds.length > 0) {
@@ -205,9 +222,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
   return (
     <>
       <section
-        className={`rounded-[2rem] border p-4 shadow-sm ${
-          darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25' : 'border-black/10 bg-white shadow-zinc-900/10'
-        } min-w-0`}
+        className={panelSurfaceClass}
       >
       <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Bible tools</p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -280,7 +295,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
 
             <div>
               <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Versions</p>
-              <div className={`max-h-40 overflow-y-auto overflow-x-hidden rounded-2xl border p-2 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
+              <div className={`max-h-32 overflow-y-auto overflow-x-hidden rounded-2xl border p-2 sm:max-h-40 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
                 <div className="grid gap-1">
                   {versions.map((version) => {
                     const checked = selectedCompareVersions.includes(version.id);
@@ -482,7 +497,7 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
         </button>
       </div>
 
-      <div className={`mt-4 max-h-80 overflow-y-auto rounded-2xl p-3 ${darkMode ? 'bg-[#171717]' : 'bg-transparent'}`}>
+      <div className={resultsClass}>
         {status ? <p className="text-sm leading-6 text-red-800 dark:text-red-200">{status}</p> : null}
         {comparisonHasVerses ? (
           <div className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`}>
@@ -521,13 +536,13 @@ const BibleToolsPanel = ({ books, darkMode, selectedBook, selectedChapter, selec
 
       {comparisonOpen && comparison ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pb-4 pt-20 backdrop-blur-sm sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="comparison-title"
         >
           <div
-            className={`flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border shadow-2xl ${
+            className={`flex max-h-[calc(100vh-6rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border shadow-2xl sm:max-h-[90vh] ${
               darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
             }`}
           >

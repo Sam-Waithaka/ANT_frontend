@@ -128,3 +128,28 @@ test('clicking a Project 52 tile opens the correct scripture route and chapter',
   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
   await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
 });
+
+test('mobile scripture dock panels close when tapping the backdrop', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: /project 52/i }).click();
+  await expect(page.getByRole('dialog', { name: /project 52/i })).toBeVisible();
+
+  await page.mouse.click(12, 12);
+  await expect(page.getByRole('dialog', { name: /project 52/i })).toHaveCount(0);
+});
+
+test('mobile project 52 panel closes after opening a reading', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: /project 52/i }).click();
+  await expect(page.getByRole('dialog', { name: /project 52/i })).toBeVisible();
+
+  await page.getByRole('button', { name: /john 20/i }).click();
+
+  await expect(page.getByRole('dialog', { name: /project 52/i })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
+  await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
+});

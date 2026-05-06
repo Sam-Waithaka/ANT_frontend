@@ -74,15 +74,17 @@ const ScriptureMobilePanels = ({
       {activePanel ? (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 p-3 backdrop-blur-sm sm:items-center"
+          onClick={() => setActivePanel(null)}
           role="dialog"
           aria-modal="true"
           aria-labelledby="scripture-mobile-panel-title"
         >
           <div
-            className={`max-h-[86vh] w-full max-w-2xl overflow-hidden rounded-[2rem] border shadow-2xl ${darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
+            onClick={(event) => event.stopPropagation()}
+            className={`max-h-[calc(100dvh-4.5rem)] w-full max-w-2xl overflow-hidden rounded-[1.75rem] border shadow-2xl sm:max-h-[86vh] sm:rounded-[2rem] ${darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
               }`}
           >
-            <div className={`flex items-center justify-between gap-4 border-b p-4 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
+            <div className={`flex items-center justify-between gap-4 border-b px-4 py-3 sm:p-4 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
               <div>
                 <p className={`text-[10px] font-black uppercase tracking-[0.18em] ${darkMode ? 'text-red-200' : 'text-red-900'}`}>Scripture</p>
                 <h2 id="scripture-mobile-panel-title" className="mt-1 text-xl font-black">{modalTitle}</h2>
@@ -98,17 +100,18 @@ const ScriptureMobilePanels = ({
               </button>
             </div>
 
-            <div className="max-h-[calc(86vh-5rem)] overflow-y-auto p-4">
+            <div className="max-h-[calc(100dvh-9.5rem)] overflow-y-auto px-4 pb-4 pt-3 sm:max-h-[calc(86vh-5rem)] sm:p-4">
               {activePanel === 'tools' ? (
                 <BibleToolsPanel
                   books={books}
                   darkMode={darkMode}
+                  embedded
                   selectedBook={selectedBook}
                   selectedChapter={selectedChapter}
                   selectedVersion={selectedVersion}
                   versions={versions}
                 />
-              ) : <ScriptureProject52Card darkMode={darkMode} />}
+              ) : <ScriptureProject52Card darkMode={darkMode} onOpenReading={() => setActivePanel(null)} />}
             </div>
           </div>
         </div>

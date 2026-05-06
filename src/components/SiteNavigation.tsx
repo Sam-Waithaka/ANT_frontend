@@ -135,9 +135,13 @@ const SiteNavigation = ({
     <>
       <div
         className={`pointer-events-none fixed inset-x-0 top-0 z-[60] flex items-center justify-between px-4 py-3 transition-all duration-300 ease-out lg:hidden ${
-          compactSmallHeader ? 'translate-y-0 opacity-100' : '-translate-y-3 opacity-0'
+          drawerOpen
+            ? '-translate-y-3 opacity-0'
+            : compactSmallHeader
+              ? 'translate-y-0 opacity-100'
+              : '-translate-y-3 opacity-0'
         }`}
-        aria-hidden={!compactSmallHeader}
+        aria-hidden={!compactSmallHeader || drawerOpen}
       >
           <a
             href={churchWebsiteUrl}
@@ -169,7 +173,11 @@ const SiteNavigation = ({
         </div>
       <header
         className={`${sticky ? 'sticky top-0' : 'relative'} z-30 border-b backdrop-blur-xl transition-all duration-300 ease-out ${
-        compactSmallHeader ? 'max-lg:max-h-0 max-lg:-translate-y-full max-lg:overflow-hidden max-lg:border-b-0 max-lg:opacity-0' : 'max-lg:max-h-24 max-lg:translate-y-0 max-lg:opacity-100'
+        drawerOpen
+          ? 'max-lg:max-h-0 max-lg:-translate-y-full max-lg:overflow-hidden max-lg:border-b-0 max-lg:opacity-0'
+          : compactSmallHeader
+            ? 'max-lg:max-h-0 max-lg:-translate-y-full max-lg:overflow-hidden max-lg:border-b-0 max-lg:opacity-0'
+            : 'max-lg:max-h-24 max-lg:translate-y-0 max-lg:opacity-100'
       } ${
         darkMode ? 'border-white/10 bg-black/75' : 'border-black/10 bg-[#f8f5ef]/85'
       }`}
@@ -271,7 +279,7 @@ const SiteNavigation = ({
       </header>
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
+        <div className="fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <button
             type="button"
             className="absolute inset-0 bg-black/45"

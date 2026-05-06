@@ -8,9 +8,10 @@ import Project52ProgressBar from '../project52/Project52ProgressBar';
 
 type ScriptureProject52CardProps = {
   darkMode: boolean;
+  onOpenReading?: () => void;
 };
 
-const ScriptureProject52Card = ({ darkMode }: ScriptureProject52CardProps) => {
+const ScriptureProject52Card = ({ darkMode, onOpenReading }: ScriptureProject52CardProps) => {
   const { currentWeek, weeks, readingTarget } = useProject52();
   const openProject52Reading = useOpenProject52Reading();
 
@@ -52,7 +53,10 @@ const ScriptureProject52Card = ({ darkMode }: ScriptureProject52CardProps) => {
       <div className="mt-4 grid gap-3">
         {todayItems?.oldTestament && todayItems.oldTestament.length > 0 && (
           <button
-            onClick={() => openProject52Reading(todayItems.oldTestament, { navigateToScripture: false })}
+            onClick={() => {
+              onOpenReading?.();
+              openProject52Reading(todayItems.oldTestament, { navigateToScripture: false });
+            }}
             className={`flex min-h-12 w-full items-center gap-2 rounded-full border px-4 py-2 text-left text-sm font-black transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${secondaryButtonClass} ${darkMode ? 'focus:ring-offset-black' : 'focus:ring-offset-white'}`}
           >
             <span className="flex items-center gap-3">
@@ -64,7 +68,10 @@ const ScriptureProject52Card = ({ darkMode }: ScriptureProject52CardProps) => {
 
         {todayItems?.newTestament && todayItems.newTestament.length > 0 && (
           <button
-            onClick={() => openProject52Reading(todayItems.newTestament, { navigateToScripture: false })}
+            onClick={() => {
+              onOpenReading?.();
+              openProject52Reading(todayItems.newTestament, { navigateToScripture: false });
+            }}
             className={`flex min-h-12 w-full items-center gap-2 rounded-full border px-4 py-2 text-left text-sm font-black transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${secondaryButtonClass} ${darkMode ? 'focus:ring-offset-black' : 'focus:ring-offset-white'}`}
           >
             <span className="flex items-center gap-3">
