@@ -31,17 +31,19 @@ const ScriptureActionSheet = ({
   onShareChapter,
   shareSelectionLabel = 'Share verse',
 }: ScriptureActionSheetProps) => {
-  if (!open) {
-    return null;
-  }
-
+  const [desktopExpanded, setDesktopExpanded] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState(false);
 
   useEffect(() => {
     if (!open) {
+      setDesktopExpanded(false);
       setMobileExpanded(false);
     }
   }, [open]);
+
+  if (!open) {
+    return null;
+  }
 
   const surfaceClass = darkMode
     ? 'border-white/10 bg-[#080808] text-stone-100'
@@ -67,25 +69,40 @@ const ScriptureActionSheet = ({
           } ${surfaceClass}`}
         >
           <div className={`flex items-start justify-between gap-4 border-b px-5 py-4 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">
                 Scripture actions
               </p>
               <h2 id="scripture-action-sheet-title" className="mt-2 text-xl font-black">
                 {title}
               </h2>
-              <p className={`mt-2 whitespace-pre-line text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+              <p
+                className={`mt-2 overflow-y-auto whitespace-pre-line pr-1 text-sm leading-6 ${
+                  desktopExpanded ? 'max-h-80' : 'max-h-28'
+                } ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}
+              >
                 {description}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className={`grid size-11 shrink-0 place-items-center rounded-full border transition ${buttonClass}`}
-              aria-label="Close Scripture actions"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setDesktopExpanded((current) => !current)}
+                className={`grid size-11 place-items-center rounded-full border transition ${buttonClass}`}
+                aria-label={desktopExpanded ? 'Collapse Scripture actions' : 'Expand Scripture actions'}
+                aria-expanded={desktopExpanded}
+              >
+                {desktopExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className={`grid size-11 place-items-center rounded-full border transition ${buttonClass}`}
+                aria-label="Close Scripture actions"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div className="grid gap-3 p-5">
@@ -127,7 +144,11 @@ const ScriptureActionSheet = ({
               <h2 id="scripture-action-sheet-title-mobile" className="mt-1 truncate text-lg font-black">
                 {title}
               </h2>
-              <p className={`mt-1 line-clamp-2 text-sm leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+              <p
+                className={`mt-1 overflow-y-auto pr-1 text-sm leading-5 ${
+                  mobileExpanded ? 'max-h-36 whitespace-pre-line' : 'max-h-10 line-clamp-2'
+                } ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}
+              >
                 {description}
               </p>
             </div>
