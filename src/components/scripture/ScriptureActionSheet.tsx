@@ -1,35 +1,33 @@
-import { BookText, ChevronDown, ChevronUp, Copy, Share2, X } from 'lucide-react';
+import { BookText, ChevronDown, ChevronUp, Copy, GitCompareArrows, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 type ScriptureActionSheetProps = {
+  canCompareVerse?: boolean;
   copySelectionLabel?: string;
   darkMode: boolean;
   description: string;
   open: boolean;
+  onCompareVerse?: () => void;
   onCopySelection: () => void;
   title: string;
   onClose: () => void;
   onCopyChapter: () => void;
-  onShareSelection: () => void;
-  onShareChapter: () => void;
-  shareSelectionLabel?: string;
 };
 
 const actionButtonBase =
   'flex min-h-12 w-full items-center gap-3 rounded-2xl border px-4 text-left text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700';
 
 const ScriptureActionSheet = ({
+  canCompareVerse = false,
   copySelectionLabel = 'Copy verse',
   darkMode,
   description,
   open,
+  onCompareVerse,
   onCopySelection,
   title,
   onClose,
   onCopyChapter,
-  onShareSelection,
-  onShareChapter,
-  shareSelectionLabel = 'Share verse',
 }: ScriptureActionSheetProps) => {
   const [desktopExpanded, setDesktopExpanded] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState(false);
@@ -106,22 +104,26 @@ const ScriptureActionSheet = ({
           </div>
 
           <div className="grid gap-3 p-5">
-            <button type="button" onClick={onShareSelection} className={`${actionButtonBase} ${buttonClass}`}>
-              <Share2 size={18} />
-              {shareSelectionLabel}
-            </button>
-            <button type="button" onClick={onCopySelection} className={`${actionButtonBase} ${buttonClass}`}>
-              <Copy size={18} />
-              {copySelectionLabel}
-            </button>
-            <button type="button" onClick={onShareChapter} className={`${actionButtonBase} ${buttonClass}`}>
-              <BookText size={18} />
-              Share chapter
-            </button>
-            <button type="button" onClick={onCopyChapter} className={`${actionButtonBase} ${buttonClass}`}>
-              <Copy size={18} />
-              Copy chapter
-            </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button type="button" onClick={onCopySelection} className={`${actionButtonBase} ${buttonClass}`}>
+                <Copy size={18} />
+                {copySelectionLabel}
+              </button>
+              {canCompareVerse ? (
+                <button type="button" onClick={onCompareVerse} className={`${actionButtonBase} ${buttonClass}`}>
+                  <GitCompareArrows size={18} />
+                  Compare verse
+                </button>
+              ) : null}
+            </div>
+            {desktopExpanded ? (
+              <div className="grid gap-3 border-t pt-3 dark:border-white/10">
+                <button type="button" onClick={onCopyChapter} className={`${actionButtonBase} ${buttonClass}`}>
+                  <BookText size={18} />
+                  Copy chapter
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -174,25 +176,23 @@ const ScriptureActionSheet = ({
           </div>
 
           <div className="grid gap-3 p-4">
-            <div className="grid grid-cols-2 gap-3">
-              <button type="button" onClick={onShareSelection} className={`${actionButtonBase} ${buttonClass} min-h-11 justify-center px-3 text-center text-[0.95rem]`}>
-                <Share2 size={17} />
-                {shareSelectionLabel}
-              </button>
+            <div className={`grid gap-3 ${canCompareVerse ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <button type="button" onClick={onCopySelection} className={`${actionButtonBase} ${buttonClass} min-h-11 justify-center px-3 text-center text-[0.95rem]`}>
                 <Copy size={17} />
                 {copySelectionLabel}
               </button>
+              {canCompareVerse ? (
+                <button type="button" onClick={onCompareVerse} className={`${actionButtonBase} ${buttonClass} min-h-11 justify-center px-3 text-center text-[0.95rem]`}>
+                  <GitCompareArrows size={17} />
+                  Compare verse
+                </button>
+              ) : null}
             </div>
 
             {mobileExpanded ? (
               <div className="grid gap-3 border-t pt-3 dark:border-white/10">
-                <button type="button" onClick={onShareChapter} className={`${actionButtonBase} ${buttonClass}`}>
-                  <BookText size={18} />
-                  Share chapter
-                </button>
                 <button type="button" onClick={onCopyChapter} className={`${actionButtonBase} ${buttonClass}`}>
-                  <Copy size={18} />
+                  <BookText size={18} />
                   Copy chapter
                 </button>
               </div>

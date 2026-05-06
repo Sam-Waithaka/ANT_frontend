@@ -35,6 +35,29 @@ const chapterPayloads: Record<string, Array<{ verse_number: number; text: string
   ],
 };
 
+const comparisonPayloads: Record<string, { book: string; chapter: number; results: Array<{ verse_number: number; readings: Array<{ version: string; text: string }> }> }> = {
+  'Gen:1': {
+    book: 'Genesis',
+    chapter: 1,
+    results: [
+      {
+        verse_number: 1,
+        readings: [
+          { version: 'BSB', text: 'In the beginning God created the heavens and the earth.' },
+          { version: 'ASV', text: 'In the beginning God created the heavens and the earth.' },
+        ],
+      },
+      {
+        verse_number: 2,
+        readings: [
+          { version: 'BSB', text: 'Now the earth was formless and void.' },
+          { version: 'ASV', text: 'And the earth was waste and void.' },
+        ],
+      },
+    ],
+  },
+};
+
 const fulfillJson = async (route: Route, payload: unknown) => {
   await route.fulfill({
     status: 200,
@@ -103,6 +126,14 @@ const mockScriptureApi = async (page: Page) => {
     const payload = chapterPayloads[`${book}:${chapter}`] ?? [];
     await fulfillJson(route, payload);
   });
+
+  await page.route('**/v1/bible/compare/**', async (route) => {
+    const url = new URL(route.request().url());
+    const book = url.searchParams.get('book') || '';
+    const chapter = url.searchParams.get('chapter') || '';
+    const payload = comparisonPayloads[`${book}:${chapter}`] ?? { book, chapter: Number(chapter), results: [] };
+    await fulfillJson(route, payload);
+  });
 };
 
 test.beforeEach(async ({ page }) => {
@@ -160,6 +191,19 @@ test('clicking a verse opens the scripture action sheet', async ({ page }) => {
   await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
 
   await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByRole('button', { name: /share verse/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /copy chapter/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /copy verse/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /compare verse/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /collapse scripture actions|expand scripture actions/i })).toBeVisible();
+});
+
+test('compare verse opens the chapter comparison modal focused on the selected verse', async ({ page }) => {
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+  await page.getByRole('button', { name: /compare verse/i }).click();
+
+  await expect(page.getByRole('dialog', { name: 'Genesis 1', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Genesis 1', exact: true }).last()).toBeVisible();
+  await expect(page.getByText('Verse 1')).toBeVisible();
+  await expect(page.getByText('In the beginning God created the heavens and the earth.')).toBeVisible();
 });

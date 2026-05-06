@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ScriptureActionSheet from '../components/scripture/ScriptureActionSheet';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
+import ScriptureComparisonModal from '../components/scripture/ScriptureComparisonModal';
 import ScriptureCompactControls from '../components/scripture/ScriptureCompactControls';
 import ScriptureDisplay from '../components/scripture/ScriptureDisplay';
 import ScriptureFloatingControls from '../components/scripture/ScriptureFloatingControls';
@@ -14,7 +15,8 @@ import { useScriptureReader } from '../hooks/useScriptureReader';
 import { useScriptureSearch } from '../hooks/useScriptureSearch';
 import { useCompactHeader } from '../hooks/useCompactHeader';
 import { useTheme } from '../hooks/useTheme';
-import type { BibleVerse } from '../types/scripture';
+import { compareBibleChapter } from '../services/scriptureApi';
+import type { BibleComparisonChapter, BibleVerse } from '../types/scripture';
 import {
   buildChapterSharePayload,
   buildSelectionSharePayload,
@@ -27,6 +29,9 @@ const ScripturePage = () => {
   const [forceSearchBarOpen, setForceSearchBarOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<BibleVerse[]>([]);
   const [focusVerseNumber, setFocusVerseNumber] = useState<number | null>(null);
+  const [comparison, setComparison] = useState<BibleComparisonChapter | null>(null);
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
   const compactHeader = useCompactHeader();
   const {
@@ -82,6 +87,13 @@ const ScripturePage = () => {
     verses: selectedVerses,
     version: selectedVersion,
   });
+  const canCompareVerse = selectedVerses.length === 1 && Boolean(selectedBook && selectedChapter && selectedVersionId);
+  const selectedCompareVersions = [
+    selectedVersion?.id || selectedVersionId,
+    versions.find((version) => version.id !== (selectedVersion?.id || selectedVersionId))?.id,
+  ].filter(Boolean) as string[];
+  const getVersionLabel = (versionIdToFind: string) =>
+    versions.find((version) => version.id.toLowerCase() === versionIdToFind.toLowerCase())?.abbreviation || versionIdToFind;
 
   useEffect(() => {
     if (!actionMessage) {
@@ -143,34 +155,25 @@ const ScripturePage = () => {
     setActionMessage(successMessage);
   };
 
-  const sharePayload = async (
-    payload: { title: string; text: string; url: string; copyText: string } | null,
-    successMessage: string,
-  ) => {
-    if (!payload) {
+  const openVerseComparison = async () => {
+    if (!canCompareVerse || !selectedBook || !selectedChapter) {
       return;
     }
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: payload.title,
-          text: payload.text,
-          url: payload.url,
-        });
-        setActionMessage(successMessage);
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return;
-        }
-
-        await copyText(payload.copyText, `${successMessage} Copied instead.`);
-        return;
-      }
+    setComparisonLoading(true);
+    try {
+      const nextComparison = await compareBibleChapter(
+        selectedCompareVersions,
+        selectedBook.id,
+        selectedChapter.number,
+      );
+      setComparison(nextComparison);
+      setComparisonOpen(true);
+    } catch {
+      setActionMessage('Unable to compare this verse right now.');
+    } finally {
+      setComparisonLoading(false);
     }
-
-    await copyText(payload.copyText, `${successMessage} Copied instead.`);
   };
 
   const selectionDescription =
@@ -299,16 +302,17 @@ const ScripturePage = () => {
         onVersionChange={setSelectedVersionId}
       />
       <ScriptureActionSheet
+        canCompareVerse={canCompareVerse}
         darkMode={darkMode}
         copySelectionLabel={selectedVerses.length > 1 ? 'Copy selection' : 'Copy verse'}
         description={selectionDescription}
         open={selectedVerses.length > 0}
+        onCompareVerse={openVerseComparison}
         onCopySelection={async () => {
           await copyText(
             (selectedVerses.length > 1 ? selectionSharePayload : verseSharePayload)?.copyText,
             selectedVerses.length > 1 ? 'Selection copied.' : 'Verse copied.',
           );
-          closeActionSheet();
         }}
         title={
           selectionSharePayload?.title ||
@@ -317,20 +321,16 @@ const ScripturePage = () => {
         onClose={closeActionSheet}
         onCopyChapter={async () => {
           await copyText(chapterSharePayload?.copyText, 'Chapter copied.');
-          closeActionSheet();
         }}
-        onShareChapter={async () => {
-          await sharePayload(chapterSharePayload, 'Chapter shared.');
-          closeActionSheet();
-        }}
-        onShareSelection={async () => {
-          await sharePayload(
-            selectedVerses.length > 1 ? selectionSharePayload : verseSharePayload,
-            selectedVerses.length > 1 ? 'Selection shared.' : 'Verse shared.',
-          );
-          closeActionSheet();
-        }}
-        shareSelectionLabel={selectedVerses.length > 1 ? 'Share selection' : 'Share verse'}
+      />
+      <ScriptureComparisonModal
+        comparison={comparisonLoading ? null : comparison}
+        darkMode={darkMode}
+        highlightedVerseNumber={selectedVerses[0]?.number || null}
+        open={comparisonOpen && !comparisonLoading}
+        selectedCompareVersions={selectedCompareVersions}
+        versionLabelFor={getVersionLabel}
+        onClose={() => setComparisonOpen(false)}
       />
       {actionMessage ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-28 z-[75] flex justify-center px-4">
