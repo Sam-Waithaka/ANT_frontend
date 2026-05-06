@@ -108,8 +108,6 @@ const ScripturePage = () => {
               crossReferences={crossReferences}
               onNext={goToNextChapter}
               onPrevious={goToPreviousChapter}
-              onBookChange={setSelectedBookId}
-              onChapterChange={setSelectedChapterId}
             />
           </div>
         </main>
@@ -137,8 +135,6 @@ const ScripturePage = () => {
         selectedChapter={selectedChapter}
         selectedVersion={selectedVersion}
         versions={versions}
-        onBookChange={setSelectedBookId}
-        onChapterChange={setSelectedChapterId}
       />
       <ScriptureCompactControls
         compact={compactHeader && !forceSearchBarOpen}

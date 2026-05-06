@@ -1,54 +1,92 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { getBibleBooks, getBibleChapters, getBibleVersions, getBibleVerses } from '../services/scriptureApi';
+import { useEffect, useMemo, useState } from 'react';
+import { useScriptureReaderContext } from '../contexts/ScriptureReaderContext';
+import {
+  getBibleBooks,
+  getBibleChapters,
+  getBibleVersions,
+  getBibleVerses,
+} from '../services/scriptureApi';
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
 import { normalizeReferenceValue } from '../utils/scriptureReference';
+import { findBookIdForIntent, findChapterIdForIntent } from '../utils/scriptureIntent';
 
 const DEFAULT_VERSION_ABBR = 'BSB';
 
 export const useScriptureReader = () => {
-  const [searchParams] = useSearchParams();
-  const initialReference = useMemo(() => {
-    return {
-      book: searchParams.get('book') || '',
-      chapter: Number(searchParams.get('chapter') || 0),
-      version: searchParams.get('version') || '',
-    };
-  }, [searchParams]);
-  const hasAppliedInitialBook = useRef(false);
-  const hasAppliedInitialChapter = useRef(false);
+  const {
+    pendingReference,
+    selectedBookId,
+    selectedChapterId,
+    selectedVersionId,
+    clearPendingReference,
+    setSelectedBookId,
+    setSelectedChapterId,
+    setSelectedVersionId,
+  } = useScriptureReaderContext();
   const [versions, setVersions] = useState<BibleVersion[]>([]);
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
-  const [selectedVersionId, setSelectedVersionId] = useState('');
-  const [selectedBookId, setSelectedBookId] = useState('');
-  const [selectedChapterId, setSelectedChapterId] = useState('');
-  const [loading, setLoading] = useState({ versions: true, books: false, chapters: false, verses: false });
+  const [loading, setLoading] = useState({
+    versions: true,
+    books: false,
+    chapters: false,
+    verses: false,
+  });
   const [error, setError] = useState('');
 
   const selectedVersion = useMemo(
     () => versions.find((version) => version.id === selectedVersionId),
     [selectedVersionId, versions],
   );
-  const selectedBook = useMemo(() => books.find((book) => book.id === selectedBookId), [books, selectedBookId]);
+  const selectedBook = useMemo(
+    () => books.find((book) => book.id === selectedBookId),
+    [books, selectedBookId],
+  );
   const selectedChapter = useMemo(
-    () => chapters.find(
-      (chapter) =>
-        chapter.id === selectedChapterId ||
-        String(chapter.number) === selectedChapterId ||
-        selectedChapterId.endsWith(`.${chapter.number}`)
-    ),
+    () =>
+      chapters.find(
+        (chapter) =>
+          chapter.id === selectedChapterId ||
+          String(chapter.number) === selectedChapterId ||
+          selectedChapterId.endsWith(`.${chapter.number}`),
+      ),
     [chapters, selectedChapterId],
   );
-  const selectedChapterIndex = chapters.findIndex((chapter) => chapter.id === selectedChapterId);
+  const selectedChapterIndex = chapters.findIndex(
+    (chapter) => chapter.id === selectedChapterId,
+  );
   const selectedBookIndex = books.findIndex((book) => book.id === selectedBookId);
-  const canGoPrevious =
-    selectedChapterIndex > 0 ||
-    (selectedChapterIndex === 0 && selectedBookIndex > 0);
+  const canGoPrevious = selectedChapterIndex > 0 || (selectedChapterIndex === 0 && selectedBookIndex > 0);
   const canGoNext =
     (selectedChapterIndex >= 0 && selectedChapterIndex < chapters.length - 1) ||
-    (selectedChapterIndex === chapters.length - 1 && selectedBookIndex >= 0 && selectedBookIndex < books.length - 1);
+    (selectedChapterIndex === chapters.length - 1 &&
+      selectedBookIndex >= 0 &&
+      selectedBookIndex < books.length - 1);
+
+  useEffect(() => {
+    if (!pendingReference || books.length === 0) {
+      return;
+    }
+
+    const requestedBookId = findBookIdForIntent(books, pendingReference);
+
+    if (requestedBookId && requestedBookId !== selectedBookId) {
+      setSelectedBookId(requestedBookId);
+    }
+  }, [books, pendingReference, selectedBookId, setSelectedBookId]);
+
+  useEffect(() => {
+    if (!pendingReference || chapters.length === 0) {
+      return;
+    }
+
+    const requestedChapterId = findChapterIdForIntent(chapters, pendingReference);
+
+    if (requestedChapterId && requestedChapterId !== selectedChapterId) {
+      setSelectedChapterId(requestedChapterId);
+    }
+  }, [chapters, pendingReference, selectedChapterId, setSelectedChapterId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,16 +101,14 @@ export const useScriptureReader = () => {
 
         setVersions(nextVersions);
         setSelectedVersionId((current) => {
-          const requestedVersion = nextVersions.find((version) =>
-            normalizeReferenceValue(version.id) === normalizeReferenceValue(initialReference.version) ||
-            normalizeReferenceValue(version.abbreviation || '') === normalizeReferenceValue(initialReference.version),
-          );
-          const defaultVersion = nextVersions.find((version) =>
-            normalizeReferenceValue(version.id) === normalizeReferenceValue(DEFAULT_VERSION_ABBR) ||
-            normalizeReferenceValue(version.abbreviation || '') === normalizeReferenceValue(DEFAULT_VERSION_ABBR),
+          const defaultVersion = nextVersions.find(
+            (version) =>
+              normalizeReferenceValue(version.id) === normalizeReferenceValue(DEFAULT_VERSION_ABBR) ||
+              normalizeReferenceValue(version.abbreviation || '') ===
+                normalizeReferenceValue(DEFAULT_VERSION_ABBR),
           );
 
-          return requestedVersion?.id || current || defaultVersion?.id || nextVersions[0]?.id || '';
+          return current || defaultVersion?.id || nextVersions[0]?.id || '';
         });
       } catch {
         if (!cancelled) {
@@ -90,7 +126,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [initialReference.version]);
+  }, [setSelectedVersionId]);
 
   useEffect(() => {
     if (!selectedVersionId) return;
@@ -110,19 +146,16 @@ export const useScriptureReader = () => {
 
         setBooks(nextBooks);
         setSelectedBookId((current) => {
-          if (initialReference.book && !hasAppliedInitialBook.current) {
-            const requestedBook = nextBooks.find((book) => {
-              const requested = normalizeReferenceValue(initialReference.book);
-
-              return (
+          if (pendingReference?.book) {
+            const requested = normalizeReferenceValue(pendingReference.book);
+            const requestedBook = nextBooks.find(
+              (book) =>
                 normalizeReferenceValue(book.id) === requested ||
                 normalizeReferenceValue(book.name) === requested ||
-                normalizeReferenceValue(book.abbreviation || '') === requested
-              );
-            });
+                normalizeReferenceValue(book.abbreviation || '') === requested,
+            );
 
             if (requestedBook) {
-              hasAppliedInitialBook.current = true;
               return requestedBook.id;
             }
           }
@@ -145,7 +178,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [initialReference.book, selectedVersionId]);
+  }, [pendingReference?.book, selectedVersionId, setSelectedBookId]);
 
   useEffect(() => {
     if (!selectedVersionId || !selectedBookId) return;
@@ -164,19 +197,21 @@ export const useScriptureReader = () => {
 
         setChapters(nextChapters);
         setSelectedChapterId((current) => {
-          if (initialReference.chapter && !hasAppliedInitialChapter.current) {
-            const requestedChapter = nextChapters.find((chapter) => chapter.number === initialReference.chapter);
+          if (pendingReference?.chapter) {
+            const requestedChapter = nextChapters.find(
+              (chapter) => chapter.number === pendingReference.chapter,
+            );
 
             if (requestedChapter) {
-              hasAppliedInitialChapter.current = true;
               return requestedChapter.id;
             }
           }
 
-          const match = nextChapters.find((chapter) =>
-            chapter.id === current ||
-            String(chapter.number) === current ||
-            current.endsWith(`.${chapter.number}`)
+          const match = nextChapters.find(
+            (chapter) =>
+              chapter.id === current ||
+              String(chapter.number) === current ||
+              current.endsWith(`.${chapter.number}`),
           );
 
           return match ? match.id : nextChapters[0]?.id || '';
@@ -197,7 +232,24 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [initialReference.chapter, selectedBookId, selectedVersionId]);
+  }, [pendingReference?.chapter, selectedBookId, selectedVersionId, setSelectedChapterId]);
+
+  useEffect(() => {
+    if (!pendingReference || !selectedBook || !selectedChapter) {
+      return;
+    }
+
+    const requested = normalizeReferenceValue(pendingReference.book);
+    const matchesBook =
+      normalizeReferenceValue(selectedBook.id) === requested ||
+      normalizeReferenceValue(selectedBook.name) === requested ||
+      normalizeReferenceValue(selectedBook.abbreviation || '') === requested;
+    const matchesChapter = selectedChapter.number === pendingReference.chapter;
+
+    if (matchesBook && matchesChapter) {
+      clearPendingReference();
+    }
+  }, [clearPendingReference, pendingReference, selectedBook, selectedChapter]);
 
   useEffect(() => {
     if (!selectedVersionId || !selectedBookId || !selectedChapter) return;
@@ -255,7 +307,11 @@ export const useScriptureReader = () => {
       return;
     }
 
-    if (selectedChapterIndex === chapters.length - 1 && selectedBookIndex >= 0 && selectedBookIndex < books.length - 1) {
+    if (
+      selectedChapterIndex === chapters.length - 1 &&
+      selectedBookIndex >= 0 &&
+      selectedBookIndex < books.length - 1
+    ) {
       setSelectedBookId(books[selectedBookIndex + 1].id);
       setSelectedChapterId('');
     }

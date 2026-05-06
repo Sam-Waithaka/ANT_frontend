@@ -39,6 +39,12 @@ export type ScriptureSelection = {
   chapterId: string;
 };
 
+export type ScriptureReferenceIntent = {
+  book: string;
+  chapter: number;
+  versionId?: string;
+};
+
 export type BibleResourceType =
   | 'preface'
   | 'copyright'

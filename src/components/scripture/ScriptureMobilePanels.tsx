@@ -11,8 +11,6 @@ type ScriptureMobilePanelsProps = {
   selectedChapter?: BibleChapter;
   selectedVersion?: BibleVersion;
   versions: BibleVersion[];
-  onBookChange: (id: string) => void;
-  onChapterChange: (id: string) => void;
 };
 
 type ActivePanel = 'tools' | 'project52' | null;
@@ -24,8 +22,6 @@ const ScriptureMobilePanels = ({
   selectedChapter,
   selectedVersion,
   versions,
-  onBookChange,
-  onChapterChange,
 }: ScriptureMobilePanelsProps) => {
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
 
@@ -112,7 +108,7 @@ const ScriptureMobilePanels = ({
                   selectedVersion={selectedVersion}
                   versions={versions}
                 />
-              ) : <ScriptureProject52Card darkMode={darkMode} books={books} onBookChange={onBookChange} onChapterChange={onChapterChange} />}
+              ) : <ScriptureProject52Card darkMode={darkMode} />}
             </div>
           </div>
         </div>

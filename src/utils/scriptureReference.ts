@@ -1,4 +1,4 @@
-const bookNames = [
+export const bookNames = [
   'Song of Solomon',
   '1 Thessalonians',
   '2 Thessalonians',
@@ -68,36 +68,5 @@ const bookNames = [
   'Jude',
 ].sort((left, right) => right.length - left.length);
 
-export const parseReadingReference = (reading: string) => {
-  const firstReading = reading.split(';')[0]?.trim() || reading.trim();
-  const matchedBook = bookNames.find((bookName) => firstReading.toLowerCase().startsWith(bookName.toLowerCase()));
-
-  if (!matchedBook) {
-    return null;
-  }
-
-  const remainder = firstReading.slice(matchedBook.length).trim();
-  const chapter = Number(remainder.match(/\d+/)?.[0] || 1);
-
-  return {
-    book: matchedBook === 'Psalm' ? 'Psalms' : matchedBook,
-    chapter,
-  };
-};
-
-export const buildScriptureHref = (reading: string) => {
-  const reference = parseReadingReference(reading);
-
-  if (!reference) {
-    return '/scripture';
-  }
-
-  const params = new URLSearchParams({
-    book: reference.book,
-    chapter: String(reference.chapter),
-  });
-
-  return `/scripture?${params.toString()}`;
-};
-
-export const normalizeReferenceValue = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+export const normalizeReferenceValue = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]/g, '');
