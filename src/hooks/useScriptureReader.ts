@@ -77,6 +77,11 @@ export const useScriptureReader = () => {
     ? chapters.find((chapter) => chapter.number === pendingReference.chapter)
     : undefined;
   const isResolvingReference = Boolean(pendingReference);
+  const displayPassageTitle = pendingReference
+    ? `${pendingReference.book} ${pendingReference.chapter}`
+    : selectedBook && selectedChapter
+      ? `${selectedBook.name} ${selectedChapter.number}`
+      : 'Scripture';
 
   useEffect(() => {
     if (!pendingReference || books.length === 0) {
@@ -150,9 +155,6 @@ export const useScriptureReader = () => {
     const loadBooks = async () => {
       setLoading((current) => ({ ...current, books: true }));
       setError('');
-      setBooks([]);
-      setChapters([]);
-      setVerses([]);
 
       try {
         const nextBooks = await getBibleBooks(selectedVersionId);
@@ -202,8 +204,6 @@ export const useScriptureReader = () => {
     const loadChapters = async () => {
       setLoading((current) => ({ ...current, chapters: true }));
       setError('');
-      setChapters([]);
-      setVerses([]);
 
       try {
         const nextChapters = await getBibleChapters(selectedVersionId, selectedBookId);
@@ -256,7 +256,6 @@ export const useScriptureReader = () => {
     const loadVerses = async () => {
       setLoading((current) => ({ ...current, verses: true }));
       setError('');
-      setVerses([]);
 
       try {
         const nextVerses = await getBibleVerses(
@@ -335,6 +334,7 @@ export const useScriptureReader = () => {
     canGoPrevious,
     chapters,
     error,
+    displayPassageTitle,
     isResolvingReference,
     loading,
     selectedBook,

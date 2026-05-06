@@ -6,6 +6,7 @@ import ScriptureStatus from './ScriptureStatus';
 
 type ScriptureDisplayProps = {
   darkMode: boolean;
+  displayPassageTitle?: string;
   error: string;
   footer?: ReactNode;
   footnotes: BibleChapterNote[];
@@ -23,6 +24,7 @@ type ScriptureDisplayProps = {
 
 const ScriptureDisplay = ({
   darkMode,
+  displayPassageTitle,
   error,
   footer,
   footnotes,
@@ -40,7 +42,9 @@ const ScriptureDisplay = ({
   const query = searchTerm.trim().toLowerCase();
   const isSearching = query.length >= 2;
   const scriptureVerses = verses.filter((verse) => verse.number > 0);
-  const passageTitle = selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture';
+  const passageTitle =
+    displayPassageTitle ||
+    (selectedBook && selectedChapter ? `${selectedBook.name} ${selectedChapter.number}` : 'Scripture');
 
   return (
     <article className={`min-h-0 min-w-0 flex-1 overflow-y-auto px-5 py-10 sm:px-10 lg:px-16 ${darkMode ? 'bg-[#080808]' : 'bg-[#f8f5ef]'}`}>
