@@ -156,6 +156,36 @@ const BibleToolsPanel = ({
     );
   };
 
+  const loadComparison = async ({
+    bookId: nextBookId = compareBookId || bookId,
+    chapterNumber: nextChapterNumber = compareChapterNumber || chapterNumber,
+    openModal = comparisonOpen,
+    versionIds = selectedCompareVersions,
+  }: {
+    bookId?: string;
+    chapterNumber?: number;
+    openModal?: boolean;
+    versionIds?: string[];
+  } = {}) => {
+    if (versionIds.length < 2) {
+      setStatus('Choose at least two Bible versions to compare.');
+      return;
+    }
+
+    const nextComparison = await compareBibleChapter(versionIds, nextBookId, nextChapterNumber);
+    setComparison(nextComparison);
+    setCompareBookId(nextBookId);
+    setCompareChapterNumber(nextComparison.chapter || nextChapterNumber);
+
+    if (openModal && nextComparison.verses.length > 0) {
+      setComparisonOpen(true);
+    }
+
+    if (nextComparison.verses.length === 0) {
+      setStatus('No comparison text was returned for this chapter. Try another version pair or confirm the compare endpoint response shape.');
+    }
+  };
+
   const updateCompareVersions = async (versionIds: string[]) => {
     if (versionIds.length === 0) {
       return;
@@ -168,14 +198,43 @@ const BibleToolsPanel = ({
     }
 
     try {
-      const nextComparison = await compareBibleChapter(
-        versionIds,
-        compareBookId || bookId,
-        compareChapterNumber || chapterNumber,
-      );
-      setComparison(nextComparison);
+      await loadComparison({ versionIds });
     } catch {
       setStatus('Unable to update comparison versions right now.');
+    }
+  };
+
+  const updateComparisonReference = async ({
+    bookId: nextBookId,
+    chapterNumber: nextChapterNumber,
+  }: {
+    bookId: string;
+    chapterNumber: number;
+  }) => {
+    let nextChapters = compareChapters;
+
+    if (nextBookId !== compareBookId || nextChapters.length === 0) {
+      try {
+        nextChapters = await getBibleChapters(versionId, nextBookId);
+        setCompareChapters(nextChapters);
+      } catch {
+        setStatus('Unable to load chapters for that book right now.');
+        return;
+      }
+    }
+
+    const usableChapterNumber = nextChapters.some((chapter) => chapter.number === nextChapterNumber)
+      ? nextChapterNumber
+      : nextChapters[0]?.number || nextChapterNumber;
+
+    try {
+      await loadComparison({
+        bookId: nextBookId,
+        chapterNumber: usableChapterNumber,
+        openModal: true,
+      });
+    } catch {
+      setStatus('Unable to load that comparison right now.');
     }
   };
 
@@ -185,23 +244,7 @@ const BibleToolsPanel = ({
 
     try {
       if (activeTool === 'compare') {
-        if (selectedCompareVersions.length < 2) {
-          setStatus('Choose at least two Bible versions to compare.');
-          return;
-        }
-
-        const nextComparison = await compareBibleChapter(
-          selectedCompareVersions,
-          compareBookId || bookId,
-          compareChapterNumber || chapterNumber,
-        );
-        setComparison(nextComparison);
-
-        if (nextComparison.verses.length > 0) {
-          setComparisonOpen(true);
-        } else {
-          setStatus('No comparison text was returned for this chapter. Try another version pair or confirm the compare endpoint response shape.');
-        }
+        await loadComparison({ openModal: true });
       }
 
       if (activeTool === 'resources') setRecords(await getBibleResources(versionId, resourceType || undefined));
@@ -329,13 +372,19 @@ const BibleToolsPanel = ({
       </section>
 
       <ScriptureComparisonModal
+        books={books}
+        chapters={compareChapters}
         comparison={comparison}
+        comparisonNavigationLoading={loading}
         darkMode={darkMode}
         open={comparisonOpen}
+        selectedBookId={compareBookId || bookId}
+        selectedChapterNumber={compareChapterNumber || chapterNumber}
         selectedCompareVersions={selectedCompareVersions}
         versions={versions}
         versionLabelFor={getVersionLabel}
         onClose={() => setComparisonOpen(false)}
+        onComparisonReferenceChange={updateComparisonReference}
         onSelectedCompareVersionsChange={updateCompareVersions}
       />
     </>

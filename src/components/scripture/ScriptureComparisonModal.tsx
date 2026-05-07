@@ -1,31 +1,48 @@
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { assetPaths } from '../../constants/assets';
-import type { BibleComparisonChapter, BibleVersion } from '../../types/scripture';
+import type { BibleBook, BibleChapter, BibleComparisonChapter, BibleVersion } from '../../types/scripture';
+
+type ComparisonReferenceChange = {
+  bookId: string;
+  chapterNumber: number;
+};
 
 type ScriptureComparisonModalProps = {
+  books?: BibleBook[];
+  chapters?: BibleChapter[];
   comparison: BibleComparisonChapter | null;
+  comparisonNavigationLoading?: boolean;
   darkMode: boolean;
   highlightedVerseNumber?: number | null;
   highlightedVerseNumbers?: number[];
   open: boolean;
+  selectedBookId?: string;
+  selectedChapterNumber?: number;
   selectedCompareVersions: string[];
   versions: BibleVersion[];
   versionLabelFor: (versionId: string) => string;
   onClose: () => void;
+  onComparisonReferenceChange?: (reference: ComparisonReferenceChange) => void | Promise<void>;
   onSelectedCompareVersionsChange?: (versionIds: string[]) => void | Promise<void>;
 };
 
 const ScriptureComparisonModal = ({
+  books = [],
+  chapters = [],
   comparison,
+  comparisonNavigationLoading = false,
   darkMode,
   highlightedVerseNumber = null,
   highlightedVerseNumbers = [],
   open,
+  selectedBookId,
+  selectedChapterNumber,
   selectedCompareVersions,
   versions,
   versionLabelFor,
   onClose,
+  onComparisonReferenceChange,
   onSelectedCompareVersionsChange,
 }: ScriptureComparisonModalProps) => {
   const highlightedVerseRef = useRef<HTMLElement | null>(null);
@@ -77,6 +94,24 @@ const ScriptureComparisonModal = ({
 
     void onSelectedCompareVersionsChange?.(nextVersions);
   };
+  const canNavigateComparison = books.length > 0 && Boolean(onComparisonReferenceChange);
+  const activeBookId =
+    selectedBookId || books.find((book) => book.name.toLowerCase() === comparison.book.toLowerCase())?.id || '';
+  const activeChapterNumber = selectedChapterNumber || comparison.chapter;
+  const chapterOptions = chapters.length > 0
+    ? chapters
+    : [{ id: String(comparison.chapter), label: `Chapter ${comparison.chapter}`, number: comparison.chapter }];
+  const navigatorSelectClass = `min-h-10 rounded-full border px-3 text-sm font-black outline-none transition focus:ring-2 focus:ring-red-700 ${
+    darkMode
+      ? 'border-white/10 bg-white/10 text-stone-100'
+      : 'border-black/10 bg-white text-zinc-900 shadow-sm'
+  }`;
+  const handleBookChange = (bookId: string) => {
+    void onComparisonReferenceChange?.({ bookId, chapterNumber: activeChapterNumber });
+  };
+  const handleChapterChange = (chapterNumber: number) => {
+    void onComparisonReferenceChange?.({ bookId: activeBookId, chapterNumber });
+  };
 
   return (
     <div
@@ -111,6 +146,36 @@ const ScriptureComparisonModal = ({
             <h2 id="comparison-title" className="mt-2 text-2xl font-black sm:text-3xl">
               {comparison.book} {comparison.chapter}
             </h2>
+            {canNavigateComparison ? (
+              <div className="mt-2 flex flex-wrap items-center gap-2 md:justify-center" aria-labelledby="comparison-title">
+                <select
+                  value={activeBookId}
+                  onChange={(event) => handleBookChange(event.target.value)}
+                  disabled={comparisonNavigationLoading}
+                  className={`${navigatorSelectClass} max-w-48 sm:max-w-64`}
+                  aria-label="Comparison book"
+                >
+                  {books.map((book) => (
+                    <option key={book.id} value={book.id}>
+                      {book.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={activeChapterNumber}
+                  onChange={(event) => handleChapterChange(Number(event.target.value))}
+                  disabled={comparisonNavigationLoading}
+                  className={navigatorSelectClass}
+                  aria-label="Comparison chapter"
+                >
+                  {chapterOptions.map((chapter) => (
+                    <option key={chapter.id} value={chapter.number}>
+                      {chapter.label || `Chapter ${chapter.number}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
             <div className="relative mt-2 inline-block max-w-full">
               <button
                 type="button"

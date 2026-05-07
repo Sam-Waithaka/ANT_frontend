@@ -16,8 +16,8 @@ import { useScriptureReader } from '../hooks/useScriptureReader';
 import { useScriptureSearch } from '../hooks/useScriptureSearch';
 import { useCompactHeader } from '../hooks/useCompactHeader';
 import { useTheme } from '../hooks/useTheme';
-import { compareBibleChapter } from '../services/scriptureApi';
-import type { BibleComparisonChapter, BibleVerse } from '../types/scripture';
+import { compareBibleChapter, getBibleChapters } from '../services/scriptureApi';
+import type { BibleChapter, BibleComparisonChapter, BibleVerse } from '../types/scripture';
 import {
   buildChapterSharePayload,
   buildSelectionSharePayload,
@@ -36,6 +36,9 @@ const ScripturePage = () => {
   const [comparison, setComparison] = useState<BibleComparisonChapter | null>(null);
   const [comparisonHighlightedVerseNumbers, setComparisonHighlightedVerseNumbers] = useState<number[]>([]);
   const [comparisonVersionIds, setComparisonVersionIds] = useState<string[]>([]);
+  const [comparisonBookId, setComparisonBookId] = useState('');
+  const [comparisonChapterNumber, setComparisonChapterNumber] = useState(1);
+  const [comparisonChapters, setComparisonChapters] = useState<BibleChapter[]>([]);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
@@ -276,26 +279,50 @@ const ScripturePage = () => {
     setActionMessage(successMessage);
   };
 
-  const openChapterComparison = async (highlightedVerseNumbers: number[] = []) => {
-    if (!selectedBook || !selectedChapter || !selectedVersionId) {
+  const loadChapterComparison = async ({
+    bookId,
+    chapterNumber,
+    highlightedVerseNumbers = comparisonHighlightedVerseNumbers,
+    openModal = comparisonOpen,
+    versionIds = selectedCompareVersions,
+  }: {
+    bookId: string;
+    chapterNumber: number;
+    highlightedVerseNumbers?: number[];
+    openModal?: boolean;
+    versionIds?: string[];
+  }) => {
+    if (!bookId || !chapterNumber || versionIds.length === 0) {
       return;
     }
 
     setComparisonLoading(true);
     try {
-      const nextComparison = await compareBibleChapter(
-        selectedCompareVersions,
-        selectedBook.id,
-        selectedChapter.number,
-      );
+      const nextComparison = await compareBibleChapter(versionIds, bookId, chapterNumber);
       setComparison(nextComparison);
+      setComparisonBookId(bookId);
+      setComparisonChapterNumber(nextComparison.chapter || chapterNumber);
       setComparisonHighlightedVerseNumbers(highlightedVerseNumbers);
-      setComparisonOpen(true);
+      setComparisonOpen(openModal);
     } catch {
       setActionMessage('Unable to compare this chapter right now.');
     } finally {
       setComparisonLoading(false);
     }
+  };
+
+  const openChapterComparison = async (highlightedVerseNumbers: number[] = []) => {
+    if (!selectedBook || !selectedChapter || !selectedVersionId) {
+      return;
+    }
+
+    setComparisonChapters(chapters);
+    await loadChapterComparison({
+      bookId: selectedBook.id,
+      chapterNumber: selectedChapter.number,
+      highlightedVerseNumbers,
+      openModal: true,
+    });
   };
 
   const changeComparisonVersions = async (versionIds: string[]) => {
@@ -305,20 +332,53 @@ const ScripturePage = () => {
 
     setComparisonVersionIds(versionIds);
 
-    if (!comparisonOpen || !selectedBook || !selectedChapter) {
+    const nextBookId = comparisonBookId || selectedBook?.id;
+    const nextChapterNumber = comparisonChapterNumber || selectedChapter?.number;
+
+    if (!comparisonOpen || !nextBookId || !nextChapterNumber) {
       return;
     }
 
-    try {
-      const nextComparison = await compareBibleChapter(
-        versionIds,
-        selectedBook.id,
-        selectedChapter.number,
-      );
-      setComparison(nextComparison);
-    } catch {
-      setActionMessage('Unable to update comparison versions right now.');
+    await loadChapterComparison({
+      bookId: nextBookId,
+      chapterNumber: nextChapterNumber,
+      versionIds,
+    });
+  };
+
+  const changeComparisonReference = async ({
+    bookId,
+    chapterNumber,
+  }: {
+    bookId: string;
+    chapterNumber: number;
+  }) => {
+    if (!selectedVersionId) {
+      return;
     }
+
+    let nextChapters = comparisonChapters;
+
+    if (bookId !== comparisonBookId || nextChapters.length === 0) {
+      try {
+        nextChapters = await getBibleChapters(selectedVersionId, bookId);
+        setComparisonChapters(nextChapters);
+      } catch {
+        setActionMessage('Unable to load chapters for that book right now.');
+        return;
+      }
+    }
+
+    const nextChapterNumber = nextChapters.some((chapter) => chapter.number === chapterNumber)
+      ? chapterNumber
+      : nextChapters[0]?.number || chapterNumber;
+
+    await loadChapterComparison({
+      bookId,
+      chapterNumber: nextChapterNumber,
+      highlightedVerseNumbers: [],
+      openModal: true,
+    });
   };
 
   const openVerseComparison = async () => {
@@ -466,14 +526,20 @@ const ScripturePage = () => {
         }}
       />
       <ScriptureComparisonModal
+        books={books}
+        chapters={comparisonChapters}
         comparison={comparison}
+        comparisonNavigationLoading={comparisonLoading}
         darkMode={darkMode}
         highlightedVerseNumbers={comparisonHighlightedVerseNumbers}
-        open={comparisonOpen && !comparisonLoading}
+        open={comparisonOpen}
+        selectedBookId={comparisonBookId || selectedBook?.id}
+        selectedChapterNumber={comparisonChapterNumber || selectedChapter?.number}
         selectedCompareVersions={selectedCompareVersions}
         versions={versions}
         versionLabelFor={getVersionLabel}
         onClose={() => setComparisonOpen(false)}
+        onComparisonReferenceChange={changeComparisonReference}
         onSelectedCompareVersionsChange={changeComparisonVersions}
       />
       {actionMessage ? (

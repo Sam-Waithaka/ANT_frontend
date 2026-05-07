@@ -63,6 +63,19 @@ const comparisonPayloads: Record<string, { book: string; chapter: number; result
       },
     ],
   },
+  'Gen:2': {
+    book: 'Genesis',
+    chapter: 2,
+    results: [
+      {
+        verse_number: 1,
+        readings: [
+          { version: 'BSB', text: 'Thus the heavens and the earth were completed in all their vast array.' },
+          { version: 'ASV', text: 'And the heavens and the earth were finished, and all the host of them.' },
+        ],
+      },
+    ],
+  },
 };
 
 const fulfillJson = async (route: Route, payload: unknown) => {
@@ -271,6 +284,21 @@ test('comparison modal version selector can deselect an active version', async (
   await expect(comparisonDialog.getByRole('button', { name: /^BSB$/i })).toBeVisible();
   await expect(comparisonDialog.locator('[data-comparison-version="ASV"]')).toHaveCount(0);
   await expect(comparisonDialog.getByRole('checkbox', { name: /ASV/i })).not.toBeChecked();
+});
+
+test('comparison modal chapter picker loads another chapter', async ({ page }) => {
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+  await page.getByRole('button', { name: /compare verse/i }).click();
+
+  const comparisonDialog = page.getByRole('dialog', { name: 'Genesis 1', exact: true });
+  await expect(comparisonDialog).toBeVisible();
+
+  await comparisonDialog.getByLabel('Comparison chapter').selectOption('2');
+
+  await expect(page.getByRole('dialog', { name: 'Genesis 2', exact: true })).toBeVisible();
+  await expect(page.getByText('Thus the heavens and the earth were completed in all their vast array.')).toBeVisible();
 });
 
 test('shared verses link opens the chapter and selects the requested verses', async ({ page }) => {
