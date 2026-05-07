@@ -1,5 +1,5 @@
 import { BookText, ChevronDown, ChevronUp, Copy, GitCompareArrows, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type ScriptureActionSheetProps = {
   canCompareVerse?: boolean;
@@ -32,12 +32,11 @@ const ScriptureActionSheet = ({
   const [desktopExpanded, setDesktopExpanded] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState(false);
 
-  useEffect(() => {
-    if (!open) {
-      setDesktopExpanded(false);
-      setMobileExpanded(false);
-    }
-  }, [open]);
+  const handleClose = () => {
+    setDesktopExpanded(false);
+    setMobileExpanded(false);
+    onClose();
+  };
 
   if (!open) {
     return null;
@@ -94,7 +93,7 @@ const ScriptureActionSheet = ({
               </button>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className={`grid size-11 place-items-center rounded-full border transition ${buttonClass}`}
                 aria-label="Close Scripture actions"
               >
@@ -166,7 +165,7 @@ const ScriptureActionSheet = ({
               </button>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className={`grid size-10 place-items-center rounded-full border transition ${subtleButtonClass}`}
                 aria-label="Close Scripture actions"
               >
