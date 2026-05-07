@@ -2,11 +2,14 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { assetPaths } from '../../constants/assets';
 import type { BibleBook, BibleChapter, BibleComparisonChapter, BibleVersion } from '../../types/scripture';
+import { ScriptureBookPicker, ScriptureChapterPicker } from './ScriptureReferencePickers';
 
 type ComparisonReferenceChange = {
   bookId: string;
   chapterNumber: number;
 };
+
+type ComparisonMenu = 'version' | 'book' | 'chapter' | null;
 
 type ScriptureComparisonModalProps = {
   books?: BibleBook[];
@@ -46,7 +49,9 @@ const ScriptureComparisonModal = ({
   onSelectedCompareVersionsChange,
 }: ScriptureComparisonModalProps) => {
   const highlightedVerseRef = useRef<HTMLElement | null>(null);
-  const [versionPickerOpen, setVersionPickerOpen] = useState(false);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const pickerControlsRef = useRef<HTMLDivElement | null>(null);
+  const [openMenu, setOpenMenu] = useState<ComparisonMenu>(null);
   const highlightedNumbers =
     highlightedVerseNumbers.length > 0
       ? highlightedVerseNumbers
@@ -56,7 +61,7 @@ const ScriptureComparisonModal = ({
   const firstHighlightedVerseNumber = highlightedNumbers[0] || null;
 
   const handleClose = useCallback(() => {
-    setVersionPickerOpen(false);
+    setOpenMenu(null);
     onClose();
   }, [onClose]);
 
@@ -78,6 +83,18 @@ const ScriptureComparisonModal = ({
 
     highlightedVerseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [firstHighlightedVerseNumber, open]);
+
+  useEffect(() => {
+    if (!openMenu) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (pickerControlsRef.current?.contains(event.target as Node)) return;
+      setOpenMenu(null);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [openMenu]);
 
   if (!open || !comparison) {
     return null;
@@ -101,26 +118,36 @@ const ScriptureComparisonModal = ({
   const chapterOptions = chapters.length > 0
     ? chapters
     : [{ id: String(comparison.chapter), label: `Chapter ${comparison.chapter}`, number: comparison.chapter }];
-  const navigatorSelectClass = `min-h-10 rounded-full border px-3 text-sm font-black outline-none transition focus:ring-2 focus:ring-red-700 ${
-    darkMode
-      ? 'border-white/10 bg-white/10 text-stone-100'
-      : 'border-black/10 bg-white text-zinc-900 shadow-sm'
-  }`;
+  const activeChapterId =
+    chapterOptions.find((chapter) => chapter.number === activeChapterNumber)?.id || String(activeChapterNumber);
   const handleBookChange = (bookId: string) => {
     void onComparisonReferenceChange?.({ bookId, chapterNumber: activeChapterNumber });
   };
-  const handleChapterChange = (chapterNumber: number) => {
+  const handleChapterChange = (chapterId: string) => {
+    const chapterNumber =
+      chapterOptions.find((chapter) => chapter.id === chapterId)?.number || Number(chapterId);
+
+    if (!Number.isFinite(chapterNumber)) {
+      return;
+    }
+
     void onComparisonReferenceChange?.({ bookId: activeBookId, chapterNumber });
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pb-4 pt-20 backdrop-blur-sm sm:items-center sm:p-4"
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          handleClose();
+        }
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="comparison-title"
     >
       <div
+        ref={modalRef}
         className={`flex max-h-[calc(100vh-6rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border shadow-2xl sm:max-h-[90vh] ${
           darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
         }`}
@@ -146,52 +173,52 @@ const ScriptureComparisonModal = ({
             <h2 id="comparison-title" className="mt-2 text-2xl font-black sm:text-3xl">
               {comparison.book} {comparison.chapter}
             </h2>
-            {canNavigateComparison ? (
-              <div className="mt-2 flex flex-wrap items-center gap-2 md:justify-center" aria-labelledby="comparison-title">
-                <select
-                  value={activeBookId}
-                  onChange={(event) => handleBookChange(event.target.value)}
-                  disabled={comparisonNavigationLoading}
-                  className={`${navigatorSelectClass} max-w-48 sm:max-w-64`}
-                  aria-label="Comparison book"
-                >
-                  {books.map((book) => (
-                    <option key={book.id} value={book.id}>
-                      {book.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={activeChapterNumber}
-                  onChange={(event) => handleChapterChange(Number(event.target.value))}
-                  disabled={comparisonNavigationLoading}
-                  className={navigatorSelectClass}
-                  aria-label="Comparison chapter"
-                >
-                  {chapterOptions.map((chapter) => (
-                    <option key={chapter.id} value={chapter.number}>
-                      {chapter.label || `Chapter ${chapter.number}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-            <div className="relative mt-2 inline-block max-w-full">
+            <div ref={pickerControlsRef} className="relative mt-2 flex flex-wrap items-center gap-2 md:justify-center">
+              {canNavigateComparison ? (
+                <>
+                  <ScriptureBookPicker
+                    books={books}
+                    buttonAriaLabel="Comparison book"
+                    darkMode={darkMode}
+                    disabled={comparisonNavigationLoading}
+                    gridClassName="grid max-h-72 grid-cols-2 gap-1 overflow-y-auto md:grid-cols-3"
+                    menuClassName="left-1/2 w-[min(84vw,34rem)] -translate-x-1/2"
+                    open={openMenu === 'book'}
+                    placement="bottom"
+                    selectedBookId={activeBookId}
+                    onBookChange={handleBookChange}
+                    onOpenChange={(nextOpen) => setOpenMenu(nextOpen ? 'book' : null)}
+                  />
+                  <ScriptureChapterPicker
+                    buttonAriaLabel="Comparison chapter"
+                    chapters={chapterOptions}
+                    darkMode={darkMode}
+                    disabled={comparisonNavigationLoading}
+                    menuClassName="left-1/2 w-[min(80vw,20rem)] -translate-x-1/2 sm:w-80"
+                    open={openMenu === 'chapter'}
+                    placement="bottom"
+                    selectedChapterId={activeChapterId}
+                    onChapterChange={handleChapterChange}
+                    onOpenChange={(nextOpen) => setOpenMenu(nextOpen ? 'chapter' : null)}
+                  />
+                </>
+              ) : null}
+              <div className="relative inline-block max-w-full">
               <button
                 type="button"
-                onClick={() => setVersionPickerOpen((current) => !current)}
+                onClick={() => setOpenMenu(openMenu === 'version' ? null : 'version')}
                 className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-red-700 ${
                   darkMode
                     ? 'border-white/10 bg-white/10 text-stone-200 hover:bg-white/15'
                     : 'border-black/10 bg-white text-zinc-700 shadow-sm hover:bg-[#fffaf0]'
                 }`}
-                aria-expanded={versionPickerOpen}
+                aria-expanded={openMenu === 'version'}
                 aria-haspopup="menu"
               >
                 <span className="truncate">{selectedCompareVersions.map(versionLabelFor).join(', ')}</span>
-                {versionPickerOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                {openMenu === 'version' ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
               </button>
-              {versionPickerOpen ? (
+              {openMenu === 'version' ? (
                 <div
                   className={`absolute left-0 z-20 mt-2 max-h-72 w-[min(20rem,calc(100vw-3rem))] overflow-y-auto rounded-2xl border p-2 text-left shadow-2xl md:left-1/2 md:-translate-x-1/2 ${
                     darkMode
@@ -235,6 +262,7 @@ const ScriptureComparisonModal = ({
                   </div>
                 </div>
               ) : null}
+              </div>
             </div>
           </div>
           <button

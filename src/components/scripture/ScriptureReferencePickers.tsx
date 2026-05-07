@@ -7,6 +7,7 @@ type ChapterLabel = 'number' | 'chapter';
 
 type PickerBaseProps = {
   darkMode: boolean;
+  disabled?: boolean;
   fullWidth?: boolean;
   menuClassName: string;
   open: boolean;
@@ -16,12 +17,14 @@ type PickerBaseProps = {
 
 type ScriptureBookPickerProps = PickerBaseProps & {
   books: BibleBook[];
+  buttonAriaLabel?: string;
   gridClassName?: string;
   selectedBookId: string;
   onBookChange: (value: string) => void;
 };
 
 type ScriptureChapterPickerProps = PickerBaseProps & {
+  buttonAriaLabel?: string;
   chapters: BibleChapter[];
   gridClassName?: string;
   labelStyle?: ChapterLabel;
@@ -60,7 +63,9 @@ const getInactiveOptionClass = (darkMode: boolean) =>
 
 export const ScriptureBookPicker = ({
   books,
+  buttonAriaLabel,
   darkMode,
+  disabled = false,
   fullWidth = false,
   gridClassName = 'grid max-h-80 grid-cols-2 gap-1 overflow-y-auto md:grid-cols-3',
   menuClassName,
@@ -80,9 +85,11 @@ export const ScriptureBookPicker = ({
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
+        disabled={disabled}
+        aria-label={buttonAriaLabel}
         className={`${pillBase} ${getNeutralPillClass(darkMode)} ${
           fullWidth ? 'w-full justify-between' : 'max-w-[11rem] sm:max-w-[15rem]'
-        }`}
+        } disabled:cursor-not-allowed disabled:opacity-60`}
       >
         <span className="truncate">{selectedBook?.name || 'Book'}</span>
         <ChevronDown size={15} className="shrink-0 text-red-800 dark:text-red-200" />
@@ -135,8 +142,10 @@ export const ScriptureBookPicker = ({
 };
 
 export const ScriptureChapterPicker = ({
+  buttonAriaLabel,
   chapters,
   darkMode,
+  disabled = false,
   fullWidth = false,
   gridClassName = 'grid max-h-72 grid-cols-5 gap-2 overflow-y-auto sm:grid-cols-6',
   labelStyle = 'number',
@@ -159,9 +168,11 @@ export const ScriptureChapterPicker = ({
       <button
         type="button"
         onClick={() => onOpenChange(!open)}
+        disabled={disabled}
+        aria-label={buttonAriaLabel}
         className={`${pillBase} ${getNeutralPillClass(darkMode)} ${
           fullWidth ? 'w-full justify-between' : 'min-w-[4.1rem] px-3'
-        }`}
+        } disabled:cursor-not-allowed disabled:opacity-60`}
       >
         <span>{label}</span>
         <ChevronDown size={15} className="shrink-0 text-red-800 dark:text-red-200" />

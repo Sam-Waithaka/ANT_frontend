@@ -295,10 +295,30 @@ test('comparison modal chapter picker loads another chapter', async ({ page }) =
   const comparisonDialog = page.getByRole('dialog', { name: 'Genesis 1', exact: true });
   await expect(comparisonDialog).toBeVisible();
 
-  await comparisonDialog.getByLabel('Comparison chapter').selectOption('2');
+  await comparisonDialog.getByRole('button', { name: 'Comparison chapter' }).click();
+  await comparisonDialog.getByRole('button', { name: '2', exact: true }).click();
 
   await expect(page.getByRole('dialog', { name: 'Genesis 2', exact: true })).toBeVisible();
   await expect(page.getByText('Thus the heavens and the earth were completed in all their vast array.')).toBeVisible();
+});
+
+test('comparison modal closes picker menus and the modal on outside clicks', async ({ page }) => {
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+  await page.getByRole('button', { name: /compare verse/i }).click();
+
+  const comparisonDialog = page.getByRole('dialog', { name: 'Genesis 1', exact: true });
+  await expect(comparisonDialog).toBeVisible();
+
+  await comparisonDialog.getByRole('button', { name: /BSB, ASV/i }).click();
+  await expect(comparisonDialog.getByRole('checkbox', { name: /ASV/i })).toBeVisible();
+
+  await comparisonDialog.getByRole('heading', { name: 'Genesis 1', exact: true }).click();
+  await expect(comparisonDialog.getByRole('checkbox', { name: /ASV/i })).toHaveCount(0);
+
+  await page.mouse.click(8, 8);
+  await expect(comparisonDialog).toHaveCount(0);
 });
 
 test('shared verses link opens the chapter and selects the requested verses', async ({ page }) => {
