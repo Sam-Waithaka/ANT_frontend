@@ -6,6 +6,7 @@ type ScriptureComparisonModalProps = {
   comparison: BibleComparisonChapter | null;
   darkMode: boolean;
   highlightedVerseNumber?: number | null;
+  highlightedVerseNumbers?: number[];
   open: boolean;
   selectedCompareVersions: string[];
   versionLabelFor: (versionId: string) => string;
@@ -16,12 +17,20 @@ const ScriptureComparisonModal = ({
   comparison,
   darkMode,
   highlightedVerseNumber = null,
+  highlightedVerseNumbers = [],
   open,
   selectedCompareVersions,
   versionLabelFor,
   onClose,
 }: ScriptureComparisonModalProps) => {
   const highlightedVerseRef = useRef<HTMLElement | null>(null);
+  const highlightedNumbers =
+    highlightedVerseNumbers.length > 0
+      ? highlightedVerseNumbers
+      : highlightedVerseNumber
+        ? [highlightedVerseNumber]
+        : [];
+  const firstHighlightedVerseNumber = highlightedNumbers[0] || null;
 
   useEffect(() => {
     if (!open) {
@@ -39,12 +48,12 @@ const ScriptureComparisonModal = ({
   }, [onClose, open]);
 
   useEffect(() => {
-    if (!open || !highlightedVerseNumber) {
+    if (!open || !firstHighlightedVerseNumber) {
       return;
     }
 
     highlightedVerseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [highlightedVerseNumber, open]);
+  }, [firstHighlightedVerseNumber, open]);
 
   if (!open || !comparison) {
     return null;
@@ -88,12 +97,14 @@ const ScriptureComparisonModal = ({
           {comparison.verses.length > 0 ? (
             <div className="grid gap-5">
               {comparison.verses.map((verse) => {
-                const isHighlighted = highlightedVerseNumber === verse.verseNumber;
+                const isHighlighted = highlightedNumbers.includes(verse.verseNumber);
 
                 return (
                   <section
                     key={verse.verseNumber}
-                    ref={isHighlighted ? highlightedVerseRef : null}
+                    ref={verse.verseNumber === firstHighlightedVerseNumber ? highlightedVerseRef : null}
+                    data-highlighted={isHighlighted || undefined}
+                    data-verse-number={verse.verseNumber}
                     className={`rounded-3xl border p-4 ${
                       isHighlighted
                         ? darkMode

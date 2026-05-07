@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 type ScriptureActionSheetProps = {
   canCompareVerse?: boolean;
+  compareVerseLabel?: string;
   copySelectionLabel?: string;
   darkMode: boolean;
   description: string;
@@ -19,6 +20,7 @@ const actionButtonBase =
 
 const ScriptureActionSheet = ({
   canCompareVerse = false,
+  compareVerseLabel = 'Compare verse',
   copySelectionLabel = 'Copy verse',
   darkMode,
   description,
@@ -111,7 +113,7 @@ const ScriptureActionSheet = ({
               {canCompareVerse ? (
                 <button type="button" onClick={onCompareVerse} className={`${actionButtonBase} ${buttonClass}`}>
                   <GitCompareArrows size={18} />
-                  Compare verse
+                  {compareVerseLabel}
                 </button>
               ) : null}
             </div>
@@ -183,7 +185,7 @@ const ScriptureActionSheet = ({
               {canCompareVerse ? (
                 <button type="button" onClick={onCompareVerse} className={`${actionButtonBase} ${buttonClass} min-h-11 justify-center px-3 text-center text-[0.95rem]`}>
                   <GitCompareArrows size={17} />
-                  Compare verse
+                  {compareVerseLabel}
                 </button>
               ) : null}
             </div>

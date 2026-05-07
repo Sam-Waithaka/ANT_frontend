@@ -94,7 +94,7 @@ const ScripturePage = () => {
     verses: selectedVerses,
     version: selectedVersion,
   });
-  const canCompareVerse = selectedVerses.length === 1 && Boolean(selectedBook && selectedChapter && selectedVersionId);
+  const canCompareVerse = selectedVerses.length > 0 && Boolean(selectedBook && selectedChapter && selectedVersionId);
   const selectedCompareVersions = [
     selectedVersion?.id || selectedVersionId,
     versions.find((version) => version.id !== (selectedVersion?.id || selectedVersionId))?.id,
@@ -397,6 +397,7 @@ const ScripturePage = () => {
       />
       <ScriptureActionSheet
         canCompareVerse={canCompareVerse}
+        compareVerseLabel={selectedVerses.length > 1 ? 'Compare selection' : 'Compare verse'}
         darkMode={darkMode}
         copySelectionLabel={selectedVerses.length > 1 ? 'Copy selection' : 'Copy verse'}
         description={selectionDescription}
@@ -420,7 +421,7 @@ const ScripturePage = () => {
       <ScriptureComparisonModal
         comparison={comparisonLoading ? null : comparison}
         darkMode={darkMode}
-        highlightedVerseNumber={selectedVerses[0]?.number || null}
+        highlightedVerseNumbers={selectedVerses.map((verse) => verse.number)}
         open={comparisonOpen && !comparisonLoading}
         selectedCompareVersions={selectedCompareVersions}
         versionLabelFor={getVersionLabel}
