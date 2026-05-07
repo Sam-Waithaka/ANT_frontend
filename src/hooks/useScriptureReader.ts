@@ -132,40 +132,6 @@ export const useScriptureReader = () => {
   }, [openScripture, searchParams]);
 
   useEffect(() => {
-    const requestedBook = searchParams.get('book');
-    const requestedChapter = Number(searchParams.get('chapter'));
-
-    if (!requestedBook || !Number.isFinite(requestedChapter) || requestedChapter <= 0) {
-      return;
-    }
-
-    const requestedBookId = books.find(
-      (book) =>
-        normalizeReferenceValue(book.id) === normalizeReferenceValue(requestedBook) ||
-        normalizeReferenceValue(book.name) === normalizeReferenceValue(requestedBook) ||
-        normalizeReferenceValue(book.abbreviation || '') === normalizeReferenceValue(requestedBook),
-    )?.id;
-
-    if (requestedBookId && requestedBookId !== selectedBookId) {
-      setSelectedBookId(requestedBookId);
-      return;
-    }
-
-    const requestedChapterId = chapters.find((chapter) => chapter.number === requestedChapter)?.id;
-    if (requestedChapterId && requestedChapterId !== selectedChapterId) {
-      setSelectedChapterId(requestedChapterId);
-    }
-  }, [
-    books,
-    chapters,
-    searchParams,
-    selectedBookId,
-    selectedChapterId,
-    setSelectedBookId,
-    setSelectedChapterId,
-  ]);
-
-  useEffect(() => {
     if (!pendingReference || books.length === 0) {
       return;
     }
@@ -285,6 +251,14 @@ export const useScriptureReader = () => {
 
         setChapters(nextChapters);
         setSelectedChapterId((current) => {
+          if (current === '__last__') {
+            return nextChapters.at(-1)?.id || '';
+          }
+
+          if (current === '__first__') {
+            return nextChapters[0]?.id || '';
+          }
+
           const match = nextChapters.find(
             (chapter) =>
               chapter.id === current ||
@@ -456,7 +430,7 @@ export const useScriptureReader = () => {
     }
 
     if (selectedChapterIndex === 0 && selectedBookIndex > 0) {
-      openScripture({ bookId: books[selectedBookIndex - 1].id });
+      openScripture({ bookId: books[selectedBookIndex - 1].id, chapterPlacement: 'last' });
     }
   };
 
@@ -471,7 +445,7 @@ export const useScriptureReader = () => {
       selectedBookIndex >= 0 &&
       selectedBookIndex < books.length - 1
     ) {
-      openScripture({ bookId: books[selectedBookIndex + 1].id });
+      openScripture({ bookId: books[selectedBookIndex + 1].id, chapterPlacement: 'first' });
     }
   };
 

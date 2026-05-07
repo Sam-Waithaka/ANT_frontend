@@ -11,6 +11,7 @@ const booksPayload = [
   { osis_id: 'Gen', name: 'Genesis', testament: 'OT' },
   { osis_id: '1Sam', name: '1 Samuel', testament: 'OT' },
   { osis_id: 'John', name: 'John', testament: 'NT' },
+  { osis_id: 'Acts', name: 'Acts', testament: 'NT' },
 ];
 
 const chapterList = (count: number) =>
@@ -32,6 +33,12 @@ const chapterPayloads: Record<string, Array<{ verse_number: number; text: string
   'John:20': [
     { verse_number: 1, text: 'Early on the first day of the week Mary Magdalene went to the tomb.' },
     { verse_number: 2, text: 'So she came running to Simon Peter and the other disciple.' },
+  ],
+  'John:21': [
+    { verse_number: 1, text: 'Afterward Jesus appeared again to the disciples by the Sea of Tiberias.' },
+  ],
+  'Acts:1': [
+    { verse_number: 1, text: 'In my first book, O Theophilus, I wrote about all that Jesus began to do and to teach.' },
   ],
 };
 
@@ -111,6 +118,10 @@ const mockScriptureApi = async (page: Page) => {
 
   await page.route('**/v1/bible/versions/*/books/John/chapters/', async (route) => {
     await fulfillJson(route, chapterList(21));
+  });
+
+  await page.route('**/v1/bible/versions/*/books/Acts/chapters/', async (route) => {
+    await fulfillJson(route, chapterList(28));
   });
 
   await page.route('**/v1/bible/versions/*/books/*/chapters/*/', async (route) => {
@@ -224,4 +235,14 @@ test('shared verses link opens the chapter and selects the requested verses', as
   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
   await expect(page.getByRole('dialog', { name: 'John 20:1-2 (BSB)' })).toBeVisible();
   await expect(page.getByRole('button', { name: /copy selection/i })).toBeVisible();
+});
+
+test('previous chapter from the first chapter opens the previous book final chapter', async ({ page }) => {
+  await page.goto('/scripture?book=Acts&chapter=1&version=BSB');
+
+  await expect(page.getByRole('heading', { name: 'Acts 1' })).toBeVisible();
+  await page.getByRole('button', { name: 'Previous chapter' }).click();
+
+  await expect(page.getByRole('heading', { name: 'John 21' })).toBeVisible();
+  await expect(page.getByText('Afterward Jesus appeared again to the disciples by the Sea of Tiberias.')).toBeVisible();
 });

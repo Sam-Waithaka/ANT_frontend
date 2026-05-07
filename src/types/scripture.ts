@@ -52,6 +52,7 @@ export type ScriptureRenderRequest = {
   bookId?: string;
   chapter?: number;
   chapterId?: string;
+  chapterPlacement?: 'first' | 'last';
   verse?: number | null;
   verses?: number[];
   versionId?: string;

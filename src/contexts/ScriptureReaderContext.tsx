@@ -24,7 +24,7 @@ export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) =
       selectedVersionId,
       clearPendingReference: () => setPendingReference(null),
       openScripture: (request) => {
-        const { book, bookId, chapter, chapterId, verse, versionId } = request;
+        const { book, bookId, chapter, chapterId, chapterPlacement, verse, versionId } = request;
 
         if (versionId) {
           setSelectedVersionIdState(versionId);
@@ -40,7 +40,10 @@ export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) =
 
         if (bookId) {
           setSelectedBookIdState(bookId);
-          setSelectedChapterIdState(chapterId || '');
+          setSelectedChapterIdState(
+            chapterId ||
+              (chapterPlacement === 'last' ? '__last__' : chapterPlacement === 'first' ? '__first__' : ''),
+          );
         } else if (chapterId) {
           setSelectedChapterIdState(chapterId);
         }
