@@ -1,6 +1,7 @@
-import { X } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import type { BibleComparisonChapter } from '../../types/scripture';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { assetPaths } from '../../constants/assets';
+import type { BibleComparisonChapter, BibleVersion } from '../../types/scripture';
 
 type ScriptureComparisonModalProps = {
   comparison: BibleComparisonChapter | null;
@@ -9,8 +10,10 @@ type ScriptureComparisonModalProps = {
   highlightedVerseNumbers?: number[];
   open: boolean;
   selectedCompareVersions: string[];
+  versions: BibleVersion[];
   versionLabelFor: (versionId: string) => string;
   onClose: () => void;
+  onSelectedCompareVersionsChange?: (versionIds: string[]) => void | Promise<void>;
 };
 
 const ScriptureComparisonModal = ({
@@ -20,10 +23,13 @@ const ScriptureComparisonModal = ({
   highlightedVerseNumbers = [],
   open,
   selectedCompareVersions,
+  versions,
   versionLabelFor,
   onClose,
+  onSelectedCompareVersionsChange,
 }: ScriptureComparisonModalProps) => {
   const highlightedVerseRef = useRef<HTMLElement | null>(null);
+  const [versionPickerOpen, setVersionPickerOpen] = useState(false);
   const highlightedNumbers =
     highlightedVerseNumbers.length > 0
       ? highlightedVerseNumbers
@@ -48,6 +54,12 @@ const ScriptureComparisonModal = ({
   }, [onClose, open]);
 
   useEffect(() => {
+    if (!open) {
+      setVersionPickerOpen(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
     if (!open || !firstHighlightedVerseNumber) {
       return;
     }
@@ -58,6 +70,18 @@ const ScriptureComparisonModal = ({
   if (!open || !comparison) {
     return null;
   }
+
+  const toggleVersion = (versionId: string) => {
+    const nextVersions = selectedCompareVersions.includes(versionId)
+      ? selectedCompareVersions.filter((id) => id !== versionId)
+      : [...selectedCompareVersions, versionId];
+
+    if (nextVersions.length === 0) {
+      return;
+    }
+
+    void onSelectedCompareVersionsChange?.(nextVersions);
+  };
 
   return (
     <div
@@ -71,15 +95,85 @@ const ScriptureComparisonModal = ({
           darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#f8f5ef] text-zinc-950'
         }`}
       >
-        <div className={`flex items-start justify-between gap-4 border-b p-5 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
-          <div>
+        <div className={`grid grid-cols-[1fr_auto] items-start gap-4 border-b p-5 md:grid-cols-[auto_1fr_auto] md:items-center ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
+          <a
+            href="https://aicnjoro.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700 md:block"
+            aria-label="Open the AIC Njoro Town website"
+          >
+            <img
+              src={assetPaths.circleLogo}
+              alt=""
+              className={`size-14 rounded-2xl border object-contain p-1 shadow-sm ${
+                darkMode ? 'border-red-400/30 bg-white' : 'border-red-900/15 bg-white'
+              }`}
+            />
+          </a>
+          <div className="min-w-0 md:text-center">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-red-900 dark:text-red-200">Chapter comparison</p>
             <h2 id="comparison-title" className="mt-2 text-2xl font-black sm:text-3xl">
               {comparison.book} {comparison.chapter}
             </h2>
-            <p className={`mt-1 text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
-              {selectedCompareVersions.map(versionLabelFor).join(', ')}
-            </p>
+            <div className="relative mt-2 inline-block max-w-full">
+              <button
+                type="button"
+                onClick={() => setVersionPickerOpen((current) => !current)}
+                className={`inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-red-700 ${
+                  darkMode
+                    ? 'border-white/10 bg-white/10 text-stone-200 hover:bg-white/15'
+                    : 'border-black/10 bg-white text-zinc-700 shadow-sm hover:bg-[#fffaf0]'
+                }`}
+                aria-expanded={versionPickerOpen}
+                aria-haspopup="menu"
+              >
+                <span className="truncate">{selectedCompareVersions.map(versionLabelFor).join(', ')}</span>
+                {versionPickerOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              </button>
+              {versionPickerOpen ? (
+                <div
+                  className={`absolute left-0 z-20 mt-2 max-h-72 w-[min(20rem,calc(100vw-3rem))] overflow-y-auto rounded-2xl border p-2 text-left shadow-2xl md:left-1/2 md:-translate-x-1/2 ${
+                    darkMode
+                      ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/40'
+                      : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/15'
+                  }`}
+                  role="menu"
+                >
+                  {versions.map((version) => {
+                    const checked = selectedCompareVersions.includes(version.id);
+                    const isLastSelected = checked && selectedCompareVersions.length === 1;
+
+                    return (
+                      <label
+                        key={version.id}
+                        className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
+                          checked
+                            ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                            : darkMode
+                              ? 'text-stone-300 hover:bg-white/10'
+                              : 'text-zinc-700 hover:bg-[#fffaf0]'
+                        } ${isLastSelected ? 'cursor-not-allowed opacity-70' : ''}`}
+                        role="menuitemcheckbox"
+                        aria-checked={checked}
+                      >
+                        <input
+                          checked={checked}
+                          disabled={isLastSelected}
+                          onChange={() => toggleVersion(version.id)}
+                          type="checkbox"
+                          className="size-4 accent-red-800"
+                        />
+                        <span className="min-w-12 font-black">{version.abbreviation || version.id}</span>
+                        <span className={`min-w-0 truncate text-xs ${checked ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>
+                          {version.name}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
           </div>
           <button
             type="button"
@@ -125,6 +219,7 @@ const ScriptureComparisonModal = ({
                         return (
                           <article
                             key={version}
+                            data-comparison-version={version}
                             className={`rounded-2xl border p-4 ${
                               darkMode ? 'border-white/10 bg-[#080808]' : 'border-black/10 bg-[#fffaf0]'
                             }`}

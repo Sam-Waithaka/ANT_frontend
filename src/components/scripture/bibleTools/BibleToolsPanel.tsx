@@ -17,7 +17,7 @@ import type {
   BibleToolRecord,
   BibleVersion,
 } from '../../../types/scripture';
-import BibleToolsComparisonDialog from './BibleToolsComparisonDialog';
+import ScriptureComparisonModal from '../ScriptureComparisonModal';
 import BibleToolsTabs from './BibleToolsTabs';
 import CompareTool from './CompareTool';
 import OptionGridTool from './OptionGridTool';
@@ -154,6 +154,29 @@ const BibleToolsPanel = ({
         ? current.filter((id) => id !== versionIdToToggle)
         : [...current, versionIdToToggle],
     );
+  };
+
+  const updateCompareVersions = async (versionIds: string[]) => {
+    if (versionIds.length === 0) {
+      return;
+    }
+
+    setCompareVersionIds(versionIds);
+
+    if (!comparisonOpen) {
+      return;
+    }
+
+    try {
+      const nextComparison = await compareBibleChapter(
+        versionIds,
+        compareBookId || bookId,
+        compareChapterNumber || chapterNumber,
+      );
+      setComparison(nextComparison);
+    } catch {
+      setStatus('Unable to update comparison versions right now.');
+    }
   };
 
   const runTool = async () => {
@@ -305,15 +328,16 @@ const BibleToolsPanel = ({
         />
       </section>
 
-      {comparisonOpen && comparison ? (
-        <BibleToolsComparisonDialog
-          comparison={comparison}
-          darkMode={darkMode}
-          selectedCompareVersions={selectedCompareVersions}
-          versionLabelFor={getVersionLabel}
-          onClose={() => setComparisonOpen(false)}
-        />
-      ) : null}
+      <ScriptureComparisonModal
+        comparison={comparison}
+        darkMode={darkMode}
+        open={comparisonOpen}
+        selectedCompareVersions={selectedCompareVersions}
+        versions={versions}
+        versionLabelFor={getVersionLabel}
+        onClose={() => setComparisonOpen(false)}
+        onSelectedCompareVersionsChange={updateCompareVersions}
+      />
     </>
   );
 };

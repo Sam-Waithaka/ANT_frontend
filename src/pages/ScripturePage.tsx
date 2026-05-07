@@ -35,6 +35,7 @@ const ScripturePage = () => {
   const [focusVerseNumber, setFocusVerseNumber] = useState<number | null>(null);
   const [comparison, setComparison] = useState<BibleComparisonChapter | null>(null);
   const [comparisonHighlightedVerseNumbers, setComparisonHighlightedVerseNumbers] = useState<number[]>([]);
+  const [comparisonVersionIds, setComparisonVersionIds] = useState<string[]>([]);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
@@ -96,10 +97,14 @@ const ScripturePage = () => {
     version: selectedVersion,
   });
   const canCompareVerse = selectedVerses.length > 0 && Boolean(selectedBook && selectedChapter && selectedVersionId);
-  const selectedCompareVersions = [
+  const defaultCompareVersions = [
     selectedVersion?.id || selectedVersionId,
     versions.find((version) => version.id !== (selectedVersion?.id || selectedVersionId))?.id,
   ].filter(Boolean) as string[];
+  const selectedCompareVersions =
+    comparisonVersionIds.filter((id) => versions.some((version) => version.id === id)).length > 0
+      ? comparisonVersionIds.filter((id) => versions.some((version) => version.id === id))
+      : defaultCompareVersions;
   const getVersionLabel = (versionIdToFind: string) =>
     versions.find((version) => version.id.toLowerCase() === versionIdToFind.toLowerCase())?.abbreviation || versionIdToFind;
   const sharedVerseNumbers = useMemo(() => {
@@ -138,6 +143,14 @@ const ScripturePage = () => {
     const timeout = window.setTimeout(() => setActionMessage(''), 2600);
     return () => window.clearTimeout(timeout);
   }, [actionMessage]);
+
+  useEffect(() => {
+    if (versions.length === 0 || comparisonVersionIds.length > 0 || defaultCompareVersions.length === 0) {
+      return;
+    }
+
+    setComparisonVersionIds(defaultCompareVersions);
+  }, [comparisonVersionIds.length, defaultCompareVersions, versions.length]);
 
   useEffect(() => {
     setSelectedVerses((current) =>
@@ -282,6 +295,29 @@ const ScripturePage = () => {
       setActionMessage('Unable to compare this chapter right now.');
     } finally {
       setComparisonLoading(false);
+    }
+  };
+
+  const changeComparisonVersions = async (versionIds: string[]) => {
+    if (versionIds.length === 0) {
+      return;
+    }
+
+    setComparisonVersionIds(versionIds);
+
+    if (!comparisonOpen || !selectedBook || !selectedChapter) {
+      return;
+    }
+
+    try {
+      const nextComparison = await compareBibleChapter(
+        versionIds,
+        selectedBook.id,
+        selectedChapter.number,
+      );
+      setComparison(nextComparison);
+    } catch {
+      setActionMessage('Unable to update comparison versions right now.');
     }
   };
 
@@ -430,13 +466,15 @@ const ScripturePage = () => {
         }}
       />
       <ScriptureComparisonModal
-        comparison={comparisonLoading ? null : comparison}
+        comparison={comparison}
         darkMode={darkMode}
         highlightedVerseNumbers={comparisonHighlightedVerseNumbers}
         open={comparisonOpen && !comparisonLoading}
         selectedCompareVersions={selectedCompareVersions}
+        versions={versions}
         versionLabelFor={getVersionLabel}
         onClose={() => setComparisonOpen(false)}
+        onSelectedCompareVersionsChange={changeComparisonVersions}
       />
       {actionMessage ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-28 z-[75] flex justify-center px-4">
