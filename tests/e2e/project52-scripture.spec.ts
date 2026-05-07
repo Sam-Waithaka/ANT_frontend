@@ -233,6 +233,7 @@ test('compare verse opens the chapter comparison modal focused on the selected v
   const comparisonDialog = page.getByRole('dialog', { name: 'Genesis 1', exact: true });
 
   await expect(comparisonDialog).toBeVisible();
+  await expect(page.getByRole('button', { name: /copy verse/i })).toHaveCount(0);
   await expect(comparisonDialog.getByRole('heading', { name: 'Genesis 1', exact: true })).toBeVisible();
   await expect(comparisonDialog.getByText('Verse 1')).toBeVisible();
   await expect(

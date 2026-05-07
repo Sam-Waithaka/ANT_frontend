@@ -386,7 +386,9 @@ const ScripturePage = () => {
       return;
     }
 
-    await openChapterComparison(selectedVerses.map((verse) => verse.number));
+    const highlightedVerseNumbers = selectedVerses.map((verse) => verse.number);
+    closeActionSheet();
+    await openChapterComparison(highlightedVerseNumbers);
   };
 
   const selectionDescription =
@@ -507,8 +509,11 @@ const ScripturePage = () => {
         darkMode={darkMode}
         copySelectionLabel={selectedVerses.length > 1 ? 'Copy selection' : 'Copy verse'}
         description={selectionDescription}
-        open={selectedVerses.length > 0}
-        onCompareChapter={() => openChapterComparison()}
+        open={selectedVerses.length > 0 && !comparisonOpen}
+        onCompareChapter={async () => {
+          closeActionSheet();
+          await openChapterComparison();
+        }}
         onCompareVerse={openVerseComparison}
         onCopySelection={async () => {
           await copyText(
