@@ -53,6 +53,7 @@ export type ScriptureRenderRequest = {
   chapter?: number;
   chapterId?: string;
   verse?: number | null;
+  verses?: number[];
   versionId?: string;
 };
 

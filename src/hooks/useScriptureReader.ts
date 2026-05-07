@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useScriptureReaderContext } from '../contexts/ScriptureReaderContext';
+import { useScriptureReaderContext } from '../contexts/ScriptureReaderStore';
 import {
   getBibleBooks,
   getBibleChapters,
@@ -397,6 +397,7 @@ export const useScriptureReader = () => {
   }, [
     currentReferenceKey,
     loadedReferenceKey,
+    pendingReference,
     selectedBookId,
     selectedChapter,
     selectedVersionId,
@@ -416,8 +417,8 @@ export const useScriptureReader = () => {
   }, [
     clearPendingReference,
     loadedReferenceKey,
-    pendingBookMatch?.id,
-    pendingChapterMatch?.id,
+    pendingBookMatch,
+    pendingChapterMatch,
     pendingReference,
     pendingReferenceKey,
     setSelectedBookId,

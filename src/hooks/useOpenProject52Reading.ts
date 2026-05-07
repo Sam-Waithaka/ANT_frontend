@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useScriptureReaderContext } from '../contexts/ScriptureReaderContext';
+import { useScriptureReaderContext } from '../contexts/ScriptureReaderStore';
 import type { Project52ReadingBlock } from '../types/project52';
 
 type OpenProject52ReadingOptions = {
