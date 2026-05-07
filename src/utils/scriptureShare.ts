@@ -21,8 +21,17 @@ export type ScriptureSharePayload = {
 
 const getVersionValue = (version?: BibleVersion) => version?.abbreviation || version?.id || '';
 
-const formatVerseNumbers = (verses: BibleVerse[]) => {
-  const numbers = [...new Set(verses.map((verse) => verse.number).sort((left, right) => left - right))];
+const normalizeVerseNumbers = (numbers: number[]) =>
+  [...new Set(numbers.filter((number) => Number.isFinite(number) && number > 0))].sort(
+    (left, right) => left - right,
+  );
+
+export const formatVerseNumbers = (verses: BibleVerse[] | number[]) => {
+  const numbers = normalizeVerseNumbers(
+    typeof verses[0] === 'number'
+      ? (verses as number[])
+      : (verses as BibleVerse[]).map((verse) => verse.number),
+  );
 
   if (numbers.length === 0) {
     return '';
@@ -46,6 +55,37 @@ const formatVerseNumbers = (verses: BibleVerse[]) => {
   }
 
   return ranges.join(', ');
+};
+
+export const parseVerseSelection = (value: string | null | undefined) => {
+  if (!value) {
+    return [];
+  }
+
+  const numbers = value
+    .split(',')
+    .flatMap((segment) => {
+      const trimmed = segment.trim();
+
+      if (!trimmed) {
+        return [];
+      }
+
+      const rangeMatch = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
+      if (rangeMatch) {
+        const start = Number(rangeMatch[1]);
+        const end = Number(rangeMatch[2]);
+        const lower = Math.min(start, end);
+        const upper = Math.max(start, end);
+
+        return Array.from({ length: upper - lower + 1 }, (_, index) => lower + index);
+      }
+
+      const number = Number(trimmed);
+      return Number.isFinite(number) && number > 0 ? [number] : [];
+    });
+
+  return normalizeVerseNumbers(numbers);
 };
 
 const getPublicSiteUrl = () => {
@@ -72,6 +112,7 @@ const getScriptureShareBaseUrl = () => `${getPublicSiteUrl()}/scripture`;
 export const buildScriptureShareLink = ({
   book,
   chapter,
+  verses,
   verse,
   version,
 }: ShareReferenceOptions) => {
@@ -85,8 +126,14 @@ export const buildScriptureShareLink = ({
     params.set('chapter', String(chapter.number));
   }
 
-  if (verse?.number) {
-    params.set('verse', String(verse.number));
+  const verseSelection = verses?.length
+    ? formatVerseNumbers(verses)
+    : verse?.number
+      ? String(verse.number)
+      : '';
+
+  if (verseSelection) {
+    params.set('verses', verseSelection);
   }
 
   const versionValue = getVersionValue(version);
@@ -201,8 +248,7 @@ export const buildSelectionSharePayload = ({
   const reference = `${book.name} ${chapter.number}:${verseLabel}`;
   const versionValue = getVersionValue(version);
   const versionSuffix = versionValue ? ` (${versionValue})` : '';
-  const firstVerse = sortedVerses[0];
-  const url = buildScriptureShareLink({ book, chapter, verse: firstVerse, version });
+  const url = buildScriptureShareLink({ book, chapter, verses: sortedVerses, version });
   const selectionText = sortedVerses.map((verse) => `${verse.number}. ${verse.text}`).join('\n');
   const title = `${reference}${versionSuffix}`;
 

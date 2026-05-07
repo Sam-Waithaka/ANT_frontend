@@ -217,3 +217,11 @@ test('compare verse opens the chapter comparison modal focused on the selected v
     }).first(),
   ).toBeVisible();
 });
+
+test('shared verses link opens the chapter and selects the requested verses', async ({ page }) => {
+  await page.goto('/scripture?book=John&chapter=20&verses=1-2&version=BSB');
+
+  await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'John 20:1-2 (BSB)' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /copy selection/i })).toBeVisible();
+});

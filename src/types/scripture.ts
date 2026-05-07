@@ -43,6 +43,7 @@ export type ScriptureReferenceIntent = {
   book: string;
   chapter: number;
   verse?: number;
+  verses?: number[];
   versionId?: string;
 };
 

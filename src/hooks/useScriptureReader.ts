@@ -11,6 +11,7 @@ import {
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
 import { normalizeReferenceValue } from '../utils/scriptureReference';
 import { findBookIdForIntent, findChapterIdForIntent } from '../utils/scriptureIntent';
+import { parseVerseSelection } from '../utils/scriptureShare';
 
 const DEFAULT_VERSION_ABBR = 'BSB';
 
@@ -103,6 +104,7 @@ export const useScriptureReader = () => {
     const book = searchParams.get('book');
     const chapterValue = Number(searchParams.get('chapter'));
     const verseValue = Number(searchParams.get('verse'));
+    const selectedVerses = parseVerseSelection(searchParams.get('verses'));
     const versionId = searchParams.get('version') || undefined;
 
     if (!book || !Number.isFinite(chapterValue) || chapterValue <= 0) {
@@ -121,10 +123,47 @@ export const useScriptureReader = () => {
     openScripture({
       book,
       chapter: chapterValue,
-      verse: Number.isFinite(verseValue) && verseValue > 0 ? verseValue : undefined,
+      verse:
+        selectedVerses[0] ||
+        (Number.isFinite(verseValue) && verseValue > 0 ? verseValue : undefined),
+      verses: selectedVerses.length > 0 ? selectedVerses : undefined,
       versionId,
     });
   }, [openScripture, searchParams]);
+
+  useEffect(() => {
+    const requestedBook = searchParams.get('book');
+    const requestedChapter = Number(searchParams.get('chapter'));
+
+    if (!requestedBook || !Number.isFinite(requestedChapter) || requestedChapter <= 0) {
+      return;
+    }
+
+    const requestedBookId = books.find(
+      (book) =>
+        normalizeReferenceValue(book.id) === normalizeReferenceValue(requestedBook) ||
+        normalizeReferenceValue(book.name) === normalizeReferenceValue(requestedBook) ||
+        normalizeReferenceValue(book.abbreviation || '') === normalizeReferenceValue(requestedBook),
+    )?.id;
+
+    if (requestedBookId && requestedBookId !== selectedBookId) {
+      setSelectedBookId(requestedBookId);
+      return;
+    }
+
+    const requestedChapterId = chapters.find((chapter) => chapter.number === requestedChapter)?.id;
+    if (requestedChapterId && requestedChapterId !== selectedChapterId) {
+      setSelectedChapterId(requestedChapterId);
+    }
+  }, [
+    books,
+    chapters,
+    searchParams,
+    selectedBookId,
+    selectedChapterId,
+    setSelectedBookId,
+    setSelectedChapterId,
+  ]);
 
   useEffect(() => {
     if (!pendingReference || books.length === 0) {

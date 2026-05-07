@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ScriptureActionSheet from '../components/scripture/ScriptureActionSheet';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
 import ScriptureComparisonModal from '../components/scripture/ScriptureComparisonModal';
@@ -21,10 +22,13 @@ import {
   buildChapterSharePayload,
   buildSelectionSharePayload,
   buildVerseSharePayload,
+  parseVerseSelection,
 } from '../utils/scriptureShare';
+import { normalizeReferenceValue } from '../utils/scriptureReference';
 
 const ScripturePage = () => {
   const { darkMode, toggleTheme } = useTheme();
+  const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
   const [forceSearchBarOpen, setForceSearchBarOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<BibleVerse[]>([]);
@@ -97,6 +101,33 @@ const ScripturePage = () => {
   ].filter(Boolean) as string[];
   const getVersionLabel = (versionIdToFind: string) =>
     versions.find((version) => version.id.toLowerCase() === versionIdToFind.toLowerCase())?.abbreviation || versionIdToFind;
+  const sharedVerseNumbers = useMemo(() => {
+    const explicitSelection = parseVerseSelection(searchParams.get('verses'));
+
+    if (explicitSelection.length > 0) {
+      return explicitSelection;
+    }
+
+    const verseValue = Number(searchParams.get('verse'));
+    return Number.isFinite(verseValue) && verseValue > 0 ? [verseValue] : [];
+  }, [searchParams]);
+  const sharedSelectionKey = useMemo(() => {
+    const book = searchParams.get('book');
+    const chapter = searchParams.get('chapter');
+    const version = searchParams.get('version') || selectedVersionId || '';
+
+    if (!book || !chapter || sharedVerseNumbers.length === 0) {
+      return '';
+    }
+
+    return [
+      normalizeReferenceValue(book),
+      chapter,
+      normalizeReferenceValue(version),
+      sharedVerseNumbers.join(','),
+    ].join('|');
+  }, [searchParams, selectedVersionId, sharedVerseNumbers]);
+  const [appliedSharedSelectionKey, setAppliedSharedSelectionKey] = useState('');
 
   useEffect(() => {
     if (!actionMessage) {
@@ -136,6 +167,59 @@ const ScripturePage = () => {
       setSelectedVerseNumber(null);
     }
   }, [selectedVerseNumber, selectedVerses.length, setSelectedVerseNumber]);
+
+  useEffect(() => {
+    if (!sharedSelectionKey) {
+      if (appliedSharedSelectionKey) {
+        setAppliedSharedSelectionKey('');
+      }
+      return;
+    }
+
+    if (!selectedBook || !selectedChapter || chapterVerses.length === 0) {
+      return;
+    }
+
+    const requestedBook = searchParams.get('book');
+    const requestedChapter = Number(searchParams.get('chapter'));
+    const requestedVersion = searchParams.get('version');
+
+    const matchesPassage =
+      requestedBook &&
+      Number.isFinite(requestedChapter) &&
+      requestedChapter > 0 &&
+      normalizeReferenceValue(selectedBook.name) === normalizeReferenceValue(requestedBook) &&
+      selectedChapter.number === requestedChapter &&
+      (!requestedVersion ||
+        normalizeReferenceValue(selectedVersion?.abbreviation || selectedVersion?.id || selectedVersionId) ===
+          normalizeReferenceValue(requestedVersion));
+
+    if (!matchesPassage || appliedSharedSelectionKey === sharedSelectionKey) {
+      return;
+    }
+
+    const nextSelectedVerses = sharedVerseNumbers
+      .map((verseNumber) => chapterVerses.find((verse) => verse.number === verseNumber))
+      .filter(Boolean) as BibleVerse[];
+
+    if (nextSelectedVerses.length === 0) {
+      return;
+    }
+
+    setSelectedVerses(nextSelectedVerses);
+    setFocusVerseNumber(nextSelectedVerses[0].number);
+    setAppliedSharedSelectionKey(sharedSelectionKey);
+  }, [
+    appliedSharedSelectionKey,
+    chapterVerses,
+    searchParams,
+    selectedBook,
+    selectedChapter,
+    selectedVersion,
+    selectedVersionId,
+    sharedSelectionKey,
+    sharedVerseNumbers,
+  ]);
 
   const closeActionSheet = () => {
     setSelectedVerses([]);
