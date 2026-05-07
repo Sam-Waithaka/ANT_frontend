@@ -3,14 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import { useScriptureReaderContext } from '../contexts/ScriptureReaderStore';
 import {
   getBibleBooks,
+  getBibleChapter,
   getBibleChapters,
   getBibleVersions,
-  getBibleVerses,
-  getBibleVersesByReference,
 } from '../services/scriptureApi';
-import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
+import type { BibleBook, BibleChapter, BibleChapterDetail, BibleVerse, BibleVersion } from '../types/scripture';
 import { normalizeReferenceValue } from '../utils/scriptureReference';
-import { findBookIdForIntent, findChapterIdForIntent } from '../utils/scriptureIntent';
+import { findBookIdForIntent, findChapterIdForIntent, resolveApiBookReference } from '../utils/scriptureIntent';
 import { parseVerseSelection } from '../utils/scriptureShare';
 
 const DEFAULT_VERSION_ABBR = 'BSB';
@@ -33,6 +32,7 @@ export const useScriptureReader = () => {
   const lastUrlReferenceKey = useRef('');
   const [versions, setVersions] = useState<BibleVersion[]>([]);
   const [books, setBooks] = useState<BibleBook[]>([]);
+  const [chapterDetail, setChapterDetail] = useState<BibleChapterDetail | null>(null);
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [loadedReferenceKey, setLoadedReferenceKey] = useState('');
@@ -304,13 +304,14 @@ export const useScriptureReader = () => {
       setError('');
 
       try {
-        const nextVerses = await getBibleVersesByReference(
+        const nextChapter = await getBibleChapter(
           selectedVersionId,
-          pendingReference.book,
+          resolveApiBookReference(pendingReference.book),
           pendingReference.chapter,
         );
         if (!cancelled) {
-          setVerses(nextVerses);
+          setChapterDetail(nextChapter);
+          setVerses(nextChapter.verses);
           setLoadedReferenceKey(pendingReferenceKey);
         }
       } catch {
@@ -342,14 +343,14 @@ export const useScriptureReader = () => {
       setError('');
 
       try {
-        const nextVerses = await getBibleVerses(
+        const nextChapter = await getBibleChapter(
           selectedVersionId,
           selectedBookId,
-          selectedChapter.id,
           selectedChapter.number,
         );
         if (!cancelled) {
-          setVerses(nextVerses);
+          setChapterDetail(nextChapter);
+          setVerses(nextChapter.verses);
           setLoadedReferenceKey(currentReferenceKey);
         }
       } catch {
@@ -465,6 +466,7 @@ export const useScriptureReader = () => {
     books,
     canGoNext,
     canGoPrevious,
+    chapterDetail,
     chapters,
     error,
     displayPassageTitle,

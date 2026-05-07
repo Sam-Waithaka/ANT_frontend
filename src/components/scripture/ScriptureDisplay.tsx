@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { BibleBook, BibleChapter, BibleChapterNote, BibleToolRecord, BibleVerse, BibleVersion } from '../../types/scripture';
+import type { BibleBook, BibleChapter, BibleChapterNote, BibleCredit, BibleToolRecord, BibleVerse, BibleVersion } from '../../types/scripture';
 import ScriptureReadingContent from './ScriptureReadingContent';
 import ScriptureSearchResults from './ScriptureSearchResults';
 import ScriptureStatus from './ScriptureStatus';
@@ -11,6 +11,7 @@ type ScriptureDisplayProps = {
   footer?: ReactNode;
   focusVerseNumber?: number | null;
   footnotes: BibleChapterNote[];
+  chapterCredit?: BibleCredit;
   licenseNote?: BibleChapterNote;
   loading: boolean;
   onVerseSelect?: (verse: BibleVerse) => void;
@@ -32,6 +33,7 @@ const ScriptureDisplay = ({
   footer,
   focusVerseNumber,
   footnotes,
+  chapterCredit,
   licenseNote,
   loading,
   onVerseSelect,
@@ -104,6 +106,7 @@ const ScriptureDisplay = ({
             footer={footer}
             focusVerseNumber={focusVerseNumber}
             footnotes={footnotes}
+            chapterCredit={chapterCredit}
             licenseNote={licenseNote}
             onVerseSelect={onVerseSelect}
             selectedVerseNumbers={selectedVerseNumbers}

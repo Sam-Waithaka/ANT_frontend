@@ -1,15 +1,25 @@
 import type {
   BibleBook,
+  BibleAnnotation,
   BibleChapterNote,
   BibleChapter,
+  BibleChapterDetail,
   BibleComparisonChapter,
   BibleComparisonVerse,
+  BibleCredit,
+  BibleGlossaryEntry,
   BibleMarkerStatus,
   BibleNoteType,
+  BibleResource,
   BibleResourceType,
+  BibleSearchResult,
+  BibleSourceRecord,
+  BibleToken,
   BibleToolRecord,
   BibleVerse,
   BibleVersion,
+  BibleVersionDetail,
+  PaginatedResponse,
   VerseLookupResult,
 } from '../types/scripture';
 import { resolveApiBookReference } from '../utils/scriptureIntent';
@@ -68,6 +78,51 @@ const readNumber = (record: UnknownRecord, keys: string[], fallback: number) => 
   }
 
   return fallback;
+};
+
+const readOptionalNumber = (record: UnknownRecord, keys: string[]) => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && Number.isFinite(Number(value))) {
+      return Number(value);
+    }
+  }
+
+  return undefined;
+};
+
+const readBoolean = (record: UnknownRecord, keys: string[], fallback = false) => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.toLowerCase();
+      if (normalized === 'true') return true;
+      if (normalized === 'false') return false;
+    }
+  }
+
+  return fallback;
+};
+
+const toPaginatedResponse = <T>(
+  payload: unknown,
+  mapItem: (item: unknown, index: number) => T,
+): PaginatedResponse<T> => {
+  const record = asRecord(payload);
+  const results = unwrapCollection(payload).map(mapItem);
+
+  return {
+    count: readNumber(record, ['count'], results.length),
+    next: readString(record, ['next']) || null,
+    previous: readString(record, ['previous']) || null,
+    results,
+  };
 };
 
 const fetchJson = async (path: string) => {
@@ -188,22 +243,90 @@ const normalizeNoteType = (value: string): BibleNoteType => {
     return 'textual_variant';
   }
 
-  return 'footnote';
+  if (type === 'section_heading' || type === 'section-heading' || type === 'section heading') {
+    return 'section_heading';
+  }
+
+  if (type === 'speaker_label' || type === 'speaker-label' || type === 'speaker label') {
+    return 'speaker_label';
+  }
+
+  if (
+    type === 'translator_addition' ||
+    type === 'translator-addition' ||
+    type === 'translator addition'
+  ) {
+    return 'translator_addition';
+  }
+
+  if (type === 'word_study' || type === 'word-study' || type === 'word study') {
+    return 'word_study';
+  }
+
+  if (type === 'paragraph' || type === 'poetry') {
+    return type;
+  }
+
+  return type === 'other' ? 'other' : 'footnote';
 };
 
 const toChapterNote = (item: unknown, index: number, fallbackType: BibleNoteType, fallbackVerse?: number): BibleChapterNote => {
   const record = asRecord(item);
-  const type = normalizeNoteType(readString(record, ['type', 'note_type', 'kind'], fallbackType));
+  const type = normalizeNoteType(readString(record, ['annotation_type', 'type', 'note_type', 'kind'], fallbackType));
   const verseNumber = readNumber(record, ['verse_number', 'verse', 'number'], fallbackVerse || 0);
   const reference = readString(record, ['reference', 'ref', 'target', 'osis_ref', 'verse_reference']);
   const text = readString(record, ['text', 'content', 'body', 'note', 'label', 'display'], reference);
 
   return {
     id: readString(record, ['id', '_id', 'uuid'], `${fallbackType}-${fallbackVerse || 'chapter'}-${index}`),
+    anchorText: readString(record, ['anchor_text']) || undefined,
+    endOffset: readOptionalNumber(record, ['end_offset']),
     verseNumber: verseNumber || fallbackVerse,
     type,
+    placement: readString(record, ['placement']) || undefined,
     text,
+    rawContent: readString(record, ['raw_content']) || undefined,
     reference: reference || undefined,
+    sourceMarker: readString(record, ['source_marker']) || undefined,
+    startOffset: readOptionalNumber(record, ['start_offset']),
+  };
+};
+
+const toBibleSearchResult = (item: unknown, index: number): BibleSearchResult => {
+  const record = asRecord(item);
+  const book = asRecord(record.book);
+  const chapter = readOptionalNumber(record, ['chapter', 'chapter_number']);
+  const verseNumber = readOptionalNumber(record, ['verse_number', 'verse', 'number']);
+  const bookName = readString(book, ['name', 'canonical_name']) || readString(record, ['book_name', 'book']);
+  const computedReference = [
+    bookName,
+    chapter && verseNumber ? `${chapter}:${verseNumber}` : chapter,
+  ].filter(Boolean).join(' ');
+  const reference = readString(
+    record,
+    ['reference', 'display_reference', 'verse_reference', 'ref', 'osis_ref', 'title'],
+    computedReference || `Result ${index + 1}`,
+  );
+  const version = readString(record, ['version', 'version_abbr', 'version_id', 'translation']);
+  const searchType = readString(record, ['search_type']);
+  const text = readString(record, ['text', 'content', 'verseText', 'body', 'snippet']);
+
+  return {
+    id: readString(record, ['id', '_id', 'uuid'], `${reference}-${index}`),
+    title: reference,
+    subtitle: version || undefined,
+    body: text || undefined,
+    meta: readString(record, ['testament', 'language', 'language_code']) || searchType || undefined,
+    bookId: readString(book, ['osis_id']) || undefined,
+    chapter,
+    credit: toBibleCredit(record.credit),
+    headline: readString(record, ['headline']) || undefined,
+    isFuzzy: searchType === 'fuzzy',
+    reference,
+    searchType: searchType || undefined,
+    testament: readString(record, ['testament']) || undefined,
+    verseNumber,
+    version: version || undefined,
   };
 };
 
@@ -265,6 +388,106 @@ const getLicenseNote = (payload: unknown): BibleChapterNote | null => {
   };
 };
 
+const normalizeTestament = (value: string): BibleBook['testament'] => {
+  const testament = value.toLowerCase();
+  if (testament.startsWith('old') || testament === 'ot') return 'old';
+  if (testament.startsWith('new') || testament === 'nt') return 'new';
+  return undefined;
+};
+
+const toBibleVersion = (item: unknown, index: number): BibleVersion => {
+  const record = asRecord(item);
+  const abbreviation = readString(record, ['abbreviation', 'abbr', 'code', 'shortName']);
+  const name = readString(record, ['name', 'title', 'label'], abbreviation || `Version ${index + 1}`);
+
+  return {
+    id: abbreviation || readString(record, ['code', 'id', '_id', 'uuid', 'versionId'], name),
+    abbreviation: abbreviation || undefined,
+    code: readString(record, ['code'], abbreviation) || undefined,
+    isPublic: readBoolean(record, ['is_public'], true),
+    language: readString(record, ['language']) || undefined,
+    languageCode: readString(record, ['language_code', 'lang']) || undefined,
+    licenseType: readString(record, ['license_type']) || undefined,
+    name,
+    publicationYear: readOptionalNumber(record, ['publication_year']),
+    source: readString(record, ['source']) || undefined,
+  };
+};
+
+const toBibleVersionDetail = (payload: unknown): BibleVersionDetail => {
+  const version = toBibleVersion(payload, 0);
+  const record = asRecord(payload);
+
+  return {
+    ...version,
+    description: readString(record, ['description']) || undefined,
+    licenseNotes: readString(record, ['license_notes']) || undefined,
+    licenseUrl: readString(record, ['license_url']) || undefined,
+    sourceUrl: readString(record, ['source_url']) || undefined,
+  };
+};
+
+const toBibleBook = (item: unknown, index: number): BibleBook => {
+  const record = asRecord(item);
+  const osisId = readString(record, ['osis_id', 'osisId', 'canonical_abbreviation', 'code']);
+
+  return {
+    abbreviation: readString(record, ['abbreviation', 'abbr']) || undefined,
+    canonicalAbbreviation: readString(record, ['canonical_abbreviation']) || undefined,
+    canonicalName: readString(record, ['canonical_name']) || undefined,
+    id: osisId || readString(record, ['abbreviation', 'bookId', 'id', '_id', 'uuid'], `book-${index + 1}`),
+    longName: readString(record, ['long_name']) || undefined,
+    name: readString(record, ['name', 'title', 'label', 'book'], `Book ${index + 1}`),
+    number: readOptionalNumber(record, ['number', 'order']),
+    osisId: osisId || undefined,
+    testament: normalizeTestament(readString(record, ['testament', 'section'])),
+  };
+};
+
+const toBibleCredit = (payload: unknown): BibleCredit | undefined => {
+  const record = asRecord(payload);
+  const source = readString(record, ['source']);
+  const sourceUrl = readString(record, ['source_url']);
+  const licenseType = readString(record, ['license_type']);
+  const licenseNotes = readString(record, ['license_notes']);
+
+  if (!source && !sourceUrl && !licenseType && !licenseNotes) {
+    return undefined;
+  }
+
+  return {
+    licenseNotes: licenseNotes || undefined,
+    licenseType: licenseType || undefined,
+    source: source || undefined,
+    sourceUrl: sourceUrl || undefined,
+  };
+};
+
+const toBibleAnnotation = (item: unknown, index: number, fallbackVerse?: number): BibleAnnotation => {
+  const record = asRecord(item);
+
+  return {
+    anchorText: readString(record, ['anchor_text']) || undefined,
+    content: readString(record, ['content', 'text', 'note', 'body']),
+    endOffset: readOptionalNumber(record, ['end_offset']),
+    id: readString(record, ['id', '_id', 'uuid'], `annotation-${fallbackVerse || 'chapter'}-${index}`),
+    placement: readString(record, ['placement']) || undefined,
+    rawContent: readString(record, ['raw_content']) || undefined,
+    sourceMarker: readString(record, ['source_marker']) || undefined,
+    startOffset: readOptionalNumber(record, ['start_offset']),
+    type: normalizeNoteType(readString(record, ['annotation_type', 'type', 'note_type'], 'footnote')),
+    verseNumber: readOptionalNumber(record, ['verse_number', 'verse']) || fallbackVerse,
+  };
+};
+
+const toMarker = (item: unknown) => {
+  const record = asRecord(item);
+  return {
+    note: readString(record, ['note', 'text', 'content']) || undefined,
+    status: readString(record, ['status']) || undefined,
+  };
+};
+
 const toBibleVersesFromChapterPayload = (payload: unknown): BibleVerse[] => {
   const verses = unwrapCollection(payload);
   const chapterNotes = collectChapterNotes(payload);
@@ -281,6 +504,7 @@ const toBibleVersesFromChapterPayload = (payload: unknown): BibleVerse[] => {
       const verseNotes: BibleChapterNote[] = [];
 
       [
+        [record.annotations, 'footnote'],
         [record.footnotes, 'footnote'],
         [record.notes, 'footnote'],
         [record.cross_references, 'cross_reference'],
@@ -296,16 +520,27 @@ const toBibleVersesFromChapterPayload = (payload: unknown): BibleVerse[] => {
         }
       });
 
+      const rawAnnotations = Array.isArray(record.annotations)
+        ? record.annotations.map((annotation, annotationIndex) =>
+            toBibleAnnotation(annotation, annotationIndex, verseNumber),
+          )
+        : [];
       const matchingChapterNotes = chapterNotes.filter(
         (note) => note.verseNumber === verseNumber,
       );
+      const markers = Array.isArray(record.markers) ? record.markers.map(toMarker) : [];
+      const display = readString(record, ['display']);
 
       return {
         id: readString(record, ['id', '_id', 'uuid', 'verseId'], `verse-${index + 1}`),
+        display: display || undefined,
+        footnotes: verseNotes.filter((note) => note.type === 'footnote'),
         number: verseNumber,
         text: readString(record, ['text', 'content', 'verseText', 'body']),
         isPresent: record.is_present === undefined ? true : Boolean(record.is_present),
+        markers,
         notes: dedupeChapterNotes([...verseNotes, ...matchingChapterNotes]),
+        rawAnnotations,
       };
     })
     .concat(
@@ -313,10 +548,14 @@ const toBibleVersesFromChapterPayload = (payload: unknown): BibleVerse[] => {
         ? [
             {
               id: '__chapter_meta__',
+              display: 'metadata',
+              footnotes: [licenseNote],
+              markers: [],
               number: 0,
               text: '',
               isPresent: false,
               notes: [licenseNote],
+              rawAnnotations: [],
             },
           ]
         : [],
@@ -324,35 +563,20 @@ const toBibleVersesFromChapterPayload = (payload: unknown): BibleVerse[] => {
 };
 
 export const getBibleVersions = async (): Promise<BibleVersion[]> => {
-  const versions = await fetchFirstCollection(['/v1/bible/versions/']);
+  const versions = await fetchFirstCollection(['/v1/bible/versions/?public=true', '/v1/bible/versions/']);
 
-  return versions.map((item, index) => {
-    const record = asRecord(item);
-    const abbreviation = readString(record, ['abbreviation', 'abbr', 'code', 'shortName']);
-    const name = readString(record, ['name', 'title', 'label'], abbreviation || `Version ${index + 1}`);
+  return versions.map(toBibleVersion);
+};
 
-    return {
-      id: abbreviation || readString(record, ['id', '_id', 'uuid', 'versionId', 'code'], name),
-      name,
-      abbreviation: abbreviation || undefined,
-    };
-  });
+export const getBibleVersionDetail = async (versionId: string): Promise<BibleVersionDetail> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/`);
+  return toBibleVersionDetail(payload);
 };
 
 export const getBibleBooks = async (versionId: string): Promise<BibleBook[]> => {
   const books = await fetchFirstCollection([`/v1/bible/versions/${encode(versionId)}/books/`]);
 
-  return books.map((item, index) => {
-    const record = asRecord(item);
-    const testament = readString(record, ['testament', 'section']).toLowerCase();
-
-    return {
-      abbreviation: readString(record, ['abbreviation', 'abbr']),
-      id: readString(record, ['osis_id', 'osisId', 'abbreviation', 'code', 'bookId', 'id', '_id', 'uuid'], `book-${index + 1}`),
-      name: readString(record, ['name', 'title', 'label', 'book'], `Book ${index + 1}`),
-      testament: testament.startsWith('old') || testament === 'ot' ? 'old' : testament.startsWith('new') || testament === 'nt' ? 'new' : undefined,
-    };
-  });
+  return books.map(toBibleBook);
 };
 
 export const getBibleChapters = async (versionId: string, bookId: string): Promise<BibleChapter[]> => {
@@ -372,18 +596,36 @@ export const getBibleChapters = async (versionId: string, bookId: string): Promi
   });
 };
 
+export const getBibleChapter = async (
+  versionId: string,
+  bookId: string,
+  chapterNumber: number,
+  options: { includeRaw?: boolean; includeTokens?: boolean } = {},
+): Promise<BibleChapterDetail> => {
+  const payload = await fetchJson(
+    `/v1/bible/versions/${encode(versionId)}/books/${encode(bookId)}/chapters/${encode(
+      chapterNumber,
+    )}/${toQueryString({ include_raw: options.includeRaw, include_tokens: options.includeTokens })}`,
+  );
+  const record = asRecord(payload);
+
+  return {
+    book: toBibleBook(record.book || { name: bookId, osis_id: bookId }, 0),
+    chapter: readNumber(record, ['chapter', 'chapter_number'], chapterNumber),
+    credit: toBibleCredit(record.credit),
+    version: toBibleVersion(record.version || { abbreviation: versionId, name: versionId }, 0),
+    verses: toBibleVersesFromChapterPayload(payload),
+  };
+};
+
 export const getBibleVerses = async (
   versionId: string,
   bookId: string,
   _chapterId: string,
   chapterNumber: number,
 ): Promise<BibleVerse[]> => {
-  const payload = await fetchJson(
-    `/v1/bible/versions/${encode(versionId)}/books/${encode(bookId)}/chapters/${encode(
-      chapterNumber,
-    )}/`,
-  );
-  return toBibleVersesFromChapterPayload(payload);
+  const chapter = await getBibleChapter(versionId, bookId, chapterNumber);
+  return chapter.verses;
 };
 
 export const getBibleVersesByReference = async (
@@ -391,12 +633,8 @@ export const getBibleVersesByReference = async (
   book: string,
   chapterNumber: number,
 ): Promise<BibleVerse[]> => {
-  const payload = await fetchJson(
-    `/v1/bible/versions/${encode(versionId)}/books/${encode(
-      resolveApiBookReference(book),
-    )}/chapters/${encode(chapterNumber)}/`,
-  );
-  return toBibleVersesFromChapterPayload(payload);
+  const chapter = await getBibleChapter(versionId, resolveApiBookReference(book), chapterNumber);
+  return chapter.verses;
 };
 
 export const getBibleResources = async (
@@ -407,9 +645,46 @@ export const getBibleResources = async (
   return unwrapCollection(payload).map(toToolRecord);
 };
 
+export const getBibleResourceRecords = async (
+  versionId: string,
+  type?: BibleResourceType,
+): Promise<PaginatedResponse<BibleResource>> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/resources/${toQueryString({ type })}`);
+
+  return toPaginatedResponse(payload, (item, index) => {
+    const record = asRecord(item);
+    const title = readString(record, ['title', 'name', 'resource_type'], `Resource ${index + 1}`);
+
+    return {
+      id: readString(record, ['id', '_id', 'uuid'], `${title}-${index}`),
+      content: readString(record, ['content', 'body', 'text']) || undefined,
+      resourceType: readString(record, ['resource_type', 'type']) || undefined,
+      title,
+    };
+  });
+};
+
 export const getBibleGlossary = async (versionId: string, query?: string): Promise<BibleToolRecord[]> => {
   const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/glossary/${toQueryString({ q: query })}`);
   return unwrapCollection(payload).map(toToolRecord);
+};
+
+export const getBibleGlossaryEntries = async (
+  versionId: string,
+  query?: string,
+): Promise<PaginatedResponse<BibleGlossaryEntry>> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/glossary/${toQueryString({ q: query })}`);
+
+  return toPaginatedResponse(payload, (item, index) => {
+    const record = asRecord(item);
+    const term = readString(record, ['term', 'title', 'name'], `Glossary item ${index + 1}`);
+
+    return {
+      definition: readString(record, ['definition', 'content', 'body', 'text']),
+      id: readString(record, ['id', '_id', 'uuid'], `${term}-${index}`),
+      term,
+    };
+  });
 };
 
 export const getBibleMarkers = async (
@@ -423,6 +698,59 @@ export const getBibleMarkers = async (
 export const getBibleNotes = async (versionId: string, type?: BibleNoteType): Promise<BibleToolRecord[]> => {
   const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/notes/${toQueryString({ type })}`);
   return unwrapCollection(payload).map(toToolRecord);
+};
+
+export const getBibleAnnotations = async (
+  versionId: string,
+  params: { book?: string; chapter?: number; type?: BibleNoteType } = {},
+): Promise<PaginatedResponse<BibleAnnotation>> => {
+  const payload = await fetchJson(
+    `/v1/bible/versions/${encode(versionId)}/annotations/${toQueryString(params)}`,
+  );
+
+  return toPaginatedResponse(payload, toBibleAnnotation);
+};
+
+export const getBibleSources = async (
+  versionId: string,
+  params: { book?: string; chapter?: number; format?: string; verse?: number } = {},
+): Promise<PaginatedResponse<BibleSourceRecord>> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/sources/${toQueryString(params)}`);
+
+  return toPaginatedResponse(payload, (item) => {
+    const record = asRecord(item);
+
+    return {
+      cleanText: readString(record, ['clean_text']) || undefined,
+      rawText: readString(record, ['raw_text']) || undefined,
+      sourceFile: readString(record, ['source_file']) || undefined,
+      sourceFormat: readString(record, ['source_format']) || undefined,
+      sourceId: readString(record, ['source_id']) || undefined,
+    };
+  });
+};
+
+export const getBibleTokens = async (
+  versionId: string,
+  params: { book?: string; chapter?: number; q?: string; verse?: number } = {},
+): Promise<PaginatedResponse<BibleToken>> => {
+  const payload = await fetchJson(`/v1/bible/versions/${encode(versionId)}/tokens/${toQueryString(params)}`);
+
+  return toPaginatedResponse(payload, (item) => {
+    const record = asRecord(item);
+
+    return {
+      endOffset: readOptionalNumber(record, ['end_offset']),
+      lemma: readString(record, ['lemma']) || undefined,
+      morphology: readString(record, ['morphology']) || undefined,
+      normalized: readString(record, ['normalized']) || undefined,
+      position: readOptionalNumber(record, ['position']),
+      startOffset: readOptionalNumber(record, ['start_offset']),
+      strong: readString(record, ['strong']) || undefined,
+      token: readString(record, ['token']),
+      tokenType: readString(record, ['token_type']) || undefined,
+    };
+  });
 };
 
 export const lookupBibleVerse = async (
@@ -453,6 +781,41 @@ export const compareBibleChapter = async (
   const payload = await fetchJson(
     `/v1/bible/compare/${toQueryString({ versions: versions.join(','), book: bookId, chapter })}`,
   );
+  const payloadRecord = asRecord(payload);
+  const backendResults = Array.isArray(payloadRecord.results) ? payloadRecord.results : [];
+
+  if (backendResults.length > 0) {
+    const verses = backendResults.map((item, index): BibleComparisonVerse => {
+      const record = asRecord(item);
+      const verseNumber = readNumber(record, ['verse_number', 'number', 'verse'], index + 1);
+      const readings = Array.isArray(record.readings)
+        ? record.readings.map((reading) => {
+            const readingRecord = asRecord(reading);
+            const markers = Array.isArray(readingRecord.markers) ? readingRecord.markers.map(toMarker) : [];
+
+            return {
+              display: readString(readingRecord, ['display']) || undefined,
+              isPresent: readingRecord.is_present === undefined ? true : Boolean(readingRecord.is_present),
+              markerNote: markers.find((marker) => marker.note)?.note,
+              text: readString(readingRecord, ['text', 'content', 'verseText', 'body']),
+              version: readString(readingRecord, ['version', 'version_abbr', 'abbreviation']),
+            };
+          })
+        : [];
+
+      return { readings, verseNumber };
+    });
+    const book = asRecord(payloadRecord.book);
+
+    return {
+      book: readString(book, ['name', 'canonical_name', 'osis_id'], bookId),
+      bookId: readString(book, ['osis_id'], bookId),
+      chapter: readNumber(payloadRecord, ['chapter', 'chapter_number'], chapter),
+      versions,
+      verses,
+    };
+  }
+
   const verseMap = new Map<number, BibleComparisonVerse>();
   const normalizedVersions = versions.map((version) => version.toLowerCase());
   const normalizeVersion = (version: string) => version.trim().toLowerCase();
@@ -595,8 +958,6 @@ export const compareBibleChapter = async (
       }
     });
   };
-  const payloadRecord = asRecord(payload);
-
   inspectContainer(payload);
 
   [
@@ -626,10 +987,29 @@ export const searchBible = async (params: {
   language?: string;
   language_code?: string;
   q: string;
+  page?: number;
+  page_size?: number;
+  fuzzy?: boolean;
   testament?: string;
   version?: string;
   versions?: string;
 }): Promise<BibleToolRecord[]> => {
   const payload = await fetchJson(`/v1/bible/search/${toQueryString(params)}`);
   return unwrapCollection(payload).map(toSearchRecord);
+};
+
+export const searchBiblePaginated = async (params: {
+  book?: string;
+  fuzzy?: boolean;
+  language?: string;
+  language_code?: string;
+  page?: number;
+  page_size?: number;
+  q: string;
+  testament?: string;
+  version?: string;
+  versions?: string;
+}): Promise<PaginatedResponse<BibleSearchResult>> => {
+  const payload = await fetchJson(`/v1/bible/search/${toQueryString(params)}`);
+  return toPaginatedResponse(payload, toBibleSearchResult);
 };

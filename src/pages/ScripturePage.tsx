@@ -54,6 +54,7 @@ const ScripturePage = () => {
     loading,
     canGoNext,
     canGoPrevious,
+    chapterDetail,
     selectedVerseNumber,
     selectedBook,
     selectedBookId,
@@ -442,6 +443,7 @@ const ScripturePage = () => {
               error={error}
               focusVerseNumber={focusVerseNumber}
               footnotes={footnotes}
+              chapterCredit={chapterDetail?.credit}
               licenseNote={licenseNote}
               loading={isLoading}
               searchError={scriptureSearch.error}
