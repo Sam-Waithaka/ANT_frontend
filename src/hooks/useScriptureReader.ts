@@ -17,7 +17,7 @@ const DEFAULT_VERSION_ABBR = 'BSB';
 export const useScriptureReader = () => {
   const {
     pendingReference,
-    openReference,
+    openScripture,
     selectedVerseNumber,
     selectedBookId,
     selectedChapterId,
@@ -118,13 +118,13 @@ export const useScriptureReader = () => {
     }
 
     lastUrlReferenceKey.current = nextKey;
-    openReference({
+    openScripture({
       book,
       chapter: chapterValue,
       verse: Number.isFinite(verseValue) && verseValue > 0 ? verseValue : undefined,
       versionId,
     });
-  }, [openReference, searchParams]);
+  }, [openScripture, searchParams]);
 
   useEffect(() => {
     if (!pendingReference || books.length === 0) {
@@ -366,10 +366,12 @@ export const useScriptureReader = () => {
   useEffect(() => {
     if (
       pendingReference &&
-      pendingBookMatch?.id === selectedBookId &&
-      pendingChapterMatch?.id === selectedChapter?.id &&
+      pendingBookMatch &&
+      pendingChapterMatch &&
       loadedReferenceKey === pendingReferenceKey
     ) {
+      setSelectedBookId(pendingBookMatch.id);
+      setSelectedChapterId(pendingChapterMatch.id);
       clearPendingReference();
     }
   }, [
@@ -379,8 +381,8 @@ export const useScriptureReader = () => {
     pendingChapterMatch?.id,
     pendingReference,
     pendingReferenceKey,
-    selectedBookId,
-    selectedChapter?.id,
+    setSelectedBookId,
+    setSelectedChapterId,
   ]);
 
   useEffect(() => {
@@ -409,19 +411,18 @@ export const useScriptureReader = () => {
 
   const goToPreviousChapter = () => {
     if (selectedChapterIndex > 0) {
-      setSelectedChapterId(chapters[selectedChapterIndex - 1].id);
+      openScripture({ chapterId: chapters[selectedChapterIndex - 1].id });
       return;
     }
 
     if (selectedChapterIndex === 0 && selectedBookIndex > 0) {
-      setSelectedBookId(books[selectedBookIndex - 1].id);
-      setSelectedChapterId('');
+      openScripture({ bookId: books[selectedBookIndex - 1].id });
     }
   };
 
   const goToNextChapter = () => {
     if (selectedChapterIndex >= 0 && selectedChapterIndex < chapters.length - 1) {
-      setSelectedChapterId(chapters[selectedChapterIndex + 1].id);
+      openScripture({ chapterId: chapters[selectedChapterIndex + 1].id });
       return;
     }
 
@@ -430,9 +431,20 @@ export const useScriptureReader = () => {
       selectedBookIndex >= 0 &&
       selectedBookIndex < books.length - 1
     ) {
-      setSelectedBookId(books[selectedBookIndex + 1].id);
-      setSelectedChapterId('');
+      openScripture({ bookId: books[selectedBookIndex + 1].id });
     }
+  };
+
+  const openSelectedBook = (bookId: string) => {
+    openScripture({ bookId });
+  };
+
+  const openSelectedChapter = (chapterId: string) => {
+    openScripture({ chapterId });
+  };
+
+  const openSelectedVersion = (versionId: string) => {
+    openScripture({ versionId });
   };
 
   return {
@@ -456,9 +468,10 @@ export const useScriptureReader = () => {
     verses,
     goToNextChapter,
     goToPreviousChapter,
-    setSelectedBookId,
-    setSelectedChapterId,
+    openScripture,
+    setSelectedBookId: openSelectedBook,
+    setSelectedChapterId: openSelectedChapter,
     setSelectedVerseNumber,
-    setSelectedVersionId,
+    setSelectedVersionId: openSelectedVersion,
   };
 };

@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import type { ScriptureReferenceIntent } from '../types/scripture';
+import type { ScriptureReferenceIntent, ScriptureRenderRequest } from '../types/scripture';
 
 const DEFAULT_VERSION_ABBR = 'BSB';
 
@@ -12,7 +12,7 @@ type ScriptureReaderContextType = {
   selectedVersionId: string;
   clearPendingReference: () => void;
   setSelectedVerseNumber: Dispatch<SetStateAction<number | null>>;
-  openReference: (reference: ScriptureReferenceIntent) => void;
+  openScripture: (request: ScriptureRenderRequest) => void;
   setSelectedBookId: Dispatch<SetStateAction<string>>;
   setSelectedChapterId: Dispatch<SetStateAction<string>>;
   setSelectedVersionId: Dispatch<SetStateAction<string>>;
@@ -35,10 +35,29 @@ export const ScriptureReaderProvider = ({ children }: { children: ReactNode }) =
       selectedChapterId,
       selectedVersionId,
       clearPendingReference: () => setPendingReference(null),
-      openReference: (reference) => {
-        setPendingReference(reference);
-        setSelectedVersionIdState(reference.versionId || selectedVersionId || DEFAULT_VERSION_ABBR);
-        setSelectedVerseNumber(reference.verse ?? null);
+      openScripture: (request) => {
+        const { book, bookId, chapter, chapterId, verse, versionId } = request;
+
+        if (versionId) {
+          setSelectedVersionIdState(versionId);
+        }
+
+        if (book && chapter) {
+          setPendingReference({ book, chapter, verse: verse ?? undefined, versionId });
+          setSelectedVerseNumber(verse ?? null);
+          return;
+        }
+
+        setPendingReference(null);
+
+        if (bookId) {
+          setSelectedBookIdState(bookId);
+          setSelectedChapterIdState(chapterId || '');
+        } else if (chapterId) {
+          setSelectedChapterIdState(chapterId);
+        }
+
+        setSelectedVerseNumber(verse ?? null);
       },
       setSelectedVerseNumber,
       setSelectedBookId: (value) => {

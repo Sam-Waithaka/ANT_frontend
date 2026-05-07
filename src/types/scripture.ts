@@ -46,6 +46,15 @@ export type ScriptureReferenceIntent = {
   versionId?: string;
 };
 
+export type ScriptureRenderRequest = {
+  book?: string;
+  bookId?: string;
+  chapter?: number;
+  chapterId?: string;
+  verse?: number | null;
+  versionId?: string;
+};
+
 export type BibleResourceType =
   | 'preface'
   | 'copyright'

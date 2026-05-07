@@ -8,7 +8,7 @@ type OpenProject52ReadingOptions = {
 
 export const useOpenProject52Reading = () => {
   const navigate = useNavigate();
-  const { openReference } = useScriptureReaderContext();
+  const { openScripture } = useScriptureReaderContext();
 
   return (
     blocks: Project52ReadingBlock[],
@@ -20,7 +20,7 @@ export const useOpenProject52Reading = () => {
       return;
     }
 
-    openReference({
+    openScripture({
       book: block.book,
       chapter: block.startChapter,
     });
