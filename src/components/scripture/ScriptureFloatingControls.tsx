@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { BibleBook, BibleChapter, BibleVersion } from '../../types/scripture';
-import { ScriptureBookPicker, ScriptureChapterPicker } from './ScriptureReferencePickers';
+import ScriptureReferencePickerGroup from './ScriptureReferencePickerGroup';
 
 type ScriptureFloatingControlsProps = {
   books: BibleBook[];
@@ -127,24 +127,18 @@ const ScriptureFloatingControls = ({
             )}
           </div>
 
-          <ScriptureBookPicker
+          <ScriptureReferencePickerGroup
+            bookMenuClassName="left-[calc(50%+2.875rem)] w-[min(84vw,34rem)] -translate-x-1/2 md:left-1/2 md:w-[min(90vw,34rem)]"
             books={books}
-            darkMode={darkMode}
-            menuClassName="left-[calc(50%+2.875rem)] w-[min(84vw,34rem)] -translate-x-1/2 md:left-1/2 md:w-[min(90vw,34rem)]"
-            open={openMenu === 'book'}
-            selectedBookId={selectedBookId}
-            onBookChange={onBookChange}
-            onOpenChange={(open) => setOpenMenu(open ? 'book' : null)}
-          />
-
-          <ScriptureChapterPicker
+            chapterMenuClassName="left-[calc(50%-2.875rem)] w-[min(84vw,20rem)] -translate-x-1/2 sm:w-80 md:left-auto md:right-0 md:translate-x-0"
             chapters={chapters}
             darkMode={darkMode}
-            menuClassName="left-[calc(50%-2.875rem)] w-[min(84vw,20rem)] -translate-x-1/2 sm:w-80 md:left-auto md:right-0 md:translate-x-0"
-            open={openMenu === 'chapter'}
+            selectedBookId={selectedBookId}
             selectedChapterId={selectedChapterId}
+            onBookChange={onBookChange}
             onChapterChange={onChapterChange}
-            onOpenChange={(open) => setOpenMenu(open ? 'chapter' : null)}
+            onOpenMenuChange={setOpenMenu}
+            openMenu={openMenu === 'version' ? null : openMenu}
           />
         </div>
 

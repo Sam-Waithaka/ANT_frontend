@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { assetPaths } from '../../constants/assets';
 import type { BibleBook, BibleChapter, BibleComparisonChapter, BibleVersion } from '../../types/scripture';
-import { ScriptureBookPicker, ScriptureChapterPicker } from './ScriptureReferencePickers';
+import ScriptureReferencePickerGroup from './ScriptureReferencePickerGroup';
 
 type ComparisonReferenceChange = {
   bookId: string;
@@ -175,33 +175,25 @@ const ScriptureComparisonModal = ({
             </h2>
             <div ref={pickerControlsRef} className="relative mt-2 flex flex-wrap items-center gap-2 md:justify-center">
               {canNavigateComparison ? (
-                <>
-                  <ScriptureBookPicker
-                    books={books}
-                    buttonAriaLabel="Comparison book"
-                    darkMode={darkMode}
-                    disabled={comparisonNavigationLoading}
-                    gridClassName="grid max-h-72 grid-cols-2 gap-1 overflow-y-auto md:grid-cols-3"
-                    menuClassName="left-1/2 w-[min(84vw,34rem)] -translate-x-1/2"
-                    open={openMenu === 'book'}
-                    placement="bottom"
-                    selectedBookId={activeBookId}
-                    onBookChange={handleBookChange}
-                    onOpenChange={(nextOpen) => setOpenMenu(nextOpen ? 'book' : null)}
-                  />
-                  <ScriptureChapterPicker
-                    buttonAriaLabel="Comparison chapter"
-                    chapters={chapterOptions}
-                    darkMode={darkMode}
-                    disabled={comparisonNavigationLoading}
-                    menuClassName="left-1/2 w-[min(80vw,20rem)] -translate-x-1/2 sm:w-80"
-                    open={openMenu === 'chapter'}
-                    placement="bottom"
-                    selectedChapterId={activeChapterId}
-                    onChapterChange={handleChapterChange}
-                    onOpenChange={(nextOpen) => setOpenMenu(nextOpen ? 'chapter' : null)}
-                  />
-                </>
+                <ScriptureReferencePickerGroup
+                  bookButtonAriaLabel="Comparison book"
+                  bookGridClassName="grid max-h-72 grid-cols-2 gap-1 overflow-y-auto md:grid-cols-3"
+                  bookMenuClassName="left-1/2 w-[min(84vw,34rem)] -translate-x-1/2"
+                  books={books}
+                  chapterButtonAriaLabel="Comparison chapter"
+                  chapterMenuClassName="left-1/2 w-[min(80vw,20rem)] -translate-x-1/2 sm:w-80"
+                  chapters={chapterOptions}
+                  className="contents"
+                  darkMode={darkMode}
+                  disabled={comparisonNavigationLoading}
+                  openMenu={openMenu === 'version' ? null : openMenu}
+                  placement="bottom"
+                  selectedBookId={activeBookId}
+                  selectedChapterId={activeChapterId}
+                  onBookChange={handleBookChange}
+                  onChapterChange={handleChapterChange}
+                  onOpenMenuChange={setOpenMenu}
+                />
               ) : null}
               <div className="relative inline-block max-w-full">
               <button

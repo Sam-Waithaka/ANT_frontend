@@ -1,5 +1,5 @@
 import type { BibleBook, BibleChapter, BibleVersion } from '../../../types/scripture';
-import { ScriptureBookPicker, ScriptureChapterPicker } from '../ScriptureReferencePickers';
+import ScriptureReferencePickerGroup from '../ScriptureReferencePickerGroup';
 import type { ComparePicker } from './types';
 
 type CompareToolProps = {
@@ -38,36 +38,28 @@ const CompareTool = ({
   onToggleVersion,
 }: CompareToolProps) => (
   <div className="grid gap-3">
-    <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]">
-      <ScriptureBookPicker
-        books={books}
-        darkMode={darkMode}
-        fullWidth
-        gridClassName="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto"
-        menuClassName="left-0 w-[min(20rem,calc(100vw-3rem))]"
-        open={openComparePicker === 'book'}
-        placement="bottom"
-        selectedBookId={compareBookId}
-        onBookChange={onBookChange}
-        onOpenChange={(open) => onOpenComparePickerChange(open ? 'book' : null)}
-      />
-      <ScriptureChapterPicker
-        chapters={compareChapters}
-        darkMode={darkMode}
-        fullWidth
-        gridClassName="grid max-h-64 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-4"
-        labelStyle="number"
-        menuClassName="right-0 w-[min(18rem,calc(100vw-3rem))]"
-        open={openComparePicker === 'chapter'}
-        placement="bottom"
-        selectedChapterId={compareChapter?.id || ''}
-        onChapterChange={(chapterId) => {
-          const nextChapter = compareChapters.find((chapter) => chapter.id === chapterId);
-          onChapterNumberChange(nextChapter?.number || 1);
-        }}
-        onOpenChange={(open) => onOpenComparePickerChange(open ? 'chapter' : null)}
-      />
-    </div>
+    <ScriptureReferencePickerGroup
+      bookGridClassName="grid max-h-64 grid-cols-2 gap-1 overflow-y-auto"
+      bookMenuClassName="left-0 w-[min(20rem,calc(100vw-3rem))]"
+      books={books}
+      chapterGridClassName="grid max-h-64 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-4"
+      chapterLabelStyle="number"
+      chapterMenuClassName="right-0 w-[min(18rem,calc(100vw-3rem))]"
+      chapters={compareChapters}
+      className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_8rem]"
+      darkMode={darkMode}
+      fullWidth
+      openMenu={openComparePicker}
+      placement="bottom"
+      selectedBookId={compareBookId}
+      selectedChapterId={compareChapter?.id || ''}
+      onBookChange={onBookChange}
+      onChapterChange={(chapterId) => {
+        const nextChapter = compareChapters.find((chapter) => chapter.id === chapterId);
+        onChapterNumberChange(nextChapter?.number || 1);
+      }}
+      onOpenMenuChange={onOpenComparePickerChange}
+    />
 
     <div>
       <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Versions</p>
