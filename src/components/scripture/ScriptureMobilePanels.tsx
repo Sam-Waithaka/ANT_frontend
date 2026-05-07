@@ -1,7 +1,7 @@
 import { BookOpen, CalendarDays, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { BibleBook, BibleChapter, BibleVersion } from '../../types/scripture';
-import BibleToolsPanel from './BibleToolsPanel';
+import BibleToolsPanel from './bibleTools/BibleToolsPanel';
 import ScriptureProject52Card from './ScriptureProject52Card';
 
 type ScriptureMobilePanelsProps = {

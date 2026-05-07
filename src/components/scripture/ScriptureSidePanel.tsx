@@ -1,6 +1,6 @@
 import { BookOpen } from 'lucide-react';
 import type { BibleBook, BibleChapter, BibleChapterNote, BibleVersion } from '../../types/scripture';
-import BibleToolsPanel from './BibleToolsPanel';
+import BibleToolsPanel from './bibleTools/BibleToolsPanel';
 import ChapterNavigation from './ChapterNavigation';
 import ScriptureProject52Card from './ScriptureProject52Card';
 
