@@ -108,6 +108,7 @@ const getPublicSiteUrl = () => {
 };
 
 const getScriptureShareBaseUrl = () => `${getPublicSiteUrl()}/scripture`;
+const SHARE_LINK_LABEL = 'Continue reading on A.I.C Njoro Town Church:';
 
 export const buildScriptureShareLink = ({
   book,
@@ -161,7 +162,7 @@ export const buildVerseShareText = ({
   const versionSuffix = versionValue ? ` (${versionValue})` : '';
   const link = buildScriptureShareLink({ book, chapter, verse, version });
 
-  return `${reference}${versionSuffix}\n\n${verse.text}\n\nRead on AIC Njoro Town:\n${link}`;
+  return `${reference}${versionSuffix}\n\n${verse.text}\n\n${SHARE_LINK_LABEL}\n${link}`;
 };
 
 export const buildChapterShareText = ({
@@ -180,7 +181,7 @@ export const buildChapterShareText = ({
   const link = buildScriptureShareLink({ book, chapter, version });
   const chapterText = chapterVerses.map((item) => `${item.number}. ${item.text}`).join('\n');
 
-  return `${reference}${versionSuffix}\n\n${chapterText}\n\nRead this chapter on AIC Njoro Town:\n${link}`;
+  return `${reference}${versionSuffix}\n\n${chapterText}\n\n${SHARE_LINK_LABEL}\n${link}`;
 };
 
 export const buildVerseSharePayload = ({
@@ -204,7 +205,7 @@ export const buildVerseSharePayload = ({
     title,
     text,
     url,
-    copyText: `${title}\n\n${verse.text}\n\nRead on AIC Njoro Town:\n${url}`,
+    copyText: `${title}\n\n${verse.text}\n\n${SHARE_LINK_LABEL}\n${url}`,
   };
 };
 
@@ -229,7 +230,7 @@ export const buildChapterSharePayload = ({
     title,
     text: `${reference}${versionSuffix}\n\n${chapterText}`,
     url,
-    copyText: `${reference}${versionSuffix}\n\n${chapterText}\n\nRead this chapter on AIC Njoro Town:\n${url}`,
+    copyText: `${reference}${versionSuffix}\n\n${chapterText}\n\n${SHARE_LINK_LABEL}\n${url}`,
   };
 };
 
@@ -256,6 +257,6 @@ export const buildSelectionSharePayload = ({
     title,
     text: `${selectionText}\n\n${reference}${versionSuffix}`,
     url,
-    copyText: `${title}\n\n${selectionText}\n\nRead on AIC Njoro Town:\n${url}`,
+    copyText: `${title}\n\n${selectionText}\n\n${SHARE_LINK_LABEL}\n${url}`,
   };
 };

@@ -243,6 +243,19 @@ test('compare selection opens the chapter comparison modal with selected verses 
   await expect(comparisonDialog.locator('[data-highlighted="true"][data-verse-number="2"]')).toBeVisible();
 });
 
+test('compare chapter opens the chapter comparison modal without selected verse highlights', async ({ page }) => {
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: /In the beginning God created the heavens and the earth\./i }).click();
+  await page.getByRole('button', { name: /expand scripture actions/i }).click();
+  await page.getByRole('button', { name: /compare chapter/i }).click();
+
+  const comparisonDialog = page.getByRole('dialog', { name: 'Genesis 1', exact: true });
+
+  await expect(comparisonDialog).toBeVisible();
+  await expect(comparisonDialog.locator('[data-highlighted="true"]')).toHaveCount(0);
+});
+
 test('shared verses link opens the chapter and selects the requested verses', async ({ page }) => {
   await page.goto('/scripture?book=John&chapter=20&verses=1-2&version=BSB');
 

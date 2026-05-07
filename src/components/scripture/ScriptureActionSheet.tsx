@@ -8,6 +8,7 @@ type ScriptureActionSheetProps = {
   darkMode: boolean;
   description: string;
   open: boolean;
+  onCompareChapter?: () => void;
   onCompareVerse?: () => void;
   onCopySelection: () => void;
   title: string;
@@ -25,6 +26,7 @@ const ScriptureActionSheet = ({
   darkMode,
   description,
   open,
+  onCompareChapter,
   onCompareVerse,
   onCopySelection,
   title,
@@ -123,6 +125,12 @@ const ScriptureActionSheet = ({
                   <BookText size={18} />
                   Copy chapter
                 </button>
+                {onCompareChapter ? (
+                  <button type="button" onClick={onCompareChapter} className={`${actionButtonBase} ${buttonClass}`}>
+                    <GitCompareArrows size={18} />
+                    Compare chapter
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -196,6 +204,12 @@ const ScriptureActionSheet = ({
                   <BookText size={18} />
                   Copy chapter
                 </button>
+                {onCompareChapter ? (
+                  <button type="button" onClick={onCompareChapter} className={`${actionButtonBase} ${buttonClass}`}>
+                    <GitCompareArrows size={18} />
+                    Compare chapter
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>

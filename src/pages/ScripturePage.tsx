@@ -34,6 +34,7 @@ const ScripturePage = () => {
   const [selectedVerses, setSelectedVerses] = useState<BibleVerse[]>([]);
   const [focusVerseNumber, setFocusVerseNumber] = useState<number | null>(null);
   const [comparison, setComparison] = useState<BibleComparisonChapter | null>(null);
+  const [comparisonHighlightedVerseNumbers, setComparisonHighlightedVerseNumbers] = useState<number[]>([]);
   const [comparisonLoading, setComparisonLoading] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
@@ -262,8 +263,8 @@ const ScripturePage = () => {
     setActionMessage(successMessage);
   };
 
-  const openVerseComparison = async () => {
-    if (!canCompareVerse || !selectedBook || !selectedChapter) {
+  const openChapterComparison = async (highlightedVerseNumbers: number[] = []) => {
+    if (!selectedBook || !selectedChapter || !selectedVersionId) {
       return;
     }
 
@@ -275,12 +276,21 @@ const ScripturePage = () => {
         selectedChapter.number,
       );
       setComparison(nextComparison);
+      setComparisonHighlightedVerseNumbers(highlightedVerseNumbers);
       setComparisonOpen(true);
     } catch {
-      setActionMessage('Unable to compare this verse right now.');
+      setActionMessage('Unable to compare this chapter right now.');
     } finally {
       setComparisonLoading(false);
     }
+  };
+
+  const openVerseComparison = async () => {
+    if (!canCompareVerse) {
+      return;
+    }
+
+    await openChapterComparison(selectedVerses.map((verse) => verse.number));
   };
 
   const selectionDescription =
@@ -402,6 +412,7 @@ const ScripturePage = () => {
         copySelectionLabel={selectedVerses.length > 1 ? 'Copy selection' : 'Copy verse'}
         description={selectionDescription}
         open={selectedVerses.length > 0}
+        onCompareChapter={() => openChapterComparison()}
         onCompareVerse={openVerseComparison}
         onCopySelection={async () => {
           await copyText(
@@ -421,7 +432,7 @@ const ScripturePage = () => {
       <ScriptureComparisonModal
         comparison={comparisonLoading ? null : comparison}
         darkMode={darkMode}
-        highlightedVerseNumbers={selectedVerses.map((verse) => verse.number)}
+        highlightedVerseNumbers={comparisonHighlightedVerseNumbers}
         open={comparisonOpen && !comparisonLoading}
         selectedCompareVersions={selectedCompareVersions}
         versionLabelFor={getVersionLabel}

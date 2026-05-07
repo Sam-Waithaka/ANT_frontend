@@ -48,7 +48,7 @@ describe('scriptureShare', () => {
       text: 'Early on the first day of the week Mary Magdalene went to the tomb.\n\nJohn 20:1 (BSB)',
       url: 'https://aicnjoro.org/scripture?book=John&chapter=20&verses=1&version=BSB',
       copyText:
-        'John 20:1 (BSB)\n\nEarly on the first day of the week Mary Magdalene went to the tomb.\n\nRead on AIC Njoro Town:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verses=1&version=BSB',
+        'John 20:1 (BSB)\n\nEarly on the first day of the week Mary Magdalene went to the tomb.\n\nContinue reading on A.I.C Njoro Town Church:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verses=1&version=BSB',
     });
   });
 
@@ -66,7 +66,7 @@ describe('scriptureShare', () => {
         '1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nJohn 20:1-2 (BSB)',
       url: 'https://aicnjoro.org/scripture?book=John&chapter=20&verses=1-2&version=BSB',
       copyText:
-        'John 20:1-2 (BSB)\n\n1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nRead on AIC Njoro Town:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verses=1-2&version=BSB',
+        'John 20:1-2 (BSB)\n\n1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nContinue reading on A.I.C Njoro Town Church:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verses=1-2&version=BSB',
     });
   });
 
