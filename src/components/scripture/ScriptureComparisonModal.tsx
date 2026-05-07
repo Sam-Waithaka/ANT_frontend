@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { assetPaths } from '../../constants/assets';
 import type { BibleComparisonChapter, BibleVersion } from '../../types/scripture';
 
@@ -38,26 +38,21 @@ const ScriptureComparisonModal = ({
         : [];
   const firstHighlightedVerseNumber = highlightedNumbers[0] || null;
 
+  const handleClose = useCallback(() => {
+    setVersionPickerOpen(false);
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
+      if (event.key === 'Escape') handleClose();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, open]);
-
-  useEffect(() => {
-    if (!open) {
-      setVersionPickerOpen(false);
-    }
-  }, [open]);
+  }, [handleClose, open]);
 
   useEffect(() => {
     if (!open || !firstHighlightedVerseNumber) {
@@ -140,44 +135,46 @@ const ScriptureComparisonModal = ({
                   }`}
                   role="menu"
                 >
-                  {versions.map((version) => {
-                    const checked = selectedCompareVersions.includes(version.id);
-                    const isLastSelected = checked && selectedCompareVersions.length === 1;
+                  <div className="grid gap-2">
+                    {versions.map((version) => {
+                      const checked = selectedCompareVersions.includes(version.id);
+                      const isLastSelected = checked && selectedCompareVersions.length === 1;
 
-                    return (
-                      <label
-                        key={version.id}
-                        className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
-                          checked
-                            ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                            : darkMode
-                              ? 'text-stone-300 hover:bg-white/10'
-                              : 'text-zinc-700 hover:bg-[#fffaf0]'
-                        } ${isLastSelected ? 'cursor-not-allowed opacity-70' : ''}`}
-                        role="menuitemcheckbox"
-                        aria-checked={checked}
-                      >
-                        <input
-                          checked={checked}
-                          disabled={isLastSelected}
-                          onChange={() => toggleVersion(version.id)}
-                          type="checkbox"
-                          className="size-4 accent-red-800"
-                        />
-                        <span className="min-w-12 font-black">{version.abbreviation || version.id}</span>
-                        <span className={`min-w-0 truncate text-xs ${checked ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>
-                          {version.name}
-                        </span>
-                      </label>
-                    );
-                  })}
+                      return (
+                        <label
+                          key={version.id}
+                          className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
+                            checked
+                              ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                              : darkMode
+                                ? 'text-stone-300 hover:bg-white/10'
+                                : 'text-zinc-700 hover:bg-[#fffaf0]'
+                          } ${isLastSelected ? 'cursor-not-allowed opacity-70' : ''}`}
+                          role="menuitemcheckbox"
+                          aria-checked={checked}
+                        >
+                          <input
+                            checked={checked}
+                            disabled={isLastSelected}
+                            onChange={() => toggleVersion(version.id)}
+                            type="checkbox"
+                            className="size-4 accent-red-800"
+                          />
+                          <span className="min-w-12 font-black">{version.abbreviation || version.id}</span>
+                          <span className={`min-w-0 truncate text-xs ${checked ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>
+                            {version.name}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               ) : null}
             </div>
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className={`inline-flex size-11 shrink-0 items-center justify-center rounded-full border text-xl font-black transition ${
               darkMode ? 'border-white/10 bg-white/10 hover:bg-white/15' : 'border-black/10 bg-white hover:bg-[#fffaf0]'
             }`}
