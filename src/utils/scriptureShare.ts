@@ -1,6 +1,5 @@
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
-
-const FALLBACK_PUBLIC_SITE_URL = 'https://aicnjoro.org';
+import { getSiteBaseUrl } from '../config/env';
 
 type ShareReferenceOptions = {
   book?: BibleBook;
@@ -87,22 +86,7 @@ export const parseVerseSelection = (value: string | null | undefined) => {
   return normalizeVerseNumbers(numbers);
 };
 
-const getPublicSiteUrl = () => {
-  const configuredUrl = (import.meta.env as ImportMeta['env'] & { VITE_PUBLIC_SITE_URL?: string })
-    .VITE_PUBLIC_SITE_URL?.trim();
-
-  if (configuredUrl) {
-    return configuredUrl.replace(/\/+$/, '');
-  }
-
-  if (typeof window !== 'undefined' && window.location?.origin) {
-    return window.location.origin.replace(/\/+$/, '');
-  }
-
-  return FALLBACK_PUBLIC_SITE_URL;
-};
-
-const getScriptureShareBaseUrl = () => `${getPublicSiteUrl()}/scripture`;
+const getScriptureShareBaseUrl = () => `${getSiteBaseUrl()}/scripture`;
 const SHARE_LINK_LABEL = 'Continue reading on A.I.C Njoro Town Church:';
 
 export const buildScriptureShareLink = ({

@@ -12,11 +12,10 @@ import type {
   BibleVersion,
   VerseLookupResult,
 } from '../types/scripture';
+import { getApiBaseUrl } from '../config/env';
 import { resolveApiBookReference } from '../utils/scriptureIntent';
 
-const API_BASE_URL = (
-  import.meta.env.VITE_SCRIPTURE_API_BASE_URL ?? (import.meta.env.DEV ? '' : 'https://api.aicnjoro.org')
-).replace(/\/$/, '');
+const API_BASE_URL = getApiBaseUrl();
 
 type UnknownRecord = Record<string, unknown>;
 

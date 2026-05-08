@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const scriptureApiProxyTarget =
-    env.VITE_SCRIPTURE_API_PROXY_TARGET || env.VITE_SCRIPTURE_API_BASE_URL || 'http://localhost:9000'
+    env.VITE_API_PROXY_TARGET || env.VITE_API_BASE_URL || 'http://localhost:9000'
 
   return {
     plugins: [

@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getSiteBaseUrl } from '../../config/env';
 import { assetPaths } from '../../constants/assets';
 import type { BibleBook, BibleChapter, BibleComparisonChapter, BibleVersion } from '../../types/scripture';
 import BibleVersionPickerList from './BibleVersionPickerList';
@@ -121,6 +122,7 @@ const ScriptureComparisonModal = ({
     : [{ id: String(comparison.chapter), label: `Chapter ${comparison.chapter}`, number: comparison.chapter }];
   const activeChapterId =
     chapterOptions.find((chapter) => chapter.number === activeChapterNumber)?.id || String(activeChapterNumber);
+  const churchWebsiteUrl = getSiteBaseUrl();
   const handleBookChange = (bookId: string) => {
     void onComparisonReferenceChange?.({ bookId, chapterNumber: activeChapterNumber });
   };
@@ -155,7 +157,7 @@ const ScriptureComparisonModal = ({
       >
         <div className={`grid grid-cols-[1fr_auto] items-start gap-4 border-b p-5 md:grid-cols-[auto_1fr_auto] md:items-center ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
           <a
-            href="https://aicnjoro.org"
+            href={churchWebsiteUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-700 md:block"

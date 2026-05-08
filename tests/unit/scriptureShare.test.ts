@@ -36,8 +36,8 @@ describe('scriptureShare', () => {
     ).toBe('http://localhost:5173/scripture?book=John&chapter=20&verses=1&version=BSB');
   });
 
-  it('uses the configured public site url when one is provided', () => {
-    vi.stubEnv('VITE_PUBLIC_SITE_URL', 'https://preview.aicnjoro.net/');
+  it('uses the configured site base url when one is provided', () => {
+    vi.stubEnv('VITE_SITE_BASE_URL', 'https://preview.aicnjoro.net/');
 
     expect(
       buildScriptureShareLink({ book, chapter, verse, version }),

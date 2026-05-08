@@ -81,37 +81,41 @@ Use these variables for deployment-specific URLs:
 
 | Variable | Used by | Purpose |
 |---|---|---|
-| `VITE_PUBLIC_SITE_URL` | Browser share/copy links | Canonical public site origin for generated Scripture links. If omitted, the app uses the current browser origin, which keeps localhost and preview URLs correct. |
-| `VITE_SCRIPTURE_API_BASE_URL` | Browser Scripture API requests | Base URL for Scripture API requests. In development this can be empty so Vite proxies `/v1` requests. In production the code falls back to `https://api.aicnjoro.org` when omitted. |
-| `VITE_SCRIPTURE_API_PROXY_TARGET` | Vite dev server only | Optional local dev proxy target for `/v1` requests. If omitted, Vite uses `VITE_SCRIPTURE_API_BASE_URL`, then `http://localhost:9000`. |
+| `VITE_SITE_BASE_URL` | Browser links and Scripture share/copy text | Canonical public site origin used anywhere the app builds a site URL. If omitted, browser code uses the current origin, then falls back to `https://aicnjoro.org`. |
+| `VITE_API_BASE_URL` | Browser Scripture API requests | Base URL for Scripture API requests. Leave this empty in development so requests use `/v1` and the Vite proxy handles the upstream host. Set it to `https://api.aicnjoro.org` before a production build. |
+| `VITE_API_PROXY_TARGET` | Vite dev server only | Local dev proxy target for `/v1` requests. If omitted, Vite uses `VITE_API_BASE_URL`, then `http://localhost:9000`. This value is not used by the built static app. |
 
-Example local `.env`:
+The project uses one local `.env` file. Keep exactly one environment block active before running the app or building `dist`.
+
+Development block:
 
 ```text
-VITE_PUBLIC_SITE_URL=http://localhost:5173
-VITE_SCRIPTURE_API_BASE_URL=
-VITE_SCRIPTURE_API_PROXY_TARGET=http://localhost:9000
+VITE_SITE_BASE_URL=http://localhost:5173
+VITE_API_BASE_URL=
+VITE_API_PROXY_TARGET=https://api.aicnjoro.org
 ```
 
 Example preview deployment:
 
 ```text
-VITE_PUBLIC_SITE_URL=https://preview.example.org
-VITE_SCRIPTURE_API_BASE_URL=https://api-preview.example.org
+VITE_SITE_BASE_URL=https://preview.example.org
+VITE_API_BASE_URL=https://api-preview.example.org
+VITE_API_PROXY_TARGET=
 ```
 
-Example production deployment:
+Production/cPanel block:
 
 ```text
-VITE_PUBLIC_SITE_URL=https://aicnjoro.org
-VITE_SCRIPTURE_API_BASE_URL=https://api.aicnjoro.org
+VITE_SITE_BASE_URL=https://staging.aicnjoro.org
+VITE_API_BASE_URL=https://api.aicnjoro.org
+VITE_API_PROXY_TARGET=
 ```
 
 Vite reads these values at build time. If you upload a prebuilt `dist` folder to cPanel, set the values before running `npm run build`; cPanel runtime environment variables will not change an already-built static bundle.
 
 ### URL Behavior
 
-Scripture copy/share links use `VITE_PUBLIC_SITE_URL` when it is set. Otherwise, they use the current browser origin, so local development produces links such as:
+Scripture copy/share links and church-site links use `VITE_SITE_BASE_URL` when it is set. Otherwise, they use the current browser origin, so local development produces links such as:
 
 ```text
 http://localhost:5173/scripture?book=John&chapter=20&version=BSB
