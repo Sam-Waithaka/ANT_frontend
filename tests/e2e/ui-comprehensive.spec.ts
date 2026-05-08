@@ -8,15 +8,16 @@ test.beforeEach(async ({ page }) => {
 test('landing page navigation, fallback route, and desktop settings theme toggle work', async ({ page }) => {
   await page.goto('/not-a-real-route');
 
-  await expect(page.getByRole('heading', { name: 'A.I.C Njoro Town' })).toBeVisible();
-  await expect(page.getByText('Full Website Coming soon')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Welcome to AIC Njoro Town/i })).toBeVisible();
+  await expect(page.getByText('Growing together in faith, fellowship, and the Word.')).toBeVisible();
+  await expect(page.getByText('Daily Verse')).toBeVisible();
 
   await page.getByRole('button', { name: /settings/i }).click();
   await expect(page.getByRole('menu')).toBeVisible();
   await page.getByRole('menuitem', { name: /dark theme/i }).click();
   await expect(page.locator('html')).toHaveClass(/dark/);
 
-  await page.getByRole('link', { name: /open project 52/i }).click();
+  await page.getByRole('link', { name: /^View Plan/i }).click();
   await expect(page).toHaveURL(/\/project52$/);
   await expect(page.getByRole('heading', { name: 'Project 52' })).toBeVisible();
 
