@@ -1,4 +1,6 @@
 import { assetPaths } from '../../constants/assets';
+import { useProject52 } from '../../contexts/Project52Context';
+import { useOpenProject52Reading } from '../../hooks/useOpenProject52Reading';
 import LandingButton from './LandingButton';
 import { heroCtas } from './landingContent';
 import { landingContainer } from './LandingSection';
@@ -12,8 +14,17 @@ const overlayClass = (darkMode: boolean) =>
     ? 'bg-[linear-gradient(90deg,rgba(8,8,8,0.90)_0%,rgba(8,8,8,0.74)_38%,rgba(8,8,8,0.28)_70%,rgba(8,8,8,0.20)_100%),linear-gradient(180deg,rgba(8,8,8,0.18),rgba(8,8,8,0.58))]'
     : 'bg-[linear-gradient(90deg,rgba(248,245,239,0.88)_0%,rgba(248,245,239,0.66)_38%,rgba(248,245,239,0.20)_72%,rgba(248,245,239,0.30)_100%),linear-gradient(180deg,rgba(248,245,239,0.08),rgba(248,245,239,0.62))]';
 
-const LandingHero = ({ darkMode }: LandingHeroProps) => (
-  <section className={`relative isolate overflow-hidden px-4 py-20 sm:px-6 sm:py-24 lg:py-32 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
+const LandingHero = ({ darkMode }: LandingHeroProps) => {
+  const { currentWeek, readingTarget, weeks } = useProject52();
+  const openProject52Reading = useOpenProject52Reading();
+  const activeWeek = weeks.find((week) => week.week === currentWeek);
+  const highlightedDay = activeWeek?.items[readingTarget.dayIndex];
+  const openHighlightedNewTestamentReading = () => {
+    openProject52Reading(highlightedDay?.newTestament || []);
+  };
+
+  return (
+    <section className={`relative isolate overflow-hidden px-4 py-20 sm:px-6 sm:py-24 lg:py-32 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
     <div className="absolute inset-0 -z-10">
       <picture>
         <source type="image/avif" srcSet={assetPaths.heroChurch.avif} sizes="100vw" />
@@ -49,15 +60,27 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => (
           Growing together in faith, fellowship, and the Word.
         </p>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-          {heroCtas.map((cta) => (
-            <LandingButton key={cta.label} darkMode={darkMode} to={cta.href} variant={cta.variant}>
-              {cta.label}
-            </LandingButton>
-          ))}
+          {heroCtas.map((cta) => {
+            const opensHighlightedReading =
+              'action' in cta && cta.action === 'openHighlightedNewTestamentReading';
+
+            return (
+              <LandingButton
+                key={cta.label}
+                darkMode={darkMode}
+                onClick={opensHighlightedReading ? openHighlightedNewTestamentReading : undefined}
+                to={'href' in cta ? cta.href : undefined}
+                variant={cta.variant}
+              >
+                {cta.label}
+              </LandingButton>
+            );
+          })}
         </div>
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default LandingHero;

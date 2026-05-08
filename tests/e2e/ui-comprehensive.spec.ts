@@ -31,7 +31,7 @@ test('landing page sections expose responsive hero, verse, and Project 52 previe
   await page.goto('/');
 
   await expect(page.getByRole('link', { name: /join us this sunday/i })).toHaveAttribute('href', '/project52');
-  await expect(page.getByRole('link', { name: /explore scripture/i })).toHaveAttribute('href', '/scripture');
+  await expect(page.getByRole('button', { name: /explore scripture/i })).toBeVisible();
   await expect(page.getByText('Ephesians 2:10 | BSB')).toBeVisible();
   await expect(page.getByText('For we are His workmanship')).toBeVisible();
   await expect(page.getByText('Week 18 of 52')).toBeVisible();
@@ -44,6 +44,11 @@ test('landing page sections expose responsive hero, verse, and Project 52 previe
   await expect(page.getByText('OT: 1 Samuel 14-15')).toHaveCount(0);
   await expect(page.getByText('OT: 1 Samuel 16-17')).toHaveCount(0);
   await expect(page.getByText('Weekly ground covered')).toHaveCount(0);
+
+  await page.getByRole('button', { name: /explore scripture/i }).click();
+  await expect(page).toHaveURL(/\/scripture$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'John 20' })).toBeVisible();
+  await page.goto('/');
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();

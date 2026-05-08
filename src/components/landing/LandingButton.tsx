@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 type LandingButtonProps = {
   children: string;
   darkMode: boolean;
-  to: string;
+  onClick?: () => void;
+  to?: string;
   variant?: 'primary' | 'secondary';
 };
 
@@ -23,14 +24,28 @@ const variantClass = (variant: Required<LandingButtonProps>['variant'], darkMode
     : 'border border-black/10 bg-white/80 text-zinc-900 shadow-lg shadow-zinc-900/10 hover:bg-white focus:ring-offset-[#f8f5ef]';
 };
 
-const LandingButton = ({ children, darkMode, to, variant = 'primary' }: LandingButtonProps) => {
+const LandingButton = ({ children, darkMode, onClick, to, variant = 'primary' }: LandingButtonProps) => {
   const Icon = variant === 'primary' ? ArrowRight : BookOpen;
-
-  return (
-    <Link to={to} className={`${baseClass} ${variantClass(variant, darkMode)}`}>
+  const content = (
+    <>
       {variant === 'secondary' ? <Icon size={18} aria-hidden="true" /> : null}
       {children}
       {variant === 'primary' ? <Icon size={18} aria-hidden="true" /> : null}
+    </>
+  );
+  const className = `${baseClass} ${variantClass(variant, darkMode)}`;
+
+  if (!to) {
+    return (
+      <button type="button" onClick={onClick} className={className}>
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={to} className={className}>
+      {content}
     </Link>
   );
 };

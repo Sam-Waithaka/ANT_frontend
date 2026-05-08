@@ -6,7 +6,7 @@ export const heroCtas = [
   },
   {
     label: 'Explore Scripture',
-    href: '/scripture',
+    action: 'openHighlightedNewTestamentReading',
     variant: 'secondary',
   },
 ] as const;
