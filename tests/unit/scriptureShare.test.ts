@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildChapterSharePayload,
   buildChapterShareText,
@@ -17,10 +17,31 @@ const chapterVerses = [verse, { id: 'v2', number: 2, text: 'So she came running 
 const version = { id: 'BSB', name: 'Berean Standard Bible', abbreviation: 'BSB' };
 
 describe('scriptureShare', () => {
+  beforeEach(() => {
+    vi.stubGlobal('window', {
+      location: {
+        origin: 'http://localhost:5173',
+      },
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
   it('builds a scripture share link with version chapter and verse', () => {
     expect(
       buildScriptureShareLink({ book, chapter, verse, version }),
-    ).toBe('https://aicnjoro.org/scripture?book=John&chapter=20&verses=1&version=BSB');
+    ).toBe('http://localhost:5173/scripture?book=John&chapter=20&verses=1&version=BSB');
+  });
+
+  it('uses the configured public site url when one is provided', () => {
+    vi.stubEnv('VITE_PUBLIC_SITE_URL', 'https://preview.aicnjoro.net/');
+
+    expect(
+      buildScriptureShareLink({ book, chapter, verse, version }),
+    ).toBe('https://preview.aicnjoro.net/scripture?book=John&chapter=20&verses=1&version=BSB');
   });
 
   it('builds verse share text with the passage text and link', () => {
@@ -28,14 +49,14 @@ describe('scriptureShare', () => {
       'John 20:1 (BSB)',
     );
     expect(buildVerseShareText({ book, chapter, verse, version })).toContain(
-      'https://aicnjoro.org/scripture?book=John&chapter=20&verses=1&version=BSB',
+      'http://localhost:5173/scripture?book=John&chapter=20&verses=1&version=BSB',
     );
   });
 
   it('builds chapter share text with a chapter link', () => {
     expect(buildChapterShareText({ book, chapter, chapterVerses, version })).toContain('John 20 (BSB)');
     expect(buildChapterShareText({ book, chapter, chapterVerses, version })).toContain(
-      'https://aicnjoro.org/scripture?book=John&chapter=20&version=BSB',
+      'http://localhost:5173/scripture?book=John&chapter=20&version=BSB',
     );
     expect(buildChapterShareText({ book, chapter, chapterVerses, version })).toContain(
       '1. Early on the first day of the week Mary Magdalene went to the tomb.',
@@ -46,16 +67,16 @@ describe('scriptureShare', () => {
     expect(buildVerseSharePayload({ book, chapter, verse, version })).toEqual({
       title: 'John 20:1 (BSB)',
       text: 'Early on the first day of the week Mary Magdalene went to the tomb.\n\nJohn 20:1 (BSB)',
-      url: 'https://aicnjoro.org/scripture?book=John&chapter=20&verses=1&version=BSB',
+      url: 'http://localhost:5173/scripture?book=John&chapter=20&verses=1&version=BSB',
       copyText:
-        'John 20:1 (BSB)\n\nEarly on the first day of the week Mary Magdalene went to the tomb.\n\nContinue reading on A.I.C Njoro Town Church:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verses=1&version=BSB',
+        'John 20:1 (BSB)\n\nEarly on the first day of the week Mary Magdalene went to the tomb.\n\nContinue reading on A.I.C Njoro Town Church:\nhttp://localhost:5173/scripture?book=John&chapter=20&verses=1&version=BSB',
     });
   });
 
   it('builds a chapter share payload with a canonical chapter url', () => {
     expect(buildChapterSharePayload({ book, chapter, chapterVerses, version })).toMatchObject({
       title: 'John 20 (BSB)',
-      url: 'https://aicnjoro.org/scripture?book=John&chapter=20&version=BSB',
+      url: 'http://localhost:5173/scripture?book=John&chapter=20&version=BSB',
     });
   });
 
@@ -64,9 +85,9 @@ describe('scriptureShare', () => {
       title: 'John 20:1-2 (BSB)',
       text:
         '1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nJohn 20:1-2 (BSB)',
-      url: 'https://aicnjoro.org/scripture?book=John&chapter=20&verses=1-2&version=BSB',
+      url: 'http://localhost:5173/scripture?book=John&chapter=20&verses=1-2&version=BSB',
       copyText:
-        'John 20:1-2 (BSB)\n\n1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nContinue reading on A.I.C Njoro Town Church:\nhttps://aicnjoro.org/scripture?book=John&chapter=20&verses=1-2&version=BSB',
+        'John 20:1-2 (BSB)\n\n1. Early on the first day of the week Mary Magdalene went to the tomb.\n2. So she came running to Simon Peter and the other disciple.\n\nContinue reading on A.I.C Njoro Town Church:\nhttp://localhost:5173/scripture?book=John&chapter=20&verses=1-2&version=BSB',
     });
   });
 

@@ -1,7 +1,6 @@
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
 
 const FALLBACK_PUBLIC_SITE_URL = 'https://aicnjoro.org';
-const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1']);
 
 type ShareReferenceOptions = {
   book?: BibleBook;
@@ -97,11 +96,7 @@ const getPublicSiteUrl = () => {
   }
 
   if (typeof window !== 'undefined' && window.location?.origin) {
-    const { hostname, origin } = window.location;
-
-    if (!LOCAL_HOSTNAMES.has(hostname)) {
-      return origin.replace(/\/+$/, '');
-    }
+    return window.location.origin.replace(/\/+$/, '');
   }
 
   return FALLBACK_PUBLIC_SITE_URL;

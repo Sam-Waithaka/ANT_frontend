@@ -29,7 +29,7 @@ export const installFixedDate = async (page: Page, iso = fixedDateIso) => {
 
     class MockDate extends NativeDate {
       constructor(...args: ConstructorParameters<DateConstructor>) {
-        if (args.length === 0) {
+        if (!args.length) {
           super(fixedTime);
           return;
         }

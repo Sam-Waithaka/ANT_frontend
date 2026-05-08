@@ -1,14 +1,15 @@
 # A.I.C Njoro Town Scripture + Project 52
 
-A client-side React app for **A.I.C Njoro Town Church**. The current phase delivers a branded church web presence, a Project 52 reading plan, and a Scripture reader that can open readings directly from Project 52.
+A client-side React Router app for **A.I.C Njoro Town Church**. The current phase delivers a lightweight church landing page, the Project 52 reading plan, and a Scripture reader with sharing, search, comparison, and Bible tools.
 
 ## Current Scope
 
-- `/` - church landing/home page.
+- `/` - church landing/home page for the current phase.
 - `/project52` - full 52-week Bible reading plan.
 - `/scripture` - Scripture reader, Project 52 widget, Bible tools, search, sharing, and comparison flows.
+- `*` - unmatched client routes render the landing page.
 
-The app is built with React, TypeScript, Vite, Tailwind CSS, and lucide-react. It consumes a Scripture API through `src/services/scriptureApi.ts`.
+The app is built with React, React Router, TypeScript, Vite, Tailwind CSS, and lucide-react. Scripture API access is centralized in `src/services/scriptureApi.ts`.
 
 ## Key Features
 
@@ -74,32 +75,55 @@ Default dev URL:
 http://localhost:5173
 ```
 
-## Scripture API Configuration
+## Environment Variables
 
-The API base URL is controlled by:
+Use these variables for deployment-specific URLs:
 
-```text
-VITE_SCRIPTURE_API_BASE_URL
-```
+| Variable | Used by | Purpose |
+|---|---|---|
+| `VITE_PUBLIC_SITE_URL` | Browser share/copy links | Canonical public site origin for generated Scripture links. If omitted, the app uses the current browser origin, which keeps localhost and preview URLs correct. |
+| `VITE_SCRIPTURE_API_BASE_URL` | Browser Scripture API requests | Base URL for Scripture API requests. In development this can be empty so Vite proxies `/v1` requests. In production the code falls back to `https://api.aicnjoro.org` when omitted. |
+| `VITE_SCRIPTURE_API_PROXY_TARGET` | Vite dev server only | Optional local dev proxy target for `/v1` requests. If omitted, Vite uses `VITE_SCRIPTURE_API_BASE_URL`, then `http://localhost:9000`. |
 
-In development, an empty base URL is allowed so Vite can proxy or mock same-origin endpoints. In production, the fallback is:
-
-```text
-https://api.aicnjoro.org
-```
-
-Scripture API access is centralized in:
+Example local `.env`:
 
 ```text
-src/services/scriptureApi.ts
+VITE_PUBLIC_SITE_URL=http://localhost:5173
+VITE_SCRIPTURE_API_BASE_URL=
+VITE_SCRIPTURE_API_PROXY_TARGET=http://localhost:9000
 ```
 
-That service includes tolerant response parsing and an in-memory request cache so duplicate requests reuse the same promise.
+Example preview deployment:
+
+```text
+VITE_PUBLIC_SITE_URL=https://preview.example.org
+VITE_SCRIPTURE_API_BASE_URL=https://api-preview.example.org
+```
+
+Example production deployment:
+
+```text
+VITE_PUBLIC_SITE_URL=https://aicnjoro.org
+VITE_SCRIPTURE_API_BASE_URL=https://api.aicnjoro.org
+```
+
+Vite reads these values at build time. If you upload a prebuilt `dist` folder to cPanel, set the values before running `npm run build`; cPanel runtime environment variables will not change an already-built static bundle.
+
+### URL Behavior
+
+Scripture copy/share links use `VITE_PUBLIC_SITE_URL` when it is set. Otherwise, they use the current browser origin, so local development produces links such as:
+
+```text
+http://localhost:5173/scripture?book=John&chapter=20&version=BSB
+```
+
+`src/services/scriptureApi.ts` includes tolerant response parsing and an in-memory request cache so duplicate requests reuse the same promise.
 
 ## Important Source Paths
 
 ```text
 src/
+  App.tsx
   contexts/
     Project52Context.tsx
     ScriptureReaderContext.tsx
@@ -132,6 +156,12 @@ src/
     project52Pdf.ts
     project52Schedule.ts
     scriptureShare.ts
+tests/
+  e2e/
+    fixtures/
+    project52-scripture.spec.ts
+    ui-comprehensive.spec.ts
+  unit/
 ```
 
 ## Documentation
@@ -141,17 +171,24 @@ src/
 
 ## Testing Notes
 
-The focused Playwright suite for Scripture and Project 52 is:
+Unit tests live under `tests/unit`. Playwright tests live under `tests/e2e`, with shared E2E mocks in `tests/e2e/fixtures`.
+
+Useful commands:
 
 ```bash
+npm test
+npm run test:e2e
 npm run test:e2e -- tests/e2e/project52-scripture.spec.ts
+npm run test:e2e -- tests/e2e/ui-comprehensive.spec.ts
 ```
 
 The app uses React `StrictMode` in development. Dev mode may mount effects twice, but Scripture API calls are cached to avoid duplicate identical network work.
 
 ## Deployment Notes
 
-The app is a static SPA. Refresh support depends on:
+Routing is handled in the browser by React Router. Because this is still a static SPA, the hosting platform must serve `index.html` for deep links such as `/project52` and `/scripture?book=John&chapter=20`.
+
+For Netlify-style hosting, this fallback is provided by:
 
 ```text
 public/_redirects
@@ -162,6 +199,10 @@ with:
 ```text
 /* /index.html 200
 ```
+
+On other hosts, configure the equivalent SPA fallback/rewrite to `index.html`. This is hosting fallback behavior, not application routing; the actual routes are declared in `src/App.tsx`.
+
+For cPanel/Apache hosting, `public/.htaccess` is copied into `dist/.htaccess` during the Vite build. Upload the contents of `dist` into the target web root, such as `public_html`, and keep `.htaccess` included so direct visits to `/project52` and `/scripture?...` resolve to the React Router app.
 
 ## Credits
 
