@@ -82,8 +82,7 @@ Use these variables for deployment-specific URLs:
 | Variable | Used by | Purpose |
 |---|---|---|
 | `VITE_SITE_BASE_URL` | Browser links and Scripture share/copy text | Canonical public site origin used anywhere the app builds a site URL. If omitted, browser code uses the current origin, then falls back to `https://aicnjoro.org`. |
-| `VITE_API_BASE_URL` | Browser Scripture API requests | Base URL for Scripture API requests. Leave this empty in development so requests use `/v1` and the Vite proxy handles the upstream host. Set it to `https://api.aicnjoro.org` before a production build. |
-| `VITE_API_PROXY_TARGET` | Vite dev server only | Local dev proxy target for `/v1` requests. If omitted, Vite uses `VITE_API_BASE_URL`, then `http://localhost:9000`. This value is not used by the built static app. |
+| `VITE_API_BASE_URL` | Scripture API requests | Canonical Scripture API origin. In development, Vite uses this as the `/v1` proxy target while browser code calls relative `/v1` paths. In production builds, browser code calls this URL directly. |
 
 The project uses one local `.env` file. Keep exactly one environment block active before running the app or building `dist`.
 
@@ -91,8 +90,7 @@ Development block:
 
 ```text
 VITE_SITE_BASE_URL=http://localhost:5173
-VITE_API_BASE_URL=
-VITE_API_PROXY_TARGET=https://api.aicnjoro.org
+VITE_API_BASE_URL=https://api.aicnjoro.org
 ```
 
 Example preview deployment:
@@ -100,7 +98,6 @@ Example preview deployment:
 ```text
 VITE_SITE_BASE_URL=https://preview.example.org
 VITE_API_BASE_URL=https://api-preview.example.org
-VITE_API_PROXY_TARGET=
 ```
 
 Production/cPanel block:
@@ -108,10 +105,11 @@ Production/cPanel block:
 ```text
 VITE_SITE_BASE_URL=https://staging.aicnjoro.org
 VITE_API_BASE_URL=https://api.aicnjoro.org
-VITE_API_PROXY_TARGET=
 ```
 
 Vite reads these values at build time. If you upload a prebuilt `dist` folder to cPanel, set the values before running `npm run build`; cPanel runtime environment variables will not change an already-built static bundle.
+
+During local development, the frontend still requests `/v1/...` from `localhost:5173`. The Vite dev server proxies those requests to `VITE_API_BASE_URL`, which keeps one API host setting while avoiding browser CORS issues.
 
 ### URL Behavior
 

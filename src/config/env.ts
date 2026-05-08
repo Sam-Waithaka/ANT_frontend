@@ -25,9 +25,13 @@ export const getSiteBaseUrl = () => {
 export const getApiBaseUrl = () => {
   const configuredUrl = getEnvValue('VITE_API_BASE_URL');
 
-  if (configuredUrl !== undefined) {
+  if (import.meta.env.DEV) {
+    return '';
+  }
+
+  if (configuredUrl?.trim()) {
     return trimTrailingSlash(configuredUrl);
   }
 
-  return import.meta.env.DEV ? '' : FALLBACK_API_BASE_URL;
+  return FALLBACK_API_BASE_URL;
 };

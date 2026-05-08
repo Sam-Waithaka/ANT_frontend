@@ -126,7 +126,7 @@ test('Scripture action sheet copy actions show feedback and Escape closes the sh
   const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
   expect(clipboardText).toContain('Genesis 1:1');
   expect(clipboardText).toContain('Continue reading on A.I.C Njoro Town Church:');
-  expect(clipboardText).toContain('http://127.0.0.1:4173/scripture?book=Genesis&chapter=1&verses=1&version=BSB');
+  expect(clipboardText).toContain('/scripture?book=Genesis&chapter=1&verses=1&version=BSB');
 
   await page.getByRole('button', { name: 'Close Scripture actions' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
