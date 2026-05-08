@@ -63,13 +63,14 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => {
           {heroCtas.map((cta) => {
             const opensHighlightedReading =
               'action' in cta && cta.action === 'openHighlightedNewTestamentReading';
+            const ctaHref = 'href' in cta && typeof cta.href === 'string' ? cta.href : undefined;
 
             return (
               <LandingButton
                 key={cta.label}
                 darkMode={darkMode}
                 onClick={opensHighlightedReading ? openHighlightedNewTestamentReading : undefined}
-                to={'href' in cta ? cta.href : undefined}
+                to={ctaHref}
                 variant={cta.variant}
               >
                 {cta.label}
