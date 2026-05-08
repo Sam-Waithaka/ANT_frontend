@@ -9,6 +9,7 @@ test('landing page navigation, fallback route, and desktop settings theme toggle
   await page.goto('/not-a-real-route');
 
   await expect(page.getByRole('heading', { name: /Welcome to AIC Njoro Town/i })).toBeVisible();
+  await expect(page.getByRole('img', { name: /AIC Njoro Town church building/i })).toBeVisible();
   await expect(page.getByText('Growing together in faith, fellowship, and the Word.')).toBeVisible();
   await expect(page.getByText('Daily Verse')).toBeVisible();
 
@@ -24,6 +25,24 @@ test('landing page navigation, fallback route, and desktop settings theme toggle
   await page.getByRole('link', { name: 'Scripture' }).click();
   await expect(page).toHaveURL(/\/scripture$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Genesis 1' })).toBeVisible();
+});
+
+test('landing page sections expose responsive hero, verse, and Project 52 preview content', async ({ page }) => {
+  await page.goto('/');
+
+  await expect(page.getByRole('link', { name: /join us this sunday/i })).toHaveAttribute('href', '/project52');
+  await expect(page.getByRole('link', { name: /explore scripture/i })).toHaveAttribute('href', '/scripture');
+  await expect(page.getByText('Ephesians 2:10 | BSB')).toBeVisible();
+  await expect(page.getByText('For we are His workmanship')).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: /Project 52 reading progress/i })).toHaveAttribute('aria-valuenow', '38');
+  await expect(page.getByText('Psalms 23-29')).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload();
+
+  const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  expect(hasHorizontalOverflow).toBe(false);
+  await expect(page.getByRole('heading', { name: /Welcome to AIC Njoro Town/i })).toBeVisible();
 });
 
 test('mobile navigation drawer opens, changes routes, toggles theme, and closes', async ({ page }) => {

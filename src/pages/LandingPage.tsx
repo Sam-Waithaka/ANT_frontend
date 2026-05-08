@@ -13,7 +13,7 @@ const LandingPage = () => {
       <SiteHeader activePath="/" darkMode={darkMode} onToggleTheme={toggleTheme} sticky={false} />
 
       <main>
-        <LandingHero />
+        <LandingHero darkMode={darkMode} />
         <DailyVerseSection darkMode={darkMode} />
         <Project52LandingSection darkMode={darkMode} />
       </main>
