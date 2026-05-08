@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 test('landing page navigation, fallback route, and desktop settings theme toggle work', async ({ page }) => {
   await page.goto('/not-a-real-route');
 
-  await expect(page.getByRole('heading', { name: /Welcome to AIC Njoro Town/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Welcome to\s+AIC\s+Njoro Town/i })).toBeVisible();
   await expect(page.getByRole('img', { name: /AIC Njoro Town church building/i })).toBeVisible();
   await expect(page.getByText('Growing together in faith, fellowship, and the Word.')).toBeVisible();
   await expect(page.getByText('Daily Verse')).toBeVisible();
@@ -34,15 +34,23 @@ test('landing page sections expose responsive hero, verse, and Project 52 previe
   await expect(page.getByRole('link', { name: /explore scripture/i })).toHaveAttribute('href', '/scripture');
   await expect(page.getByText('Ephesians 2:10 | BSB')).toBeVisible();
   await expect(page.getByText('For we are His workmanship')).toBeVisible();
-  await expect(page.getByRole('progressbar', { name: /Project 52 reading progress/i })).toHaveAttribute('aria-valuenow', '38');
-  await expect(page.getByText('Psalms 23-29')).toBeVisible();
+  await expect(page.getByText('Week 18 of 52')).toBeVisible();
+  await expect(page.getByText('35%')).toBeVisible();
+  await expect(page.getByText('OT: 1 Samuel 7-9')).toBeVisible();
+  await expect(page.getByText('NT: John 18')).toBeVisible();
+  await expect(page.getByText('OT: 1 Samuel 18-19')).toBeVisible();
+  await expect(page.getByText('NT: Acts 1')).toBeVisible();
+  await expect(page.getByText('OT: 1 Samuel 10-13')).toHaveCount(0);
+  await expect(page.getByText('OT: 1 Samuel 14-15')).toHaveCount(0);
+  await expect(page.getByText('OT: 1 Samuel 16-17')).toHaveCount(0);
+  await expect(page.getByText('Weekly ground covered')).toHaveCount(0);
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.reload();
 
   const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(hasHorizontalOverflow).toBe(false);
-  await expect(page.getByRole('heading', { name: /Welcome to AIC Njoro Town/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Welcome to\s+AIC\s+Njoro Town/i })).toBeVisible();
 });
 
 test('mobile navigation drawer opens, changes routes, toggles theme, and closes', async ({ page }) => {

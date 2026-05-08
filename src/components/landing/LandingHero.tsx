@@ -42,7 +42,7 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => (
           style={{ fontFamily: '"Times New Roman", Times, serif' }}
         >
           <span className="block">Welcome to</span>
-          <span className="block">A.I.C <span className="text-red-800">Njoro Town</span></span>
+          <span className="block">AIC <span className="text-red-800">Njoro Town</span></span>
         </h1>
         <div className="mt-7 h-0.5 w-16 rounded-full bg-red-700" />
         <p className={`mt-8 max-w-xl text-lg leading-8 sm:text-xl ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
