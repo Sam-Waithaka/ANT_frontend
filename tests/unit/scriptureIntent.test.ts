@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { BibleBook, BibleChapter, ScriptureReferenceIntent } from '../types/scripture';
+import type { BibleBook, BibleChapter, ScriptureReferenceIntent } from '../../src/types/scripture';
 import {
   findBookIdForIntent,
   findChapterIdForIntent,
   resolveApiBookReference,
-} from './scriptureIntent';
+} from '../../src/utils/scriptureIntent';
 
 const books: BibleBook[] = [
   { id: 'Genesis', name: 'Genesis', testament: 'old' },

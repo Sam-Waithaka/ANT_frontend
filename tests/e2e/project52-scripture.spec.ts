@@ -1,164 +1,5 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
-
-const fixedDateIso = '2026-05-06T09:00:00+03:00';
-
-const versionsPayload = [
-  { abbreviation: 'BSB', name: 'Berean Standard Bible' },
-  { abbreviation: 'ASV', name: 'American Standard Version' },
-];
-
-const booksPayload = [
-  { osis_id: 'Gen', name: 'Genesis', testament: 'OT' },
-  { osis_id: '1Sam', name: '1 Samuel', testament: 'OT' },
-  { osis_id: 'John', name: 'John', testament: 'NT' },
-  { osis_id: 'Acts', name: 'Acts', testament: 'NT' },
-];
-
-const chapterList = (count: number) =>
-  Array.from({ length: count }, (_, index) => ({
-    id: String(index + 1),
-    number: index + 1,
-    label: `Chapter ${index + 1}`,
-  }));
-
-const chapterPayloads: Record<string, Array<{ verse_number: number; text: string }>> = {
-  'Gen:1': [
-    { verse_number: 1, text: 'In the beginning God created the heavens and the earth.' },
-    { verse_number: 2, text: 'Now the earth was formless and void.' },
-  ],
-  '1Sam:14': [
-    { verse_number: 1, text: 'One day Jonathan son of Saul said to his young armor-bearer.' },
-    { verse_number: 2, text: 'Meanwhile Saul was staying under the pomegranate tree.' },
-  ],
-  'John:20': [
-    { verse_number: 1, text: 'Early on the first day of the week Mary Magdalene went to the tomb.' },
-    { verse_number: 2, text: 'So she came running to Simon Peter and the other disciple.' },
-  ],
-  'John:21': [
-    { verse_number: 1, text: 'Afterward Jesus appeared again to the disciples by the Sea of Tiberias.' },
-  ],
-  'Acts:1': [
-    { verse_number: 1, text: 'In my first book, O Theophilus, I wrote about all that Jesus began to do and to teach.' },
-  ],
-};
-
-const comparisonPayloads: Record<string, { book: string; chapter: number; results: Array<{ verse_number: number; readings: Array<{ version: string; text: string }> }> }> = {
-  'Gen:1': {
-    book: 'Genesis',
-    chapter: 1,
-    results: [
-      {
-        verse_number: 1,
-        readings: [
-          { version: 'BSB', text: 'In the beginning God created the heavens and the earth.' },
-          { version: 'ASV', text: 'In the beginning God created the heavens and the earth.' },
-        ],
-      },
-      {
-        verse_number: 2,
-        readings: [
-          { version: 'BSB', text: 'Now the earth was formless and void.' },
-          { version: 'ASV', text: 'And the earth was waste and void.' },
-        ],
-      },
-    ],
-  },
-  'Gen:2': {
-    book: 'Genesis',
-    chapter: 2,
-    results: [
-      {
-        verse_number: 1,
-        readings: [
-          { version: 'BSB', text: 'Thus the heavens and the earth were completed in all their vast array.' },
-          { version: 'ASV', text: 'And the heavens and the earth were finished, and all the host of them.' },
-        ],
-      },
-    ],
-  },
-};
-
-const fulfillJson = async (route: Route, payload: unknown) => {
-  await route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify(payload),
-  });
-};
-
-const mockScriptureApi = async (page: Page) => {
-  await page.addInitScript(({ iso }) => {
-    const fixedTime = new Date(iso).getTime();
-    const NativeDate = Date;
-
-    class MockDate extends NativeDate {
-      constructor(...args: ConstructorParameters<DateConstructor>) {
-        if (args.length === 0) {
-          super(fixedTime);
-          return;
-        }
-        super(...args);
-      }
-
-      static now() {
-        return fixedTime;
-      }
-    }
-
-    // @ts-expect-error test override
-    window.Date = MockDate;
-  }, { iso: fixedDateIso });
-
-  await page.route('**/v1/bible/versions/', async (route) => {
-    await fulfillJson(route, versionsPayload);
-  });
-
-  await page.route('**/v1/bible/versions/BSB/books/', async (route) => {
-    await fulfillJson(route, booksPayload);
-  });
-
-  await page.route('**/v1/bible/versions/ASV/books/', async (route) => {
-    await fulfillJson(route, booksPayload);
-  });
-
-  await page.route('**/v1/bible/versions/*/books/Gen/chapters/', async (route) => {
-    await fulfillJson(route, chapterList(3));
-  });
-
-  await page.route('**/v1/bible/versions/*/books/1Sam/chapters/', async (route) => {
-    await fulfillJson(route, chapterList(20));
-  });
-
-  await page.route('**/v1/bible/versions/*/books/John/chapters/', async (route) => {
-    await fulfillJson(route, chapterList(21));
-  });
-
-  await page.route('**/v1/bible/versions/*/books/Acts/chapters/', async (route) => {
-    await fulfillJson(route, chapterList(28));
-  });
-
-  await page.route('**/v1/bible/versions/*/books/*/chapters/*/', async (route) => {
-    const url = new URL(route.request().url());
-    const match = url.pathname.match(/\/books\/([^/]+)\/chapters\/(\d+)\/$/);
-
-    if (!match) {
-      await route.fallback();
-      return;
-    }
-
-    const [, book, chapter] = match;
-    const payload = chapterPayloads[`${book}:${chapter}`] ?? [];
-    await fulfillJson(route, payload);
-  });
-
-  await page.route('**/v1/bible/compare/**', async (route) => {
-    const url = new URL(route.request().url());
-    const book = url.searchParams.get('book') || '';
-    const chapter = url.searchParams.get('chapter') || '';
-    const payload = comparisonPayloads[`${book}:${chapter}`] ?? { book, chapter: Number(chapter), results: [] };
-    await fulfillJson(route, payload);
-  });
-};
+import { expect, test } from '@playwright/test';
+import { installFixedDate, mockScriptureApi } from './fixtures/scriptureApi';
 
 test.beforeEach(async ({ page }) => {
   await mockScriptureApi(page);
@@ -167,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 test('clicking the scripture Project 52 widget opens the OT reading directly', async ({ page }) => {
   await page.goto('/scripture');
 
-  await expect(page.getByRole('heading', { name: 'Genesis 1' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Genesis 1' })).toBeVisible();
   await page.getByRole('button', { name: /1 Samuel 14-15/i }).click();
 
   await expect(page.getByRole('heading', { name: '1 Samuel 14' })).toBeVisible();
@@ -190,27 +31,7 @@ test('scripture Project 52 widget previews the next reading and opens it directl
 });
 
 test('scripture Project 52 widget previous reading jumps from Monday to last Friday', async ({ page }) => {
-  await page.addInitScript(() => {
-    const fixedTime = new Date('2026-05-11T09:00:00+03:00').getTime();
-    const NativeDate = Date;
-
-    class MondayMockDate extends NativeDate {
-      constructor(...args: ConstructorParameters<DateConstructor>) {
-        if (args.length === 0) {
-          super(fixedTime);
-          return;
-        }
-        super(...args);
-      }
-
-      static now() {
-        return fixedTime;
-      }
-    }
-
-    // @ts-expect-error test override
-    window.Date = MondayMockDate;
-  });
+  await installFixedDate(page, '2026-05-11T09:00:00+03:00');
 
   await page.goto('/scripture');
 
@@ -223,27 +44,7 @@ test('scripture Project 52 widget previous reading jumps from Monday to last Fri
 });
 
 test('scripture Project 52 widget disables next reading at the end of week 52', async ({ page }) => {
-  await page.addInitScript(() => {
-    const fixedTime = new Date('2027-12-31T09:00:00+03:00').getTime();
-    const NativeDate = Date;
-
-    class FinalFridayMockDate extends NativeDate {
-      constructor(...args: ConstructorParameters<DateConstructor>) {
-        if (args.length === 0) {
-          super(fixedTime);
-          return;
-        }
-        super(...args);
-      }
-
-      static now() {
-        return fixedTime;
-      }
-    }
-
-    // @ts-expect-error test override
-    window.Date = FinalFridayMockDate;
-  });
+  await installFixedDate(page, '2027-12-31T09:00:00+03:00');
 
   await page.goto('/scripture');
 
@@ -252,27 +53,7 @@ test('scripture Project 52 widget disables next reading at the end of week 52', 
 });
 
 test('scripture Project 52 widget shows weekend catch-up mode', async ({ page }) => {
-  await page.addInitScript(() => {
-    const fixedTime = new Date('2026-05-09T09:00:00+03:00').getTime();
-    const NativeDate = Date;
-
-    class WeekendMockDate extends NativeDate {
-      constructor(...args: ConstructorParameters<DateConstructor>) {
-        if (args.length === 0) {
-          super(fixedTime);
-          return;
-        }
-        super(...args);
-      }
-
-      static now() {
-        return fixedTime;
-      }
-    }
-
-    // @ts-expect-error test override
-    window.Date = WeekendMockDate;
-  });
+  await installFixedDate(page, '2026-05-09T09:00:00+03:00');
 
   await page.goto('/scripture');
 

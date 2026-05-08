@@ -8,7 +8,7 @@ import {
   buildVerseShareText,
   formatVerseNumbers,
   parseVerseSelection,
-} from './scriptureShare';
+} from '../../src/utils/scriptureShare';
 
 const book = { id: 'John', name: 'John' };
 const chapter = { id: '20', number: 20, label: 'Chapter 20' };
