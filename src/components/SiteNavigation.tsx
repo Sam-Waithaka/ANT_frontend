@@ -1,7 +1,6 @@
 import { BookOpen, CalendarDays, Heart, HelpCircle, Home, Menu, Moon, Settings, Sun, X } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { getSiteBaseUrl } from '../config/env';
 import { assetPaths } from '../constants/assets';
 import { useCompactHeader } from '../hooks/useCompactHeader';
 
@@ -22,7 +21,7 @@ const navItems = [
   { label: 'Giving', href: '#', icon: Heart },
 ] as const;
 
-const churchWebsiteUrl = getSiteBaseUrl();
+const churchWebsiteUrl = 'https://aicnjoro.org';
 const isRouteHref = (href: string) => href.startsWith('/');
 
 const SiteNavigation = ({
