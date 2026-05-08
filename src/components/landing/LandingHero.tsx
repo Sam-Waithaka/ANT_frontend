@@ -9,8 +9,8 @@ type LandingHeroProps = {
 
 const overlayClass = (darkMode: boolean) =>
   darkMode
-    ? 'bg-[linear-gradient(90deg,rgba(8,8,8,0.96)_0%,rgba(8,8,8,0.82)_42%,rgba(8,8,8,0.48)_74%,rgba(8,8,8,0.62)_100%),linear-gradient(180deg,rgba(8,8,8,0.42),rgba(8,8,8,0.86))]'
-    : 'bg-[linear-gradient(90deg,rgba(248,245,239,0.96)_0%,rgba(248,245,239,0.82)_42%,rgba(248,245,239,0.35)_72%,rgba(248,245,239,0.58)_100%),linear-gradient(180deg,rgba(248,245,239,0.12),rgba(248,245,239,0.86))]';
+    ? 'bg-[linear-gradient(90deg,rgba(8,8,8,0.90)_0%,rgba(8,8,8,0.74)_38%,rgba(8,8,8,0.28)_70%,rgba(8,8,8,0.20)_100%),linear-gradient(180deg,rgba(8,8,8,0.18),rgba(8,8,8,0.58))]'
+    : 'bg-[linear-gradient(90deg,rgba(248,245,239,0.88)_0%,rgba(248,245,239,0.66)_38%,rgba(248,245,239,0.20)_72%,rgba(248,245,239,0.30)_100%),linear-gradient(180deg,rgba(248,245,239,0.08),rgba(248,245,239,0.62))]';
 
 const LandingHero = ({ darkMode }: LandingHeroProps) => (
   <section className={`relative isolate overflow-hidden px-4 py-20 sm:px-6 sm:py-24 lg:py-32 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
@@ -21,27 +21,28 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => (
         <img
           src={assetPaths.heroChurch.fallback}
           alt="AIC Njoro Town church building"
-          className="h-full w-full object-cover object-[68%_center]"
+          className={`h-full w-full object-cover object-[68%_center] ${darkMode ? 'brightness-[0.82] contrast-[1.08] saturate-[1.05]' : 'brightness-[1.04] contrast-[1.04] saturate-[0.98]'}`}
           fetchPriority="high"
           width="1920"
           height="1276"
         />
       </picture>
       <div className={`absolute inset-0 ${overlayClass(darkMode)}`} />
-      <div className={`absolute inset-0 ${darkMode ? 'bg-[radial-gradient(circle_at_78%_28%,rgba(153,27,27,0.28),transparent_24%)]' : 'bg-[radial-gradient(circle_at_78%_28%,rgba(153,27,27,0.16),transparent_24%)]'}`} />
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#f8f5ef] to-transparent dark:from-[#080808]" />
+      <div className={`absolute inset-0 ${darkMode ? 'bg-[radial-gradient(circle_at_78%_28%,rgba(153,27,27,0.16),transparent_25%)]' : 'bg-[radial-gradient(circle_at_78%_28%,rgba(153,27,27,0.08),transparent_25%)]'}`} />
+      <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#f8f5ef] to-transparent dark:from-[#080808]" />
     </div>
 
     <div className={`${landingContainer} grid min-h-[560px] items-center`}>
-      <div className="max-w-3xl">
-        <img
-          src={assetPaths.circleLogo}
-          alt="AIC Njoro Town"
-          className={`mb-8 size-14 rounded-2xl border bg-white object-contain p-1 shadow-2xl sm:size-16 ${darkMode ? 'border-red-200/10 shadow-black/40' : 'border-red-900/10 shadow-zinc-900/10'}`}
-        />
-        <p className={`text-xs font-black uppercase tracking-[0.28em] ${darkMode ? 'text-red-200' : 'text-red-900'}`}>You Are Welcome</p>
-        <h1 className={`mt-5 max-w-3xl text-5xl font-extrabold leading-tight sm:text-6xl lg:text-7xl ${darkMode ? 'text-white' : 'text-zinc-950'}`}>
-          Welcome to AIC <span className={darkMode ? 'text-red-300' : 'text-red-800'}>Njoro Town</span>
+      <div className="max-w-5xl">
+        <p className="text-xs font-black uppercase tracking-[0.28em] text-red-800">You Are Welcome</p>
+        <h1
+          className={`mt-5 max-w-5xl font-serif text-5xl font-bold leading-tight sm:text-6xl lg:whitespace-nowrap lg:text-7xl ${
+            darkMode ? 'text-white' : 'text-zinc-950'
+          }`}
+          style={{ fontFamily: '"Times New Roman", Times, serif' }}
+        >
+          <span className="block">Welcome to</span>
+          <span className="block">A.I.C <span className="text-red-800">Njoro Town</span></span>
         </h1>
         <div className="mt-7 h-0.5 w-16 rounded-full bg-red-700" />
         <p className={`mt-8 max-w-xl text-lg leading-8 sm:text-xl ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
