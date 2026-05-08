@@ -9,7 +9,7 @@ const LandingPage = () => {
   const { darkMode, toggleTheme } = useTheme();
 
   return (
-    <div className={`min-h-screen overflow-x-hidden transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
+    <div className={`min-h-screen overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader activePath="/" darkMode={darkMode} onToggleTheme={toggleTheme} />
 
       <main>
