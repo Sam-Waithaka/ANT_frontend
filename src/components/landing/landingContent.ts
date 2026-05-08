@@ -1,7 +1,6 @@
 export const heroCtas = [
   {
     label: 'Join Us This Sunday',
-    href: '/project52',
     variant: 'primary',
   },
   {

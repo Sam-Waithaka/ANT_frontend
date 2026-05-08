@@ -30,7 +30,7 @@ test('landing page navigation, fallback route, and desktop settings theme toggle
 test('landing page sections expose responsive hero, verse, and Project 52 preview content', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('link', { name: /join us this sunday/i })).toHaveAttribute('href', '/project52');
+  await expect(page.getByRole('button', { name: /join us this sunday/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /explore scripture/i })).toBeVisible();
   await expect(page.getByText('Ephesians 2:10 | BSB')).toBeVisible();
   await expect(page.getByText('For we are His workmanship')).toBeVisible();

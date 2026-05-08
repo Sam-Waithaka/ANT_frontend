@@ -12,7 +12,7 @@ type LandingHeroProps = {
 const overlayClass = (darkMode: boolean) =>
   darkMode
     ? 'bg-[linear-gradient(90deg,rgba(8,8,8,0.90)_0%,rgba(8,8,8,0.74)_38%,rgba(8,8,8,0.28)_70%,rgba(8,8,8,0.20)_100%),linear-gradient(180deg,rgba(8,8,8,0.18),rgba(8,8,8,0.58))]'
-    : 'bg-[linear-gradient(90deg,rgba(248,245,239,0.88)_0%,rgba(248,245,239,0.66)_38%,rgba(248,245,239,0.20)_72%,rgba(248,245,239,0.30)_100%),linear-gradient(180deg,rgba(248,245,239,0.08),rgba(248,245,239,0.62))]';
+    : 'bg-[linear-gradient(90deg,rgba(248,245,239,0.78)_0%,rgba(248,245,239,0.50)_38%,rgba(248,245,239,0.10)_72%,rgba(248,245,239,0.18)_100%),linear-gradient(180deg,rgba(248,245,239,0.02),rgba(248,245,239,0.48))]';
 
 const LandingHero = ({ darkMode }: LandingHeroProps) => {
   const { currentWeek, readingTarget, weeks } = useProject52();
@@ -32,7 +32,7 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => {
         <img
           src={assetPaths.heroChurch.fallback}
           alt="AIC Njoro Town church building"
-          className={`h-full w-full object-cover object-[68%_center] ${darkMode ? 'brightness-[0.82] contrast-[1.08] saturate-[1.05]' : 'brightness-[1.04] contrast-[1.04] saturate-[0.98]'}`}
+          className={`h-full w-full object-cover object-[68%_center] ${darkMode ? 'brightness-[0.82] contrast-[1.08] saturate-[1.05]' : 'brightness-[1.0] contrast-[1.06] saturate-[1.04]'}`}
           fetchPriority="high"
           width="1920"
           height="1276"

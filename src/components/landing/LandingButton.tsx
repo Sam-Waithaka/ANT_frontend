@@ -21,7 +21,7 @@ const variantClass = (variant: Required<LandingButtonProps>['variant'], darkMode
 
   return darkMode
     ? 'border border-white/15 bg-white/10 text-stone-100 hover:bg-white/15 focus:ring-offset-[#080808]'
-    : 'border border-black/10 bg-white/80 text-zinc-900 shadow-lg shadow-zinc-900/10 hover:bg-white focus:ring-offset-[#f8f5ef]';
+    : 'border border-white/65 bg-white/25 text-zinc-950 shadow-lg shadow-zinc-900/10 backdrop-blur-xl hover:bg-white/40 focus:ring-offset-[#f8f5ef]';
 };
 
 const LandingButton = ({ children, darkMode, onClick, to, variant = 'primary' }: LandingButtonProps) => {
