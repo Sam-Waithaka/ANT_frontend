@@ -24,6 +24,31 @@ type BuildVerseAnnotationViewOptions = {
 
 const hasReadableContent = (annotation: BibleVerseAnnotation) => annotation.content.trim().length > 0;
 const withoutRawContent = ({ rawContent: _rawContent, ...annotation }: BibleVerseAnnotation): BibleVerseAnnotation => annotation;
+export const annotationIdentityKey = (annotation: BibleVerseAnnotation) =>
+  [
+    annotation.type,
+    annotation.verseNumber || '',
+    annotation.startOffset ?? '',
+    annotation.endOffset ?? '',
+    annotation.sourceMarker || '',
+    annotation.anchorText || '',
+    annotation.content,
+  ].join('|').toLowerCase();
+
+const dedupeAnnotations = (annotations: BibleVerseAnnotation[]) => {
+  const seen = new Set<string>();
+
+  return annotations.filter((annotation) => {
+    const key = annotationIdentityKey(annotation);
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+};
 
 const offsetFor = (annotation: BibleVerseAnnotation, textLength: number) => {
   const offset = annotation.endOffset ?? annotation.startOffset;
@@ -39,7 +64,7 @@ const groupByOffset = (annotations: BibleVerseAnnotation[], textLength: number) 
   const grouped = new Map<number, BibleVerseAnnotation[]>();
   const missingOffset: BibleVerseAnnotation[] = [];
 
-  annotations.filter(hasReadableContent).forEach((annotation) => {
+  dedupeAnnotations(annotations.filter(hasReadableContent)).forEach((annotation) => {
     const offset = offsetFor(annotation, textLength);
 
     if (offset === undefined) {

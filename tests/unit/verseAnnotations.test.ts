@@ -84,4 +84,30 @@ describe('verseAnnotations', () => {
     expect(JSON.stringify(buildVerseAnnotationView('Peace.', [annotation]))).not.toContain('<note>');
     expect(JSON.stringify(buildVerseAnnotationView('Peace.', [annotation], { includeRawContent: true }))).toContain('<note>');
   });
+
+  it('deduplicates matching annotations even when backend ids differ', () => {
+    const view = buildVerseAnnotationView('In the beginning God created.', [
+      {
+        content: 'The Hebrew word rendered God is Elohim.',
+        endOffset: 16,
+        id: 'chapter-detail-note',
+        sourceMarker: 'usfm:f',
+        startOffset: 16,
+        type: 'footnote',
+        verseNumber: 1,
+      },
+      {
+        content: 'The Hebrew word rendered God is Elohim.',
+        endOffset: 16,
+        id: 'annotation-endpoint-note',
+        sourceMarker: 'usfm:f',
+        startOffset: 16,
+        type: 'footnote',
+        verseNumber: 1,
+      },
+    ]);
+
+    expect(view.inlineNotes).toHaveLength(1);
+    expect(view.inlineNotes[0].annotations).toHaveLength(1);
+  });
 });

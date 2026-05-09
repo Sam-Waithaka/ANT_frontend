@@ -13,6 +13,7 @@ import type { BibleBook, BibleChapter, BibleVerse, BibleVerseAnnotation, BibleVe
 import { normalizeReferenceValue } from '../utils/scriptureReference';
 import { findBookIdForIntent, findChapterIdForIntent } from '../utils/scriptureIntent';
 import { parseVerseSelection } from '../utils/scriptureShare';
+import { annotationIdentityKey } from '../utils/verseAnnotations';
 
 const DEFAULT_VERSION_ABBR = 'BSB';
 
@@ -41,12 +42,15 @@ const mergeAnnotationsIntoVerses = (
     }
 
     const existingIds = new Set((verse.annotations || []).map((annotation) => annotation.id));
+    const existingKeys = new Set((verse.annotations || []).map(annotationIdentityKey));
 
     return {
       ...verse,
       annotations: [
         ...(verse.annotations || []),
-        ...nextAnnotations.filter((annotation) => !existingIds.has(annotation.id)),
+        ...nextAnnotations.filter((annotation) =>
+          !existingIds.has(annotation.id) && !existingKeys.has(annotationIdentityKey(annotation)),
+        ),
       ],
     };
   });
