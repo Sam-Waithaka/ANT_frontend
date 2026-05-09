@@ -189,33 +189,40 @@ test('Scripture action sheet copy actions show feedback and Escape closes the sh
 
 test('desktop Bible tools load compare, glossary, resources, markers, and notes results', async ({ page }) => {
   await page.goto('/scripture');
+  const toolsPanel = page.locator('aside').filter({ hasText: 'Bible tools' });
 
-  await page.getByRole('button', { name: 'Run comparison' }).click();
+  await toolsPanel.getByRole('button', { name: 'Run comparison' }).click();
   await expect(page.getByRole('dialog', { name: 'Genesis 1' })).toBeVisible();
   await page.getByRole('button', { name: 'Close comparison' }).click();
   await expect(page.getByRole('dialog', { name: 'Genesis 1' })).toHaveCount(0);
-  await expect(page.getByText('2 verses compared across 2 versions.')).toBeVisible();
-  await page.getByRole('button', { name: 'View comparison' }).click();
+  await expect(toolsPanel.getByText('2 verses compared across 2 versions.')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'View comparison' }).click();
   await expect(page.getByRole('dialog', { name: 'Genesis 1' })).toBeVisible();
   await page.getByRole('button', { name: 'Close comparison' }).click();
   await expect(page.getByRole('dialog', { name: 'Genesis 1' })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Glossary' }).click();
-  await page.getByPlaceholder('Glossary term').fill('love');
-  await page.getByRole('button', { name: 'Run tool' }).click();
-  await expect(page.getByText('A covenantal commitment expressed in action.')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'Glossary' }).click();
+  await toolsPanel.getByPlaceholder('Glossary term').fill('love');
+  await toolsPanel.getByRole('button', { name: 'Run tool' }).click();
+  await expect(toolsPanel.getByText('2 results')).toBeVisible();
+  await expect(toolsPanel.getByText('A covenantal commitment expressed in action.')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'Load more' }).click();
+  await expect(toolsPanel.getByText('Steadfast covenant mercy.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Resources' }).click();
-  await page.getByRole('button', { name: 'Load resources' }).click();
-  await expect(page.getByText('BSB Preface')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'Resources' }).click();
+  await toolsPanel.getByRole('button', { name: 'Load resources' }).click();
+  await expect(toolsPanel.getByText('1 result')).toBeVisible();
+  await expect(toolsPanel.getByText('BSB Preface')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Markers' }).click();
-  await page.getByRole('button', { name: 'Load markers' }).click();
-  await expect(page.getByText('John 5:4')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'Markers' }).click();
+  await toolsPanel.getByRole('button', { name: 'Load markers' }).click();
+  await expect(toolsPanel.getByText('John 5:4')).toBeVisible();
+  await expect(toolsPanel.getByText('This verse is intentionally omitted or represented by a marker in this source.')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Notes' }).click();
-  await page.getByRole('button', { name: 'Load notes' }).click();
-  await expect(page.getByText('A footnote returned by the notes endpoint.')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'Notes' }).click();
+  await toolsPanel.getByRole('button', { name: 'Load notes' }).click();
+  await expect(toolsPanel.getByText('Reader annotations are preferred when available; these notes remain available as a legacy fallback.')).toBeVisible();
+  await expect(toolsPanel.getByText('A footnote returned by the notes endpoint.')).toBeVisible();
 });
 
 test('desktop Bible Tools search supports filters pagination and opening results', async ({ page }) => {

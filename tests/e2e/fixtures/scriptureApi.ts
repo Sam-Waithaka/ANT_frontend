@@ -231,16 +231,41 @@ export const mockScriptureApi = async (page: Page) => {
     });
   });
 
-  await page.route('**/v1/bible/versions/*/resources/**', async (route) => fulfillJson(route, [
-    { title: 'BSB Preface', resource_type: 'preface', description: 'Translation background and usage notes.' },
-  ]));
-  await page.route('**/v1/bible/versions/*/glossary/**', async (route) => fulfillJson(route, [
-    { term: 'Love', definition: 'A covenantal commitment expressed in action.', language: 'English' },
-  ]));
-  await page.route('**/v1/bible/versions/*/markers/**', async (route) => fulfillJson(route, [
-    { status: 'omitted', reference: 'John 5:4', text: 'Verse marker note.' },
-  ]));
-  await page.route('**/v1/bible/versions/*/notes/**', async (route) => fulfillJson(route, [
-    { note_type: 'footnote', reference: 'Genesis 1:1', text: 'A footnote returned by the notes endpoint.' },
-  ]));
+  await page.route('**/v1/bible/versions/*/resources/**', async (route) => fulfillJson(route, {
+    count: 1,
+    next: null,
+    previous: null,
+    results: [
+      { title: 'BSB Preface', resource_type: 'preface', description: 'Translation background and usage notes.' },
+    ],
+  }));
+  await page.route('**/v1/bible/versions/*/glossary/**', async (route) => {
+    const url = new URL(route.request().url());
+    const pageNumber = Number(url.searchParams.get('page') || '1');
+
+    await fulfillJson(route, {
+      count: 2,
+      next: pageNumber === 1 ? 'https://api.aicnjoro.org/v1/bible/versions/BSB/glossary/?page=2&q=love' : null,
+      previous: pageNumber > 1 ? 'https://api.aicnjoro.org/v1/bible/versions/BSB/glossary/?page=1&q=love' : null,
+      results: pageNumber === 1
+        ? [{ term: 'Love', definition: 'A covenantal commitment expressed in action.', language: 'English' }]
+        : [{ term: 'Lovingkindness', definition: 'Steadfast covenant mercy.', language: 'English' }],
+    });
+  });
+  await page.route('**/v1/bible/versions/*/markers/**', async (route) => fulfillJson(route, {
+    count: 1,
+    next: null,
+    previous: null,
+    results: [
+      { status: 'omitted', reference: 'John 5:4', text: 'Verse marker note.' },
+    ],
+  }));
+  await page.route('**/v1/bible/versions/*/notes/**', async (route) => fulfillJson(route, {
+    count: 1,
+    next: null,
+    previous: null,
+    results: [
+      { note_type: 'footnote', reference: 'Genesis 1:1', text: 'A footnote returned by the notes endpoint.' },
+    ],
+  }));
 };

@@ -9,7 +9,7 @@ import type {
   BibleNoteType,
   BibleResourceType,
   BibleSearchResponse,
-  BibleToolRecord,
+  BibleToolResponse,
   BibleVerse,
   BibleVersion,
   VerseLookupResult,
@@ -23,7 +23,7 @@ import {
   normalizeChaptersResponse,
   normalizeComparisonResponse,
   normalizeSearchResponse,
-  normalizeToolRecordsResponse,
+  normalizeToolResponse,
   normalizeVersionsResponse,
   readString,
 } from './scriptureNormalizers';
@@ -88,27 +88,29 @@ export const getBibleVersesByReference = async (
 export const getBibleResources = async (
   versionId: string,
   type?: BibleResourceType,
-): Promise<BibleToolRecord[]> => {
-  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/resources/${toQueryString({ type })}`);
-  return normalizeToolRecordsResponse(payload);
+  page?: number,
+): Promise<BibleToolResponse> => {
+  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/resources/${toQueryString({ page, type })}`);
+  return normalizeToolResponse(payload);
 };
 
-export const getBibleGlossary = async (versionId: string, query?: string): Promise<BibleToolRecord[]> => {
-  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/glossary/${toQueryString({ q: query })}`);
-  return normalizeToolRecordsResponse(payload);
+export const getBibleGlossary = async (versionId: string, query?: string, page?: number): Promise<BibleToolResponse> => {
+  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/glossary/${toQueryString({ page, q: query })}`);
+  return normalizeToolResponse(payload);
 };
 
 export const getBibleMarkers = async (
   versionId: string,
   status?: BibleMarkerStatus,
-): Promise<BibleToolRecord[]> => {
-  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/markers/${toQueryString({ status })}`);
-  return normalizeToolRecordsResponse(payload);
+  page?: number,
+): Promise<BibleToolResponse> => {
+  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/markers/${toQueryString({ page, status })}`);
+  return normalizeToolResponse(payload);
 };
 
-export const getBibleNotes = async (versionId: string, type?: BibleNoteType): Promise<BibleToolRecord[]> => {
-  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/notes/${toQueryString({ type })}`);
-  return normalizeToolRecordsResponse(payload);
+export const getBibleNotes = async (versionId: string, type?: BibleNoteType, page?: number): Promise<BibleToolResponse> => {
+  const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/notes/${toQueryString({ page, type })}`);
+  return normalizeToolResponse(payload);
 };
 
 export const lookupBibleVerse = async (

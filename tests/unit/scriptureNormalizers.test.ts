@@ -7,6 +7,7 @@ import {
   normalizePaginatedResponse,
   normalizeSearchResponse,
   normalizeSearchRecordsResponse,
+  normalizeToolResponse,
   normalizeVersionsResponse,
 } from '../../src/services/scriptureNormalizers';
 
@@ -186,6 +187,36 @@ describe('scriptureNormalizers', () => {
       next: 'https://api.aicnjoro.org/v1/bible/search/?page=2',
       previous: null,
       results: [{ term: 'altar' }],
+    });
+  });
+
+  it('normalizes paginated Bible tool responses and preserves marker status metadata', () => {
+    expect(
+      normalizeToolResponse({
+        count: 2,
+        next: 'https://api.aicnjoro.org/v1/bible/versions/BSB/markers/?page=2',
+        previous: null,
+        results: [
+          {
+            reference: 'John 5:4',
+            status: 'omitted',
+            text: 'Verse marker note.',
+          },
+        ],
+      }),
+    ).toEqual({
+      count: 2,
+      next: 'https://api.aicnjoro.org/v1/bible/versions/BSB/markers/?page=2',
+      previous: null,
+      results: [
+        {
+          body: 'Verse marker note.',
+          id: 'John 5:4-0',
+          meta: 'omitted',
+          subtitle: undefined,
+          title: 'John 5:4',
+        },
+      ],
     });
   });
 

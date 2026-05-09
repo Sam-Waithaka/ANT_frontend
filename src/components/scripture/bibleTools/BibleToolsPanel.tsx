@@ -16,7 +16,7 @@ import type {
   BibleResourceType,
   BibleSearchResponse,
   BibleSearchResult,
-  BibleToolRecord,
+  BibleToolResponse,
   BibleVersion,
 } from '../../../types/scripture';
 import ScriptureComparisonModal from '../ScriptureComparisonModal';
@@ -67,7 +67,9 @@ const BibleToolsPanel = ({
   const [resourceType, setResourceType] = useState<BibleResourceType | ''>('');
   const [markerStatus, setMarkerStatus] = useState<BibleMarkerStatus | ''>('');
   const [noteType, setNoteType] = useState<BibleNoteType | ''>('');
-  const [records, setRecords] = useState<BibleToolRecord[]>([]);
+  const [toolResponse, setToolResponse] = useState<BibleToolResponse | null>(null);
+  const [toolPage, setToolPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const bibleComparison = useBibleComparison({
@@ -104,7 +106,8 @@ const BibleToolsPanel = ({
 
   const resetToolOutput = () => {
     setStatus('');
-    setRecords([]);
+    setToolPage(1);
+    setToolResponse(null);
     setSearchResponse(null);
     bibleComparison.resetOutput();
   };
@@ -136,7 +139,7 @@ const BibleToolsPanel = ({
 
     setLoading(true);
     setStatus('');
-    setRecords([]);
+    setToolResponse(null);
     bibleComparison.resetOutput();
 
     try {
@@ -151,6 +154,33 @@ const BibleToolsPanel = ({
     }
   };
 
+  const loadPaginatedTool = async (page = 1, append = false) => {
+    const nextResponse =
+      activeTool === 'resources'
+        ? await getBibleResources(versionId, resourceType || undefined, page)
+        : activeTool === 'glossary'
+          ? await getBibleGlossary(versionId, query, page)
+          : activeTool === 'markers'
+            ? await getBibleMarkers(versionId, markerStatus || undefined, page)
+            : activeTool === 'notes'
+              ? await getBibleNotes(versionId, noteType || undefined, page)
+              : null;
+
+    if (!nextResponse) {
+      return;
+    }
+
+    setToolPage(page);
+    setToolResponse((current) =>
+      append && current
+        ? {
+            ...nextResponse,
+            results: [...current.results, ...nextResponse.results],
+          }
+        : nextResponse,
+    );
+  };
+
   const runTool = async () => {
     setLoading(true);
     resetToolOutput();
@@ -163,14 +193,30 @@ const BibleToolsPanel = ({
       if (activeTool === 'search') {
         await runSearch(1);
       }
-      if (activeTool === 'resources') setRecords(await getBibleResources(versionId, resourceType || undefined));
-      if (activeTool === 'glossary') setRecords(await getBibleGlossary(versionId, query));
-      if (activeTool === 'markers') setRecords(await getBibleMarkers(versionId, markerStatus || undefined));
-      if (activeTool === 'notes') setRecords(await getBibleNotes(versionId, noteType || undefined));
+      if (['resources', 'glossary', 'markers', 'notes'].includes(activeTool)) {
+        await loadPaginatedTool(1);
+      }
     } catch {
       setStatus('Unable to load this Bible tool right now. Confirm the backend is running and the endpoint is available.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMoreToolResults = async () => {
+    if (!toolResponse?.next || loadingMore) {
+      return;
+    }
+
+    setLoadingMore(true);
+    setStatus('');
+
+    try {
+      await loadPaginatedTool(toolPage + 1, true);
+    } catch {
+      setStatus('Unable to load more results for this Bible tool right now.');
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -348,13 +394,17 @@ const BibleToolsPanel = ({
           status ? <p className="mt-4 text-sm leading-6 text-red-800 dark:text-red-200">{status}</p> : null
         ) : (
           <ToolResults
+            activeTool={activeTool}
             comparison={bibleComparison.comparison}
             comparisonHasVerses={bibleComparison.comparisonHasVerses}
             darkMode={darkMode}
-            records={records}
+            loadingMore={loadingMore}
+            records={toolResponse?.results || []}
             resultsClass={resultsClass}
             selectedCompareVersions={bibleComparison.selectedVersions}
             status={status || bibleComparison.status}
+            toolResponse={toolResponse}
+            onLoadMore={loadMoreToolResults}
             onOpenComparison={() => setComparisonOpen(true)}
           />
         )}

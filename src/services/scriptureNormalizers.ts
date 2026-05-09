@@ -9,6 +9,7 @@ import type {
   BibleSearchResponse,
   BibleSearchResult,
   BibleToolRecord,
+  BibleToolResponse,
   BibleVerse,
   BibleVersion,
   PaginatedResponse,
@@ -392,7 +393,7 @@ export const normalizeToolRecordsResponse = (payload: unknown): BibleToolRecord[
     );
     const subtitle = readString(record, ['subtitle', 'ref', 'location', 'language', 'note_type', 'resource_type']);
     const body = readString(record, ['text', 'content', 'body', 'definition', 'note', 'description', 'license_notes']);
-    const meta = readString(record, ['version', 'version_abbr', 'source', 'license_type', 'display']);
+    const meta = readString(record, ['version', 'version_abbr', 'status', 'source', 'license_type', 'display']);
 
     return {
       body: body || undefined,
@@ -401,6 +402,12 @@ export const normalizeToolRecordsResponse = (payload: unknown): BibleToolRecord[
       subtitle: subtitle || undefined,
       title,
     };
+  });
+
+export const normalizeToolResponse = (payload: unknown): BibleToolResponse =>
+  normalizePaginatedResponse(payload, (item, index) => normalizeToolRecordsResponse([item])[0] || {
+    id: `tool-record-${index}`,
+    title: `Result ${index + 1}`,
   });
 
 export const normalizeSearchRecordsResponse = (payload: unknown): BibleToolRecord[] =>

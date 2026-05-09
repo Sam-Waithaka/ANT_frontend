@@ -126,6 +126,8 @@ export type BibleToolRecord = {
   meta?: string;
 };
 
+export type BibleToolResponse = PaginatedResponse<BibleToolRecord>;
+
 export type BibleSearchBook = {
   name?: string;
   osisId?: string;
