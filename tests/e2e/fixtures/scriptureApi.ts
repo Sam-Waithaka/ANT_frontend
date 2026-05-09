@@ -193,6 +193,29 @@ export const mockScriptureApi = async (page: Page) => {
               start_offset: 16,
               verse_number: 1,
             },
+            {
+              annotation_type: 'cross_reference',
+              anchor_text: 'beginning',
+              content: 'Compare John 1:1 for the Word in the beginning.',
+              end_offset: 16,
+              source_marker: 'osis:xref',
+              start_offset: 8,
+              verse_number: 1,
+            },
+            {
+              annotation_type: 'word_study',
+              anchor_text: 'created',
+              content: 'Created emphasizes divine initiative and purposeful action.',
+              end_offset: 28,
+              source_marker: 'osis:study',
+              start_offset: 21,
+              verse_number: 1,
+            },
+            {
+              annotation_type: 'textual_variant',
+              content: 'Some sources preserve a structural marker near this clause.',
+              verse_number: 2,
+            },
           ]
         : [],
     });

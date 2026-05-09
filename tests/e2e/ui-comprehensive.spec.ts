@@ -126,6 +126,12 @@ test('Scripture reference controls change version, book, chapter, and next navig
   await toolsPanel.getByRole('button', { name: 'Study' }).click();
   await toolsPanel.getByRole('switch', { name: 'Enable study mode' }).click();
   await expect(page.getByText('Study Annotations')).toBeVisible();
+  await expect(page.getByText('Cross reference', { exact: true })).toBeVisible();
+  await expect(page.getByText('Word study', { exact: true })).toBeVisible();
+  await expect(page.getByText('Textual variant', { exact: true })).toBeVisible();
+  await expect(page.getByText('A related Scripture reference for comparing this thought with another passage.')).toBeVisible();
+  await expect(page.getByText('<note caller="study">Raw annotation source text.</note>')).not.toBeVisible();
+  await page.getByText('Raw source', { exact: true }).click();
   await expect(page.getByText('<note caller="study">Raw annotation source text.</note>')).toBeVisible();
 
   const readerControls = page.locator('div.pointer-events-auto').filter({
@@ -220,6 +226,8 @@ test('desktop Bible tools load compare, glossary, resources, markers, and notes 
   await toolsPanel.getByPlaceholder('Glossary term').fill('love');
   await toolsPanel.getByRole('button', { name: 'Run tool' }).click();
   await expect(toolsPanel.getByText('2 results')).toBeVisible();
+  await expect(toolsPanel.getByText('Glossary matches for the selected Bible version.')).toBeVisible();
+  await expect(toolsPanel.getByText('Glossary term')).toBeVisible();
   await expect(toolsPanel.getByText('A covenantal commitment expressed in action.')).toBeVisible();
   await toolsPanel.getByRole('button', { name: 'Load more' }).click();
   await expect(toolsPanel.getByText('Steadfast covenant mercy.')).toBeVisible();

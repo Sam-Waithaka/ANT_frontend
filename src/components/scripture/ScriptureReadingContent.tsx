@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import type { BibleChapterCredit, BibleChapterNote, BibleVerse } from '../../types/scripture';
 import { buildVerseAnnotationView } from '../../utils/verseAnnotations';
+import StudyAnnotationsSection from './StudyAnnotationsSection';
 
 type ScriptureReadingContentProps = {
   chapterCredit?: BibleChapterCredit;
@@ -134,62 +135,7 @@ const ScriptureReadingContent = ({
           </div>
         </section>
       )}
-      {studyMode && verses.some((verse) => (verse.annotations || []).length > 0) && (
-        <section className={`border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
-          <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Study Annotations</p>
-          <div className="mt-4 grid gap-4">
-            {verses.flatMap((verse) => {
-              const annotationView = buildVerseAnnotationView(verse.text, verse.annotations || [], { includeRawContent: true });
-              const notes = [...annotationView.inlineNotes, ...annotationView.verseNumberNotes];
-
-              return notes.map((note) => (
-                <article
-                  key={`${verse.id}-${note.id}`}
-                  className={`rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-black/10 bg-white/70'}`}
-                >
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-red-900 dark:text-red-200">
-                    Verse {verse.number} · Note {note.label}{note.offset !== undefined ? ` · Offset ${note.offset}` : ''}
-                  </p>
-                  <div className="mt-3 grid gap-3">
-                    {note.annotations.map((annotation) => (
-                      <div key={annotation.id} className={`rounded-xl border p-3 ${darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-[#fffaf0]'}`}>
-                        <p className={`text-sm font-black ${darkMode ? 'text-stone-100' : 'text-zinc-950'}`}>
-                          {annotation.type.replaceAll('_', ' ')}
-                        </p>
-                        <p className={`mt-1 text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
-                          {annotation.content}
-                        </p>
-                        <dl className={`mt-3 grid gap-1 text-xs leading-5 ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>
-                          {annotation.anchorText && (
-                            <div>
-                              <dt className="inline font-black">Anchor: </dt>
-                              <dd className="inline">{annotation.anchorText}</dd>
-                            </div>
-                          )}
-                          {annotation.sourceMarker && (
-                            <div>
-                              <dt className="inline font-black">Source marker: </dt>
-                              <dd className="inline">{annotation.sourceMarker}</dd>
-                            </div>
-                          )}
-                          {annotation.rawContent && (
-                            <div>
-                              <dt className="font-black">Raw text</dt>
-                              <dd className={`mt-1 overflow-x-auto rounded-lg p-2 font-mono text-[11px] ${darkMode ? 'bg-black/35 text-stone-300' : 'bg-white text-zinc-700'}`}>
-                                {annotation.rawContent}
-                              </dd>
-                            </div>
-                          )}
-                        </dl>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              ));
-            })}
-          </div>
-        </section>
-      )}
+      {studyMode && <StudyAnnotationsSection darkMode={darkMode} verses={verses} />}
       {licenseNote && !chapterCredit && (
         <section className={`border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">License Notes</p>

@@ -36,6 +36,9 @@ const markerExplanation = (status?: string) => {
   return '';
 };
 
+const glossaryCardClass = (darkMode: boolean) =>
+  `rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`;
+
 const ToolResults = ({
   activeTool,
   comparison,
@@ -79,6 +82,11 @@ const ToolResults = ({
         <p className="text-sm font-black">
           {toolResponse.count === 1 ? '1 result' : `${toolResponse.count} results`}
         </p>
+        {activeTool === 'glossary' ? (
+          <p className={`mt-1 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+            Glossary matches for the selected Bible version.
+          </p>
+        ) : null}
         {activeTool === 'notes' ? (
           <p className={`mt-1 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
             Reader annotations are preferred when available; these notes remain available as a legacy fallback.
@@ -87,19 +95,39 @@ const ToolResults = ({
       </div>
     ) : null}
     <div className="grid gap-3">
-      {records.map((record) => (
-        <article key={record.id} className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`}>
-          <p className="text-sm font-black">{record.title}</p>
-          {record.subtitle ? <p className="mt-1 text-xs font-bold text-red-800 dark:text-red-200">{formatToolLabel(record.subtitle)}</p> : null}
-          {record.body ? <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>{record.body}</p> : null}
-          {record.meta ? <p className={`mt-2 text-xs ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>{formatToolLabel(record.meta)}</p> : null}
-          {activeTool === 'markers' && markerExplanation(record.meta) ? (
-            <p className={`mt-2 rounded-xl border p-2 text-xs leading-5 ${darkMode ? 'border-white/10 bg-black/20 text-stone-400' : 'border-black/10 bg-[#fffaf0] text-zinc-600'}`}>
-              {markerExplanation(record.meta)}
-            </p>
-          ) : null}
-        </article>
-      ))}
+      {records.map((record) =>
+        activeTool === 'glossary' ? (
+          <article key={record.id} className={glossaryCardClass(darkMode)}>
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-red-900 dark:text-red-200">Glossary term</p>
+            <h3 className="mt-2 text-base font-black">{record.title}</h3>
+            {record.subtitle ? (
+              <p className={`mt-1 text-xs font-bold ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>
+                {formatToolLabel(record.subtitle)}
+              </p>
+            ) : null}
+            {record.body ? (
+              <p className={`mt-3 text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>{record.body}</p>
+            ) : null}
+            {record.meta ? (
+              <p className={`mt-3 rounded-xl border p-2 text-xs leading-5 ${darkMode ? 'border-white/10 bg-black/20 text-stone-400' : 'border-black/10 bg-[#fffaf0] text-zinc-600'}`}>
+                {formatToolLabel(record.meta)}
+              </p>
+            ) : null}
+          </article>
+        ) : (
+          <article key={record.id} className={`rounded-2xl border p-3 ${darkMode ? 'border-white/10 bg-white/[0.045]' : 'border-black/10 bg-white'}`}>
+            <p className="text-sm font-black">{record.title}</p>
+            {record.subtitle ? <p className="mt-1 text-xs font-bold text-red-800 dark:text-red-200">{formatToolLabel(record.subtitle)}</p> : null}
+            {record.body ? <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>{record.body}</p> : null}
+            {record.meta ? <p className={`mt-2 text-xs ${darkMode ? 'text-stone-500' : 'text-zinc-500'}`}>{formatToolLabel(record.meta)}</p> : null}
+            {activeTool === 'markers' && markerExplanation(record.meta) ? (
+              <p className={`mt-2 rounded-xl border p-2 text-xs leading-5 ${darkMode ? 'border-white/10 bg-black/20 text-stone-400' : 'border-black/10 bg-[#fffaf0] text-zinc-600'}`}>
+                {markerExplanation(record.meta)}
+              </p>
+            ) : null}
+          </article>
+        ),
+      )}
     </div>
     {toolResponse?.next ? (
       <button
