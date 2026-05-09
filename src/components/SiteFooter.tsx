@@ -11,12 +11,12 @@ const SiteFooter = ({ darkMode }: SiteFooterProps) => {
   const socialLinks = [
     {
       label: 'Instagram',
-      href: 'https://www.instagram.com/aicnjorotownchurch?igsh=Mjk3cTNjczZ3Z2dr',
+      href: 'https://www.instagram.com/aicnjorotownchurch',
       icon: <Instagram size={17} />,
     },
     {
       label: 'TikTok',
-      href: 'https://www.tiktok.com/@aicnjorotownchurch',
+      href: 'https://www.tiktok.com/@aicnjorotownchurch_',
       icon: (
         <svg viewBox="0 0 24 24" aria-hidden="true" className="size-[17px] fill-current">
           <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.77h-3.4v13.67a2.9 2.9 0 1 1-2-2.76V9.39a6.32 6.32 0 1 0 5.43 6.25V8.7a8.16 8.16 0 0 0 4.77 1.52V6.69h-1.03Z" />
@@ -32,6 +32,15 @@ const SiteFooter = ({ darkMode }: SiteFooterProps) => {
       label: 'YouTube',
       href: 'https://www.youtube.com/@aicnjorotownchurch',
       icon: <Youtube size={17} />,
+    },
+    {
+      label: 'Spotify',
+      href: 'https://open.spotify.com/show/3TsEjZG4GYw6rncs5D96OD',
+      icon: (
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-[17px] fill-current">
+          <path d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12S6.34 22.25 12 22.25 22.25 17.66 22.25 12 17.66 1.75 12 1.75Zm4.7 14.78a.64.64 0 0 1-.88.21c-2.42-1.48-5.47-1.81-9.06-.99a.64.64 0 1 1-.29-1.25c3.93-.9 7.3-.51 10.02 1.15.3.19.4.58.21.88Zm1.25-2.78a.78.78 0 0 1-1.07.26c-2.77-1.7-6.99-2.2-10.27-1.2a.78.78 0 1 1-.45-1.49c3.73-1.13 8.37-.57 11.53 1.37.37.23.49.7.26 1.06Zm.11-2.9c-3.32-1.97-8.8-2.15-11.97-1.19a.94.94 0 0 1-.54-1.8c3.64-1.1 9.68-.89 13.47 1.36a.94.94 0 1 1-.96 1.63Z" />
+        </svg>
+      ),
     },
   ];
 

@@ -1,5 +1,17 @@
 # Todo
 
+## Recently Completed On The Frontend
+
+- Added the shared API client and endpoint-specific normalizers.
+- Migrated version, book, chapter, reader, search, comparison, Bible Tools, annotations, tokens, and sources onto the backend API contracts.
+- Added paginated Search, Glossary, Resources, Markers, and Notes support.
+- Added Study Mode in Bible Tools.
+- Added inline verse footnote markers in normal reader mode.
+- Added rich Study Annotations with annotation-type explanations.
+- Added explicit token/source loading in Study Mode.
+- Kept tokens/raw source out of normal reading by default.
+- Added tests around annotations, raw-source visibility, token/source loading, search pagination, Bible Tools, and reader behavior.
+
 ## Scripture Chapter Navigation Performance
 
 Random or first-time chapter clicks can feel slightly slow because chapter rendering is currently request-driven:
@@ -26,6 +38,11 @@ This is expected for uncached chapters, but the experience can be improved.
 - First visit to a chapter depends on the backend request.
 - Returning to an already-loaded chapter should be faster because chapter text now uses intentional memory cache.
 - The most noticeable delay comes from replacing the reader content with skeletons during loading.
+- Annotation enrichment now loads after the main chapter text, so annotations should not block verse rendering.
+
+### Status
+
+Still open. This is the main remaining frontend-side UX/performance improvement for Scripture reading.
 
 ## Scripture Page Effect Cleanup
 
@@ -53,6 +70,26 @@ ESLint currently flags older `setState`-inside-effect patterns in the Scripture 
   - clicking a verse opens the action sheet
   - compare verse opens the modal focused on the selected verse
   - compare selection highlights selected verses
+
+### Status
+
+Still open. The page works and tests pass, but some state synchronization effects should be simplified before the Scripture page grows further.
+
+## Study Mode UX Polish
+
+Study Mode now exposes annotations, tokens, and sources, but it can be made more reader-friendly.
+
+### Improvements To Consider
+
+- Make token cards denser on mobile so long verses do not become exhausting to scan.
+- Add a short empty state explaining that some versions may not have token/source metadata.
+- Consider linking Strong's numbers to an external or internal lexicon once approved.
+- Consider grouping tokens by phrase or source marker when backend data supports it.
+- Consider making source/raw views clearly "debug/verification" oriented so normal users do not confuse raw USFM with Scripture text.
+
+### Status
+
+Open polish item. Current behavior is functional and explicitly user-triggered.
 
 ## Backend Notification: Search Abuse Protection
 
@@ -84,6 +121,10 @@ These reduce accidental load, but they do not prevent abuse because a user can b
 ### Why This Matters
 
 Frontend controls are user-experience protections, not security protections. Backend throttling and query limits are what prevent one user from locking everyone else out of Scripture search.
+
+### Status
+
+Still a backend-team notification. Frontend already uses polite defaults, but backend protection is the real control.
 
 ## Backend Request: Version Bible Tool Capabilities
 
@@ -139,3 +180,7 @@ Example response:
 ### Why This Matters
 
 An empty filtered response does not always mean a version lacks that tool. For example, `glossary?q=altar` returning `count=0` may mean only that the specific term is absent. Backend capability metadata gives the frontend a reliable source of truth.
+
+### Status
+
+Still a backend-team request. Frontend can currently show empty states, but it cannot reliably hide unavailable tabs without backend capability metadata.
