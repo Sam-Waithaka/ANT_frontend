@@ -2,18 +2,63 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useScriptureReaderContext } from '../contexts/ScriptureReaderStore';
 import {
+  getBibleAnnotations,
   getBibleBooks,
   getBibleChapters,
   getBibleVersions,
   getBibleVerses,
   getBibleVersesByReference,
 } from '../services/scriptureApi';
-import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../types/scripture';
+import type { BibleBook, BibleChapter, BibleVerse, BibleVerseAnnotation, BibleVersion } from '../types/scripture';
 import { normalizeReferenceValue } from '../utils/scriptureReference';
 import { findBookIdForIntent, findChapterIdForIntent } from '../utils/scriptureIntent';
 import { parseVerseSelection } from '../utils/scriptureShare';
 
 const DEFAULT_VERSION_ABBR = 'BSB';
+
+const mergeAnnotationsIntoVerses = (
+  verses: BibleVerse[],
+  annotations: BibleVerseAnnotation[],
+) => {
+  if (annotations.length === 0) {
+    return verses;
+  }
+
+  const annotationsByVerse = new Map<number, BibleVerseAnnotation[]>();
+
+  annotations.forEach((annotation) => {
+    const verseNumber = annotation.verseNumber;
+    if (!verseNumber) return;
+
+    annotationsByVerse.set(verseNumber, [...(annotationsByVerse.get(verseNumber) || []), annotation]);
+  });
+
+  return verses.map((verse) => {
+    const nextAnnotations = annotationsByVerse.get(verse.number) || [];
+
+    if (nextAnnotations.length === 0) {
+      return verse;
+    }
+
+    const existingIds = new Set((verse.annotations || []).map((annotation) => annotation.id));
+
+    return {
+      ...verse,
+      annotations: [
+        ...(verse.annotations || []),
+        ...nextAnnotations.filter((annotation) => !existingIds.has(annotation.id)),
+      ],
+    };
+  });
+};
+
+const loadVerseAnnotations = async (versionId: string, bookId: string, chapterNumber: number) => {
+  try {
+    return await getBibleAnnotations(versionId, bookId, chapterNumber);
+  } catch {
+    return [];
+  }
+};
 
 export const useScriptureReader = () => {
   const {
@@ -36,6 +81,8 @@ export const useScriptureReader = () => {
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
   const [verses, setVerses] = useState<BibleVerse[]>([]);
   const [loadedReferenceKey, setLoadedReferenceKey] = useState('');
+  const activeVerseReferenceKey = useRef('');
+  const readerMounted = useRef(true);
   const [loading, setLoading] = useState({
     versions: true,
     books: false,
@@ -99,6 +146,14 @@ export const useScriptureReader = () => {
     pendingReference && selectedVersionId
       ? `${selectedVersionId}:${normalizeReferenceValue(pendingReference.book)}:${pendingReference.chapter}`
       : '';
+
+  useEffect(() => {
+    readerMounted.current = true;
+
+    return () => {
+      readerMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const book = searchParams.get('book');
@@ -300,6 +355,7 @@ export const useScriptureReader = () => {
     let cancelled = false;
 
     const loadPendingVerses = async () => {
+      activeVerseReferenceKey.current = pendingReferenceKey;
       setLoading((current) => ({ ...current, verses: true }));
       setError('');
 
@@ -313,6 +369,19 @@ export const useScriptureReader = () => {
           setVerses(nextVerses);
           setLoadedReferenceKey(pendingReferenceKey);
         }
+        void loadVerseAnnotations(
+          selectedVersionId,
+          pendingBookMatch?.id || pendingReference.book,
+          pendingReference.chapter,
+        ).then((nextAnnotations) => {
+          if (
+            readerMounted.current &&
+            activeVerseReferenceKey.current === pendingReferenceKey &&
+            nextAnnotations.length > 0
+          ) {
+            setVerses((current) => mergeAnnotationsIntoVerses(current, nextAnnotations));
+          }
+        });
       } catch {
         if (!cancelled) {
           setError('We could not load verses for this chapter.');
@@ -329,7 +398,7 @@ export const useScriptureReader = () => {
     return () => {
       cancelled = true;
     };
-  }, [loadedReferenceKey, pendingReference, pendingReferenceKey, selectedVersionId]);
+  }, [loadedReferenceKey, pendingBookMatch, pendingReference, pendingReferenceKey, selectedVersionId]);
 
   useEffect(() => {
     if (!selectedVersionId || !selectedBookId || !selectedChapter || pendingReference) return;
@@ -338,6 +407,7 @@ export const useScriptureReader = () => {
     let cancelled = false;
 
     const loadVerses = async () => {
+      activeVerseReferenceKey.current = currentReferenceKey;
       setLoading((current) => ({ ...current, verses: true }));
       setError('');
 
@@ -352,6 +422,19 @@ export const useScriptureReader = () => {
           setVerses(nextVerses);
           setLoadedReferenceKey(currentReferenceKey);
         }
+        void loadVerseAnnotations(
+          selectedVersionId,
+          selectedBookId,
+          selectedChapter.number,
+        ).then((nextAnnotations) => {
+          if (
+            readerMounted.current &&
+            activeVerseReferenceKey.current === currentReferenceKey &&
+            nextAnnotations.length > 0
+          ) {
+            setVerses((current) => mergeAnnotationsIntoVerses(current, nextAnnotations));
+          }
+        });
       } catch {
         if (!cancelled) {
           setError('We could not load verses for this chapter.');

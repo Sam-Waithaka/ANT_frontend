@@ -280,7 +280,7 @@ const normalizeChapterCredit = (payload: unknown): BibleChapterCredit | undefine
   };
 };
 
-const normalizeVerseAnnotations = (collection: unknown, verseNumber: number) => {
+export const normalizeVerseAnnotations = (collection: unknown, fallbackVerseNumber = 0) => {
   if (!Array.isArray(collection)) {
     return [];
   }
@@ -289,6 +289,7 @@ const normalizeVerseAnnotations = (collection: unknown, verseNumber: number) => 
     const record = asRecord(item);
     const type = readString(record, ['annotation_type', 'type'], 'other');
     const content = readString(record, ['content', 'text', 'body', 'note']);
+    const verseNumber = readNumber(record, ['verse_number', 'verse', 'number'], fallbackVerseNumber);
 
     return {
       anchorText: readString(record, ['anchor_text']) || undefined,
@@ -304,6 +305,9 @@ const normalizeVerseAnnotations = (collection: unknown, verseNumber: number) => 
     };
   });
 };
+
+export const normalizeAnnotationsResponse = (payload: unknown) =>
+  normalizeVerseAnnotations(unwrapCollection(payload));
 
 export const normalizeChapterDetailResponse = (payload: unknown): BibleVerse[] => {
   const verses = unwrapCollection(payload);

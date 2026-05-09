@@ -10,6 +10,7 @@ import type {
   BibleResourceType,
   BibleSearchResponse,
   BibleToolResponse,
+  BibleVerseAnnotation,
   BibleVerse,
   BibleVersion,
   VerseLookupResult,
@@ -18,6 +19,7 @@ import { resolveApiBookReference } from '../utils/scriptureIntent';
 import { apiGet } from './apiClient';
 import {
   asRecord,
+  normalizeAnnotationsResponse,
   normalizeBooksResponse,
   normalizeChapterDetailResponse,
   normalizeChaptersResponse,
@@ -111,6 +113,17 @@ export const getBibleMarkers = async (
 export const getBibleNotes = async (versionId: string, type?: BibleNoteType, page?: number): Promise<BibleToolResponse> => {
   const payload = await freshGet<unknown>(`/v1/bible/versions/${encode(versionId)}/notes/${toQueryString({ page, type })}`);
   return normalizeToolResponse(payload);
+};
+
+export const getBibleAnnotations = async (
+  versionId: string,
+  bookId: string,
+  chapter: number,
+): Promise<BibleVerseAnnotation[]> => {
+  const payload = await freshGet<unknown>(
+    `/v1/bible/versions/${encode(versionId)}/annotations/${toQueryString({ book: bookId, chapter })}`,
+  );
+  return normalizeAnnotationsResponse(payload);
 };
 
 export const lookupBibleVerse = async (

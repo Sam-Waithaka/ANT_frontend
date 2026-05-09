@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  normalizeAnnotationsResponse,
   normalizeBooksResponse,
   normalizeChapterDetailResponse,
   normalizeChaptersResponse,
@@ -167,6 +168,36 @@ describe('scriptureNormalizers', () => {
         id: '__chapter_meta__',
         notes: [expect.objectContaining({ reference: 'license', text: 'Public domain test scripture.' })],
         number: 0,
+      }),
+    ]);
+  });
+
+  it('normalizes annotation endpoint responses with offsets and safe public content', () => {
+    expect(
+      normalizeAnnotationsResponse({
+        results: [
+          {
+            annotation_type: 'footnote',
+            anchor_text: 'beginning',
+            content: 'Or at first.',
+            end_offset: 16,
+            raw_content: '<note>Or at first.</note>',
+            source_marker: 'osis:note',
+            start_offset: 7,
+            verse_number: 1,
+          },
+        ],
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        anchorText: 'beginning',
+        content: 'Or at first.',
+        endOffset: 16,
+        rawContent: '<note>Or at first.</note>',
+        sourceMarker: 'osis:note',
+        startOffset: 7,
+        type: 'footnote',
+        verseNumber: 1,
       }),
     ]);
   });

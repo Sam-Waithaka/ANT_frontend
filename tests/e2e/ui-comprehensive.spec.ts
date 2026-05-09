@@ -110,9 +110,15 @@ test('Project 52 PDF download control reports progress without leaving the page'
 });
 
 test('Scripture reference controls change version, book, chapter, and next navigation', async ({ page }) => {
+  const annotationsResponse = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return url.pathname.endsWith('/annotations/') && url.searchParams.get('book') === 'Gen';
+  });
   await page.goto('/scripture');
+  await annotationsResponse;
 
   await expect(page.getByRole('heading', { level: 1, name: 'Genesis 1' })).toBeVisible();
+  await expect(page.getByText('Annotation footnote returned by the annotations endpoint.')).toBeVisible();
   const readerControls = page.locator('div.pointer-events-auto').filter({
     has: page.getByRole('button', { name: 'Previous chapter' }),
   }).first();

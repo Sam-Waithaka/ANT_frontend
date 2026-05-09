@@ -173,6 +173,30 @@ export const mockScriptureApi = async (page: Page) => {
     await fulfillJson(route, chapterPayloads[`${book}:${chapter}`] ?? []);
   });
 
+  await page.route('**/v1/bible/versions/*/annotations/**', async (route) => {
+    const url = new URL(route.request().url());
+    const book = url.searchParams.get('book');
+    const chapter = url.searchParams.get('chapter');
+
+    await fulfillJson(route, {
+      count: book === 'Gen' && chapter === '1' ? 1 : 0,
+      next: null,
+      previous: null,
+      results: book === 'Gen' && chapter === '1'
+        ? [
+            {
+              annotation_type: 'footnote',
+              content: 'Annotation footnote returned by the annotations endpoint.',
+              end_offset: 16,
+              source_marker: 'osis:note',
+              start_offset: 16,
+              verse_number: 1,
+            },
+          ]
+        : [],
+    });
+  });
+
   await page.route('**/v1/bible/compare/**', async (route) => {
     const url = new URL(route.request().url());
     const book = url.searchParams.get('book') || '';

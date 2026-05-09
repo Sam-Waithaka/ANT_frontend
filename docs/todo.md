@@ -84,3 +84,58 @@ These reduce accidental load, but they do not prevent abuse because a user can b
 ### Why This Matters
 
 Frontend controls are user-experience protections, not security protections. Backend throttling and query limits are what prevent one user from locking everyone else out of Scripture search.
+
+## Backend Request: Version Bible Tool Capabilities
+
+The frontend should avoid showing Bible Tool options that are not available for a selected Bible version. To do this reliably, the backend should expose capability metadata per version instead of requiring the frontend to guess from empty endpoint responses.
+
+### Recommended API Shape
+
+Add capability fields to the versions endpoint:
+
+```json
+{
+  "abbreviation": "ASV",
+  "name": "American Standard Version",
+  "has_resources": true,
+  "has_glossary": false,
+  "has_markers": true,
+  "has_notes": false,
+  "has_annotations": true,
+  "has_tokens": false,
+  "has_sources": false
+}
+```
+
+Or provide a dedicated endpoint:
+
+```http
+GET /v1/bible/versions/{version}/capabilities/
+```
+
+Example response:
+
+```json
+{
+  "version": "ASV",
+  "resources": true,
+  "glossary": false,
+  "markers": true,
+  "notes": false,
+  "annotations": true,
+  "tokens": false,
+  "sources": false,
+  "resource_types": ["preface", "copyright", "front_matter"]
+}
+```
+
+### Frontend Behavior Once Available
+
+- Hide or disable unavailable Bible Tool tabs for the selected version.
+- Hide unavailable resource-type filters, such as `front_matter`, when the version has none.
+- Keep empty states only for filtered searches, for example `glossary?q=altar` returning zero results.
+- Avoid probing every tool endpoint just to discover availability.
+
+### Why This Matters
+
+An empty filtered response does not always mean a version lacks that tool. For example, `glossary?q=altar` returning `count=0` may mean only that the specific term is absent. Backend capability metadata gives the frontend a reliable source of truth.
