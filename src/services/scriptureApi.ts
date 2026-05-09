@@ -8,7 +8,9 @@ import type {
   BibleMarkerStatus,
   BibleNoteType,
   BibleResourceType,
+  BibleSourceRecord,
   BibleSearchResponse,
+  BibleToken,
   BibleToolResponse,
   BibleVerseAnnotation,
   BibleVerse,
@@ -24,8 +26,10 @@ import {
   normalizeChapterDetailResponse,
   normalizeChaptersResponse,
   normalizeComparisonResponse,
+  normalizeSourcesResponse,
   normalizeSearchResponse,
   normalizeToolResponse,
+  normalizeTokensResponse,
   normalizeVersionsResponse,
   readString,
 } from './scriptureNormalizers';
@@ -49,6 +53,11 @@ const cachedGet = <T>(path: string) => apiGet<T>(path, { cache: 'memory' });
 const freshGet = <T>(path: string, options: ApiRequestOptions = {}) =>
   apiGet<T>(path, { ...options, cache: 'none' });
 
+type ChapterDetailOptions = {
+  includeRaw?: boolean;
+  includeTokens?: boolean;
+};
+
 export const getBibleVersions = async (): Promise<BibleVersion[]> => {
   const payload = await cachedGet<unknown>('/v1/bible/versions/?public=true');
   return normalizeVersionsResponse(payload);
@@ -69,10 +78,13 @@ export const getBibleVerses = async (
   bookId: string,
   _chapterId: string,
   chapterNumber: number,
+  options: ChapterDetailOptions = {},
 ): Promise<BibleVerse[]> => {
-  const payload = await cachedGet<unknown>(
-    `/v1/bible/versions/${encode(versionId)}/books/${encode(bookId)}/chapters/${encode(chapterNumber)}/`,
-  );
+  const path = `/v1/bible/versions/${encode(versionId)}/books/${encode(bookId)}/chapters/${encode(chapterNumber)}/${toQueryString({
+    include_raw: options.includeRaw || undefined,
+    include_tokens: options.includeTokens || undefined,
+  })}`;
+  const payload = await (options.includeRaw || options.includeTokens ? freshGet<unknown>(path) : cachedGet<unknown>(path));
   return normalizeChapterDetailResponse(payload);
 };
 
@@ -80,10 +92,13 @@ export const getBibleVersesByReference = async (
   versionId: string,
   book: string,
   chapterNumber: number,
+  options: ChapterDetailOptions = {},
 ): Promise<BibleVerse[]> => {
-  const payload = await cachedGet<unknown>(
-    `/v1/bible/versions/${encode(versionId)}/books/${encode(resolveApiBookReference(book))}/chapters/${encode(chapterNumber)}/`,
-  );
+  const path = `/v1/bible/versions/${encode(versionId)}/books/${encode(resolveApiBookReference(book))}/chapters/${encode(chapterNumber)}/${toQueryString({
+    include_raw: options.includeRaw || undefined,
+    include_tokens: options.includeTokens || undefined,
+  })}`;
+  const payload = await (options.includeRaw || options.includeTokens ? freshGet<unknown>(path) : cachedGet<unknown>(path));
   return normalizeChapterDetailResponse(payload);
 };
 
@@ -124,6 +139,30 @@ export const getBibleAnnotations = async (
     `/v1/bible/versions/${encode(versionId)}/annotations/${toQueryString({ book: bookId, chapter })}`,
   );
   return normalizeAnnotationsResponse(payload);
+};
+
+export const getBibleTokens = async (
+  versionId: string,
+  bookId: string,
+  chapter: number,
+  verse?: number,
+): Promise<BibleToken[]> => {
+  const payload = await freshGet<unknown>(
+    `/v1/bible/versions/${encode(versionId)}/tokens/${toQueryString({ book: bookId, chapter, verse })}`,
+  );
+  return normalizeTokensResponse(payload);
+};
+
+export const getBibleSources = async (
+  versionId: string,
+  bookId: string,
+  chapter: number,
+  verse?: number,
+): Promise<BibleSourceRecord[]> => {
+  const payload = await freshGet<unknown>(
+    `/v1/bible/versions/${encode(versionId)}/sources/${toQueryString({ book: bookId, chapter, verse })}`,
+  );
+  return normalizeSourcesResponse(payload);
 };
 
 export const lookupBibleVerse = async (

@@ -221,6 +221,44 @@ export const mockScriptureApi = async (page: Page) => {
     });
   });
 
+  await page.route('**/v1/bible/versions/*/tokens/**', async (route) => {
+    const url = new URL(route.request().url());
+    const verse = url.searchParams.get('verse');
+
+    await fulfillJson(route, {
+      count: verse === '1' ? 2 : 0,
+      next: null,
+      previous: null,
+      results: verse === '1'
+        ? [
+            { id: 'token-1', lemma: 'reshith', morph: 'N-fs', position: 1, strong: 'H7225', token: 'beginning' },
+            { id: 'token-2', position: 2, token: 'God' },
+          ]
+        : [],
+    });
+  });
+
+  await page.route('**/v1/bible/versions/*/sources/**', async (route) => {
+    const url = new URL(route.request().url());
+    const verse = url.searchParams.get('verse');
+
+    await fulfillJson(route, {
+      count: verse === '1' ? 1 : 0,
+      next: null,
+      previous: null,
+      results: verse === '1'
+        ? [
+            {
+              format: 'usfm',
+              raw_text: '\\v 1 In the beginning God created the heavens and the earth.',
+              source: 'Fixture USFM',
+              verse_number: 1,
+            },
+          ]
+        : [],
+    });
+  });
+
   await page.route('**/v1/bible/compare/**', async (route) => {
     const url = new URL(route.request().url());
     const book = url.searchParams.get('book') || '';

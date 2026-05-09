@@ -6,8 +6,10 @@ import type {
   BibleComparisonChapter,
   BibleComparisonVerse,
   BibleNoteType,
+  BibleSourceRecord,
   BibleSearchResponse,
   BibleSearchResult,
+  BibleToken,
   BibleToolRecord,
   BibleToolResponse,
   BibleVerse,
@@ -412,6 +414,37 @@ export const normalizeToolResponse = (payload: unknown): BibleToolResponse =>
   normalizePaginatedResponse(payload, (item, index) => normalizeToolRecordsResponse([item])[0] || {
     id: `tool-record-${index}`,
     title: `Result ${index + 1}`,
+  });
+
+export const normalizeTokensResponse = (payload: unknown): BibleToken[] =>
+  unwrapCollection(payload).map((item, index) => {
+    const record = asRecord(item);
+    const text = readString(record, ['text', 'token', 'word', 'surface'], `Token ${index + 1}`);
+
+    return {
+      id: readString(record, ['id', '_id', 'uuid'], `${text}-${index}`),
+      lemma: readString(record, ['lemma']) || undefined,
+      morphology: readString(record, ['morphology', 'morph']) || undefined,
+      position: readNumber(record, ['position', 'order', 'index'], 0) || undefined,
+      strong: readString(record, ['strong', 'strongs', 'strong_number']) || undefined,
+      text,
+    };
+  });
+
+export const normalizeSourcesResponse = (payload: unknown): BibleSourceRecord[] =>
+  unwrapCollection(payload).map((item, index) => {
+    const record = asRecord(item);
+    const rawText = readString(record, ['raw_text', 'rawText', 'raw', 'source_text']);
+    const source = readString(record, ['source', 'source_name', 'format']);
+
+    return {
+      format: readString(record, ['format', 'source_format']) || undefined,
+      id: readString(record, ['id', '_id', 'uuid'], `source-${index}`),
+      rawText: rawText || undefined,
+      source: source || undefined,
+      title: readString(record, ['title', 'reference', 'verse_reference'], source || `Source ${index + 1}`),
+      verseNumber: readNumber(record, ['verse_number', 'verse', 'number'], 0) || undefined,
+    };
   });
 
 export const normalizeSearchRecordsResponse = (payload: unknown): BibleToolRecord[] =>

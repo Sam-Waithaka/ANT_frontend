@@ -110,6 +110,13 @@ test('Project 52 PDF download control reports progress without leaving the page'
 });
 
 test('Scripture reference controls change version, book, chapter, and next navigation', async ({ page }) => {
+  const studyRequests: string[] = [];
+  page.on('request', (request) => {
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.includes('/tokens/') || pathname.includes('/sources/')) {
+      studyRequests.push(request.url());
+    }
+  });
   const annotationsResponse = page.waitForResponse((response) => {
     const url = new URL(response.url());
     return url.pathname.endsWith('/annotations/') && url.searchParams.get('book') === 'Gen';
@@ -126,6 +133,7 @@ test('Scripture reference controls change version, book, chapter, and next navig
   await toolsPanel.getByRole('button', { name: 'Study' }).click();
   await toolsPanel.getByRole('switch', { name: 'Enable study mode' }).click();
   await expect(page.getByText('Study Annotations')).toBeVisible();
+  expect(studyRequests).toHaveLength(0);
   await expect(page.getByText('Cross reference', { exact: true })).toBeVisible();
   await expect(page.getByText('Word study', { exact: true })).toBeVisible();
   await expect(page.getByText('Textual variant', { exact: true })).toBeVisible();
@@ -133,6 +141,18 @@ test('Scripture reference controls change version, book, chapter, and next navig
   await expect(page.getByText('<note caller="study">Raw annotation source text.</note>')).not.toBeVisible();
   await page.getByText('Raw source', { exact: true }).click();
   await expect(page.getByText('<note caller="study">Raw annotation source text.</note>')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'Load tokens' }).click();
+  await expect(toolsPanel.getByText('Strong:')).toBeVisible();
+  await expect(toolsPanel.getByText('H7225')).toBeVisible();
+  await expect(toolsPanel.getByText('Lemma:')).toBeVisible();
+  await expect(toolsPanel.getByText('reshith')).toBeVisible();
+  await toolsPanel.getByRole('button', { name: 'Load source' }).click();
+  await expect(toolsPanel.getByText('Fixture USFM · usfm')).toBeVisible();
+  await expect(toolsPanel.getByText('\\v 1 In the beginning God created the heavens and the earth.')).not.toBeVisible();
+  await toolsPanel.getByText('Raw source', { exact: true }).last().click();
+  await expect(toolsPanel.getByText('\\v 1 In the beginning God created the heavens and the earth.')).toBeVisible();
+  expect(studyRequests.some((url) => url.includes('/tokens/') && url.includes('verse=1'))).toBe(true);
+  expect(studyRequests.some((url) => url.includes('/sources/') && url.includes('verse=1'))).toBe(true);
 
   const readerControls = page.locator('div.pointer-events-auto').filter({
     has: page.getByRole('button', { name: 'Previous chapter' }),

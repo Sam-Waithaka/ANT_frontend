@@ -4,6 +4,8 @@ import {
   getBibleMarkers,
   getBibleNotes,
   getBibleResources,
+  getBibleSources,
+  getBibleTokens,
   searchBible,
 } from '../../../services/scriptureApi';
 import { useBibleComparison } from '../../../hooks/useBibleComparison';
@@ -14,8 +16,10 @@ import type {
   BibleMarkerStatus,
   BibleNoteType,
   BibleResourceType,
+  BibleSourceRecord,
   BibleSearchResponse,
   BibleSearchResult,
+  BibleToken,
   BibleToolResponse,
   BibleVersion,
 } from '../../../types/scripture';
@@ -73,6 +77,13 @@ const BibleToolsPanel = ({
   const [markerStatus, setMarkerStatus] = useState<BibleMarkerStatus | ''>('');
   const [noteType, setNoteType] = useState<BibleNoteType | ''>('');
   const [toolResponse, setToolResponse] = useState<BibleToolResponse | null>(null);
+  const [studyVerse, setStudyVerse] = useState(1);
+  const [tokens, setTokens] = useState<BibleToken[]>([]);
+  const [sources, setSources] = useState<BibleSourceRecord[]>([]);
+  const [tokenStatus, setTokenStatus] = useState('');
+  const [sourceStatus, setSourceStatus] = useState('');
+  const [loadingTokens, setLoadingTokens] = useState(false);
+  const [loadingSources, setLoadingSources] = useState(false);
   const [toolPage, setToolPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [status, setStatus] = useState('');
@@ -114,6 +125,10 @@ const BibleToolsPanel = ({
     setToolPage(1);
     setToolResponse(null);
     setSearchResponse(null);
+    setTokens([]);
+    setSources([]);
+    setTokenStatus('');
+    setSourceStatus('');
     bibleComparison.resetOutput();
   };
 
@@ -247,6 +262,48 @@ const BibleToolsPanel = ({
     );
   };
 
+  const loadTokens = async () => {
+    if (!selectedBook || !selectedChapter) {
+      setTokenStatus('Select a book and chapter before loading tokens.');
+      return;
+    }
+
+    setLoadingTokens(true);
+    setTokenStatus('');
+
+    try {
+      const nextTokens = await getBibleTokens(versionId, selectedBook.id, selectedChapter.number, studyVerse);
+      setTokens(nextTokens);
+      setTokenStatus(nextTokens.length === 0 ? 'No tokens were returned for this verse.' : '');
+    } catch {
+      setTokens([]);
+      setTokenStatus('Unable to load tokens for this verse.');
+    } finally {
+      setLoadingTokens(false);
+    }
+  };
+
+  const loadSources = async () => {
+    if (!selectedBook || !selectedChapter) {
+      setSourceStatus('Select a book and chapter before loading source text.');
+      return;
+    }
+
+    setLoadingSources(true);
+    setSourceStatus('');
+
+    try {
+      const nextSources = await getBibleSources(versionId, selectedBook.id, selectedChapter.number, studyVerse);
+      setSources(nextSources);
+      setSourceStatus(nextSources.length === 0 ? 'No source records were returned for this verse.' : '');
+    } catch {
+      setSources([]);
+      setSourceStatus('Unable to load source records for this verse.');
+    } finally {
+      setLoadingSources(false);
+    }
+  };
+
   return (
     <>
       <section className={panelSurfaceClass}>
@@ -339,7 +396,23 @@ const BibleToolsPanel = ({
             <StudyModeTool
               darkMode={darkMode}
               enabled={studyMode}
+              loadingSources={loadingSources}
+              loadingTokens={loadingTokens}
+              sources={sources}
+              sourceStatus={sourceStatus}
+              tokens={tokens}
+              tokenStatus={tokenStatus}
+              verse={studyVerse}
               onChange={onStudyModeChange}
+              onLoadSources={loadSources}
+              onLoadTokens={loadTokens}
+              onVerseChange={(verse) => {
+                setStudyVerse(verse);
+                setTokens([]);
+                setSources([]);
+                setTokenStatus('');
+                setSourceStatus('');
+              }}
             />
           )}
 

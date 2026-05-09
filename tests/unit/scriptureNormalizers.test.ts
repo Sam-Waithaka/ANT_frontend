@@ -8,6 +8,8 @@ import {
   normalizePaginatedResponse,
   normalizeSearchResponse,
   normalizeSearchRecordsResponse,
+  normalizeSourcesResponse,
+  normalizeTokensResponse,
   normalizeToolResponse,
   normalizeVersionsResponse,
 } from '../../src/services/scriptureNormalizers';
@@ -199,6 +201,68 @@ describe('scriptureNormalizers', () => {
         type: 'footnote',
         verseNumber: 1,
       }),
+    ]);
+  });
+
+  it('normalizes token responses while preserving optional study metadata', () => {
+    expect(
+      normalizeTokensResponse({
+        results: [
+          {
+            id: 'tok-1',
+            lemma: 'agapao',
+            morph: 'V-PAI-3S',
+            position: 1,
+            strong: 'G25',
+            token: 'loved',
+          },
+          {
+            id: 'tok-2',
+            token: 'world',
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        id: 'tok-1',
+        lemma: 'agapao',
+        morphology: 'V-PAI-3S',
+        position: 1,
+        strong: 'G25',
+        text: 'loved',
+      },
+      {
+        id: 'tok-2',
+        lemma: undefined,
+        morphology: undefined,
+        position: undefined,
+        strong: undefined,
+        text: 'world',
+      },
+    ]);
+  });
+
+  it('normalizes source responses without exposing them through normal reader fields', () => {
+    expect(
+      normalizeSourcesResponse({
+        results: [
+          {
+            format: 'usfm',
+            raw_text: '\\v 1 In the beginning',
+            source: 'WEBP USFM',
+            verse_number: 1,
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        format: 'usfm',
+        id: 'source-0',
+        rawText: '\\v 1 In the beginning',
+        source: 'WEBP USFM',
+        title: 'WEBP USFM',
+        verseNumber: 1,
+      },
     ]);
   });
 

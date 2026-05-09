@@ -128,6 +128,24 @@ export type BibleToolRecord = {
 
 export type BibleToolResponse = PaginatedResponse<BibleToolRecord>;
 
+export type BibleToken = {
+  id: string;
+  text: string;
+  lemma?: string;
+  strong?: string;
+  morphology?: string;
+  position?: number;
+};
+
+export type BibleSourceRecord = {
+  id: string;
+  title: string;
+  rawText?: string;
+  source?: string;
+  format?: string;
+  verseNumber?: number;
+};
+
 export type BibleSearchBook = {
   name?: string;
   osisId?: string;
