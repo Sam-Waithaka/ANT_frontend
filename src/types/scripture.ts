@@ -1,13 +1,27 @@
 export type BibleVersion = {
+  description?: string;
   id: string;
+  isPublic?: boolean;
+  language?: string;
+  languageCode?: string;
+  licenseNotes?: string;
+  licenseType?: string;
+  licenseUrl?: string;
   name: string;
   abbreviation?: string;
+  publicationYear?: number;
+  source?: string;
+  sourceUrl?: string;
 };
 
 export type BibleBook = {
   abbreviation?: string;
+  canonicalAbbreviation?: string;
+  canonicalName?: string;
   id: string;
+  longName?: string;
   name: string;
+  number?: number;
   testament?: 'old' | 'new';
 };
 
@@ -18,11 +32,19 @@ export type BibleChapter = {
 };
 
 export type BibleVerse = {
+  crossReferences?: BibleChapterNote[];
+  display?: string;
   id: string;
   number: number;
   text: string;
   isPresent?: boolean;
+  markers?: BibleVerseMarker[];
   notes?: BibleChapterNote[];
+};
+
+export type BibleVerseMarker = {
+  note?: string;
+  status: BibleMarkerStatus | string;
 };
 
 export type BibleChapterNote = {
@@ -103,4 +125,11 @@ export type VerseLookupResult = {
   isPresent: boolean;
   display?: string;
   footnotes?: unknown[];
+};
+
+export type PaginatedResponse<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 };

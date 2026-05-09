@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
-  compareBibleChapter,
-  getBibleChapters,
   getBibleGlossary,
   getBibleMarkers,
   getBibleNotes,
   getBibleResources,
 } from '../../../services/scriptureApi';
+import { useBibleComparison } from '../../../hooks/useBibleComparison';
 import type {
   BibleBook,
   BibleChapter,
-  BibleComparisonChapter,
   BibleMarkerStatus,
   BibleNoteType,
   BibleResourceType,
@@ -51,31 +49,23 @@ const BibleToolsPanel = ({
   versions,
 }: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
-  const [compareBookId, setCompareBookId] = useState('');
-  const [compareChapterNumber, setCompareChapterNumber] = useState(1);
-  const [compareChapters, setCompareChapters] = useState<BibleChapter[]>([]);
   const [openComparePicker, setOpenComparePicker] = useState<ComparePicker>(null);
-  const [compareVersionIds, setCompareVersionIds] = useState<string[]>([]);
   const [query, setQuery] = useState('love');
   const [resourceType, setResourceType] = useState<BibleResourceType | ''>('');
   const [markerStatus, setMarkerStatus] = useState<BibleMarkerStatus | ''>('');
   const [noteType, setNoteType] = useState<BibleNoteType | ''>('');
   const [records, setRecords] = useState<BibleToolRecord[]>([]);
-  const [comparison, setComparison] = useState<BibleComparisonChapter | null>(null);
-  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const bibleComparison = useBibleComparison({
+    books,
+    selectedBook,
+    selectedChapter,
+    selectedVersion,
+    versions,
+  });
   const versionId = selectedVersion?.id || versions[0]?.id || 'ASV';
-  const bookId = selectedBook?.id || 'John';
-  const chapterNumber = selectedChapter?.number || 3;
-  const selectedCompareVersions = compareVersionIds.filter((id) => versions.some((version) => version.id === id));
-  const compareBook = books.find((book) => book.id === compareBookId);
-  const compareChapter = compareChapters.find((chapter) => chapter.number === compareChapterNumber);
-  const comparisonHasVerses = Boolean(comparison?.verses.length);
   const selectedVersionLabel = selectedVersion?.abbreviation || versionId;
-  const getVersionLabel = (versionIdToFind: string) =>
-    versions.find((version) => version.id.toLowerCase() === versionIdToFind.toLowerCase())?.abbreviation || versionIdToFind;
   const panelSurfaceClass = embedded
     ? 'min-w-0 p-0 shadow-none border-0 rounded-none bg-transparent'
     : `rounded-[2rem] border p-4 shadow-sm ${
@@ -85,53 +75,10 @@ const BibleToolsPanel = ({
     ? 'mt-3'
     : `mt-4 max-h-80 overflow-y-auto rounded-2xl p-3 ${darkMode ? 'bg-[#171717]' : 'bg-transparent'}`;
 
-  useEffect(() => {
-    if (versions.length === 0 || compareVersionIds.length > 0) return;
-
-    const defaultVersions = [
-      selectedVersion?.id,
-      versions.find((version) => version.id !== selectedVersion?.id)?.id,
-    ].filter(Boolean) as string[];
-
-    setCompareVersionIds(defaultVersions.length >= 2 ? defaultVersions : versions.slice(0, 2).map((version) => version.id));
-  }, [compareVersionIds.length, selectedVersion?.id, versions]);
+  const setComparisonOpen = bibleComparison.setOpen;
 
   useEffect(() => {
-    if (selectedBook?.id) setCompareBookId(selectedBook.id);
-  }, [selectedBook?.id]);
-
-  useEffect(() => {
-    if (selectedChapter?.number) setCompareChapterNumber(selectedChapter.number);
-  }, [selectedChapter?.number]);
-
-  useEffect(() => {
-    if (!versionId || !compareBookId) return;
-
-    let cancelled = false;
-
-    const loadCompareChapters = async () => {
-      try {
-        const nextChapters = await getBibleChapters(versionId, compareBookId);
-        if (!cancelled) {
-          setCompareChapters(nextChapters);
-          setCompareChapterNumber((current) =>
-            nextChapters.some((chapter) => chapter.number === current) ? current : nextChapters[0]?.number || 1,
-          );
-        }
-      } catch {
-        if (!cancelled) setCompareChapters([]);
-      }
-    };
-
-    loadCompareChapters();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [compareBookId, versionId]);
-
-  useEffect(() => {
-    if (!comparisonOpen) return;
+    if (!bibleComparison.open) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setComparisonOpen(false);
@@ -139,103 +86,12 @@ const BibleToolsPanel = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [comparisonOpen]);
+  }, [bibleComparison.open, setComparisonOpen]);
 
   const resetToolOutput = () => {
     setStatus('');
     setRecords([]);
-    setComparison(null);
-    setComparisonOpen(false);
-  };
-
-  const toggleCompareVersion = (versionIdToToggle: string) => {
-    setCompareVersionIds((current) =>
-      current.includes(versionIdToToggle)
-        ? current.filter((id) => id !== versionIdToToggle)
-        : [...current, versionIdToToggle],
-    );
-  };
-
-  const loadComparison = async ({
-    bookId: nextBookId = compareBookId || bookId,
-    chapterNumber: nextChapterNumber = compareChapterNumber || chapterNumber,
-    openModal = comparisonOpen,
-    versionIds = selectedCompareVersions,
-  }: {
-    bookId?: string;
-    chapterNumber?: number;
-    openModal?: boolean;
-    versionIds?: string[];
-  } = {}) => {
-    if (versionIds.length < 2) {
-      setStatus('Choose at least two Bible versions to compare.');
-      return;
-    }
-
-    const nextComparison = await compareBibleChapter(versionIds, nextBookId, nextChapterNumber);
-    setComparison(nextComparison);
-    setCompareBookId(nextBookId);
-    setCompareChapterNumber(nextComparison.chapter || nextChapterNumber);
-
-    if (openModal && nextComparison.verses.length > 0) {
-      setComparisonOpen(true);
-    }
-
-    if (nextComparison.verses.length === 0) {
-      setStatus('No comparison text was returned for this chapter. Try another version pair or confirm the compare endpoint response shape.');
-    }
-  };
-
-  const updateCompareVersions = async (versionIds: string[]) => {
-    if (versionIds.length === 0) {
-      return;
-    }
-
-    setCompareVersionIds(versionIds);
-
-    if (!comparisonOpen) {
-      return;
-    }
-
-    try {
-      await loadComparison({ versionIds });
-    } catch {
-      setStatus('Unable to update comparison versions right now.');
-    }
-  };
-
-  const updateComparisonReference = async ({
-    bookId: nextBookId,
-    chapterNumber: nextChapterNumber,
-  }: {
-    bookId: string;
-    chapterNumber: number;
-  }) => {
-    let nextChapters = compareChapters;
-
-    if (nextBookId !== compareBookId || nextChapters.length === 0) {
-      try {
-        nextChapters = await getBibleChapters(versionId, nextBookId);
-        setCompareChapters(nextChapters);
-      } catch {
-        setStatus('Unable to load chapters for that book right now.');
-        return;
-      }
-    }
-
-    const usableChapterNumber = nextChapters.some((chapter) => chapter.number === nextChapterNumber)
-      ? nextChapterNumber
-      : nextChapters[0]?.number || nextChapterNumber;
-
-    try {
-      await loadComparison({
-        bookId: nextBookId,
-        chapterNumber: usableChapterNumber,
-        openModal: true,
-      });
-    } catch {
-      setStatus('Unable to load that comparison right now.');
-    }
+    bibleComparison.resetOutput();
   };
 
   const runTool = async () => {
@@ -244,7 +100,7 @@ const BibleToolsPanel = ({
 
     try {
       if (activeTool === 'compare') {
-        await loadComparison({ openModal: true });
+        await bibleComparison.loadComparison({ openModal: true });
       }
 
       if (activeTool === 'resources') setRecords(await getBibleResources(versionId, resourceType || undefined));
@@ -284,20 +140,20 @@ const BibleToolsPanel = ({
           {activeTool === 'compare' && (
             <CompareTool
               books={books}
-              compareBook={compareBook}
-              compareBookId={compareBookId}
-              compareChapter={compareChapter}
-              compareChapterNumber={compareChapterNumber || chapterNumber}
-              compareChapters={compareChapters}
+              compareBook={bibleComparison.compareBook}
+              compareBookId={bibleComparison.bookId}
+              compareChapter={bibleComparison.compareChapter}
+              compareChapterNumber={bibleComparison.chapterNumber || selectedChapter?.number || 1}
+              compareChapters={bibleComparison.chapters}
               darkMode={darkMode}
               openComparePicker={openComparePicker}
               selectedBook={selectedBook}
-              selectedCompareVersions={selectedCompareVersions}
+              selectedCompareVersions={bibleComparison.selectedVersions}
               versions={versions}
-              onBookChange={setCompareBookId}
-              onChapterNumberChange={setCompareChapterNumber}
+              onBookChange={bibleComparison.setBookId}
+              onChapterNumberChange={bibleComparison.setChapterNumber}
               onOpenComparePickerChange={setOpenComparePicker}
-              onToggleVersion={toggleCompareVersion}
+              onToggleVersion={bibleComparison.toggleVersion}
             />
           )}
 
@@ -345,7 +201,7 @@ const BibleToolsPanel = ({
             onClick={runTool}
             className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
           >
-            {loading
+            {(loading || (activeTool === 'compare' && bibleComparison.loading))
               ? 'Loading...'
               : activeTool === 'compare'
                 ? 'Run comparison'
@@ -360,32 +216,32 @@ const BibleToolsPanel = ({
         </div>
 
         <ToolResults
-          comparison={comparison}
-          comparisonHasVerses={comparisonHasVerses}
+          comparison={bibleComparison.comparison}
+          comparisonHasVerses={bibleComparison.comparisonHasVerses}
           darkMode={darkMode}
           records={records}
           resultsClass={resultsClass}
-          selectedCompareVersions={selectedCompareVersions}
-          status={status}
+          selectedCompareVersions={bibleComparison.selectedVersions}
+          status={status || bibleComparison.status}
           onOpenComparison={() => setComparisonOpen(true)}
         />
       </section>
 
       <ScriptureComparisonModal
         books={books}
-        chapters={compareChapters}
-        comparison={comparison}
-        comparisonNavigationLoading={loading}
+        chapters={bibleComparison.chapters}
+        comparison={bibleComparison.comparison}
+        comparisonNavigationLoading={loading || bibleComparison.loading}
         darkMode={darkMode}
-        open={comparisonOpen}
-        selectedBookId={compareBookId || bookId}
-        selectedChapterNumber={compareChapterNumber || chapterNumber}
-        selectedCompareVersions={selectedCompareVersions}
+        open={bibleComparison.open}
+        selectedBookId={bibleComparison.bookId || selectedBook?.id}
+        selectedChapterNumber={bibleComparison.chapterNumber || selectedChapter?.number}
+        selectedCompareVersions={bibleComparison.selectedVersions}
         versions={versions}
-        versionLabelFor={getVersionLabel}
+        versionLabelFor={bibleComparison.versionLabelFor}
         onClose={() => setComparisonOpen(false)}
-        onComparisonReferenceChange={updateComparisonReference}
-        onSelectedCompareVersionsChange={updateCompareVersions}
+        onComparisonReferenceChange={bibleComparison.changeReference}
+        onSelectedCompareVersionsChange={bibleComparison.changeVersions}
       />
     </>
   );

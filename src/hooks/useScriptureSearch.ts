@@ -26,6 +26,8 @@ export const useScriptureSearch = (searchTerm: string, versionId?: string) => {
         const nextResults = await searchBible({
           q: normalizedSearchTerm,
           version: versionId || undefined,
+        }, {
+          signal: controller.signal,
         });
 
         if (!controller.signal.aborted) {
