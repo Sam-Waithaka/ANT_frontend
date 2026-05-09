@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { searchBible } from '../services/scriptureApi';
-import type { BibleSearchResult } from '../types/scripture';
+import type { BibleSearchConfig, BibleSearchResult } from '../types/scripture';
 
 const SEARCH_DEBOUNCE_MS = 350;
 const SEARCH_PAGE_SIZE = 25;
@@ -10,7 +10,7 @@ export const useScriptureSearch = (searchTerm: string, versionId?: string) => {
   const [count, setCount] = useState(0);
   const [next, setNext] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [searchConfig, setSearchConfig] = useState<Record<string, unknown> | undefined>();
+  const [searchConfig, setSearchConfig] = useState<BibleSearchConfig | undefined>();
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');

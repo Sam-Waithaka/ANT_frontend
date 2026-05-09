@@ -239,8 +239,13 @@ describe('scriptureNormalizers', () => {
             verse_number: 16,
           },
         ],
-        search_config: { fuzzy: true, page_size: 25 },
-        suggestions: ['upendo'],
+        search_config: 'simple',
+        suggestions: [
+          {
+            term: 'upndo',
+            options: [{ term: 'upendo', similarity: 0.82 }],
+          },
+        ],
       }),
     ).toEqual({
       count: 2,
@@ -263,8 +268,8 @@ describe('scriptureNormalizers', () => {
           version: 'SWNT',
         }),
       ],
-      searchConfig: { fuzzy: true, page_size: 25 },
-      suggestions: ['upendo'],
+      searchConfig: 'simple',
+      suggestions: ['upndo', 'upendo'],
     });
   });
 

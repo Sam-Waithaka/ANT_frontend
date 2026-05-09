@@ -131,7 +131,7 @@ export type BibleSearchBook = {
   osisId?: string;
 };
 
-export type BibleSearchConfig = Record<string, unknown>;
+export type BibleSearchConfig = Record<string, unknown> | string;
 
 export type BibleSearchResult = {
   allTermsMatch?: boolean;

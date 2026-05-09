@@ -218,6 +218,49 @@ test('desktop Bible tools load compare, glossary, resources, markers, and notes 
   await expect(page.getByText('A footnote returned by the notes endpoint.')).toBeVisible();
 });
 
+test('desktop Bible Tools search supports filters pagination and opening results', async ({ page }) => {
+  await page.goto('/scripture');
+  const toolsPanel = page.locator('aside').filter({ hasText: 'Bible tools' });
+
+  await toolsPanel.getByRole('button', { name: 'Search' }).click();
+  await toolsPanel.getByPlaceholder('Search Scripture').fill('begoten');
+  await toolsPanel.getByRole('button', { name: 'Choose versions' }).click();
+  await toolsPanel.getByLabel(/American Standard Version/i).check();
+  await toolsPanel.getByRole('combobox').first().selectOption('John');
+  await toolsPanel.getByRole('combobox').nth(1).selectOption('en');
+  await toolsPanel.getByRole('button', { name: 'New Testament' }).click();
+  await toolsPanel.getByLabel('Include close matches').check();
+
+  const searchRequest = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname === '/v1/bible/search/' && url.searchParams.get('q') === 'begoten';
+  });
+  await toolsPanel.getByRole('button', { name: 'Run search' }).click();
+  const request = await searchRequest;
+  const requestUrl = new URL(request.url());
+
+  expect(requestUrl.searchParams.get('versions')).toBe('ASV');
+  expect(requestUrl.searchParams.get('version')).toBeNull();
+  expect(requestUrl.searchParams.get('book')).toBe('John');
+  expect(requestUrl.searchParams.get('language_code')).toBe('en');
+  expect(requestUrl.searchParams.get('testament')).toBe('NT');
+  expect(requestUrl.searchParams.get('fuzzy')).toBe('true');
+  expect(requestUrl.searchParams.get('page_size')).toBe('25');
+
+  await expect(toolsPanel.getByText('26 results')).toBeVisible();
+  await expect(toolsPanel.getByText('Suggestions:')).toBeVisible();
+  await expect(toolsPanel.getByText('resurrection hope')).toBeVisible();
+  await expect(toolsPanel.getByRole('button', { name: 'John 20:1' })).toBeVisible();
+  await expect(toolsPanel.getByText('1-1 of 26')).toBeVisible();
+
+  await toolsPanel.getByRole('button', { name: 'Next search page' }).click();
+  await expect(toolsPanel.getByRole('button', { name: 'John 21:1' })).toBeVisible();
+  await expect(toolsPanel.getByText('26-26 of 26')).toBeVisible();
+
+  await toolsPanel.getByRole('button', { name: 'John 21:1' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'John 21' })).toBeVisible();
+});
+
 test('mobile Bible Tools panel supports embedded tools and closes with Escape', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/scripture');

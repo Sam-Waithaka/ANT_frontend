@@ -4,14 +4,18 @@ import {
   getBibleMarkers,
   getBibleNotes,
   getBibleResources,
+  searchBible,
 } from '../../../services/scriptureApi';
 import { useBibleComparison } from '../../../hooks/useBibleComparison';
+import { useScriptureReaderContext } from '../../../contexts/ScriptureReaderStore';
 import type {
   BibleBook,
   BibleChapter,
   BibleMarkerStatus,
   BibleNoteType,
   BibleResourceType,
+  BibleSearchResponse,
+  BibleSearchResult,
   BibleToolRecord,
   BibleVersion,
 } from '../../../types/scripture';
@@ -19,6 +23,7 @@ import ScriptureComparisonModal from '../ScriptureComparisonModal';
 import BibleToolsTabs from './BibleToolsTabs';
 import CompareTool from './CompareTool';
 import OptionGridTool from './OptionGridTool';
+import SearchTool, { type SearchScope } from './SearchTool';
 import ToolResults from './ToolResults';
 import {
   inputClass,
@@ -51,6 +56,14 @@ const BibleToolsPanel = ({
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
   const [openComparePicker, setOpenComparePicker] = useState<ComparePicker>(null);
   const [query, setQuery] = useState('love');
+  const [searchScope, setSearchScope] = useState<SearchScope>('selected');
+  const [searchVersionIds, setSearchVersionIds] = useState<string[]>([]);
+  const [searchBookId, setSearchBookId] = useState('');
+  const [searchLanguageCode, setSearchLanguageCode] = useState('');
+  const [searchTestament, setSearchTestament] = useState('');
+  const [searchFuzzy, setSearchFuzzy] = useState(false);
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchResponse, setSearchResponse] = useState<BibleSearchResponse | null>(null);
   const [resourceType, setResourceType] = useState<BibleResourceType | ''>('');
   const [markerStatus, setMarkerStatus] = useState<BibleMarkerStatus | ''>('');
   const [noteType, setNoteType] = useState<BibleNoteType | ''>('');
@@ -64,6 +77,7 @@ const BibleToolsPanel = ({
     selectedVersion,
     versions,
   });
+  const { openScripture } = useScriptureReaderContext();
   const versionId = selectedVersion?.id || versions[0]?.id || 'ASV';
   const selectedVersionLabel = selectedVersion?.abbreviation || versionId;
   const panelSurfaceClass = embedded
@@ -91,7 +105,50 @@ const BibleToolsPanel = ({
   const resetToolOutput = () => {
     setStatus('');
     setRecords([]);
+    setSearchResponse(null);
     bibleComparison.resetOutput();
+  };
+
+  const resetSearchPagination = () => {
+    setSearchPage(1);
+    setSearchResponse(null);
+    setStatus('');
+  };
+
+  const runSearch = async (page = searchPage) => {
+    if (query.trim().length < 2) {
+      setStatus('Search query must be at least 2 characters.');
+      setSearchResponse(null);
+      return;
+    }
+
+    const params = {
+      book: searchBookId || undefined,
+      fuzzy: searchFuzzy || undefined,
+      language_code: searchLanguageCode || undefined,
+      page,
+      page_size: 25,
+      q: query.trim(),
+      testament: searchTestament || undefined,
+      version: searchScope === 'selected' ? versionId : undefined,
+      versions: searchScope === 'versions' ? (searchVersionIds.length > 0 ? searchVersionIds.join(',') : versionId) : undefined,
+    };
+
+    setLoading(true);
+    setStatus('');
+    setRecords([]);
+    bibleComparison.resetOutput();
+
+    try {
+      const response = await searchBible(params);
+      setSearchPage(page);
+      setSearchResponse(response);
+    } catch {
+      setSearchResponse(null);
+      setStatus('Unable to search Scripture right now. Confirm the backend is running and the endpoint is available.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const runTool = async () => {
@@ -103,6 +160,9 @@ const BibleToolsPanel = ({
         await bibleComparison.loadComparison({ openModal: true });
       }
 
+      if (activeTool === 'search') {
+        await runSearch(1);
+      }
       if (activeTool === 'resources') setRecords(await getBibleResources(versionId, resourceType || undefined));
       if (activeTool === 'glossary') setRecords(await getBibleGlossary(versionId, query));
       if (activeTool === 'markers') setRecords(await getBibleMarkers(versionId, markerStatus || undefined));
@@ -112,6 +172,28 @@ const BibleToolsPanel = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const openSearchResult = (result: BibleSearchResult) => {
+    if (!result.book.osisId || !result.chapter) {
+      return;
+    }
+
+    openScripture({
+      book: result.book.osisId,
+      chapter: result.chapter,
+      verse: result.verseNumber,
+      versionId: result.version || versionId,
+    });
+  };
+
+  const toggleSearchVersion = (nextVersionId: string) => {
+    resetSearchPagination();
+    setSearchVersionIds((current) =>
+      current.includes(nextVersionId)
+        ? current.filter((item) => item !== nextVersionId)
+        : [...current, nextVersionId],
+    );
   };
 
   return (
@@ -154,6 +236,51 @@ const BibleToolsPanel = ({
               onChapterNumberChange={bibleComparison.setChapterNumber}
               onOpenComparePickerChange={setOpenComparePicker}
               onToggleVersion={bibleComparison.toggleVersion}
+            />
+          )}
+
+          {activeTool === 'search' && (
+            <SearchTool
+              books={books}
+              darkMode={darkMode}
+              fuzzy={searchFuzzy}
+              languageCode={searchLanguageCode}
+              page={searchPage}
+              query={query}
+              response={searchResponse}
+              scope={searchScope}
+              selectedBookId={searchBookId}
+              selectedVersionIds={searchVersionIds}
+              selectedVersionLabel={selectedVersionLabel}
+              testament={searchTestament}
+              versions={versions}
+              onBookChange={(bookId) => {
+                resetSearchPagination();
+                setSearchBookId(bookId);
+              }}
+              onFuzzyChange={(value) => {
+                resetSearchPagination();
+                setSearchFuzzy(value);
+              }}
+              onLanguageCodeChange={(languageCode) => {
+                resetSearchPagination();
+                setSearchLanguageCode(languageCode);
+              }}
+              onPageChange={(page) => void runSearch(page)}
+              onQueryChange={(nextQuery) => {
+                resetSearchPagination();
+                setQuery(nextQuery);
+              }}
+              onResultOpen={openSearchResult}
+              onScopeChange={(scope) => {
+                resetSearchPagination();
+                setSearchScope(scope);
+              }}
+              onTestamentChange={(testament) => {
+                resetSearchPagination();
+                setSearchTestament(testament);
+              }}
+              onToggleVersion={toggleSearchVersion}
             />
           )}
 
@@ -205,6 +332,8 @@ const BibleToolsPanel = ({
               ? 'Loading...'
               : activeTool === 'compare'
                 ? 'Run comparison'
+                : activeTool === 'search'
+                  ? 'Run search'
                 : activeTool === 'resources'
                   ? 'Load resources'
                   : activeTool === 'markers'
@@ -215,16 +344,20 @@ const BibleToolsPanel = ({
           </button>
         </div>
 
-        <ToolResults
-          comparison={bibleComparison.comparison}
-          comparisonHasVerses={bibleComparison.comparisonHasVerses}
-          darkMode={darkMode}
-          records={records}
-          resultsClass={resultsClass}
-          selectedCompareVersions={bibleComparison.selectedVersions}
-          status={status || bibleComparison.status}
-          onOpenComparison={() => setComparisonOpen(true)}
-        />
+        {activeTool === 'search' ? (
+          status ? <p className="mt-4 text-sm leading-6 text-red-800 dark:text-red-200">{status}</p> : null
+        ) : (
+          <ToolResults
+            comparison={bibleComparison.comparison}
+            comparisonHasVerses={bibleComparison.comparisonHasVerses}
+            darkMode={darkMode}
+            records={records}
+            resultsClass={resultsClass}
+            selectedCompareVersions={bibleComparison.selectedVersions}
+            status={status || bibleComparison.status}
+            onOpenComparison={() => setComparisonOpen(true)}
+          />
+        )}
       </section>
 
       <ScriptureComparisonModal

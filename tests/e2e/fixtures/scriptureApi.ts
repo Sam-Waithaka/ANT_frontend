@@ -186,12 +186,13 @@ export const mockScriptureApi = async (page: Page) => {
     const url = new URL(route.request().url());
     const query = url.searchParams.get('q') || '';
     const pageNumber = Number(url.searchParams.get('page') || '1');
+    const count = query === 'begoten' ? 26 : 2;
     const next = pageNumber === 1
       ? 'https://api.aicnjoro.org/v1/bible/search/?q=resurrection&version=BSB&page=2&page_size=25'
       : null;
 
     await fulfillJson(route, {
-      count: 2,
+      count,
       next,
       previous: pageNumber > 1 ? 'https://api.aicnjoro.org/v1/bible/search/?q=resurrection&version=BSB&page=1&page_size=25' : null,
       results: pageNumber === 1

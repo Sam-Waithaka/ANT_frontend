@@ -447,12 +447,18 @@ const normalizeSearchCredit = (payload: unknown): BibleChapterCredit | undefined
 const normalizeSuggestionList = (payload: unknown) =>
   Array.isArray(payload)
     ? payload
-        .map((item) => {
+        .flatMap((item) => {
           if (typeof item === 'string') {
-            return item.trim();
+            return [item.trim()];
           }
 
-          return readString(asRecord(item), ['text', 'query', 'suggestion', 'term']);
+          const record = asRecord(item);
+          const directSuggestion = readString(record, ['text', 'query', 'suggestion', 'term']);
+          const optionSuggestions = Array.isArray(record.options)
+            ? record.options.map((option) => readString(asRecord(option), ['text', 'query', 'suggestion', 'term']))
+            : [];
+
+          return [directSuggestion, ...optionSuggestions];
         })
         .filter(Boolean)
     : [];
@@ -502,7 +508,7 @@ export const normalizeSearchResponse = (payload: unknown): BibleSearchResponse =
     next: readString(record, ['next']) || null,
     previous: readString(record, ['previous']) || null,
     results,
-    searchConfig: asRecord(record.search_config),
+    searchConfig: typeof record.search_config === 'string' ? record.search_config : asRecord(record.search_config),
     suggestions: normalizeSuggestionList(record.suggestions),
   };
 };

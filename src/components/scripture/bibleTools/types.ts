@@ -4,11 +4,12 @@ import type {
   BibleResourceType,
 } from '../../../types/scripture';
 
-export type ToolKey = 'compare' | 'resources' | 'glossary' | 'markers' | 'notes';
+export type ToolKey = 'compare' | 'search' | 'resources' | 'glossary' | 'markers' | 'notes';
 export type ComparePicker = 'book' | 'chapter' | null;
 
 export const tools: Array<[ToolKey, string]> = [
   ['compare', 'Compare'],
+  ['search', 'Search'],
   ['resources', 'Resources'],
   ['glossary', 'Glossary'],
   ['markers', 'Markers'],
