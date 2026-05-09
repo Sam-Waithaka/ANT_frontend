@@ -8,6 +8,7 @@ import type {
   BibleMarkerStatus,
   BibleNoteType,
   BibleResourceType,
+  BibleSearchResponse,
   BibleToolRecord,
   BibleVerse,
   BibleVersion,
@@ -21,7 +22,7 @@ import {
   normalizeChapterDetailResponse,
   normalizeChaptersResponse,
   normalizeComparisonResponse,
-  normalizeSearchRecordsResponse,
+  normalizeSearchResponse,
   normalizeToolRecordsResponse,
   normalizeVersionsResponse,
   readString,
@@ -143,13 +144,17 @@ export const compareBibleChapter = async (
 
 export const searchBible = async (params: {
   book?: string;
+  fuzzy?: boolean;
+  lang?: string;
   language?: string;
   language_code?: string;
+  page?: number;
+  page_size?: number;
   q: string;
   testament?: string;
   version?: string;
   versions?: string;
-}, options: ApiRequestOptions = {}): Promise<BibleToolRecord[]> => {
+}, options: ApiRequestOptions = {}): Promise<BibleSearchResponse> => {
   const payload = await freshGet<unknown>(`/v1/bible/search/${toQueryString(params)}`, options);
-  return normalizeSearchRecordsResponse(payload);
+  return normalizeSearchResponse(payload);
 };

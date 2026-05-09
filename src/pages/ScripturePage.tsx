@@ -44,6 +44,7 @@ const ScripturePage = () => {
     goToPreviousChapter,
     isResolvingReference,
     loading,
+    openScripture,
     canGoNext,
     canGoPrevious,
     selectedVerseNumber,
@@ -286,6 +287,21 @@ const ScripturePage = () => {
     }
   };
 
+  const openSearchResult = (result: (typeof scriptureSearch.results)[number]) => {
+    if (!result.book.osisId || !result.chapter) {
+      return;
+    }
+
+    setSearchTerm('');
+    setForceSearchBarOpen(false);
+    openScripture({
+      book: result.book.osisId,
+      chapter: result.chapter,
+      verse: result.verseNumber,
+      versionId: result.version || selectedVersionId,
+    });
+  };
+
   const openVerseComparison = async () => {
     if (!canCompareVerse) {
       return;
@@ -350,9 +366,16 @@ const ScripturePage = () => {
               footnotes={footnotes}
               licenseNote={licenseNote}
               loading={isLoading}
+              onSearchLoadMore={scriptureSearch.loadMore}
+              onSearchResultOpen={openSearchResult}
               searchError={scriptureSearch.error}
+              searchCount={scriptureSearch.count}
+              searchHasFuzzyResults={scriptureSearch.hasFuzzyResults}
+              searchHasMore={scriptureSearch.hasMore}
               searchLoading={scriptureSearch.loading}
+              searchLoadingMore={scriptureSearch.loadingMore}
               searchResults={scriptureSearch.results}
+              searchSuggestions={scriptureSearch.suggestions}
               searchTerm={searchTerm}
               onVerseSelect={handleVerseSelect}
               selectedVerseNumbers={selectedVerses.map((verse) => verse.number)}

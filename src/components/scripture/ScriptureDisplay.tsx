@@ -4,7 +4,7 @@ import type {
   BibleChapter,
   BibleChapterCredit,
   BibleChapterNote,
-  BibleToolRecord,
+  BibleSearchResult,
   BibleVerse,
   BibleVersion,
 } from '../../types/scripture';
@@ -23,10 +23,17 @@ type ScriptureDisplayProps = {
   licenseNote?: BibleChapterNote;
   loading: boolean;
   onVerseSelect?: (verse: BibleVerse) => void;
+  onSearchResultOpen?: (result: BibleSearchResult) => void;
+  searchCount?: number;
   selectedVerseNumbers?: number[];
   searchError?: string;
+  searchHasFuzzyResults?: boolean;
+  searchHasMore?: boolean;
   searchLoading?: boolean;
-  searchResults?: BibleToolRecord[];
+  searchLoadingMore?: boolean;
+  searchSuggestions?: string[];
+  onSearchLoadMore?: () => void;
+  searchResults?: BibleSearchResult[];
   searchTerm: string;
   selectedBook?: BibleBook;
   selectedChapter?: BibleChapter;
@@ -45,9 +52,16 @@ const ScriptureDisplay = ({
   licenseNote,
   loading,
   onVerseSelect,
+  onSearchResultOpen,
+  searchCount = 0,
   selectedVerseNumbers = [],
   searchError = '',
+  searchHasFuzzyResults = false,
+  searchHasMore = false,
   searchLoading = false,
+  searchLoadingMore = false,
+  searchSuggestions = [],
+  onSearchLoadMore = () => undefined,
   searchResults = [],
   searchTerm,
   selectedBook,
@@ -82,11 +96,18 @@ const ScriptureDisplay = ({
       <div className="pt-8">
         {isSearching ? (
           <ScriptureSearchResults
+            count={searchCount}
             darkMode={darkMode}
             error={searchError}
+            hasFuzzyResults={searchHasFuzzyResults}
+            hasMore={searchHasMore}
             loading={searchLoading}
+            loadingMore={searchLoadingMore}
+            onLoadMore={onSearchLoadMore}
+            onResultOpen={onSearchResultOpen}
             query={searchTerm.trim()}
             results={searchResults}
+            suggestions={searchSuggestions}
           />
         ) : error ? (
           <ScriptureStatus darkMode={darkMode} title="Connection issue" message={error} tone="error" />

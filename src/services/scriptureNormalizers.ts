@@ -6,6 +6,8 @@ import type {
   BibleComparisonChapter,
   BibleComparisonVerse,
   BibleNoteType,
+  BibleSearchResponse,
+  BibleSearchResult,
   BibleToolRecord,
   BibleVerse,
   BibleVersion,
@@ -425,6 +427,85 @@ export const normalizeSearchRecordsResponse = (payload: unknown): BibleToolRecor
       title: reference,
     };
   });
+
+const normalizeSearchCredit = (payload: unknown): BibleChapterCredit | undefined => {
+  const credit = asRecord(payload);
+
+  if (Object.keys(credit).length === 0) {
+    return undefined;
+  }
+
+  return {
+    licenseNotes: readString(credit, ['license_notes']) || undefined,
+    licenseType: readString(credit, ['license_type']) || undefined,
+    licenseUrl: readString(credit, ['license_url']) || undefined,
+    source: readString(credit, ['source']) || undefined,
+    sourceUrl: readString(credit, ['source_url']) || undefined,
+  };
+};
+
+const normalizeSuggestionList = (payload: unknown) =>
+  Array.isArray(payload)
+    ? payload
+        .map((item) => {
+          if (typeof item === 'string') {
+            return item.trim();
+          }
+
+          return readString(asRecord(item), ['text', 'query', 'suggestion', 'term']);
+        })
+        .filter(Boolean)
+    : [];
+
+const normalizeSearchResult = (item: unknown, index: number): BibleSearchResult => {
+  const record = asRecord(item);
+  const bookRecord = asRecord(record.book);
+  const bookName = readString(bookRecord, ['name', 'canonical_name']) || readString(record, ['book_name', 'book']);
+  const bookOsisId = readString(bookRecord, ['osis_id', 'osisId']) || readString(record, ['book_osis_id', 'osis_book', 'book_id']);
+  const chapter = readNumber(record, ['chapter', 'chapter_number'], 0) || undefined;
+  const verseNumber = readNumber(record, ['verse_number', 'verse', 'number'], 0) || undefined;
+  const computedReference = [bookName || bookOsisId, chapter && verseNumber ? `${chapter}:${verseNumber}` : chapter].filter(Boolean).join(' ');
+  const reference = readString(
+    record,
+    ['reference', 'display_reference', 'verse_reference', 'ref', 'osis_ref', 'title'],
+    computedReference || `Result ${index + 1}`,
+  );
+  const version = readString(record, ['version', 'version_abbr', 'version_id', 'translation']) || undefined;
+
+  return {
+    allTermsMatch: readBoolean(record, ['all_terms_match']),
+    book: {
+      name: bookName || undefined,
+      osisId: bookOsisId || undefined,
+    },
+    chapter,
+    credit: normalizeSearchCredit(record.credit),
+    exactMatch: readBoolean(record, ['exact_match']),
+    headline: readString(record, ['headline']) || undefined,
+    id: readString(record, ['id', '_id', 'uuid'], `${reference}-${index}`),
+    rank: readNumber(record, ['rank'], 0) || undefined,
+    reference,
+    searchType: readString(record, ['search_type']) || undefined,
+    similarity: readNumber(record, ['similarity'], 0) || undefined,
+    text: readString(record, ['text', 'content', 'verseText', 'body', 'snippet']) || undefined,
+    verseNumber,
+    version,
+  };
+};
+
+export const normalizeSearchResponse = (payload: unknown): BibleSearchResponse => {
+  const record = asRecord(payload);
+  const results = unwrapCollection(payload).map(normalizeSearchResult);
+
+  return {
+    count: readNumber(record, ['count'], results.length),
+    next: readString(record, ['next']) || null,
+    previous: readString(record, ['previous']) || null,
+    results,
+    searchConfig: asRecord(record.search_config),
+    suggestions: normalizeSuggestionList(record.suggestions),
+  };
+};
 
 export const normalizeComparisonResponse = (
   payload: unknown,

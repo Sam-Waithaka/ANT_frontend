@@ -137,15 +137,37 @@ test('Scripture search replaces the reading view with API results and clears bac
   await page.goto('/scripture');
 
   const searchInput = page.getByPlaceholder('Search Scripture...').first();
+  const searchRequest = page.waitForRequest((request) => {
+    const url = new URL(request.url());
+    return url.pathname === '/v1/bible/search/' && url.searchParams.get('q') === 'resurrection';
+  });
   await searchInput.fill('resurrection');
+  const request = await searchRequest;
+  const requestUrl = new URL(request.url());
+
+  expect(requestUrl.searchParams.get('version')).toBe('BSB');
+  expect(requestUrl.searchParams.get('page_size')).toBe('25');
 
   await expect(page.getByRole('heading', { name: 'Search Scripture' })).toBeVisible();
   await expect(page.getByText('Showing results for "resurrection"')).toBeVisible();
+  await expect(page.getByText('2 results for "resurrection"')).toBeVisible();
+  await expect(page.getByText('Showing close matches')).toBeVisible();
+  await expect(page.getByText('Suggestions:')).toBeVisible();
+  await expect(page.getByText('resurrection hope')).toBeVisible();
   await expect(page.getByText('John 20:1')).toBeVisible();
   await expect(page.getByText('Search hit for resurrection: Early on the first day of the week.')).toBeVisible();
 
+  await page.getByRole('button', { name: 'Load more' }).click();
+  await expect(page.getByText('John 21:1')).toBeVisible();
+  await expect(page.getByText('Another result for resurrection hope.')).toBeVisible();
+
   await searchInput.fill('');
   await expect(page.getByRole('heading', { level: 1, name: 'Genesis 1' })).toBeVisible();
+
+  await searchInput.fill('resurrection');
+  await expect(page.getByRole('button', { name: 'John 20:1' })).toBeVisible();
+  await page.getByRole('button', { name: 'John 20:1' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'John 20' })).toBeVisible();
 });
 
 test('Scripture action sheet copy actions show feedback and Escape closes the sheet', async ({ page, context }) => {

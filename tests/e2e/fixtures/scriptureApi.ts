@@ -185,15 +185,49 @@ export const mockScriptureApi = async (page: Page) => {
   await page.route('**/v1/bible/search/**', async (route) => {
     const url = new URL(route.request().url());
     const query = url.searchParams.get('q') || '';
+    const pageNumber = Number(url.searchParams.get('page') || '1');
+    const next = pageNumber === 1
+      ? 'https://api.aicnjoro.org/v1/bible/search/?q=resurrection&version=BSB&page=2&page_size=25'
+      : null;
 
-    await fulfillJson(route, [
-      {
-        reference: 'John 20:1',
-        text: `Search hit for ${query}: Early on the first day of the week.`,
-        version: 'BSB',
-        testament: 'NT',
-      },
-    ]);
+    await fulfillJson(route, {
+      count: 2,
+      next,
+      previous: pageNumber > 1 ? 'https://api.aicnjoro.org/v1/bible/search/?q=resurrection&version=BSB&page=1&page_size=25' : null,
+      results: pageNumber === 1
+        ? [
+            {
+              book: { name: 'John', osis_id: 'John' },
+              chapter: 20,
+              credit: { source: 'Search Fixture' },
+              exact_match: false,
+              headline: `Search hit for <mark>${query}</mark>: Early on the first day of the week.`,
+              rank: 1,
+              reference: 'John 20:1',
+              search_type: 'fuzzy',
+              similarity: 0.82,
+              text: `Search hit for ${query}: Early on the first day of the week.`,
+              version: url.searchParams.get('version') || 'BSB',
+              verse_number: 1,
+            },
+          ]
+        : [
+            {
+              book: { name: 'John', osis_id: 'John' },
+              chapter: 21,
+              exact_match: true,
+              headline: 'Another result for <mark>resurrection</mark> hope.',
+              rank: 2,
+              reference: 'John 21:1',
+              search_type: 'full_text',
+              text: 'Afterward Jesus appeared again to the disciples by the Sea of Tiberias.',
+              version: url.searchParams.get('version') || 'BSB',
+              verse_number: 1,
+            },
+          ],
+      search_config: { page_size: Number(url.searchParams.get('page_size') || '0') },
+      suggestions: ['resurrection hope'],
+    });
   });
 
   await page.route('**/v1/bible/versions/*/resources/**', async (route) => fulfillJson(route, [

@@ -126,6 +126,35 @@ export type BibleToolRecord = {
   meta?: string;
 };
 
+export type BibleSearchBook = {
+  name?: string;
+  osisId?: string;
+};
+
+export type BibleSearchConfig = Record<string, unknown>;
+
+export type BibleSearchResult = {
+  allTermsMatch?: boolean;
+  book: BibleSearchBook;
+  chapter?: number;
+  credit?: BibleChapterCredit;
+  exactMatch?: boolean;
+  headline?: string;
+  id: string;
+  rank?: number;
+  reference: string;
+  searchType?: string;
+  similarity?: number;
+  text?: string;
+  verseNumber?: number;
+  version?: string;
+};
+
+export type BibleSearchResponse = PaginatedResponse<BibleSearchResult> & {
+  searchConfig?: BibleSearchConfig;
+  suggestions: string[];
+};
+
 export type BibleComparisonReading = {
   text: string;
   version: string;

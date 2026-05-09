@@ -5,6 +5,7 @@ import {
   normalizeChaptersResponse,
   normalizeComparisonResponse,
   normalizePaginatedResponse,
+  normalizeSearchResponse,
   normalizeSearchRecordsResponse,
   normalizeVersionsResponse,
 } from '../../src/services/scriptureNormalizers';
@@ -213,6 +214,58 @@ describe('scriptureNormalizers', () => {
         title: 'Yohana 3:16',
       },
     ]);
+  });
+
+  it('normalizes paginated search responses with navigation metadata and result contract', () => {
+    expect(
+      normalizeSearchResponse({
+        count: 2,
+        next: 'https://api.aicnjoro.org/v1/bible/search/?page=2',
+        previous: null,
+        results: [
+          {
+            all_terms_match: true,
+            book: { name: 'Yohana', osis_id: 'John' },
+            chapter: 3,
+            credit: { license_type: 'Public Domain', source: 'eBible' },
+            exact_match: false,
+            headline: 'Kwa maana Mungu <mark>aliupenda</mark> ulimwengu.',
+            rank: 1,
+            reference: 'Yohana 3:16',
+            search_type: 'fuzzy',
+            similarity: 0.91,
+            text: 'Kwa maana Mungu aliupenda ulimwengu.',
+            version: 'SWNT',
+            verse_number: 16,
+          },
+        ],
+        search_config: { fuzzy: true, page_size: 25 },
+        suggestions: ['upendo'],
+      }),
+    ).toEqual({
+      count: 2,
+      next: 'https://api.aicnjoro.org/v1/bible/search/?page=2',
+      previous: null,
+      results: [
+        expect.objectContaining({
+          allTermsMatch: true,
+          book: { name: 'Yohana', osisId: 'John' },
+          chapter: 3,
+          credit: expect.objectContaining({ licenseType: 'Public Domain', source: 'eBible' }),
+          exactMatch: false,
+          headline: 'Kwa maana Mungu <mark>aliupenda</mark> ulimwengu.',
+          rank: 1,
+          reference: 'Yohana 3:16',
+          searchType: 'fuzzy',
+          similarity: 0.91,
+          text: 'Kwa maana Mungu aliupenda ulimwengu.',
+          verseNumber: 16,
+          version: 'SWNT',
+        }),
+      ],
+      searchConfig: { fuzzy: true, page_size: 25 },
+      suggestions: ['upendo'],
+    });
   });
 
   it('normalizes comparison results into verse rows for requested versions', () => {
