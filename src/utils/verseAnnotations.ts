@@ -50,22 +50,43 @@ const dedupeAnnotations = (annotations: BibleVerseAnnotation[]) => {
   });
 };
 
-const offsetFor = (annotation: BibleVerseAnnotation, textLength: number) => {
+const isWordCharacter = (value: string) => /[\p{L}\p{N}'’-]/u.test(value);
+
+const snapInsideWordToWordEnd = (offset: number, text: string) => {
+  if (
+    offset <= 0 ||
+    offset >= text.length ||
+    !isWordCharacter(text[offset - 1] || '') ||
+    !isWordCharacter(text[offset] || '')
+  ) {
+    return offset;
+  }
+
+  let nextOffset = offset;
+
+  while (nextOffset < text.length && isWordCharacter(text[nextOffset] || '')) {
+    nextOffset += 1;
+  }
+
+  return nextOffset;
+};
+
+const offsetFor = (annotation: BibleVerseAnnotation, text: string) => {
   const offset = annotation.endOffset ?? annotation.startOffset;
 
   if (offset === undefined || !Number.isFinite(offset)) {
     return undefined;
   }
 
-  return Math.max(0, Math.min(offset, textLength));
+  return snapInsideWordToWordEnd(Math.max(0, Math.min(offset, text.length)), text);
 };
 
-const groupByOffset = (annotations: BibleVerseAnnotation[], textLength: number) => {
+const groupByOffset = (annotations: BibleVerseAnnotation[], text: string) => {
   const grouped = new Map<number, BibleVerseAnnotation[]>();
   const missingOffset: BibleVerseAnnotation[] = [];
 
   dedupeAnnotations(annotations.filter(hasReadableContent)).forEach((annotation) => {
-    const offset = offsetFor(annotation, textLength);
+    const offset = offsetFor(annotation, text);
 
     if (offset === undefined) {
       missingOffset.push(annotation);
@@ -87,7 +108,7 @@ export const buildVerseAnnotationView = (
   options: BuildVerseAnnotationViewOptions = {},
 ): VerseAnnotationView => {
   // Keep rich annotation placement separate from rendering so Study Mode can opt in without making the default reader noisy.
-  const { grouped, missingOffset } = groupByOffset(annotations, text.length);
+  const { grouped, missingOffset } = groupByOffset(annotations, text);
   const sortedOffsets = Array.from(grouped.keys()).sort((left, right) => left - right);
   const offsetLabels = new Map<number, number>();
   const inlineNotes: VerseAnnotationNote[] = [];
