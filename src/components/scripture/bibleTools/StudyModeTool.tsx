@@ -84,6 +84,13 @@ const StudyModeTool = ({
       <label className="text-xs font-black uppercase tracking-[0.14em] text-red-900 dark:text-red-200" htmlFor="study-verse">
         Verse tools
       </label>
+      <p className={`mt-2 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+        View word-level study details for this verse, 
+        such as original word links, lemmas, Strong's numbers, 
+        and grammar notes when available. Tokens are not needed 
+        for normal Bible reading; they are for deeper word-level 
+        insight. Load the resource to see.
+      </p>
       <input
         id="study-verse"
         min={1}
