@@ -34,6 +34,7 @@ const ScripturePage = () => {
   const [selectedVerses, setSelectedVerses] = useState<BibleVerse[]>([]);
   const [focusVerseNumber, setFocusVerseNumber] = useState<number | null>(null);
   const [actionMessage, setActionMessage] = useState('');
+  const [studyMode, setStudyMode] = useState(false);
   const compactHeader = useCompactHeader();
   const {
     books,
@@ -382,6 +383,7 @@ const ScripturePage = () => {
               selectedBook={selectedBook}
               selectedChapter={selectedChapter}
               selectedVersion={selectedVersion}
+              studyMode={studyMode}
               verses={verses}
             />
             <ScriptureSidePanel
@@ -392,10 +394,12 @@ const ScripturePage = () => {
               selectedBook={selectedBook}
               selectedChapter={selectedChapter}
               selectedVersion={selectedVersion}
+              studyMode={studyMode}
               versions={versions}
               crossReferences={crossReferences}
               onNext={goToNextChapter}
               onPrevious={goToPreviousChapter}
+              onStudyModeChange={setStudyMode}
             />
           </div>
         </main>
@@ -422,7 +426,9 @@ const ScripturePage = () => {
         selectedBook={selectedBook}
         selectedChapter={selectedChapter}
         selectedVersion={selectedVersion}
+        studyMode={studyMode}
         versions={versions}
+        onStudyModeChange={setStudyMode}
       />
       <ScriptureCompactControls
         compact={compactHeader && !forceSearchBarOpen}

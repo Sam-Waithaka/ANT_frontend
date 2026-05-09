@@ -72,4 +72,16 @@ describe('verseAnnotations', () => {
       { markerLabels: [1], text: '' },
     ]);
   });
+
+  it('only exposes raw content when explicitly requested for study mode', () => {
+    const annotation = {
+      content: 'Study note.',
+      id: 'a1',
+      rawContent: '<note>Raw study payload.</note>',
+      type: 'footnote',
+    };
+
+    expect(JSON.stringify(buildVerseAnnotationView('Peace.', [annotation]))).not.toContain('<note>');
+    expect(JSON.stringify(buildVerseAnnotationView('Peace.', [annotation], { includeRawContent: true }))).toContain('<note>');
+  });
 });

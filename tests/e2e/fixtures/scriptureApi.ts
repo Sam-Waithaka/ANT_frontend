@@ -188,6 +188,7 @@ export const mockScriptureApi = async (page: Page) => {
               annotation_type: 'footnote',
               content: 'Annotation footnote returned by the annotations endpoint.',
               end_offset: 16,
+              raw_content: '<note caller="study">Raw annotation source text.</note>',
               source_marker: 'osis:note',
               start_offset: 16,
               verse_number: 1,

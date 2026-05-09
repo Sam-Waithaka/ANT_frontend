@@ -24,6 +24,7 @@ import BibleToolsTabs from './BibleToolsTabs';
 import CompareTool from './CompareTool';
 import OptionGridTool from './OptionGridTool';
 import SearchTool, { type SearchScope } from './SearchTool';
+import StudyModeTool from './StudyModeTool';
 import ToolResults from './ToolResults';
 import {
   inputClass,
@@ -41,7 +42,9 @@ type BibleToolsPanelProps = {
   selectedBook?: BibleBook;
   selectedChapter?: BibleChapter;
   selectedVersion?: BibleVersion;
+  studyMode: boolean;
   versions: BibleVersion[];
+  onStudyModeChange: (enabled: boolean) => void;
 };
 
 const BibleToolsPanel = ({
@@ -51,7 +54,9 @@ const BibleToolsPanel = ({
   selectedBook,
   selectedChapter,
   selectedVersion,
+  studyMode,
   versions,
+  onStudyModeChange,
 }: BibleToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState<ToolKey>('compare');
   const [openComparePicker, setOpenComparePicker] = useState<ComparePicker>(null);
@@ -330,6 +335,14 @@ const BibleToolsPanel = ({
             />
           )}
 
+          {activeTool === 'study' && (
+            <StudyModeTool
+              darkMode={darkMode}
+              enabled={studyMode}
+              onChange={onStudyModeChange}
+            />
+          )}
+
           {activeTool === 'resources' && (
             <OptionGridTool
               allLabel="All Types"
@@ -369,28 +382,30 @@ const BibleToolsPanel = ({
             />
           )}
 
-          <button
-            type="button"
-            onClick={runTool}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
-          >
-            {(loading || (activeTool === 'compare' && bibleComparison.loading))
-              ? 'Loading...'
-              : activeTool === 'compare'
-                ? 'Run comparison'
-                : activeTool === 'search'
-                  ? 'Run search'
-                : activeTool === 'resources'
-                  ? 'Load resources'
-                  : activeTool === 'markers'
-                    ? 'Load markers'
-                    : activeTool === 'notes'
-                      ? 'Load notes'
-                      : 'Run tool'}
-          </button>
+          {activeTool !== 'study' && (
+            <button
+              type="button"
+              onClick={runTool}
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
+            >
+              {(loading || (activeTool === 'compare' && bibleComparison.loading))
+                ? 'Loading...'
+                : activeTool === 'compare'
+                  ? 'Run comparison'
+                  : activeTool === 'search'
+                    ? 'Run search'
+                  : activeTool === 'resources'
+                    ? 'Load resources'
+                    : activeTool === 'markers'
+                      ? 'Load markers'
+                      : activeTool === 'notes'
+                        ? 'Load notes'
+                        : 'Run tool'}
+            </button>
+          )}
         </div>
 
-        {activeTool === 'search' ? (
+        {activeTool === 'study' ? null : activeTool === 'search' ? (
           status ? <p className="mt-4 text-sm leading-6 text-red-800 dark:text-red-200">{status}</p> : null
         ) : (
           <ToolResults

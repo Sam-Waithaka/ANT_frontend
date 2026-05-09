@@ -18,6 +18,10 @@ export type VerseAnnotationView = {
   segments: VerseAnnotationSegment[];
 };
 
+type BuildVerseAnnotationViewOptions = {
+  includeRawContent?: boolean;
+};
+
 const hasReadableContent = (annotation: BibleVerseAnnotation) => annotation.content.trim().length > 0;
 const withoutRawContent = ({ rawContent: _rawContent, ...annotation }: BibleVerseAnnotation): BibleVerseAnnotation => annotation;
 
@@ -55,6 +59,7 @@ const groupByOffset = (annotations: BibleVerseAnnotation[], textLength: number) 
 export const buildVerseAnnotationView = (
   text: string,
   annotations: BibleVerseAnnotation[] = [],
+  options: BuildVerseAnnotationViewOptions = {},
 ): VerseAnnotationView => {
   // Keep rich annotation placement separate from rendering so Study Mode can opt in without making the default reader noisy.
   const { grouped, missingOffset } = groupByOffset(annotations, text.length);
@@ -62,10 +67,11 @@ export const buildVerseAnnotationView = (
   const offsetLabels = new Map<number, number>();
   const inlineNotes: VerseAnnotationNote[] = [];
   const verseNumberNotes: VerseAnnotationNote[] = [];
+  const prepareAnnotation = options.includeRawContent ? (annotation: BibleVerseAnnotation) => annotation : withoutRawContent;
 
   sortedOffsets.forEach((offset) => {
     const label = inlineNotes.length + 1;
-    const groupedAnnotations = (grouped.get(offset) || []).map(withoutRawContent);
+    const groupedAnnotations = (grouped.get(offset) || []).map(prepareAnnotation);
 
     offsetLabels.set(offset, label);
     inlineNotes.push({
@@ -81,7 +87,7 @@ export const buildVerseAnnotationView = (
 
     if (!existing) {
       verseNumberNotes.push({
-        annotations: [withoutRawContent(annotation)],
+        annotations: [prepareAnnotation(annotation)],
         id: `verse-${annotation.id}`,
         label: inlineNotes.length + verseNumberNotes.length + 1,
       });

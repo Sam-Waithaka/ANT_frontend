@@ -119,6 +119,15 @@ test('Scripture reference controls change version, book, chapter, and next navig
 
   await expect(page.getByRole('heading', { level: 1, name: 'Genesis 1' })).toBeVisible();
   await expect(page.getByText('Annotation footnote returned by the annotations endpoint.')).toBeVisible();
+  await expect(page.locator('[data-footnote-marker="1-1"]')).toBeVisible();
+  await expect(page.getByText('<note caller="study">Raw annotation source text.</note>')).toHaveCount(0);
+
+  const toolsPanel = page.locator('aside').filter({ hasText: 'Bible tools' });
+  await toolsPanel.getByRole('button', { name: 'Study' }).click();
+  await toolsPanel.getByRole('switch', { name: 'Enable study mode' }).click();
+  await expect(page.getByText('Study Annotations')).toBeVisible();
+  await expect(page.getByText('<note caller="study">Raw annotation source text.</note>')).toBeVisible();
+
   const readerControls = page.locator('div.pointer-events-auto').filter({
     has: page.getByRole('button', { name: 'Previous chapter' }),
   }).first();

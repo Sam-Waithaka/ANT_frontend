@@ -38,6 +38,7 @@ type ScriptureDisplayProps = {
   selectedBook?: BibleBook;
   selectedChapter?: BibleChapter;
   selectedVersion?: BibleVersion;
+  studyMode?: boolean;
   verses: BibleVerse[];
 };
 
@@ -67,6 +68,7 @@ const ScriptureDisplay = ({
   selectedBook,
   selectedChapter,
   selectedVersion,
+  studyMode = false,
   verses,
 }: ScriptureDisplayProps) => {
   const query = searchTerm.trim().toLowerCase();
@@ -139,6 +141,7 @@ const ScriptureDisplay = ({
             licenseNote={licenseNote}
             onVerseSelect={onVerseSelect}
             selectedVerseNumbers={selectedVerseNumbers}
+            studyMode={studyMode}
             verses={scriptureVerses}
           />
         )}

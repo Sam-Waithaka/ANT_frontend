@@ -12,10 +12,12 @@ type ScriptureSidePanelProps = {
   selectedBook?: BibleBook;
   selectedChapter?: BibleChapter;
   selectedVersion?: BibleVersion;
+  studyMode: boolean;
   versions: BibleVersion[];
   crossReferences: BibleChapterNote[];
   onNext: () => void;
   onPrevious: () => void;
+  onStudyModeChange: (enabled: boolean) => void;
 };
 
 const ScriptureSidePanel = ({
@@ -26,10 +28,12 @@ const ScriptureSidePanel = ({
   selectedBook,
   selectedChapter,
   selectedVersion,
+  studyMode,
   versions,
   crossReferences,
   onNext,
   onPrevious,
+  onStudyModeChange,
 }: ScriptureSidePanelProps) => (
   <aside className={`hidden min-h-0 w-full shrink-0 overflow-y-auto overflow-x-hidden border-t p-4 pb-36 xl:block xl:w-96 xl:border-l xl:border-t-0 xl:pb-4 2xl:w-[26rem] ${darkMode ? 'border-white/10 bg-[#111111]' : 'border-black/10 bg-[#fffaf0]'
     }`}>
@@ -40,7 +44,9 @@ const ScriptureSidePanel = ({
         selectedBook={selectedBook}
         selectedChapter={selectedChapter}
         selectedVersion={selectedVersion}
+        studyMode={studyMode}
         versions={versions}
+        onStudyModeChange={onStudyModeChange}
       />
       {crossReferences.length > 0 && (
         <section
