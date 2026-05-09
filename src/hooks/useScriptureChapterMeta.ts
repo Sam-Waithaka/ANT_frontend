@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { BibleChapterNote, BibleVerse } from '../types/scripture';
+import type { BibleChapterCredit, BibleChapterNote, BibleVerse } from '../types/scripture';
 
 const dedupeNotes = (notes: BibleChapterNote[]) =>
   notes.filter((note, index, allNotes) =>
@@ -27,8 +27,10 @@ export const useScriptureChapterMeta = (verses: BibleVerse[]) =>
     const licenseNote = verses
       .flatMap((verse) => verse.notes || [])
       .find((note) => note.reference === 'license');
+    const chapterCredit = verses.find((verse) => verse.chapterCredit)?.chapterCredit as BibleChapterCredit | undefined;
 
     return {
+      chapterCredit,
       crossReferences,
       footnotes,
       licenseNote,

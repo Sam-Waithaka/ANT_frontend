@@ -83,14 +83,38 @@ describe('scriptureNormalizers', () => {
     ]);
   });
 
+  it('normalizes chapter lists from chapter_numbers when chapter objects are absent', () => {
+    expect(
+      normalizeChaptersResponse({
+        chapter_numbers: [1, 2, 3],
+      }),
+    ).toEqual([
+      { id: '1', label: 'Chapter 1', number: 1 },
+      { id: '2', label: 'Chapter 2', number: 2 },
+      { id: '3', label: 'Chapter 3', number: 3 },
+    ]);
+  });
+
   it('normalizes chapter detail with omitted verse markers and license notes', () => {
     expect(
       normalizeChapterDetailResponse({
         credit: {
+          license_type: 'Public Domain',
           license_notes: 'Public domain test scripture.',
+          source: 'eBible',
+          source_url: 'https://example.com/source',
         },
         verses: [
           {
+            annotations: [
+              {
+                annotation_type: 'footnote',
+                content: 'Or beginning.',
+                end_offset: 12,
+                source_marker: 'osis:note',
+                start_offset: 12,
+              },
+            ],
             cross_references: [{ reference: 'John 1:1', text: 'The Word was in the beginning.' }],
             footnotes: [{ text: 'Genesis opens the biblical story.' }],
             id: 'gen-1-1',
@@ -110,6 +134,19 @@ describe('scriptureNormalizers', () => {
       }),
     ).toEqual([
       expect.objectContaining({
+        annotations: [
+          expect.objectContaining({
+            content: 'Or beginning.',
+            sourceMarker: 'osis:note',
+            startOffset: 12,
+            type: 'footnote',
+          }),
+        ],
+        chapterCredit: expect.objectContaining({
+          licenseNotes: 'Public domain test scripture.',
+          licenseType: 'Public Domain',
+          source: 'eBible',
+        }),
         id: 'gen-1-1',
         isPresent: true,
         notes: expect.arrayContaining([

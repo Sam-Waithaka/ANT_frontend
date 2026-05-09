@@ -98,8 +98,8 @@ export const buildScriptureShareLink = ({
 }: ShareReferenceOptions) => {
   const params = new URLSearchParams();
 
-  if (book?.name) {
-    params.set('book', book.name);
+  if (book?.id || book?.name) {
+    params.set('book', book.id || book.name);
   }
 
   if (chapter?.number) {

@@ -32,8 +32,11 @@ export type BibleChapter = {
 };
 
 export type BibleVerse = {
+  annotations?: BibleVerseAnnotation[];
+  chapterCredit?: BibleChapterCredit;
   crossReferences?: BibleChapterNote[];
   display?: string;
+  footnotes?: BibleChapterNote[];
   id: string;
   number: number;
   text: string;
@@ -45,6 +48,27 @@ export type BibleVerse = {
 export type BibleVerseMarker = {
   note?: string;
   status: BibleMarkerStatus | string;
+};
+
+export type BibleVerseAnnotation = {
+  anchorText?: string;
+  content: string;
+  endOffset?: number;
+  id: string;
+  placement?: string;
+  rawContent?: string;
+  sourceMarker?: string;
+  startOffset?: number;
+  type: string;
+  verseNumber?: number;
+};
+
+export type BibleChapterCredit = {
+  licenseNotes?: string;
+  licenseType?: string;
+  licenseUrl?: string;
+  source?: string;
+  sourceUrl?: string;
 };
 
 export type BibleChapterNote = {

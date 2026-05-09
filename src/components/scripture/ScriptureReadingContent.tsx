@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
-import type { BibleChapterNote, BibleVerse } from '../../types/scripture';
+import type { BibleChapterCredit, BibleChapterNote, BibleVerse } from '../../types/scripture';
 
 type ScriptureReadingContentProps = {
+  chapterCredit?: BibleChapterCredit;
   darkMode: boolean;
   footer?: ReactNode;
   focusVerseNumber?: number | null;
@@ -13,7 +14,15 @@ type ScriptureReadingContentProps = {
   verses: BibleVerse[];
 };
 
+const getUnavailableVerseNotice = (verse: BibleVerse) =>
+  // Omitted verses can still carry backend-authored notes; surface those instead of inventing text.
+  verse.markers?.map((marker) => marker.note).find(Boolean) ||
+  verse.footnotes?.[0]?.text ||
+  verse.notes?.find((note) => note.type === 'footnote')?.text ||
+  'This verse is not present in this source.';
+
 const ScriptureReadingContent = ({
+  chapterCredit,
   darkMode,
   footer,
   focusVerseNumber,
@@ -37,6 +46,7 @@ const ScriptureReadingContent = ({
     <div className="grid gap-6 pb-52 md:pb-36">
       {verses.map((verse) => {
         const isSelected = selectedVerseNumbers.includes(verse.number);
+        const isUnavailable = verse.isPresent === false;
 
         return (
           <button
@@ -69,7 +79,19 @@ const ScriptureReadingContent = ({
                     : ''
                 }`}
               >
-                {verse.text}
+                {isUnavailable ? (
+                  <span
+                    className={`block rounded-2xl border px-4 py-3 font-sans text-sm italic leading-6 ${
+                      darkMode
+                        ? 'border-white/10 bg-white/[0.04] text-stone-400'
+                        : 'border-black/10 bg-white/60 text-zinc-600'
+                    }`}
+                  >
+                    {getUnavailableVerseNotice(verse)}
+                  </span>
+                ) : (
+                  verse.text
+                )}
               </span>
             </span>
           </button>
@@ -88,12 +110,44 @@ const ScriptureReadingContent = ({
           </div>
         </section>
       )}
-      {licenseNote && (
+      {licenseNote && !chapterCredit && (
         <section className={`border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">License Notes</p>
           <p className={`mt-4 whitespace-pre-line text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
             {licenseNote.text}
           </p>
+        </section>
+      )}
+      {chapterCredit && (
+        <section className={`border-t pt-6 font-sans ${darkMode ? 'border-white/10' : 'border-black/10'}`}>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Source & License</p>
+          <div className={`mt-4 grid gap-2 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+            {chapterCredit.source && (
+              <p>
+                <span className="font-bold">Source: </span>
+                {chapterCredit.sourceUrl ? (
+                  <a className="underline decoration-red-900/40 underline-offset-4 dark:decoration-red-200/50" href={chapterCredit.sourceUrl}>
+                    {chapterCredit.source}
+                  </a>
+                ) : (
+                  chapterCredit.source
+                )}
+              </p>
+            )}
+            {chapterCredit.licenseType && (
+              <p>
+                <span className="font-bold">License: </span>
+                {chapterCredit.licenseUrl ? (
+                  <a className="underline decoration-red-900/40 underline-offset-4 dark:decoration-red-200/50" href={chapterCredit.licenseUrl}>
+                    {chapterCredit.licenseType}
+                  </a>
+                ) : (
+                  chapterCredit.licenseType
+                )}
+              </p>
+            )}
+            {chapterCredit.licenseNotes && <p className="whitespace-pre-line">{chapterCredit.licenseNotes}</p>}
+          </div>
         </section>
       )}
       {footer}

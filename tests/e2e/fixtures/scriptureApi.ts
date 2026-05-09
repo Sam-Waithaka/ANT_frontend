@@ -3,15 +3,33 @@ import type { Page, Route } from '@playwright/test';
 export const fixedDateIso = '2026-05-06T09:00:00+03:00';
 
 export const versionsPayload = [
-  { abbreviation: 'BSB', name: 'Berean Standard Bible' },
-  { abbreviation: 'ASV', name: 'American Standard Version' },
+  {
+    abbreviation: 'BSB',
+    is_public: true,
+    language: 'English',
+    language_code: 'en',
+    license_type: 'Public Domain',
+    name: 'Berean Standard Bible',
+    publication_year: 2020,
+    source: 'Test Source',
+  },
+  {
+    abbreviation: 'ASV',
+    is_public: true,
+    language: 'English',
+    language_code: 'en',
+    license_type: 'Public Domain',
+    name: 'American Standard Version',
+    publication_year: 1901,
+    source: 'eBible',
+  },
 ];
 
 export const booksPayload = [
-  { osis_id: 'Gen', name: 'Genesis', testament: 'OT' },
-  { osis_id: '1Sam', name: '1 Samuel', testament: 'OT' },
-  { osis_id: 'John', name: 'John', testament: 'NT' },
-  { osis_id: 'Acts', name: 'Acts', testament: 'NT' },
+  { canonical_abbreviation: 'Gen', canonical_name: 'Genesis', osis_id: 'Gen', name: 'Genesis', testament: 'OT' },
+  { canonical_abbreviation: '1Sam', canonical_name: '1 Samuel', osis_id: '1Sam', name: '1 Samuel', testament: 'OT' },
+  { canonical_abbreviation: 'John', canonical_name: 'John', osis_id: 'John', name: 'John', testament: 'NT' },
+  { canonical_abbreviation: 'Acts', canonical_name: 'Acts', osis_id: 'Acts', name: 'Acts', testament: 'NT' },
 ];
 
 export const fulfillJson = async (route: Route, payload: unknown, status = 200) => {
@@ -125,7 +143,16 @@ const comparisonPayloads: Record<string, { book: string; chapter: number; result
 export const mockScriptureApi = async (page: Page) => {
   await installFixedDate(page);
 
-  await page.route('**/v1/bible/versions/', async (route) => fulfillJson(route, versionsPayload));
+  await page.route('**/v1/bible/versions/**', async (route) => {
+    const url = new URL(route.request().url());
+
+    if (url.pathname !== '/v1/bible/versions/') {
+      await route.fallback();
+      return;
+    }
+
+    await fulfillJson(route, versionsPayload);
+  });
   await page.route('**/v1/bible/versions/*/books/', async (route) => fulfillJson(route, booksPayload));
 
   await page.route('**/v1/bible/versions/*/books/Gen/chapters/', async (route) => fulfillJson(route, chapterList(3)));

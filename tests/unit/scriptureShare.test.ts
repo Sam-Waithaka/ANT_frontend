@@ -11,6 +11,7 @@ import {
 } from '../../src/utils/scriptureShare';
 
 const book = { id: 'John', name: 'John' };
+const localizedBook = { id: 'Matt', name: 'Mathayo', canonicalName: 'Matthew' };
 const chapter = { id: '20', number: 20, label: 'Chapter 20' };
 const verse = { id: 'v1', number: 1, text: 'Early on the first day of the week Mary Magdalene went to the tomb.' };
 const chapterVerses = [verse, { id: 'v2', number: 2, text: 'So she came running to Simon Peter and the other disciple.' }];
@@ -34,6 +35,12 @@ describe('scriptureShare', () => {
     expect(
       buildScriptureShareLink({ book, chapter, verse, version }),
     ).toBe('http://localhost:5173/scripture?book=John&chapter=20&verses=1&version=BSB');
+  });
+
+  it('uses stable book ids in share links while display names can stay localized', () => {
+    expect(
+      buildScriptureShareLink({ book: localizedBook, chapter, verse, version }),
+    ).toBe('http://localhost:5173/scripture?book=Matt&chapter=20&verses=1&version=BSB');
   });
 
   it('uses the configured site base url when one is provided', () => {

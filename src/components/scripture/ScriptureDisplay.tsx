@@ -1,10 +1,19 @@
 import type { ReactNode } from 'react';
-import type { BibleBook, BibleChapter, BibleChapterNote, BibleToolRecord, BibleVerse, BibleVersion } from '../../types/scripture';
+import type {
+  BibleBook,
+  BibleChapter,
+  BibleChapterCredit,
+  BibleChapterNote,
+  BibleToolRecord,
+  BibleVerse,
+  BibleVersion,
+} from '../../types/scripture';
 import ScriptureReadingContent from './ScriptureReadingContent';
 import ScriptureSearchResults from './ScriptureSearchResults';
 import ScriptureStatus from './ScriptureStatus';
 
 type ScriptureDisplayProps = {
+  chapterCredit?: BibleChapterCredit;
   darkMode: boolean;
   displayPassageTitle?: string;
   error: string;
@@ -26,6 +35,7 @@ type ScriptureDisplayProps = {
 };
 
 const ScriptureDisplay = ({
+  chapterCredit,
   darkMode,
   displayPassageTitle,
   error,
@@ -101,6 +111,7 @@ const ScriptureDisplay = ({
         ) : (
           <ScriptureReadingContent
             darkMode={darkMode}
+            chapterCredit={chapterCredit}
             footer={footer}
             focusVerseNumber={focusVerseNumber}
             footnotes={footnotes}

@@ -93,7 +93,7 @@ export const useScriptureReader = () => {
       : 'Scripture';
   const currentReferenceKey =
     selectedVersionId && selectedBook && selectedChapter
-      ? `${selectedVersionId}:${normalizeReferenceValue(selectedBook.name)}:${selectedChapter.number}`
+      ? `${selectedVersionId}:${normalizeReferenceValue(selectedBook.id)}:${selectedChapter.number}`
       : '';
   const pendingReferenceKey =
     pendingReference && selectedVersionId

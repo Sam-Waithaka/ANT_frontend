@@ -1,5 +1,6 @@
 import type {
   BibleBook,
+  BibleChapterCredit,
   BibleChapter,
   BibleChapterNote,
   BibleComparisonChapter,
@@ -150,9 +151,16 @@ export const normalizeBooksResponse = (payload: unknown): BibleBook[] =>
   });
 
 export const normalizeChaptersResponse = (payload: unknown): BibleChapter[] =>
-  unwrapCollection(payload).map((item, index) => {
+  // The backend returns chapter_numbers for lean chapter lists; keep chapter objects when they exist.
+  (unwrapCollection(payload).length > 0
+    ? unwrapCollection(payload)
+    : Array.isArray(asRecord(payload).chapter_numbers)
+      ? (asRecord(payload).chapter_numbers as unknown[])
+      : []
+  ).map((item, index) => {
     const record = asRecord(item);
-    const number = readNumber(record, ['number', 'chapter', 'chapterNumber', 'order'], index + 1);
+    const primitiveNumber = typeof item === 'number' || typeof item === 'string' ? Number(item) : 0;
+    const number = primitiveNumber || readNumber(record, ['number', 'chapter', 'chapterNumber', 'order'], index + 1);
 
     return {
       id: readString(record, ['id', '_id', 'uuid', 'chapterId'], String(number)),
@@ -253,20 +261,61 @@ const getLicenseNote = (payload: unknown): BibleChapterNote | null => {
   };
 };
 
+const normalizeChapterCredit = (payload: unknown): BibleChapterCredit | undefined => {
+  const credit = asRecord(asRecord(payload).credit);
+
+  if (Object.keys(credit).length === 0) {
+    return undefined;
+  }
+
+  return {
+    licenseNotes: readString(credit, ['license_notes']) || undefined,
+    licenseType: readString(credit, ['license_type']) || undefined,
+    licenseUrl: readString(credit, ['license_url']) || undefined,
+    source: readString(credit, ['source']) || undefined,
+    sourceUrl: readString(credit, ['source_url']) || undefined,
+  };
+};
+
+const normalizeVerseAnnotations = (collection: unknown, verseNumber: number) => {
+  if (!Array.isArray(collection)) {
+    return [];
+  }
+
+  return collection.map((item, index) => {
+    const record = asRecord(item);
+    const type = readString(record, ['annotation_type', 'type'], 'other');
+    const content = readString(record, ['content', 'text', 'body', 'note']);
+
+    return {
+      anchorText: readString(record, ['anchor_text']) || undefined,
+      content,
+      endOffset: readNumber(record, ['end_offset'], -1) >= 0 ? readNumber(record, ['end_offset'], -1) : undefined,
+      id: readString(record, ['id', '_id', 'uuid'], `${type}-${verseNumber}-${index}`),
+      placement: readString(record, ['placement']) || undefined,
+      rawContent: readString(record, ['raw_content']) || undefined,
+      sourceMarker: readString(record, ['source_marker']) || undefined,
+      startOffset: readNumber(record, ['start_offset'], -1) >= 0 ? readNumber(record, ['start_offset'], -1) : undefined,
+      type,
+      verseNumber,
+    };
+  });
+};
+
 export const normalizeChapterDetailResponse = (payload: unknown): BibleVerse[] => {
   const verses = unwrapCollection(payload);
   const chapterNotes = collectChapterNotes(payload);
   const licenseNote = getLicenseNote(payload);
+  const chapterCredit = normalizeChapterCredit(payload);
   const normalizedVerses: BibleVerse[] = verses.map((item, index) => {
       const record = asRecord(item);
       const verseNumber = readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1);
       const verseNotes: BibleChapterNote[] = [];
       const crossReferences: BibleChapterNote[] = [];
+      const footnotes: BibleChapterNote[] = [];
 
       [
-        [record.footnotes, 'footnote'],
         [record.notes, 'footnote'],
-        [record.annotations, 'footnote'],
         [record.textual_variants, 'textual_variant'],
       ].forEach(([collection, fallbackType]) => {
         if (Array.isArray(collection)) {
@@ -275,6 +324,14 @@ export const normalizeChapterDetailResponse = (payload: unknown): BibleVerse[] =
           });
         }
       });
+
+      if (Array.isArray(record.footnotes)) {
+        record.footnotes.forEach((note, noteIndex) => {
+          const normalizedNote = normalizeChapterNote(note, noteIndex, 'footnote', verseNumber);
+          footnotes.push(normalizedNote);
+          verseNotes.push(normalizedNote);
+        });
+      }
 
       [record.cross_references, record.crossReferences].forEach((collection) => {
         if (Array.isArray(collection)) {
@@ -287,10 +344,13 @@ export const normalizeChapterDetailResponse = (payload: unknown): BibleVerse[] =
       const matchingChapterNotes = chapterNotes.filter((note) => note.verseNumber === verseNumber);
 
       return {
+        annotations: normalizeVerseAnnotations(record.annotations, verseNumber),
+        chapterCredit,
         crossReferences: dedupeChapterNotes(crossReferences),
         display: readString(record, ['display']) || undefined,
+        footnotes: dedupeChapterNotes(footnotes),
         id: readString(record, ['id', '_id', 'uuid', 'verseId'], `verse-${index + 1}`),
-        isPresent: record.is_present === undefined ? true : Boolean(record.is_present),
+        isPresent: readBoolean(record, ['is_present'], true),
         markers: Array.isArray(record.markers)
           ? record.markers.map((marker) => {
               const markerRecord = asRecord(marker);
@@ -307,6 +367,7 @@ export const normalizeChapterDetailResponse = (payload: unknown): BibleVerse[] =
     });
 
   return normalizedVerses.concat(
+    // Keep chapter-level license notes outside the verse stream while still exposing them to the reader UI.
     licenseNote
       ? [{
           id: '__chapter_meta__',

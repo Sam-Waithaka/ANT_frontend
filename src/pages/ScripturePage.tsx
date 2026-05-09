@@ -74,7 +74,7 @@ const ScripturePage = () => {
     loading.books ||
     loading.chapters ||
     loading.verses;
-  const { crossReferences, footnotes, licenseNote } = useScriptureChapterMeta(verses);
+  const { chapterCredit, crossReferences, footnotes, licenseNote } = useScriptureChapterMeta(verses);
   const scriptureSearch = useScriptureSearch(searchTerm, selectedVersionId);
   const chapterVerses = useMemo(
     () => verses.filter((verse) => verse.number > 0),
@@ -181,12 +181,21 @@ const ScripturePage = () => {
     const requestedBook = searchParams.get('book');
     const requestedChapter = Number(searchParams.get('chapter'));
     const requestedVersion = searchParams.get('version');
+    const selectedBookKeys = [
+      selectedBook.id,
+      selectedBook.name,
+      selectedBook.abbreviation,
+      selectedBook.canonicalName,
+      selectedBook.canonicalAbbreviation,
+    ]
+      .filter(Boolean)
+      .map((value) => normalizeReferenceValue(value || ''));
 
     const matchesPassage =
       requestedBook &&
       Number.isFinite(requestedChapter) &&
       requestedChapter > 0 &&
-      normalizeReferenceValue(selectedBook.name) === normalizeReferenceValue(requestedBook) &&
+      selectedBookKeys.includes(normalizeReferenceValue(requestedBook)) &&
       selectedChapter.number === requestedChapter &&
       (!requestedVersion ||
         normalizeReferenceValue(selectedVersion?.abbreviation || selectedVersion?.id || selectedVersionId) ===
@@ -333,6 +342,7 @@ const ScripturePage = () => {
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden xl:flex-row">
             <ScriptureDisplay
+              chapterCredit={chapterCredit}
               darkMode={darkMode}
               displayPassageTitle={displayPassageTitle}
               error={error}

@@ -47,7 +47,7 @@ const freshGet = <T>(path: string, options: ApiRequestOptions = {}) =>
   apiGet<T>(path, { ...options, cache: 'none' });
 
 export const getBibleVersions = async (): Promise<BibleVersion[]> => {
-  const payload = await cachedGet<unknown>('/v1/bible/versions/');
+  const payload = await cachedGet<unknown>('/v1/bible/versions/?public=true');
   return normalizeVersionsResponse(payload);
 };
 
