@@ -526,28 +526,45 @@ export const normalizeComparisonResponse = (
   const isRequestedVersion = (version: string) => normalizedVersions.includes(normalizeVersion(version));
   const displayVersion = (version: string) =>
     requestedVersions.find((item) => normalizeVersion(item) === normalizeVersion(version)) || version;
-  const addReading = (version: string, verseNumber: number, text: string) => {
-    if (!text) return;
-
+  const addReading = (
+    version: string,
+    verseNumber: number,
+    text: string,
+    options: { display?: string; isPresent?: boolean } = {},
+  ) => {
+    if (!text && options.isPresent !== false) return;
     const existing = verseMap.get(verseNumber) || { readings: [], verseNumber };
     const normalizedVersion = displayVersion(version);
     const existingReading = existing.readings.find((reading) => normalizeVersion(reading.version) === normalizeVersion(normalizedVersion));
+    const nextReading = {
+      display: options.display,
+      isPresent: options.isPresent,
+      text,
+      version: normalizedVersion,
+    };
 
     if (existingReading) {
-      existingReading.text = text;
+      Object.assign(existingReading, nextReading);
     } else {
-      existing.readings.push({ text, version: normalizedVersion });
+      existing.readings.push(nextReading);
     }
 
     verseMap.set(verseNumber, existing);
+  };
+  const addReadingFromRecord = (version: string, verseNumber: number, record: UnknownRecord) => {
+    const text = readString(record, ['text', 'content', 'verseText', 'body']);
+
+    addReading(version, verseNumber, text, {
+      display: readString(record, ['display']) || undefined,
+      isPresent: readBoolean(record, ['is_present'], text ? true : undefined),
+    });
   };
   const addVerseCollection = (version: string, collection: unknown[]) => {
     collection.forEach((item, index) => {
       const record = asRecord(item);
       const verseNumber = readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], index + 1);
-      const text = readString(record, ['text', 'content', 'verseText', 'body']);
 
-      addReading(version, verseNumber, text);
+      addReadingFromRecord(version, verseNumber, record);
     });
   };
   const readVersionFromRecord = (record: UnknownRecord) => {
@@ -568,17 +585,16 @@ export const normalizeComparisonResponse = (
         return;
       }
 
-      addReading(version, verseNumber, readString(asRecord(textValue), ['text', 'content', 'verseText', 'body']));
+      addReadingFromRecord(version, verseNumber, asRecord(textValue));
     });
   };
   const addReadingsArray = (verseNumber: number, collection: unknown[]) => {
     collection.forEach((item) => {
       const record = asRecord(item);
       const version = readVersionFromRecord(record);
-      const text = readString(record, ['text', 'content', 'verseText', 'body']);
 
       if (version && isRequestedVersion(version)) {
-        addReading(version, verseNumber, text);
+        addReadingFromRecord(version, verseNumber, record);
       }
     });
   };
@@ -601,10 +617,9 @@ export const normalizeComparisonResponse = (
     });
 
     const version = readVersionFromRecord(record);
-    const text = readString(record, ['text', 'content', 'verseText', 'body']);
 
-    if (version && text) {
-      addReading(version, verseNumber, text);
+    if (version) {
+      addReadingFromRecord(version, verseNumber, record);
     }
   };
   const addVersionPayload = (version: string, value: unknown) => {
@@ -625,10 +640,7 @@ export const normalizeComparisonResponse = (
       }
     });
 
-    const text = readString(record, ['text', 'content', 'verseText', 'body']);
-    if (text) {
-      addReading(version, readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], 1), text);
-    }
+    addReadingFromRecord(version, readNumber(record, ['verse_number', 'number', 'verse', 'verseNumber', 'order'], 1), record);
   };
   const inspectContainer = (value: unknown) => {
     const collection = unwrapCollection(value);

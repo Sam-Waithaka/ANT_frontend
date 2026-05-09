@@ -276,20 +276,37 @@ const ScriptureComparisonModal = ({
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                       {selectedCompareVersions.map((version) => {
                         const reading = verse.readings.find((item) => item.version.toLowerCase() === version.toLowerCase());
+                        const isNotPresent = reading?.isPresent === false;
 
                         return (
                           <article
                             key={version}
                             data-comparison-version={version}
                             className={`rounded-2xl border p-4 ${
-                              darkMode ? 'border-white/10 bg-[#080808]' : 'border-black/10 bg-[#fffaf0]'
+                              isNotPresent
+                                ? darkMode
+                                  ? 'border-white/10 bg-white/[0.035]'
+                                  : 'border-black/10 bg-zinc-50'
+                                : darkMode
+                                  ? 'border-white/10 bg-[#080808]'
+                                  : 'border-black/10 bg-[#fffaf0]'
                             }`}
                           >
                             <p className="text-xs font-black uppercase tracking-[0.14em] text-red-900 dark:text-red-200">
                               {versionLabelFor(version)}
                             </p>
-                            <p className={`mt-3 text-base leading-8 ${darkMode ? 'text-stone-200' : 'text-zinc-800'}`}>
-                              {reading?.text || 'This verse is not available in this version.'}
+                            <p className={`mt-3 text-base leading-8 ${
+                              isNotPresent
+                                ? darkMode
+                                  ? 'italic text-stone-500'
+                                  : 'italic text-zinc-500'
+                                : darkMode
+                                  ? 'text-stone-200'
+                                  : 'text-zinc-800'
+                            }`}>
+                              {isNotPresent
+                                ? reading?.display || 'Not present in this source'
+                                : reading?.text || 'This verse is not available in this version.'}
                             </p>
                           </article>
                         );

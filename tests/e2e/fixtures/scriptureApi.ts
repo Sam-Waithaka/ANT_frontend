@@ -104,9 +104,9 @@ const chapterPayloads: Record<string, unknown> = {
   ],
 };
 
-const comparisonPayloads: Record<string, { book: string; chapter: number; results: Array<{ verse_number: number; readings: Array<{ version: string; text: string }> }> }> = {
+const comparisonPayloads: Record<string, { book: string | { name: string; osis_id: string }; chapter: number; results: Array<{ verse_number: number; readings: Array<{ display?: string; is_present?: boolean; version: string; text: string }> }> }> = {
   'Gen:1': {
-    book: 'Genesis',
+    book: { name: 'Genesis', osis_id: 'Gen' },
     chapter: 1,
     results: [
       {
@@ -120,7 +120,7 @@ const comparisonPayloads: Record<string, { book: string; chapter: number; result
         verse_number: 2,
         readings: [
           { version: 'BSB', text: 'Now the earth was formless and void.' },
-          { version: 'ASV', text: 'And the earth was waste and void.' },
+          { version: 'ASV', is_present: false, display: 'Not present in this source', text: '' },
         ],
       },
     ],

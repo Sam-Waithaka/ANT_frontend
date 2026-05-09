@@ -287,6 +287,13 @@ describe('scriptureNormalizers', () => {
               ],
               verse_number: 16,
             },
+            {
+              readings: [
+                { display: 'Not present in this source', is_present: false, text: '', version: 'ASV' },
+                { text: 'An angel went down at a certain season.', version: 'BSB' },
+              ],
+              verse_number: 4,
+            },
           ],
         },
         ['ASV', 'BSB'],
@@ -300,8 +307,15 @@ describe('scriptureNormalizers', () => {
       verses: [
         {
           readings: [
-            { text: 'For God so loved the world.', version: 'ASV' },
-            { text: 'For God loved the world in this way.', version: 'BSB' },
+            { display: 'Not present in this source', isPresent: false, text: '', version: 'ASV' },
+            { isPresent: true, text: 'An angel went down at a certain season.', version: 'BSB' },
+          ],
+          verseNumber: 4,
+        },
+        {
+          readings: [
+            { isPresent: true, text: 'For God so loved the world.', version: 'ASV' },
+            { isPresent: true, text: 'For God loved the world in this way.', version: 'BSB' },
           ],
           verseNumber: 16,
         },

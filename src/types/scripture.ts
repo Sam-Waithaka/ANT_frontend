@@ -156,6 +156,8 @@ export type BibleSearchResponse = PaginatedResponse<BibleSearchResult> & {
 };
 
 export type BibleComparisonReading = {
+  display?: string;
+  isPresent?: boolean;
   text: string;
   version: string;
 };

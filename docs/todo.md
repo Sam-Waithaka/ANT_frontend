@@ -53,3 +53,34 @@ ESLint currently flags older `setState`-inside-effect patterns in the Scripture 
   - clicking a verse opens the action sheet
   - compare verse opens the modal focused on the selected verse
   - compare selection highlights selected verses
+
+## Backend Notification: Search Abuse Protection
+
+The frontend now uses polite defaults for Scripture search:
+
+- no search below 2 characters
+- debounced quick search
+- cancelled stale requests
+- selected-version search by default
+- explicit all-version search
+- explicit fuzzy search
+- `page_size=25`
+
+These reduce accidental load, but they do not prevent abuse because a user can bypass the UI and call `/v1/bible/search/` directly.
+
+### Backend Guardrails To Review
+
+- Keep or tighten anonymous search throttling.
+- Add a stricter throttle for fuzzy search, for example lower than normal full-text search.
+- Add a stricter throttle for broad all-version searches.
+- Consider requiring authentication, session-based limits, or CAPTCHA-style protection if fuzzy/broad search abuse appears.
+- Combine IP-based and user/session-based throttling so one abusive client cannot starve normal users.
+- Add server-side query timeouts for expensive searches.
+- Require longer minimum queries for fuzzy search, for example 3 or 4 characters.
+- Reject broad fuzzy searches unless at least one limiting filter is present, such as `version`, `versions`, `book`, or `language_code`.
+- Cache common search responses briefly, for example 30-120 seconds.
+- Log slow searches and repeated throttling so abusive patterns can be identified.
+
+### Why This Matters
+
+Frontend controls are user-experience protections, not security protections. Backend throttling and query limits are what prevent one user from locking everyone else out of Scripture search.

@@ -146,6 +146,7 @@ test('compare selection opens the chapter comparison modal with selected verses 
   await expect(comparisonDialog).toBeVisible();
   await expect(comparisonDialog.locator('[data-highlighted="true"][data-verse-number="1"]')).toBeVisible();
   await expect(comparisonDialog.locator('[data-highlighted="true"][data-verse-number="2"]')).toBeVisible();
+  await expect(comparisonDialog.getByText('Not present in this source')).toBeVisible();
 });
 
 test('compare chapter opens the chapter comparison modal without selected verse highlights', async ({ page }) => {
