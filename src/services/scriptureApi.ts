@@ -21,6 +21,7 @@ const API_BASE_URL = (
 type UnknownRecord = Record<string, unknown>;
 
 const toUrl = (path: string) => `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+const scriptureRequestCache = new Map<string, Promise<unknown>>();
 
 const asRecord = (value: unknown): UnknownRecord => (value && typeof value === 'object' ? value as UnknownRecord : {});
 
@@ -70,17 +71,33 @@ const readNumber = (record: UnknownRecord, keys: string[], fallback: number) => 
 };
 
 const fetchJson = async (path: string) => {
-  const response = await fetch(toUrl(path), {
+  const url = toUrl(path);
+  const cachedRequest = scriptureRequestCache.get(url);
+
+  if (cachedRequest) {
+    return cachedRequest;
+  }
+
+  const request = fetch(url, {
     headers: {
       Accept: 'application/json',
     },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error(`Scripture API request failed: ${response.status}`);
+    }
+
+    return response.json() as Promise<unknown>;
   });
 
-  if (!response.ok) {
-    throw new Error(`Scripture API request failed: ${response.status}`);
-  }
+  scriptureRequestCache.set(url, request);
 
-  return response.json();
+  try {
+    return await request;
+  } catch (error) {
+    scriptureRequestCache.delete(url);
+    throw error;
+  }
 };
 
 const fetchFirstCollection = async (paths: string[]) => {
