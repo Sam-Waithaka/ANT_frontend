@@ -1,81 +1,157 @@
-# AIC Njoro Town Holding Page + Project 52
+# A.I.C Njoro Town Scripture + Project 52
 
-A premium temporary website for **AIC Njoro Town** while the full church website is being prepared.
+A client-side React app for **A.I.C Njoro Town Church**. The current phase delivers a branded church web presence, a Project 52 reading plan, and a Scripture reader that can open readings directly from Project 52.
 
-The app currently serves two main experiences:
+## Current Scope
 
-- `/` - a branded holding page for AIC Njoro Town.
-- `/project52` - Project 52, a 52-week Bible reading plan for the church community.
+- `/` - church landing/home page.
+- `/project52` - full 52-week Bible reading plan.
+- `/scripture` - Scripture reader, Project 52 widget, Bible tools, search, sharing, and comparison flows.
 
-The project is fully client-side, deployable on Netlify, and built with React, TypeScript, Vite, and Tailwind CSS.
+The app is built with React, TypeScript, Vite, Tailwind CSS, and lucide-react. It consumes a Scripture API through `src/services/scriptureApi.ts`.
 
-## Current Features
+## Key Features
 
-### Holding Page
+### Scripture Reader
 
-- Branded AIC Njoro Town landing/holding page.
-- Light and dark mode.
-- Theme preference saved in `localStorage`.
-- Shared header and footer.
-- AIC circle logo and generated favicons.
-- Media Crew footer credit and link.
+- Bible version, book, and chapter navigation.
+- Previous/next chapter controls, including cross-book navigation.
+- Shared scripture-render authority through `ScriptureReaderProvider` and `openScripture(request)`.
+- URL-driven references such as `/scripture?book=John&chapter=20&verses=1-2&version=BSB`.
+- Verse selection action sheet with:
+  - copy verse/selection/chapter
+  - compare verse/selection/chapter
+- Share links with canonical query params.
+- Search panel for Scripture lookup.
+- Bible tools panel for comparison, resources, glossary, markers, and notes.
+- Shared comparison modal with selectable versions, book/chapter navigation, highlighted selected verses, and outside-click close.
 
 ### Project 52
 
-- 52-week Bible reading plan.
-- Old Testament and New Testament readings shown distinctly.
-- Automatic current reading week detection.
-- Week 1 starts on the first Monday of each year.
-- Monday-Friday highlight the current reading day.
-- Saturday/Sunday highlight Friday from the previous reading week.
-- Current week opens and scrolls into view automatically.
-- Tabs for:
-  - Both
-  - Old Testament
-  - New Testament
-- Smart search by book name.
-- Search can switch tabs automatically when a query clearly belongs to OT or NT.
-- Scrollable full-year reading container.
-- Rotating Project 52 catchphrase badge with optional scripture references.
-- Downloadable branded PDF reading plan.
-
-### PDF Export
-
-The Project 52 page generates a branded PDF in the browser.
-
-The PDF includes:
-
-- `ANT_letter_head.png` as the PDF header.
 - Full 52-week reading plan.
-- Monday-Friday reading rows.
-- Old Testament and New Testament columns.
-- Page footer with:
-  - Project 52 page text
-  - `ANT_logo_black.png`
-  - `media_crew_black.png`
-  - the catchphrase visible at the time the user clicked download
+- Monday-Friday readings with Old Testament and New Testament tracks.
+- Current week detection based on the first Monday of the year.
+- Weekend catch-up mode for the current week.
+- `Previous / Today / Next` reading tabs in the Scripture-route widget.
+- Edge handling for Week 1 Monday and Week 52 Friday.
+- Direct opening from Project 52 readings into the Scripture reader.
+- Branded PDF export of the full plan.
 
-No server is required for PDF generation.
+### Site Experience
+
+- A.I.C Njoro Town branding and assets.
+- Light/dark theme with persisted preference.
+- Responsive desktop and mobile layouts.
+- Modular shared controls for reference pickers and Bible version pickers.
 
 ## Tech Stack
 
 | Technology | Purpose |
 |---|---|
-| React | UI rendering |
+| React 19 | UI rendering |
 | TypeScript | Type safety |
-| Vite | Development and production builds |
+| Vite | Dev server and production build |
 | Tailwind CSS v4 | Styling |
+| React Router | Client-side routing |
 | lucide-react | Icons |
-| Browser Blob / PDF commands | Client-side PDF download |
+| Vitest | Unit tests |
+| Playwright | End-to-end tests |
 
-## Routes
+## Scripts
 
-| Route | Purpose |
-|---|---|
-| `/` | AIC Njoro Town holding page |
-| `/project52` | Project 52 reading plan |
+```bash
+npm install
+npm run dev
+npm run build
+npm run lint
+npm test
+npm run test:e2e
+```
 
-Netlify refresh support is handled by:
+Default dev URL:
+
+```text
+http://localhost:5173
+```
+
+## Scripture API Configuration
+
+The API base URL is controlled by:
+
+```text
+VITE_SCRIPTURE_API_BASE_URL
+```
+
+In development, an empty base URL is allowed so Vite can proxy or mock same-origin endpoints. In production, the fallback is:
+
+```text
+https://api.aicnjoro.org
+```
+
+Scripture API access is centralized in:
+
+```text
+src/services/scriptureApi.ts
+```
+
+That service includes tolerant response parsing and an in-memory request cache so duplicate requests reuse the same promise.
+
+## Important Source Paths
+
+```text
+src/
+  contexts/
+    Project52Context.tsx
+    ScriptureReaderContext.tsx
+    ScriptureReaderStore.ts
+  components/
+    project52/
+    scripture/
+      bibleTools/
+      BibleVersionPickerList.tsx
+      ScriptureComparisonModal.tsx
+      ScriptureFloatingControls.tsx
+      ScriptureProject52Card.tsx
+      ScriptureReferencePickerGroup.tsx
+      ScriptureReferencePickers.tsx
+      ScriptureVersionSelect.tsx
+  data/
+    project52Catchphrases.ts
+    project52Readings.ts
+  hooks/
+    useOpenProject52Reading.ts
+    useScriptureReader.ts
+    useScriptureSearch.ts
+  pages/
+    LandingPage.tsx
+    Project52Page.tsx
+    ScripturePage.tsx
+  services/
+    scriptureApi.ts
+  utils/
+    project52Pdf.ts
+    project52Schedule.ts
+    scriptureShare.ts
+```
+
+## Documentation
+
+- [Design language](docs/design-language.md)
+- [System design](docs/system-design.md)
+
+## Testing Notes
+
+The focused Playwright suite for Scripture and Project 52 is:
+
+```bash
+npm run test:e2e -- tests/e2e/project52-scripture.spec.ts
+```
+
+The app uses React `StrictMode` in development. Dev mode may mount effects twice, but Scripture API calls are cached to avoid duplicate identical network work.
+
+## Deployment Notes
+
+The app is a static SPA. Refresh support depends on:
 
 ```text
 public/_redirects
@@ -87,165 +163,8 @@ with:
 /* /index.html 200
 ```
 
-## Project Structure
-
-```text
-src/
-  App.tsx
-  main.tsx
-  index.css
-  components/
-    SiteHeader.tsx
-    SiteFooter.tsx
-    project52/
-      Project52Hero.tsx
-      Project52ProgressCard.tsx
-      ReadingPlanSection.tsx
-      RotatingCatchphrase.tsx
-  constants/
-    assets.ts
-  data/
-    project52Catchphrases.ts
-    project52Readings.ts
-  hooks/
-    useTheme.ts
-  pages/
-    LandingPage.tsx
-    Project52Page.tsx
-  types/
-    project52.ts
-  utils/
-    project52Pdf.ts
-    project52Schedule.ts
-```
-
-## Public Assets
-
-Brand and app assets live in `public/`.
-
-Important assets:
-
-```text
-public/aic_circle.png
-public/ANT_logo.png
-public/ANT_logo_black.png
-public/ANT_letter_head.png
-public/media_crew_black.png
-public/favicon/
-```
-
-Asset paths are centralized in:
-
-```text
-src/constants/assets.ts
-```
-
-## Design Documentation
-
-The project design language is documented in:
-
-```text
-docs/design-language.md
-```
-
-That document captures:
-
-- Brand colors
-- Theme colors
-- Typography
-- Spacing
-- Button patterns
-- Card patterns
-- Header/footer rules
-- Project 52 UX rules
-- PDF design rules
-- Future page guidance
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js
-- npm
-
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### Run Development Server
-
-```bash
-npm run dev
-```
-
-Default local URL:
-
-```text
-http://localhost:5173
-```
-
-Project 52:
-
-```text
-http://localhost:5173/project52
-```
-
-### Build For Production
-
-```bash
-npm run build
-```
-
-### Lint
-
-```bash
-npm run lint
-```
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## Development Notes
-
-- Keep shared UI in `src/components`.
-- Keep feature-specific UI in `src/components/{feature}`.
-- Keep route-level views in `src/pages`.
-- Keep long static lists in `src/data`.
-- Keep reusable business logic in `src/utils`.
-- Keep common types in `src/types`.
-- Keep public asset paths in `src/constants/assets.ts`.
-
-Avoid putting data, PDF logic, and UI all in the same component.
-
-## Future Plans
-
-Planned or possible future enhancements:
-
-- Add license-free Scripture text directly into the site.
-- Add user reading progress tracking.
-- Add weekly completion state.
-- Add user interactivity for marking readings complete.
-- Add optional reminders.
-- Expand from holding page into the full AIC Njoro Town website.
-- Add more ministry pages while following the documented design language.
-
 ## Credits
 
-Built for **AIC Njoro Town**.
+Built for **A.I.C Njoro Town Church**.
 
-Footer credit belongs to:
-
-```text
-AIC Njoro Town Media Crew
-```
-
-Media Crew link:
-
-```text
-https://media-crew.aicnjorotown.org
-```
+Footer credit belongs to **AIC Njoro Town Media Crew**.
