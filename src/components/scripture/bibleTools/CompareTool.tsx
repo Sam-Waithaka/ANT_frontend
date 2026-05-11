@@ -1,5 +1,5 @@
 import type { BibleBook, BibleChapter, BibleVersion } from '../../../types/scripture';
-import BibleVersionAvailabilityNote from '../BibleVersionAvailabilityNote';
+import BibleVersionPickerList from '../BibleVersionPickerList';
 import ScriptureReferencePickerGroup from '../ScriptureReferencePickerGroup';
 import type { ComparePicker } from './types';
 
@@ -65,35 +65,16 @@ const CompareTool = ({
     <div>
       <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Versions</p>
       <div className={`max-h-32 overflow-y-auto overflow-x-hidden rounded-2xl border p-2 sm:max-h-40 ${darkMode ? 'border-white/10 bg-[#171717]' : 'border-black/10 bg-[#f8f5ef]'}`}>
-        <div className="grid gap-1">
-          {versions.map((version) => {
-            const checked = selectedCompareVersions.includes(version.id);
-
-            return (
-              <label
-                key={version.id}
-                className={`flex min-h-10 min-w-0 cursor-pointer items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
-                  checked
-                    ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                    : darkMode
-                      ? 'text-stone-300 hover:bg-white/10'
-                      : 'text-zinc-700 hover:bg-white'
-                }`}
-              >
-                <input
-                  checked={checked}
-                  onChange={() => onToggleVersion(version.id)}
-                  type="checkbox"
-                  className="size-4 accent-red-800"
-                />
-                <span className="min-w-12 shrink-0 font-black">{version.abbreviation || version.id}</span>
-                <span className={`min-w-0 truncate text-xs ${checked ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>{version.name}</span>
-              </label>
-            );
-          })}
-        </div>
+        <BibleVersionPickerList
+          darkMode={darkMode}
+          mode="multiple"
+          noteClassName="mt-2"
+          optionClassName="min-h-10 rounded-xl px-3"
+          selectedVersionIds={selectedCompareVersions}
+          versions={versions}
+          onToggleVersion={onToggleVersion}
+        />
       </div>
-      <BibleVersionAvailabilityNote darkMode={darkMode} className="mt-2" />
       <p className={`mt-2 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
         Comparing {compareBook?.name || selectedBook?.name || compareBookId} {compareChapterNumber}.
       </p>

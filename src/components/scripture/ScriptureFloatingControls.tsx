@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { BibleBook, BibleChapter, BibleVersion } from '../../types/scripture';
-import BibleVersionAvailabilityNote from './BibleVersionAvailabilityNote';
+import BibleVersionPickerList from './BibleVersionPickerList';
 import ScriptureReferencePickerGroup from './ScriptureReferencePickerGroup';
 
 type ScriptureFloatingControlsProps = {
@@ -57,10 +57,6 @@ const ScriptureFloatingControls = ({
   const neutralPillClass = darkMode
     ? 'border-white/15 bg-white/10 text-stone-100 backdrop-blur-xl hover:bg-white/15'
     : 'border-black/10 bg-[#fffaf0]/70 text-zinc-700 backdrop-blur-xl hover:bg-white/80';
-  const inactiveOptionClass = darkMode
-    ? 'text-stone-300 hover:bg-white/10'
-    : 'text-zinc-700 hover:bg-[#fffaf0]';
-
   const closeMenu = () => setOpenMenu(null);
 
   useEffect(() => {
@@ -105,26 +101,19 @@ const ScriptureFloatingControls = ({
               <div className={`${menuBase} ${menuSurfaceClass} left-0 w-80`}>
                 <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Version</p>
                 <div className="grid max-h-72 gap-1.5 overflow-y-auto">
-                  {versions.map((version) => (
-                    <button
-                      key={version.id}
-                      type="button"
-                      onClick={() => {
-                        onVersionChange(version.id);
-                        closeMenu();
-                      }}
-                      className={`rounded-xl px-3 py-2 text-left text-sm font-bold transition ${
-                        version.id === selectedVersionId
-                          ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                          : inactiveOptionClass
-                      }`}
-                    >
-                      <span className="font-black">{version.abbreviation || version.id}</span>
-                      <span className={`ml-2 text-xs ${version.id === selectedVersionId ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>{version.name}</span>
-                    </button>
-                  ))}
+                  <BibleVersionPickerList
+                    darkMode={darkMode}
+                    mode="single"
+                    noteClassName="mt-4 border-t border-black/10 pt-4 dark:border-white/10"
+                    optionClassName="min-h-10 rounded-xl px-3 py-2"
+                    selectedVersionIds={[selectedVersionId]}
+                    versions={versions}
+                    onToggleVersion={(versionId) => {
+                      onVersionChange(versionId);
+                      closeMenu();
+                    }}
+                  />
                 </div>
-                <BibleVersionAvailabilityNote darkMode={darkMode} className="mt-4 border-t border-black/10 pt-4 dark:border-white/10" />
               </div>
             )}
           </div>

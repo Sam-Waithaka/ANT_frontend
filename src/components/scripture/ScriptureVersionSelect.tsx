@@ -2,7 +2,7 @@ import { ChevronDown, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BibleVersion } from '../../types/scripture';
-import BibleVersionAvailabilityNote from './BibleVersionAvailabilityNote';
+import BibleVersionPickerList from './BibleVersionPickerList';
 
 type ScriptureVersionSelectProps = {
   darkMode: boolean;
@@ -59,35 +59,16 @@ const ScriptureVersionSelect = ({
         </div>
 
         <div className="max-h-[calc(82vh-5rem)] overflow-y-auto p-4">
-          <div className="grid gap-2">
-            {versions.map((version) => {
-              const selected = version.id === selectedVersionId;
-
-              return (
-                <button
-                  key={version.id}
-                  type="button"
-                  onClick={() => {
-                    onChange(version.id);
-                    setOpen(false);
-                  }}
-                  className={`flex min-h-12 items-center gap-3 rounded-2xl px-4 text-left text-sm font-bold transition ${
-                    selected
-                      ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                      : darkMode
-                        ? 'text-stone-300 hover:bg-white/10'
-                        : 'text-zinc-700 hover:bg-white'
-                  }`}
-                >
-                  <span className="min-w-14 font-black">{version.abbreviation || version.id}</span>
-                  <span className={`text-xs ${selected ? 'text-white/75' : darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>
-                    {version.name}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <BibleVersionAvailabilityNote darkMode={darkMode} className="mt-4 border-t border-black/10 pt-4 dark:border-white/10" />
+          <BibleVersionPickerList
+            darkMode={darkMode}
+            mode="single"
+            selectedVersionIds={[selectedVersionId]}
+            versions={versions}
+            onToggleVersion={(versionId) => {
+              onChange(versionId);
+              setOpen(false);
+            }}
+          />
         </div>
       </div>
     </div>
