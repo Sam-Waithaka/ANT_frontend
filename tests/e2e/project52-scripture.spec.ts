@@ -174,19 +174,81 @@ test('clicking the scripture Project 52 widget opens the OT reading directly', a
   await expect(page.getByText('One day Jonathan son of Saul said to his young armor-bearer.')).toBeVisible();
 });
 
-test('scripture Project 52 widget previews tomorrow and opens its reading directly', async ({ page }) => {
+test('scripture Project 52 widget previews the next reading and opens it directly', async ({ page }) => {
   await page.goto('/scripture');
 
   await expect(page.getByRole('heading', { name: "Today's Reading" })).toBeVisible();
-  await page.getByRole('button', { name: 'Tomorrow' }).click();
+  await page.getByRole('button', { name: 'Next', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: "Tomorrow's Reading" })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Next Reading' })).toBeVisible();
   await expect(page.getByText('Today is Wednesday')).toBeVisible();
 
   await page.getByRole('button', { name: /John 21/i }).click();
 
   await expect(page.getByRole('heading', { name: 'John 21' })).toBeVisible();
   await expect(page.getByText('Afterward Jesus appeared again to the disciples by the Sea of Tiberias.')).toBeVisible();
+});
+
+test('scripture Project 52 widget previous reading jumps from Monday to last Friday', async ({ page }) => {
+  await page.addInitScript(() => {
+    const fixedTime = new Date('2026-05-11T09:00:00+03:00').getTime();
+    const NativeDate = Date;
+
+    class MondayMockDate extends NativeDate {
+      constructor(...args: ConstructorParameters<DateConstructor>) {
+        if (args.length === 0) {
+          super(fixedTime);
+          return;
+        }
+        super(...args);
+      }
+
+      static now() {
+        return fixedTime;
+      }
+    }
+
+    // @ts-expect-error test override
+    window.Date = MondayMockDate;
+  });
+
+  await page.goto('/scripture');
+
+  await page.getByRole('button', { name: 'Previous', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: 'Previous Reading' })).toBeVisible();
+  await expect(page.getByText('Friday, Week 18 of 52')).toBeVisible();
+  await expect(page.getByRole('button', { name: /1 Samuel 18-19/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Acts 1/i })).toBeVisible();
+});
+
+test('scripture Project 52 widget disables next reading at the end of week 52', async ({ page }) => {
+  await page.addInitScript(() => {
+    const fixedTime = new Date('2027-12-31T09:00:00+03:00').getTime();
+    const NativeDate = Date;
+
+    class FinalFridayMockDate extends NativeDate {
+      constructor(...args: ConstructorParameters<DateConstructor>) {
+        if (args.length === 0) {
+          super(fixedTime);
+          return;
+        }
+        super(...args);
+      }
+
+      static now() {
+        return fixedTime;
+      }
+    }
+
+    // @ts-expect-error test override
+    window.Date = FinalFridayMockDate;
+  });
+
+  await page.goto('/scripture');
+
+  await expect(page.getByText('Week 52 of 52', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Next', exact: true })).toBeDisabled();
 });
 
 test('scripture Project 52 widget shows weekend catch-up mode', async ({ page }) => {

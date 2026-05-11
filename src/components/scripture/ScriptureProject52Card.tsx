@@ -13,12 +13,12 @@ type ScriptureProject52CardProps = {
   onOpenReading?: () => void;
 };
 
-type ReadingTab = 'yesterday' | 'today' | 'tomorrow';
+type ReadingTab = 'previous' | 'today' | 'next';
 
-const readingTabs: Array<{ key: ReadingTab; label: string; offset: number }> = [
-  { key: 'yesterday', label: 'Yesterday', offset: -1 },
-  { key: 'today', label: 'Today', offset: 0 },
-  { key: 'tomorrow', label: 'Tomorrow', offset: 1 },
+const readingTabs: Array<{ key: ReadingTab; label: string; step: number }> = [
+  { key: 'previous', label: 'Previous', step: -1 },
+  { key: 'today', label: 'Today', step: 0 },
+  { key: 'next', label: 'Next', step: 1 },
 ];
 
 const shortDayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
@@ -29,32 +29,51 @@ const ScriptureProject52Card = ({ darkMode, onOpenReading }: ScriptureProject52C
   const openProject52Reading = useOpenProject52Reading();
   const activeWeek = weeks.find((week) => week.week === readingTarget.week);
   const selectedTab = readingTabs.find((tab) => tab.key === activeTab) || readingTabs[1];
+  const minWeek = weeks[0]?.week || 1;
+  const maxWeek = weeks[weeks.length - 1]?.week || 52;
 
-  const getReadingForOffset = (offset: number) => {
+  const getReadingForStep = (step: number) => {
     let weekNumber = readingTarget.week;
-    let dayIndex = readingTarget.dayIndex + offset;
+    let dayIndex = readingTarget.dayIndex + step;
 
     if (dayIndex < 0) {
-      weekNumber = Math.max(1, weekNumber - 1);
+      weekNumber = Math.max(minWeek, weekNumber - 1);
       dayIndex = 4;
     }
 
     if (dayIndex > 4) {
-      weekNumber = Math.min(52, weekNumber + 1);
+      weekNumber = Math.min(maxWeek, weekNumber + 1);
       dayIndex = 0;
+    }
+
+    if (weekNumber === minWeek && readingTarget.week === minWeek && readingTarget.dayIndex === 0 && step < 0) {
+      dayIndex = 0;
+    }
+
+    if (weekNumber === maxWeek && readingTarget.week === maxWeek && readingTarget.dayIndex === 4 && step > 0) {
+      dayIndex = 4;
     }
 
     const week = weeks.find((item) => item.week === weekNumber);
     return {
+      available: !(weekNumber === readingTarget.week && dayIndex === readingTarget.dayIndex && step !== 0),
       dayIndex,
       item: week?.items[dayIndex],
       weekNumber,
     };
   };
 
-  const selectedReading = getReadingForOffset(selectedTab.offset);
+  const tabReadings = readingTabs.reduce<Record<ReadingTab, ReturnType<typeof getReadingForStep>>>(
+    (readings, tab) => ({
+      ...readings,
+      [tab.key]: getReadingForStep(tab.step),
+    }),
+    {} as Record<ReadingTab, ReturnType<typeof getReadingForStep>>,
+  );
+  const selectedReading = tabReadings[activeTab];
   const selectedItems = selectedReading.item;
   const selectedDayLabel = selectedItems?.dayLabel || readingTarget.day;
+  const readingTitle = activeTab === 'today' ? "Today's Reading" : `${selectedTab.label} Reading`;
 
   const secondaryButtonClass = darkMode
     ? 'border-white/15 bg-white/10 text-stone-300 hover:bg-white/15'
@@ -120,7 +139,7 @@ const ScriptureProject52Card = ({ darkMode, onOpenReading }: ScriptureProject52C
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Project 52</p>
           <h2 className="mt-1 text-xl font-black">
-            {readingTarget.isWeekendCarryover ? 'Weekend Catch-Up' : `${selectedTab.label}'s Reading`}
+            {readingTarget.isWeekendCarryover ? 'Weekend Catch-Up' : readingTitle}
           </h2>
           {!readingTarget.isWeekendCarryover && activeTab !== 'today' && (
             <p className={`mt-1 text-xs font-bold ${mutedTextClass}`}>Today is {readingTarget.day}</p>
@@ -150,6 +169,7 @@ const ScriptureProject52Card = ({ darkMode, onOpenReading }: ScriptureProject52C
               <button
                 key={tab.key}
                 type="button"
+                disabled={!tabReadings[tab.key].available}
                 onClick={() => setActiveTab(tab.key)}
                 className={`min-h-9 rounded-full px-2 text-xs font-black transition ${
                   activeTab === tab.key
@@ -157,7 +177,7 @@ const ScriptureProject52Card = ({ darkMode, onOpenReading }: ScriptureProject52C
                     : darkMode
                       ? 'text-stone-300 hover:bg-white/10'
                       : 'text-zinc-600 hover:bg-white'
-                }`}
+                } disabled:cursor-not-allowed disabled:opacity-45`}
               >
                 {tab.label}
               </button>
