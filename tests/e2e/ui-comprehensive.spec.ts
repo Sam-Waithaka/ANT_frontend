@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 test('landing page navigation, fallback route, and desktop settings theme toggle work', async ({ page }) => {
   await page.goto('/not-a-real-route');
 
-  await expect(page.getByRole('heading', { name: /Welcome to\s+AIC\s+Njoro Town/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Welcome to\s+A\.I\.C\s+Njoro Town/i })).toBeVisible();
   await expect(page.getByRole('img', { name: /AIC Njoro Town church building/i })).toBeVisible();
   await expect(page.getByText('Growing together in faith, fellowship, and the Word.')).toBeVisible();
   await expect(page.getByText('Daily Verse')).toBeVisible();
@@ -55,7 +55,7 @@ test('landing page sections expose responsive hero, verse, and Project 52 previe
 
   const hasHorizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(hasHorizontalOverflow).toBe(false);
-  await expect(page.getByRole('heading', { name: /Welcome to\s+AIC\s+Njoro Town/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Welcome to\s+A\.I\.C\s+Njoro Town/i })).toBeVisible();
 });
 
 test('mobile navigation drawer opens, changes routes, toggles theme, and closes', async ({ page }) => {
