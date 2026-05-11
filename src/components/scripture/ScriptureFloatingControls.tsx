@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { BibleBook, BibleChapter, BibleVersion } from '../../types/scripture';
+import BibleVersionAvailabilityNote from './BibleVersionAvailabilityNote';
 import ScriptureReferencePickerGroup from './ScriptureReferencePickerGroup';
 
 type ScriptureFloatingControlsProps = {
@@ -123,6 +124,7 @@ const ScriptureFloatingControls = ({
                     </button>
                   ))}
                 </div>
+                <BibleVersionAvailabilityNote darkMode={darkMode} className="mt-4 border-t border-black/10 pt-4 dark:border-white/10" />
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { assetPaths } from '../../constants/assets';
 import type { BibleBook, BibleChapter, BibleComparisonChapter, BibleVersion } from '../../types/scripture';
+import BibleVersionAvailabilityNote from './BibleVersionAvailabilityNote';
 import ScriptureReferencePickerGroup from './ScriptureReferencePickerGroup';
 
 type ComparisonReferenceChange = {
@@ -252,6 +253,7 @@ const ScriptureComparisonModal = ({
                       );
                     })}
                   </div>
+                  <BibleVersionAvailabilityNote darkMode={darkMode} className="mt-3 border-t border-black/10 pt-3 dark:border-white/10" />
                 </div>
               ) : null}
               </div>

@@ -1,4 +1,5 @@
 import type { BibleBook, BibleChapter, BibleVersion } from '../../../types/scripture';
+import BibleVersionAvailabilityNote from '../BibleVersionAvailabilityNote';
 import ScriptureReferencePickerGroup from '../ScriptureReferencePickerGroup';
 import type { ComparePicker } from './types';
 
@@ -92,6 +93,7 @@ const CompareTool = ({
           })}
         </div>
       </div>
+      <BibleVersionAvailabilityNote darkMode={darkMode} className="mt-2" />
       <p className={`mt-2 text-xs leading-5 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
         Comparing {compareBook?.name || selectedBook?.name || compareBookId} {compareChapterNumber}.
       </p>

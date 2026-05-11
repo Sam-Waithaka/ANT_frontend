@@ -2,6 +2,7 @@ import { ChevronDown, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { BibleVersion } from '../../types/scripture';
+import BibleVersionAvailabilityNote from './BibleVersionAvailabilityNote';
 
 type ScriptureVersionSelectProps = {
   darkMode: boolean;
@@ -86,6 +87,7 @@ const ScriptureVersionSelect = ({
               );
             })}
           </div>
+          <BibleVersionAvailabilityNote darkMode={darkMode} className="mt-4 border-t border-black/10 pt-4 dark:border-white/10" />
         </div>
       </div>
     </div>
