@@ -44,7 +44,7 @@ const Project52ProgressCard = ({
       </div>
       <div className="flex items-center gap-2">
         <CheckCircle2 size={18} className={darkMode ? 'text-red-200' : 'text-red-800'} />
-        {readingTarget.isWeekendCarryover ? 'Weekend shows previous Friday' : `${readingTarget.day} is highlighted`}
+        {readingTarget.isWeekendCarryover ? 'Weekend catches up the current week' : `${readingTarget.day} is highlighted`}
       </div>
     </div>
   </aside>

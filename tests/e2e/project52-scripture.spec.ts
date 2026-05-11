@@ -174,6 +174,54 @@ test('clicking the scripture Project 52 widget opens the OT reading directly', a
   await expect(page.getByText('One day Jonathan son of Saul said to his young armor-bearer.')).toBeVisible();
 });
 
+test('scripture Project 52 widget previews tomorrow and opens its reading directly', async ({ page }) => {
+  await page.goto('/scripture');
+
+  await expect(page.getByRole('heading', { name: "Today's Reading" })).toBeVisible();
+  await page.getByRole('button', { name: 'Tomorrow' }).click();
+
+  await expect(page.getByRole('heading', { name: "Tomorrow's Reading" })).toBeVisible();
+  await expect(page.getByText('Today is Wednesday')).toBeVisible();
+
+  await page.getByRole('button', { name: /John 21/i }).click();
+
+  await expect(page.getByRole('heading', { name: 'John 21' })).toBeVisible();
+  await expect(page.getByText('Afterward Jesus appeared again to the disciples by the Sea of Tiberias.')).toBeVisible();
+});
+
+test('scripture Project 52 widget shows weekend catch-up mode', async ({ page }) => {
+  await page.addInitScript(() => {
+    const fixedTime = new Date('2026-05-09T09:00:00+03:00').getTime();
+    const NativeDate = Date;
+
+    class WeekendMockDate extends NativeDate {
+      constructor(...args: ConstructorParameters<DateConstructor>) {
+        if (args.length === 0) {
+          super(fixedTime);
+          return;
+        }
+        super(...args);
+      }
+
+      static now() {
+        return fixedTime;
+      }
+    }
+
+    // @ts-expect-error test override
+    window.Date = WeekendMockDate;
+  });
+
+  await page.goto('/scripture');
+
+  await expect(page.getByRole('heading', { name: 'Weekend Catch-Up' })).toBeVisible();
+  await expect(page.getByText('Week 18 of 52')).toBeVisible();
+  await expect(page.getByText("Review this week's readings or catch up where you left off.")).toBeVisible();
+  await expect(page.getByText('Mon')).toBeVisible();
+  await expect(page.getByRole('button', { name: /1 Samuel 7-9/i })).toBeVisible();
+  await expect(page.getByText('Fri')).toBeVisible();
+});
+
 test('clicking a Project 52 tile opens the correct scripture route and chapter', async ({ page }) => {
   await page.goto('/project52');
 

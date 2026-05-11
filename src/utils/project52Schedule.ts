@@ -23,7 +23,7 @@ export const getCurrentReadingTarget = (date = new Date()): ReadingTarget => {
   const dayIndex = isWeekend ? 4 : Math.max(0, dayOfWeek - 1);
 
   return {
-    week: isWeekend ? Math.max(1, readingWeek - 1) : readingWeek,
+    week: readingWeek,
     dayIndex,
     day: readingDays[dayIndex],
     isWeekendCarryover: isWeekend,
