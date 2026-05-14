@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import ScriptureActionSheet from '../components/scripture/ScriptureActionSheet';
 import ScriptureBooksRail from '../components/scripture/ScriptureBooksRail';
 import ScriptureComparisonModal from '../components/scripture/ScriptureComparisonModal';
@@ -78,6 +79,8 @@ const ScripturePage = () => {
     loading.verses;
   const { chapterCredit, crossReferences, footnotes, licenseNote } = useScriptureChapterMeta(verses);
   const scriptureSearch = useScriptureSearch(searchTerm, selectedVersionId);
+  const returnTo = searchParams.get('returnTo') || '';
+  const messageReturnPath = returnTo.startsWith('/media/watch/') ? returnTo : '';
   const chapterVerses = useMemo(
     () => verses.filter((verse) => verse.number > 0),
     [verses],
@@ -356,6 +359,27 @@ const ScripturePage = () => {
             onSearchChange={setSearchTerm}
             onVersionChange={setSelectedVersionId}
           />
+          {messageReturnPath && (
+            <div className={`shrink-0 border-b px-4 py-3 sm:px-6 ${
+              darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-white/35'
+            }`}>
+              <Link
+                to={messageReturnPath}
+                className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm font-black shadow-lg backdrop-blur-2xl transition hover:-translate-y-0.5 ${
+                  darkMode
+                    ? 'border-white/15 bg-white/[0.09] text-white shadow-black/25 ring-1 ring-white/10 hover:bg-white/[0.13]'
+                    : 'border-white/70 bg-white/70 text-zinc-950 shadow-zinc-900/10 ring-1 ring-black/5 hover:bg-white'
+                }`}
+              >
+                <span className={`grid size-7 place-items-center rounded-full ${
+                  darkMode ? 'bg-white/10 text-red-100' : 'bg-red-950/5 text-red-800'
+                }`}>
+                  <ArrowLeft size={15} />
+                </span>
+                Back to message
+              </Link>
+            </div>
+          )}
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden xl:flex-row">
             <ScriptureDisplay

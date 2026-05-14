@@ -69,11 +69,15 @@ export const parseScriptureReferences = (value?: string): ParsedScriptureReferen
 export const toScriptureSlug = (value: string) =>
   value.trim().toLowerCase().replace(/\s+/g, '-');
 
-export const createScriptureUrl = (reference: ParsedScriptureReference) => {
+export const createScriptureUrl = (reference: ParsedScriptureReference, returnTo?: string) => {
   const params = new URLSearchParams({
     book: toScriptureSlug(reference.book),
     chapter: String(reference.chapter),
   });
+
+  if (returnTo) {
+    params.set('returnTo', returnTo);
+  }
 
   return `/scripture?${params.toString()}`;
 };

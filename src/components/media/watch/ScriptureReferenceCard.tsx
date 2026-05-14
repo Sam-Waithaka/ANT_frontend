@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BookOpen, ExternalLink } from 'lucide-react';
 import { getBibleVersesByReference } from '../../../services/scriptureApi';
 import type { BibleVerse } from '../../../types/scripture';
@@ -34,11 +35,13 @@ const pickPreviewVerses = (verses: BibleVerse[], reference: ParsedScriptureRefer
 };
 
 const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardProps) => {
+  const location = useLocation();
   const [chapterVerses, setChapterVerses] = useState<BibleVerse[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [previewVerses, setPreviewVerses] = useState<BibleVerse[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty'>('loading');
-  const scriptureUrl = useMemo(() => createScriptureUrl(reference), [reference]);
+  const returnTo = `${location.pathname}${location.search}`;
+  const scriptureUrl = useMemo(() => createScriptureUrl(reference, returnTo), [reference, returnTo]);
   const visibleVerses = expanded ? chapterVerses : previewVerses;
 
   useEffect(() => {
@@ -122,12 +125,6 @@ const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardP
       )}
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <a
-          href={scriptureUrl}
-          className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-4 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
-        >
-          Read Full Chapter
-        </a>
         <a
           href={scriptureUrl}
           className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-black transition hover:-translate-y-0.5 ${
