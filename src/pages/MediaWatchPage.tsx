@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import RelatedMediaRow from '../components/media/watch/RelatedMediaRow';
 import ScriptureReferenceCard from '../components/media/watch/ScriptureReferenceCard';
 import VideoMeta from '../components/media/watch/VideoMeta';
 import VideoPlayer from '../components/media/watch/VideoPlayer';
 import { parseScriptureReferences } from '../components/media/watch/mediaWatchUtils';
+import { getMediaWatchPath } from '../components/media/mediaLinks';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { useTheme } from '../hooks/useTheme';
@@ -16,9 +17,11 @@ import type { AudioVisualItem } from '../types/audioVisual';
 
 const MediaWatchPage = () => {
   const { slug = '' } = useParams();
+  const navigate = useNavigate();
   const { darkMode, toggleTheme } = useTheme();
   const [item, setItem] = useState<AudioVisualItem | null>(null);
   const [relatedItems, setRelatedItems] = useState<AudioVisualItem[]>([]);
+  const [autoPlayNext, setAutoPlayNext] = useState(false);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   useEffect(() => {
@@ -38,10 +41,13 @@ const MediaWatchPage = () => {
         setItem(mediaItem);
         setStatus('ready');
 
+        const isShort = mediaItem.mediaType.toLowerCase() === 'short';
         const seriesSlug = mediaItem.series?.slug;
         const categorySlug = mediaItem.categories[0]?.slug;
         const related =
-          seriesSlug
+          isShort
+            ? await fetchAudioVisualItems({ type: 'short', ordering: 'latest' }, controller.signal)
+            : seriesSlug
             ? await fetchAudioVisualItems({ series: seriesSlug, ordering: 'latest' }, controller.signal)
             : categorySlug
               ? await fetchAudioVisualItems({ category: categorySlug, ordering: 'latest' }, controller.signal)
@@ -67,6 +73,17 @@ const MediaWatchPage = () => {
   }, [slug]);
 
   const scriptureReferences = useMemo(() => parseScriptureReferences(item?.scriptureReference), [item?.scriptureReference]);
+  const isShort = item?.mediaType.toLowerCase() === 'short';
+  const nextShort = isShort ? relatedItems.find((candidate) => candidate.mediaType.toLowerCase() === 'short') : undefined;
+
+  const handlePlayerEnded = () => {
+    if (!isShort || !nextShort) {
+      return;
+    }
+
+    setAutoPlayNext(true);
+    navigate(getMediaWatchPath(nextShort));
+  };
 
   return (
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
@@ -93,7 +110,7 @@ const MediaWatchPage = () => {
 
           {item && (
             <div className="grid gap-10">
-              <VideoPlayer darkMode={darkMode} item={item} />
+              <VideoPlayer autoPlay={autoPlayNext} darkMode={darkMode} isShort={isShort} item={item} onEnded={handlePlayerEnded} />
               <VideoMeta darkMode={darkMode} item={item} />
 
               {scriptureReferences.length > 0 && (

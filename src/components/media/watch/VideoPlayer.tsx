@@ -5,15 +5,18 @@ import { getPlayableMediaUrl } from './mediaWatchUtils';
 const ReactPlayer = lazy(() => import('react-player'));
 
 type VideoPlayerProps = {
+  autoPlay?: boolean;
   darkMode: boolean;
+  isShort?: boolean;
   item: AudioVisualItem;
+  onEnded?: () => void;
 };
 
-const VideoPlayer = ({ darkMode, item }: VideoPlayerProps) => {
+const VideoPlayer = ({ autoPlay = false, darkMode, isShort = false, item, onEnded }: VideoPlayerProps) => {
   const url = getPlayableMediaUrl(item);
 
   return (
-    <section className="relative">
+    <section className={`relative ${isShort ? 'mx-auto w-full max-w-[30rem]' : ''}`}>
       <div
         className={`absolute inset-x-4 -bottom-8 top-10 rounded-[2rem] blur-3xl ${
           darkMode ? 'bg-red-950/45' : 'bg-red-900/15'
@@ -24,14 +27,15 @@ const VideoPlayer = ({ darkMode, item }: VideoPlayerProps) => {
           darkMode ? 'border-white/10 bg-black shadow-red-950/25' : 'border-black/10 bg-black shadow-zinc-900/20'
         }`}
       >
-        <div className="aspect-video">
+        <div className={isShort ? 'aspect-[9/16]' : 'aspect-video'}>
           {url ? (
             <Suspense fallback={<div className="grid size-full place-items-center bg-black text-sm font-bold text-stone-300">Preparing player...</div>}>
               <ReactPlayer
                 controls
                 height="100%"
-                light={item.thumbnailUrl || false}
-                playing={false}
+                light={autoPlay ? false : item.thumbnailUrl || false}
+                onEnded={onEnded}
+                playing={autoPlay}
                 src={url}
                 width="100%"
               />
