@@ -33,8 +33,8 @@ const MediaRail = ({
   const visibleItems = onLoadMore ? items : items.slice(0, initialVisibleItems);
   const gridClass =
     variant === 'portrait'
-      ? 'columns-2 gap-4 md:columns-3 xl:columns-5'
-      : 'columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-5';
+      ? 'grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5'
+      : 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
   return (
     <section>
@@ -45,7 +45,7 @@ const MediaRail = ({
       </div>
       <div className={gridClass}>
         {visibleItems.map((item) => (
-          <div key={`${title}-${item.slug}`} className="mb-4 break-inside-avoid">
+          <div key={`${title}-${item.slug}`} className="min-w-0">
             <MediaCard darkMode={darkMode} item={item} variant={variant} />
           </div>
         ))}

@@ -67,24 +67,24 @@ const mergeMediaItems = (current: AudioVisualItem[], next: AudioVisualItem[]) =>
 
 const getPreviewCounts = () => {
   if (typeof window === 'undefined') {
-    return { sermons: 10, shorts: 6 };
+    return { livestreams: 8, music: 8, sermons: 12, shorts: 6 };
   }
 
   const width = window.innerWidth;
 
-  if (width >= 1536) {
-    return { sermons: 15, shorts: 5 };
+  if (width >= 1280) {
+    return { livestreams: 8, music: 8, sermons: 12, shorts: 5 };
   }
 
   if (width >= 1024) {
-    return { sermons: 12, shorts: 5 };
+    return { livestreams: 6, music: 6, sermons: 9, shorts: 5 };
   }
 
   if (width >= 640) {
-    return { sermons: 8, shorts: 6 };
+    return { livestreams: 4, music: 4, sermons: 6, shorts: 6 };
   }
 
-  return { sermons: 6, shorts: 6 };
+  return { livestreams: 2, music: 2, sermons: 6, shorts: 6 };
 };
 
 const selectHeroSermon = (home: AudioVisualHomePayload, latestSermon: AudioVisualItem | null, useFallback: boolean) =>
@@ -169,6 +169,7 @@ const MediaPage = () => {
   useEffect(() => {
     const handleResize = () => setPreviewCounts(getPreviewCounts());
 
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -379,6 +380,10 @@ const MediaPage = () => {
 
   const canLoadMore = (tab: PagedMediaKey) =>
     pagedMedia[tab].count > 0 && pagedMedia[tab].items.length < pagedMedia[tab].count;
+  const resolvedPreviewCounts = {
+    ...getPreviewCounts(),
+    ...previewCounts,
+  };
 
   return (
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
@@ -416,14 +421,28 @@ const MediaPage = () => {
                 />
                 <MediaRail
                   darkMode={darkMode}
-                  initialVisibleItems={previewCounts.sermons}
+                  initialVisibleItems={resolvedPreviewCounts.sermons}
                   title="Latest Sermons"
                   items={rails.latestSermons.items}
                   onViewMore={() => setActiveTab('sermons')}
                 />
                 <MediaRail
                   darkMode={darkMode}
-                  initialVisibleItems={previewCounts.shorts}
+                  initialVisibleItems={resolvedPreviewCounts.music}
+                  title="Music"
+                  items={rails.music.items}
+                  onViewMore={() => setActiveTab('music')}
+                />
+                <MediaRail
+                  darkMode={darkMode}
+                  initialVisibleItems={resolvedPreviewCounts.livestreams}
+                  title="Livestreams"
+                  items={rails.livestreams.items.slice(0, resolvedPreviewCounts.livestreams)}
+                  onViewMore={() => setActiveTab('livestreams')}
+                />
+                <MediaRail
+                  darkMode={darkMode}
+                  initialVisibleItems={resolvedPreviewCounts.shorts}
                   title="Shorts & Highlights"
                   items={rails.shorts.items}
                   variant="portrait"

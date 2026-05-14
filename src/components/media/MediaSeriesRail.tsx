@@ -25,13 +25,13 @@ const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selected
         <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
       </div>
 
-      <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {visibleItems.map((series) => (
           <button
             key={series.slug || series.name}
             type="button"
             onClick={() => onSeriesSelect?.(series)}
-            className={`group mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border text-left shadow-lg transition duration-300 hover:-translate-y-1 ${
+            className={`group block w-full overflow-hidden rounded-2xl border text-left shadow-lg transition duration-300 hover:-translate-y-1 ${
               selectedSlug && series.slug === selectedSlug
                 ? darkMode
                   ? 'border-red-400/60 bg-red-950/25 shadow-red-950/30'
