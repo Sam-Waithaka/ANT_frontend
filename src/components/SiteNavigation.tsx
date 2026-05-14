@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  BookMarked,
   CalendarDays,
   Heart,
   HelpCircle,
@@ -47,7 +48,7 @@ type SiteNavItem = {
 const navItems: SiteNavItem[] = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Scripture', href: '/scripture', icon: BookOpen },
-  { label: 'Project 52', href: '/project52', icon: CalendarDays },
+  { label: 'Project 52', href: '/project52', icon: BookMarked },
   { label: 'Media', href: '/media', icon: PlayCircle },
   { label: 'Ministries', href: '/ministries', icon: Users },
   { label: 'About', href: '/about', icon: Info },
@@ -67,7 +68,7 @@ const mobileNavSections: { title: string; items: SiteNavItem[] }[] = [
     title: 'Spiritual Growth',
     items: [
       { label: 'Scripture', href: '/scripture', icon: BookOpen },
-      { label: 'Project 52', href: '/project52', icon: CalendarDays },
+      { label: 'Project 52', href: '/project52', icon: BookMarked },
       { label: 'Media', href: '/media', icon: PlayCircle },
     ],
   },
@@ -153,20 +154,25 @@ const SiteNavigation = ({
           top: 'inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-black transition hover:-translate-y-0.5',
           drawer: 'flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-black transition',
         }[shape];
-        const stateClass = routeActive
-          ? 'bg-red-700 text-white shadow-md shadow-red-950/25'
-          : 'bg-red-800 text-white shadow-md shadow-red-950/20 hover:bg-red-700';
+        const themeClass = darkMode
+          ? 'bg-[#fffaf0] text-zinc-950 shadow-md shadow-white/10 hover:bg-white'
+          : 'bg-[#080808] text-white shadow-md shadow-zinc-950/20 hover:bg-[#111111]';
+        const activeClass = routeActive
+          ? darkMode
+            ? 'ring-2 ring-white/40'
+            : 'ring-2 ring-black/25'
+          : '';
 
-        return `${shapeClass} ${stateClass}`;
+        return `${shapeClass} ${themeClass} ${activeClass}`;
       }}
     >
       <Heart size={shape === 'top' ? 16 : shape === 'drawer' ? 18 : 17} />
       {giveNavItem.label}
     </NavLink>
   );
-  const renderMobileSectionTitle = (title: string) => (
+  const renderSectionTitle = (title: string, shape: 'side' | 'drawer') => (
     <p
-      id={`mobile-nav-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      id={`${shape}-nav-${title.toLowerCase().replace(/\s+/g, '-')}`}
       className={`mb-2 px-2 text-[11px] font-black uppercase tracking-[0.16em] ${
         darkMode ? 'text-stone-500' : 'text-zinc-500'
       }`}
@@ -174,17 +180,69 @@ const SiteNavigation = ({
       {title}
     </p>
   );
-  const mobileUtilityItemClass = `flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 text-left text-sm font-bold transition ${
-    darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
-  }`;
-  const mobileNestedUtilityItemClass = `ml-6 flex min-h-11 w-[calc(100%-1.5rem)] items-center gap-3 rounded-2xl px-4 text-left text-sm font-bold transition ${
-    darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
-  }`;
+  const getUtilityItemClass = (shape: 'side' | 'drawer', nested = false) => {
+    const shapeClass =
+      shape === 'drawer'
+        ? nested
+          ? 'ml-6 flex min-h-11 w-[calc(100%-1.5rem)] items-center gap-3 rounded-2xl px-4 text-left text-sm font-bold transition'
+          : 'flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 text-left text-sm font-bold transition'
+        : nested
+          ? 'ml-5 flex min-h-10 w-[calc(100%-1.25rem)] items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition'
+          : 'flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition';
+    const stateClass = darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white';
+
+    return `${shapeClass} ${stateClass}`;
+  };
+  const renderPreferencesSection = (shape: 'side' | 'drawer') => (
+    <section aria-labelledby={`${shape}-nav-preferences`}>
+      {renderSectionTitle('Preferences', shape)}
+      <div className="grid gap-2">
+        <a href="#" className={getUtilityItemClass(shape)}>
+          <Settings size={shape === 'drawer' ? 18 : 17} />
+          Settings
+        </a>
+        <button
+          type="button"
+          onClick={() => {
+            onToggleTheme();
+            if (shape === 'drawer') {
+              setDrawerOpen(false);
+            }
+          }}
+          className={getUtilityItemClass(shape, true)}
+        >
+          {darkMode ? <Sun size={shape === 'drawer' ? 18 : 17} /> : <Moon size={shape === 'drawer' ? 18 : 17} />}
+          {darkMode ? 'Light theme' : 'Dark theme'}
+        </button>
+        <a href="#" className={getUtilityItemClass(shape)}>
+          <HelpCircle size={shape === 'drawer' ? 18 : 17} />
+          Help
+        </a>
+      </div>
+    </section>
+  );
+  const renderGroupedNavigation = (shape: 'side' | 'drawer', onRouteClick?: () => void) => (
+    <>
+      {mobileNavSections.map((section) => (
+        <section key={section.title} aria-labelledby={`${shape}-nav-${section.title.toLowerCase().replace(/\s+/g, '-')}`}>
+          {renderSectionTitle(section.title, shape)}
+          <div className="grid gap-2">
+            {section.items.map((item) =>
+              item.href === giveNavItem.href
+                ? renderGiveButton(shape, onRouteClick)
+                : renderNavItem(item, shape, onRouteClick),
+            )}
+          </div>
+        </section>
+      ))}
+      {renderPreferencesSection(shape)}
+    </>
+  );
 
   if (layout === 'side') {
     return (
       <aside
-        className={`hidden h-screen w-48 shrink-0 border-r px-4 py-5 lg:flex lg:flex-col ${
+        className={`hidden h-screen w-60 shrink-0 border-r px-4 py-5 lg:flex lg:flex-col ${
           darkMode ? 'border-white/10 bg-[#080808] text-stone-100' : 'border-black/10 bg-[#fffaf0] text-zinc-950'
         }`}
       >
@@ -207,31 +265,9 @@ const SiteNavigation = ({
           </div>
         </a>
 
-        <nav className="mt-10 grid gap-2" aria-label="Site navigation">
-          {navItems.map((item) => renderNavItem(item, 'side'))}
-          {renderGiveButton('side')}
+        <nav className="mt-8 grid gap-6 overflow-y-auto pb-4" aria-label="Site navigation">
+          {renderGroupedNavigation('side')}
         </nav>
-
-        <div className="mt-auto grid gap-2">
-          <a className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`} href="#">
-            <Settings size={17} />
-            Settings
-          </a>
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className={`ml-4 flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
-              darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
-            }`}
-          >
-            {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-            {darkMode ? 'Light theme' : 'Dark theme'}
-          </button>
-          <a className={`flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`} href="#">
-            <HelpCircle size={17} />
-            Help
-          </a>
-        </div>
       </aside>
     );
   }
@@ -430,43 +466,7 @@ const SiteNavigation = ({
             </div>
 
             <nav className="mt-8 grid gap-6 overflow-y-auto pb-4" aria-label="Mobile site navigation">
-              {mobileNavSections.map((section) => (
-                <section key={section.title} aria-labelledby={`mobile-nav-${section.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {renderMobileSectionTitle(section.title)}
-                  <div className="grid gap-2">
-                    {section.items.map((item) =>
-                      item.href === giveNavItem.href
-                        ? renderGiveButton('drawer', () => setDrawerOpen(false))
-                        : renderNavItem(item, 'drawer', () => setDrawerOpen(false)),
-                    )}
-                  </div>
-                </section>
-              ))}
-
-              <section aria-labelledby="mobile-nav-preferences">
-                {renderMobileSectionTitle('Preferences')}
-                <div className="grid gap-2">
-                  <a href="#" className={mobileUtilityItemClass}>
-                    <Settings size={18} />
-                    Settings
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onToggleTheme();
-                      setDrawerOpen(false);
-                    }}
-                    className={mobileNestedUtilityItemClass}
-                  >
-                    {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-                    {darkMode ? 'Light theme' : 'Dark theme'}
-                  </button>
-                  <a href="#" className={mobileUtilityItemClass}>
-                    <HelpCircle size={18} />
-                    Help
-                  </a>
-                </div>
-              </section>
+              {renderGroupedNavigation('drawer', () => setDrawerOpen(false))}
             </nav>
           </aside>
         </div>
