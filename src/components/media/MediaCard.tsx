@@ -12,7 +12,7 @@ type MediaCardProps = {
 const imageClass = {
   compact: 'max-h-64',
   landscape: 'max-h-72',
-  portrait: 'max-h-[34rem]',
+  portrait: 'h-full',
 };
 
 const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) => {
@@ -27,12 +27,16 @@ const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) =>
     >
       <article className="grid gap-3">
         <div
-          className={`relative overflow-hidden rounded-2xl border shadow-lg transition duration-300 group-hover:-translate-y-1 ${
+          className={`relative overflow-hidden rounded-2xl border shadow-lg transition duration-300 group-hover:-translate-y-1 ${variant === 'portrait' ? 'aspect-[9/16]' : ''} ${
             darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25 group-hover:shadow-red-950/25' : 'border-black/10 bg-white shadow-zinc-900/10 group-hover:shadow-zinc-900/15'
           }`}
         >
           {item.thumbnailUrl ? (
-            <img src={item.thumbnailUrl} alt="" className={`h-auto w-full object-contain opacity-95 transition duration-300 group-hover:opacity-100 ${imageClass[variant]}`} />
+            <img
+              src={item.thumbnailUrl}
+              alt=""
+              className={`w-full opacity-95 transition duration-300 group-hover:opacity-100 ${variant === 'portrait' ? 'h-full object-cover' : `h-auto object-contain ${imageClass[variant]}`}`}
+            />
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
           <div className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white backdrop-blur">
