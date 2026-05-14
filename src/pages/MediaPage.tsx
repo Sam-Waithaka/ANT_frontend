@@ -12,7 +12,6 @@ import { useTheme } from '../hooks/useTheme';
 import {
   fetchAudioVisualHome,
   fetchAudioVisualItems,
-  fetchAudioVisualMediaTypes,
   fetchAudioVisualRails,
   fetchAudioVisualSeries,
   fetchFeaturedAudioVisualItems,
@@ -61,7 +60,6 @@ const MediaPage = () => {
   const [sermonItems, setSermonItems] = useState<AudioVisualItem[]>([]);
   const [seriesItems, setSeriesItems] = useState<AudioVisualLookup[]>([]);
   const [shortItems, setShortItems] = useState<AudioVisualItem[]>([]);
-  const [mediaTypes, setMediaTypes] = useState<AudioVisualLookup[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
 
   useEffect(() => {
@@ -77,7 +75,6 @@ const MediaPage = () => {
       fetchAudioVisualItems({ type: 'sermon', ordering: 'latest' }, controller.signal),
       fetchAudioVisualSeries(controller.signal),
       fetchAudioVisualItems({ type: 'short', ordering: 'latest' }, controller.signal),
-      fetchAudioVisualMediaTypes(controller.signal),
     ])
       .then(([
         homeResult,
@@ -89,7 +86,6 @@ const MediaPage = () => {
         sermonsResult,
         seriesResult,
         shortsResult,
-        mediaTypesResult,
       ]) => {
         const payload = homeResult.status === 'fulfilled' ? homeResult.value : fallbackMediaHome;
         const live = liveResult.status === 'fulfilled' && liveResult.value ? liveResult.value : payload.live;
@@ -113,7 +109,6 @@ const MediaPage = () => {
         setSermonItems(sermonsResult.status === 'fulfilled' ? sermonsResult.value : []);
         setSeriesItems(seriesResult.status === 'fulfilled' ? seriesResult.value : []);
         setShortItems(shortsResult.status === 'fulfilled' ? shortsResult.value : []);
-        setMediaTypes(mediaTypesResult.status === 'fulfilled' ? mediaTypesResult.value : []);
         setStatus(homeResult.status === 'fulfilled' && hasContent ? 'ready' : 'fallback');
       });
 
@@ -140,7 +135,7 @@ const MediaPage = () => {
 
       <main className={`flex-1 transition-colors duration-500 ${darkMode ? 'bg-[#050505] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
         <MediaHero darkMode={darkMode} heroItem={heroSermon} home={homePayload} />
-        <MediaCategoryTabs darkMode={darkMode} mediaTypes={mediaTypes} />
+        <MediaCategoryTabs darkMode={darkMode} />
 
         <section className="px-4 py-8 sm:px-6 lg:py-10 xl:px-8">
           <div className="grid gap-8">

@@ -1,5 +1,4 @@
 import { Images, ListVideo, Mic2, PlayCircle, Radio, Star, Tv } from 'lucide-react';
-import type { AudioVisualLookup } from '../../types/audioVisual';
 
 const tabs = [
   { label: 'Sermons', icon: PlayCircle },
@@ -13,21 +12,14 @@ const tabs = [
 
 type MediaCategoryTabsProps = {
   darkMode: boolean;
-  mediaTypes?: AudioVisualLookup[];
 };
 
-const MediaCategoryTabs = ({ darkMode, mediaTypes = [] }: MediaCategoryTabsProps) => {
-  const dynamicTabs =
-    mediaTypes.length > 0
-      ? mediaTypes.slice(0, 7).map((item, index) => ({ label: item.name, icon: tabs[index]?.icon || PlayCircle }))
-      : tabs;
-
-  return (
+const MediaCategoryTabs = ({ darkMode }: MediaCategoryTabsProps) => (
     <nav className="-mt-7 px-4 sm:px-6 xl:px-8" aria-label="Media categories">
       <div className={`relative z-10 grid gap-2 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl md:grid-cols-7 ${
         darkMode ? 'border-white/10 bg-black/55 shadow-black/30' : 'border-black/10 bg-white/90 shadow-zinc-900/10'
       }`}>
-        {dynamicTabs.map(({ icon: Icon, label }, index) => (
+        {tabs.map(({ icon: Icon, label }, index) => (
           <button
             key={label}
             type="button"
@@ -45,7 +37,6 @@ const MediaCategoryTabs = ({ darkMode, mediaTypes = [] }: MediaCategoryTabsProps
         ))}
       </div>
     </nav>
-  );
-};
+);
 
 export default MediaCategoryTabs;
