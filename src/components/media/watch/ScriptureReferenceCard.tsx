@@ -20,14 +20,14 @@ const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardP
       <div>
         <h3 className={`text-lg font-black ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{reference.display}</h3>
         <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
-          Scripture preview will appear here when verse text is available from the media payload.
+          Open the full chapter in Scripture and keep the passage close to the message.
         </p>
       </div>
     </div>
 
     <div className="mt-5 flex flex-wrap gap-3">
       <a
-        href={createScriptureUrl(reference, false)}
+        href={createScriptureUrl(reference)}
         className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-4 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
       >
         Read Full Chapter

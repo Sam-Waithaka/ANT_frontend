@@ -7,7 +7,18 @@ type VideoMetaProps = {
   item: AudioVisualItem;
 };
 
+const limitWords = (value: string, maxWords: number) => {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length <= maxWords) {
+    return value.trim();
+  }
+
+  return `${words.slice(0, maxWords).join(' ')}...`;
+};
+
 const VideoMeta = ({ darkMode, item }: VideoMetaProps) => {
+  const description = limitWords(item.description || item.descriptionExcerpt, 70);
   const metaItems = [
     item.speaker ? { icon: UserRound, label: item.speaker } : null,
     item.publishedAt ? { icon: CalendarDays, label: formatMediaDate(item.publishedAt) } : null,
@@ -40,9 +51,9 @@ const VideoMeta = ({ darkMode, item }: VideoMetaProps) => {
         </div>
       )}
 
-      {(item.descriptionExcerpt || item.description) && (
+      {description && (
         <p className={`max-w-3xl text-base leading-7 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
-          {item.descriptionExcerpt || item.description}
+          {description}
         </p>
       )}
     </section>
