@@ -13,6 +13,13 @@ type ScriptureReferenceCardProps = {
 
 const DEFAULT_PREVIEW_VERSION = 'BSB';
 
+type ScripturePreviewState = {
+  chapterVerses: BibleVerse[];
+  key: string;
+  previewVerses: BibleVerse[];
+  status: 'loading' | 'ready' | 'empty';
+};
+
 const pickPreviewVerses = (verses: BibleVerse[], reference: ParsedScriptureReference) => {
   const presentVerses = verses.filter((verse) => verse.number > 0 && verse.isPresent !== false && verse.text.trim());
   const startVerse = reference.startVerse;
@@ -36,21 +43,27 @@ const pickPreviewVerses = (verses: BibleVerse[], reference: ParsedScriptureRefer
 
 const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardProps) => {
   const location = useLocation();
-  const [chapterVerses, setChapterVerses] = useState<BibleVerse[]>([]);
-  const [expanded, setExpanded] = useState(false);
-  const [previewVerses, setPreviewVerses] = useState<BibleVerse[]>([]);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'empty'>('loading');
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [previewState, setPreviewState] = useState<ScripturePreviewState>({
+    chapterVerses: [],
+    key: '',
+    previewVerses: [],
+    status: 'loading',
+  });
   const returnTo = `${location.pathname}${location.search}`;
   const scriptureUrl = useMemo(() => createScriptureUrl(reference, returnTo), [reference, returnTo]);
-  const visibleVerses = expanded ? chapterVerses : previewVerses;
+  const referenceKey = useMemo(
+    () => `${reference.book}:${reference.chapter}:${reference.startVerse || ''}:${reference.endVerse || ''}`,
+    [reference]
+  );
+  const resolvedPreviewState = previewState.key === referenceKey
+    ? previewState
+    : { chapterVerses: [], key: referenceKey, previewVerses: [], status: 'loading' as const };
+  const expanded = expandedKey === referenceKey;
+  const visibleVerses = expanded ? resolvedPreviewState.chapterVerses : resolvedPreviewState.previewVerses;
 
   useEffect(() => {
     let active = true;
-
-    setStatus('loading');
-    setChapterVerses([]);
-    setExpanded(false);
-    setPreviewVerses([]);
 
     getBibleVersesByReference(DEFAULT_PREVIEW_VERSION, reference.book, reference.chapter)
       .then((verses) => {
@@ -58,20 +71,28 @@ const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardP
 
         const presentVerses = verses.filter((verse) => verse.number > 0 && verse.isPresent !== false && verse.text.trim());
         const nextPreview = pickPreviewVerses(presentVerses, reference);
-        setChapterVerses(presentVerses);
-        setPreviewVerses(nextPreview);
-        setStatus(nextPreview.length > 0 ? 'ready' : 'empty');
+        setPreviewState({
+          chapterVerses: presentVerses,
+          key: referenceKey,
+          previewVerses: nextPreview,
+          status: nextPreview.length > 0 ? 'ready' : 'empty',
+        });
       })
       .catch(() => {
         if (active) {
-          setStatus('empty');
+          setPreviewState({
+            chapterVerses: [],
+            key: referenceKey,
+            previewVerses: [],
+            status: 'empty',
+          });
         }
       });
 
     return () => {
       active = false;
     };
-  }, [reference]);
+  }, [reference, referenceKey]);
 
   return (
     <article
@@ -85,12 +106,12 @@ const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardP
         </div>
         <div className="min-w-0">
           <h3 className={`text-lg font-black ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{reference.display}</h3>
-          {status === 'loading' && (
+          {resolvedPreviewState.status === 'loading' && (
             <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
               Loading scripture preview...
             </p>
           )}
-          {status === 'empty' && (
+          {resolvedPreviewState.status === 'empty' && (
             <p className={`mt-2 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
               Open the full chapter in Scripture and keep the passage close to the message.
             </p>
@@ -100,7 +121,7 @@ const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardP
 
       {visibleVerses.length > 0 && (
         <div className={`mt-5 rounded-2xl border p-4 ${
-          darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-black/10 bg-[#fffaf0]'
+          darkMode ? 'border-white/10 bg-white/4' : 'border-black/10 bg-[#fffaf0]'
         }`}>
           <div className={`grid gap-3 pr-1 ${expanded ? 'max-h-96 overflow-y-auto' : ''}`}>
             {visibleVerses.map((verse) => (
@@ -110,10 +131,10 @@ const ScriptureReferenceCard = ({ darkMode, reference }: ScriptureReferenceCardP
               </p>
             ))}
           </div>
-          {chapterVerses.length > previewVerses.length && (
+          {resolvedPreviewState.chapterVerses.length > resolvedPreviewState.previewVerses.length && (
             <button
               type="button"
-              onClick={() => setExpanded((current) => !current)}
+              onClick={() => setExpandedKey((current) => (current === referenceKey ? null : referenceKey))}
               className={`mt-4 inline-flex min-h-10 items-center rounded-full border px-4 text-xs font-black transition hover:-translate-y-0.5 ${
                 darkMode ? 'border-white/10 bg-white/5 text-stone-100 hover:bg-white/10' : 'border-black/10 bg-white text-zinc-800 hover:bg-white'
               }`}
