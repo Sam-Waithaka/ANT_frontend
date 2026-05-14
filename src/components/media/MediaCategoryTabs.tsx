@@ -1,8 +1,8 @@
-import { CalendarDays, ChevronDown, Grid2X2, Layers, ListVideo, Music2, PlayCircle, Radio, Star, Tv, X } from 'lucide-react';
+import { ChevronDown, Grid2X2, Layers, ListVideo, Mic2, Music2, PlayCircle, Radio, Star, Tv, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
-export type MediaTabKey = 'all' | 'sermons' | 'featured' | 'series' | 'livestreams' | 'shorts' | 'conferences' | 'music';
+export type MediaTabKey = 'all' | 'sermons' | 'featured' | 'series' | 'livestreams' | 'shorts' | 'music' | 'podcasts';
 
 const tabs: Array<{ icon: LucideIcon; key: MediaTabKey; label: string }> = [
   { label: 'All', icon: Grid2X2, key: 'all' },
@@ -11,8 +11,8 @@ const tabs: Array<{ icon: LucideIcon; key: MediaTabKey; label: string }> = [
   { label: 'Series', icon: ListVideo, key: 'series' },
   { label: 'Livestreams', icon: Tv, key: 'livestreams' },
   { label: 'Shorts', icon: Radio, key: 'shorts' },
-  { label: 'Conferences', icon: CalendarDays, key: 'conferences' },
   { label: 'Music', icon: Music2, key: 'music' },
+  { label: 'Podcasts', icon: Mic2, key: 'podcasts' },
 ];
 
 type MediaCategoryTabsProps = {

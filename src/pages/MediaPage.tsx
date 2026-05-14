@@ -4,6 +4,7 @@ import MediaCategoryTabs from '../components/media/MediaCategoryTabs';
 import type { MediaTabKey } from '../components/media/MediaCategoryTabs';
 import MediaFeatured from '../components/media/MediaFeatured';
 import MediaHero from '../components/media/MediaHero';
+import MediaPodcastComingSoon from '../components/media/MediaPodcastComingSoon';
 import MediaRail from '../components/media/MediaRail';
 import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import MediaSeriesRail from '../components/media/MediaSeriesRail';
@@ -512,6 +513,7 @@ const MediaPage = () => {
                 onLoadMore={() => handleLoadMore('music')}
               />
             )}
+            {activeTab === 'podcasts' && <MediaPodcastComingSoon darkMode={darkMode} />}
           </div>
         </section>
 
