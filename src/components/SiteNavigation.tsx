@@ -164,6 +164,22 @@ const SiteNavigation = ({
       {giveNavItem.label}
     </NavLink>
   );
+  const renderMobileSectionTitle = (title: string) => (
+    <p
+      id={`mobile-nav-${title.toLowerCase().replace(/\s+/g, '-')}`}
+      className={`mb-2 px-2 text-[11px] font-black uppercase tracking-[0.16em] ${
+        darkMode ? 'text-stone-500' : 'text-zinc-500'
+      }`}
+    >
+      {title}
+    </p>
+  );
+  const mobileUtilityItemClass = `flex min-h-12 w-full items-center gap-3 rounded-2xl px-4 text-left text-sm font-bold transition ${
+    darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
+  }`;
+  const mobileNestedUtilityItemClass = `ml-6 flex min-h-11 w-[calc(100%-1.5rem)] items-center gap-3 rounded-2xl px-4 text-left text-sm font-bold transition ${
+    darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
+  }`;
 
   if (layout === 'side') {
     return (
@@ -355,6 +371,8 @@ const SiteNavigation = ({
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
+            aria-hidden={compactSmallHeader || drawerOpen}
+            tabIndex={compactSmallHeader || drawerOpen ? -1 : undefined}
             className={`grid size-11 shrink-0 place-items-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:hidden ${
               darkMode
                 ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black'
@@ -414,14 +432,7 @@ const SiteNavigation = ({
             <nav className="mt-8 grid gap-6 overflow-y-auto pb-4" aria-label="Mobile site navigation">
               {mobileNavSections.map((section) => (
                 <section key={section.title} aria-labelledby={`mobile-nav-${section.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                  <p
-                    id={`mobile-nav-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
-                    className={`mb-2 px-2 text-[11px] font-black uppercase tracking-[0.16em] ${
-                      darkMode ? 'text-stone-500' : 'text-zinc-500'
-                    }`}
-                  >
-                    {section.title}
-                  </p>
+                  {renderMobileSectionTitle(section.title)}
                   <div className="grid gap-2">
                     {section.items.map((item) =>
                       item.href === giveNavItem.href
@@ -431,34 +442,32 @@ const SiteNavigation = ({
                   </div>
                 </section>
               ))}
-            </nav>
 
-            <div className="mt-auto grid gap-2 border-t border-black/10 pt-4 dark:border-white/10">
-              <div className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
-                <Settings size={17} />
-                Settings
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onToggleTheme();
-                  setDrawerOpen(false);
-                }}
-                className={`ml-4 flex min-h-11 items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition ${
-                  darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-white'
-                }`}
-              >
-                {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-                {darkMode ? 'Light theme' : 'Dark theme'}
-              </button>
-              <a
-                href="#"
-                className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}
-              >
-                <HelpCircle size={17} />
-                Help
-              </a>
-            </div>
+              <section aria-labelledby="mobile-nav-preferences">
+                {renderMobileSectionTitle('Preferences')}
+                <div className="grid gap-2">
+                  <a href="#" className={mobileUtilityItemClass}>
+                    <Settings size={18} />
+                    Settings
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onToggleTheme();
+                      setDrawerOpen(false);
+                    }}
+                    className={mobileNestedUtilityItemClass}
+                  >
+                    {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+                    {darkMode ? 'Light theme' : 'Dark theme'}
+                  </button>
+                  <a href="#" className={mobileUtilityItemClass}>
+                    <HelpCircle size={18} />
+                    Help
+                  </a>
+                </div>
+              </section>
+            </nav>
           </aside>
         </div>
       )}
