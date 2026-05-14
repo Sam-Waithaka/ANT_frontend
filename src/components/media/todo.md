@@ -53,3 +53,9 @@ These items are intentionally parked until the `audio_visual` backend API is enh
 
 
 Fix the sitting of collections in the media page, maybe when you hit the footer the buttons can dissappear?
+
+Add share CTA button in the media player, that shares the video link, when clicked, and calls the default behavior of the device
+
+Add a 3rd CTA in the landing page, with watch live there is a Sunday live service in EAT, and watch latest sermon, which will always point to the latest sermon
+
+Changing the theme from lightmode to darkmode and vice versa should not pause the video player
