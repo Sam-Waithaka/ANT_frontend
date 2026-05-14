@@ -1,6 +1,8 @@
 import type {
   AudioVisualHomePayload,
+  AudioVisualGroupDetail,
   AudioVisualItem,
+  AudioVisualListQuery,
   AudioVisualLiveCta,
   AudioVisualLookup,
   AudioVisualRail,
@@ -46,6 +48,13 @@ const readArray = (record: Record<string, unknown>, keys: string[]) => {
   return [];
 };
 
+const normalizeItemList = (payload: unknown) => {
+  const record = readRecord(payload);
+  const source = Array.isArray(payload) ? payload : readArray(record, ['results', 'items']);
+
+  return source.map(normalizeAudioVisualItem).filter(Boolean) as AudioVisualItem[];
+};
+
 const normalizeLookup = (value: unknown): AudioVisualLookup => {
   const record = readRecord(value);
   const name = readString(record, ['name', 'title', 'label'], 'Media');
@@ -57,8 +66,12 @@ const normalizeLookup = (value: unknown): AudioVisualLookup => {
   };
 };
 
-const normalizeItem = (value: unknown): AudioVisualItem => {
+export const normalizeAudioVisualItem = (value: unknown): AudioVisualItem | null => {
   const record = readRecord(value);
+  if (Object.keys(record).length === 0) {
+    return null;
+  }
+
   const mediaTypeRecord = readRecord(record.media_type_detail || record.mediaTypeDetail);
   const mediaType = readString(record, ['media_type', 'mediaType'], 'sermon');
   const title = readString(record, ['title'], 'Untitled message');
@@ -95,13 +108,24 @@ const normalizeRail = (value: unknown): AudioVisualRail => {
   return {
     key,
     title: readString(record, ['title'], key),
-    items: readArray(record, ['items', 'results']).map(normalizeItem),
+    items: readArray(record, ['items', 'results']).map(normalizeAudioVisualItem).filter(Boolean) as AudioVisualItem[],
+  };
+};
+
+const normalizeGroupDetail = (value: unknown): AudioVisualGroupDetail => {
+  const record = readRecord(value);
+  const lookup = normalizeLookup(record);
+
+  return {
+    ...lookup,
+    description: readString(record, ['description']),
+    items: readArray(record, ['items', 'results']).map(normalizeAudioVisualItem).filter(Boolean) as AudioVisualItem[],
   };
 };
 
 const normalizeLiveCta = (value: unknown): AudioVisualLiveCta | null => {
   const record = readRecord(value);
-  const item = record.item ? normalizeItem(record.item) : null;
+  const item = record.item ? normalizeAudioVisualItem(record.item) : null;
 
   if (!item) {
     return null;
@@ -118,7 +142,7 @@ export const normalizeAudioVisualHome = (payload: unknown): AudioVisualHomePaylo
 
   return {
     generatedAt: readString(record, ['generated_at', 'generatedAt']),
-    hero: record.hero ? normalizeItem(record.hero) : null,
+    hero: record.hero ? normalizeAudioVisualItem(record.hero) : null,
     live: normalizeLiveCta(record.live),
     rails: readArray(record, ['rails']).map(normalizeRail),
   };
@@ -132,4 +156,140 @@ export const fetchAudioVisualHome = async (signal?: AbortSignal) => {
   });
 
   return normalizeAudioVisualHome(payload);
+};
+
+const createQueryString = (query: AudioVisualListQuery = {}) => {
+  const params = new URLSearchParams();
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    const apiKey = key === 'liveStatus' ? 'live_status' : key;
+    params.set(apiKey, String(value));
+  });
+
+  const queryString = params.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
+export const fetchAudioVisualItems = async (query: AudioVisualListQuery = {}, signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>(`/v1/audio-visual/${createQueryString(query)}`, {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeItemList(payload);
+};
+
+export const fetchAudioVisualRails = async (signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>('/v1/audio-visual/rails/', {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  const record = readRecord(payload);
+  const source = Array.isArray(payload) ? payload : readArray(record, ['rails', 'results', 'items']);
+  return source.map(normalizeRail);
+};
+
+export const fetchFeaturedAudioVisualItems = async (signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>('/v1/audio-visual/featured/', {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeItemList(payload);
+};
+
+export const fetchLatestAudioVisualItems = async (signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>('/v1/audio-visual/latest/', {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeItemList(payload);
+};
+
+export const fetchLatestSermon = async (signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>('/v1/audio-visual/latest-sermon/', {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeAudioVisualItem(payload);
+};
+
+export const fetchAudioVisualWatchItem = async (slug: string, signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>(`/v1/audio-visual/watch/${encodeURIComponent(slug)}/`, {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeAudioVisualItem(payload);
+};
+
+export const fetchLiveAudioVisualCta = async (signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>('/v1/audio-visual/live/', {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  const item = normalizeAudioVisualItem(payload);
+  return item ? { ctaLabel: 'Watch live', item } : null;
+};
+
+const fetchLookupList = async (path: string, signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>(path, {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+  const record = readRecord(payload);
+  const source = Array.isArray(payload) ? payload : readArray(record, ['results', 'items']);
+
+  return source.map(normalizeLookup);
+};
+
+export const fetchAudioVisualMediaTypes = (signal?: AbortSignal) =>
+  fetchLookupList('/v1/audio-visual/media-types/', signal);
+
+export const fetchAudioVisualLanguages = (signal?: AbortSignal) =>
+  fetchLookupList('/v1/audio-visual/languages/', signal);
+
+export const fetchAudioVisualCategories = (signal?: AbortSignal) =>
+  fetchLookupList('/v1/audio-visual/categories/', signal);
+
+export const fetchAudioVisualSeries = (signal?: AbortSignal) =>
+  fetchLookupList('/v1/audio-visual/series/', signal);
+
+export const fetchAudioVisualSeriesDetail = async (slug: string, signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>(`/v1/audio-visual/series/${encodeURIComponent(slug)}/`, {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeGroupDetail(payload);
+};
+
+export const fetchAudioVisualCollections = (signal?: AbortSignal) =>
+  fetchLookupList('/v1/audio-visual/collections/', signal);
+
+export const fetchAudioVisualCollectionDetail = async (slug: string, signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>(`/v1/audio-visual/collections/${encodeURIComponent(slug)}/`, {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeGroupDetail(payload);
 };

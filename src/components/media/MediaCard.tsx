@@ -3,6 +3,7 @@ import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
 
 type MediaCardProps = {
+  darkMode: boolean;
   item: AudioVisualItem;
   variant?: 'landscape' | 'portrait' | 'compact';
 };
@@ -13,7 +14,7 @@ const variantClass = {
   portrait: 'aspect-[9/14]',
 };
 
-const MediaCard = ({ item, variant = 'landscape' }: MediaCardProps) => {
+const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) => {
   const duration = formatDuration(item.durationSeconds);
   const date = formatMediaDate(item.publishedAt);
   const href = item.externalUrl || item.embedUrl || '#';
@@ -27,7 +28,9 @@ const MediaCard = ({ item, variant = 'landscape' }: MediaCardProps) => {
     >
       <article className="grid gap-3">
         <div
-          className={`relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-lg shadow-black/25 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-red-950/25 ${variantClass[variant]}`}
+          className={`relative overflow-hidden rounded-2xl border shadow-lg transition duration-300 group-hover:-translate-y-1 ${
+            darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25 group-hover:shadow-red-950/25' : 'border-black/10 bg-white shadow-zinc-900/10 group-hover:shadow-zinc-900/15'
+          } ${variantClass[variant]}`}
         >
           {item.thumbnailUrl ? (
             <img src={item.thumbnailUrl} alt="" className="size-full object-cover opacity-85 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
@@ -56,13 +59,13 @@ const MediaCard = ({ item, variant = 'landscape' }: MediaCardProps) => {
 
         {variant !== 'portrait' && (
           <div>
-            <h3 className="line-clamp-2 text-base font-black leading-snug text-white">{item.title}</h3>
-            <p className="mt-1 truncate text-sm text-stone-400">
+            <h3 className={`line-clamp-2 text-base font-black leading-snug ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{item.title}</h3>
+            <p className={`mt-1 truncate text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
               {[item.speaker, date].filter(Boolean).join(' • ')}
             </p>
-            <p className="mt-2 line-clamp-2 text-sm leading-5 text-stone-300">{item.descriptionExcerpt}</p>
+            <p className={`mt-2 line-clamp-2 text-sm leading-5 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>{item.descriptionExcerpt}</p>
             {item.scriptureReference && (
-              <p className="mt-2 text-xs font-black uppercase tracking-[0.12em] text-red-200">{item.scriptureReference}</p>
+              <p className={`mt-2 text-xs font-black uppercase tracking-[0.12em] ${darkMode ? 'text-red-200' : 'text-red-800'}`}>{item.scriptureReference}</p>
             )}
           </div>
         )}

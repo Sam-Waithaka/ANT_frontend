@@ -38,9 +38,26 @@ export type AudioVisualLiveCta = {
   item: AudioVisualItem | null;
 };
 
+export type AudioVisualGroupDetail = AudioVisualLookup & {
+  description?: string;
+  items: AudioVisualItem[];
+};
+
 export type AudioVisualHomePayload = {
   generatedAt?: string;
   hero: AudioVisualItem | null;
   live: AudioVisualLiveCta | null;
   rails: AudioVisualRail[];
+};
+
+export type AudioVisualListQuery = {
+  category?: string;
+  collection?: string;
+  featured?: boolean;
+  language?: string;
+  liveStatus?: string;
+  ordering?: 'latest' | 'oldest' | 'priority' | 'title';
+  search?: string;
+  series?: string;
+  type?: string;
 };

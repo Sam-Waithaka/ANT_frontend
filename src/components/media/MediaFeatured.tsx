@@ -3,19 +3,28 @@ import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
 
 type MediaFeaturedProps = {
+  darkMode: boolean;
   items: AudioVisualItem[];
 };
 
-const MediaFeatured = ({ items }: MediaFeaturedProps) => {
+const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
   const [featured, ...rest] = items;
 
   if (!featured) return null;
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(153,27,27,0.24),rgba(255,255,255,0.045))] p-5 shadow-xl shadow-black/20">
+    <section
+      className={`rounded-2xl border p-5 shadow-xl ${
+        darkMode
+          ? 'border-white/10 bg-[linear-gradient(135deg,rgba(153,27,27,0.24),rgba(255,255,255,0.045))] shadow-black/20'
+          : 'border-black/10 bg-white shadow-zinc-900/10'
+      }`}
+    >
       <div className="mb-5 flex items-center justify-between gap-4">
-        <h2 className="text-sm font-black uppercase tracking-[0.16em] text-white">Featured Sermon</h2>
-        <a href="#featured" className="text-sm font-black text-red-200 hover:text-white">View all featured</a>
+        <h2 className={`text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Featured Sermon</h2>
+        <a href="#featured" className={`text-sm font-black ${darkMode ? 'text-red-200 hover:text-white' : 'text-red-800 hover:text-zinc-950'}`}>
+          View all featured
+        </a>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1fr_0.85fr]">
@@ -35,18 +44,25 @@ const MediaFeatured = ({ items }: MediaFeaturedProps) => {
         </div>
 
         <div className="self-center">
-          <h3 className="max-w-md text-3xl font-extrabold leading-tight tracking-normal text-white">{featured.title}</h3>
-          <p className="mt-3 text-sm font-bold text-stone-400">
+          <h3 className={`max-w-md text-3xl font-extrabold leading-tight tracking-normal ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{featured.title}</h3>
+          <p className={`mt-3 text-sm font-bold ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
             {[featured.speaker, formatMediaDate(featured.publishedAt)].filter(Boolean).join(' • ')}
           </p>
-          <p className="mt-5 max-w-md text-base leading-7 text-stone-200">{featured.descriptionExcerpt}</p>
-          {featured.scriptureReference && <p className="mt-3 text-sm font-black uppercase tracking-[0.12em] text-red-200">{featured.scriptureReference}</p>}
+          <p className={`mt-5 max-w-md text-base leading-7 ${darkMode ? 'text-stone-200' : 'text-zinc-700'}`}>{featured.descriptionExcerpt}</p>
+          {featured.scriptureReference && (
+            <p className={`mt-3 text-sm font-black uppercase tracking-[0.12em] ${darkMode ? 'text-red-200' : 'text-red-800'}`}>{featured.scriptureReference}</p>
+          )}
           <div className="mt-6 flex flex-wrap gap-3">
             <a href={featured.externalUrl || '#'} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-red-800 px-4 text-sm font-black text-white hover:bg-red-700">
               <Play size={16} fill="currentColor" />
               Watch now
             </a>
-            <button type="button" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-4 text-sm font-black text-stone-200 hover:bg-white/10">
+            <button
+              type="button"
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-black ${
+                darkMode ? 'border-white/10 text-stone-200 hover:bg-white/10' : 'border-black/10 text-zinc-800 hover:bg-[#fffaf0]'
+              }`}
+            >
               <Plus size={16} />
               My list
             </button>
@@ -55,14 +71,18 @@ const MediaFeatured = ({ items }: MediaFeaturedProps) => {
 
         <div className="grid gap-3">
           {rest.slice(0, 3).map((item) => (
-            <a key={item.slug} href={item.externalUrl || '#'} className="grid grid-cols-[5.5rem_1fr] gap-3 rounded-xl p-2 transition hover:bg-white/10">
+            <a
+              key={item.slug}
+              href={item.externalUrl || '#'}
+              className={`grid grid-cols-[5.5rem_1fr] gap-3 rounded-xl p-2 transition ${darkMode ? 'hover:bg-white/10' : 'hover:bg-[#fffaf0]'}`}
+            >
               <div className="relative aspect-video overflow-hidden rounded-lg bg-black">
                 <img src={item.thumbnailUrl || '/images/church-front-left-1920.jpg'} alt="" className="size-full object-cover opacity-80" />
                 {item.durationSeconds && <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-black text-white">{formatDuration(item.durationSeconds)}</span>}
               </div>
               <div>
-                <h4 className="line-clamp-2 text-sm font-black text-white">{item.title}</h4>
-                <p className="mt-1 text-xs text-stone-400">{formatMediaDate(item.publishedAt)}</p>
+                <h4 className={`line-clamp-2 text-sm font-black ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{item.title}</h4>
+                <p className={`mt-1 text-xs ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>{formatMediaDate(item.publishedAt)}</p>
               </div>
             </a>
           ))}
