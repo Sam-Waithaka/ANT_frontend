@@ -25,24 +25,10 @@ import {
 } from '../services/audioVisualApi';
 import type { AudioVisualHomePayload, AudioVisualItem, AudioVisualLookup, AudioVisualRail } from '../types/audioVisual';
 
-const isSundayInNairobi = (date = new Date()) =>
-  new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Africa/Nairobi',
-    weekday: 'short',
-  }).format(date) === 'Sun';
+const selectHeroSermon = (home: AudioVisualHomePayload, latestSermon: AudioVisualItem | null, useFallback: boolean) =>
+  latestSermon || home.hero || (useFallback ? fallbackMediaHome.hero : null);
 
-const selectMediaHero = (home: AudioVisualHomePayload, latestSermon: AudioVisualItem | null) => {
-  if (isSundayInNairobi() && home.live?.item) {
-    return { heroItem: home.live.item, mode: 'live' as const };
-  }
-
-  return {
-    heroItem: latestSermon || home.hero,
-    mode: 'latest' as const,
-  };
-};
-
-const mergeRail = (rail: AudioVisualRail | undefined, fallback: AudioVisualRail, endpointItems: AudioVisualItem[] = []) => {
+const mergeRail = (rail: AudioVisualRail | undefined, fallback: AudioVisualRail, endpointItems: AudioVisualItem[] = [], useFallback = false) => {
   if (rail && rail.items.length > 0) {
     return rail;
   }
@@ -51,7 +37,7 @@ const mergeRail = (rail: AudioVisualRail | undefined, fallback: AudioVisualRail,
     return { ...fallback, items: endpointItems };
   }
 
-  return fallback;
+  return useFallback ? fallback : { ...fallback, items: [] };
 };
 
 const MediaPage = () => {
@@ -106,7 +92,16 @@ const MediaPage = () => {
         const payload = homeResult.status === 'fulfilled' ? homeResult.value : fallbackMediaHome;
         const live = liveResult.status === 'fulfilled' && liveResult.value ? liveResult.value : payload.live;
         const nextPayload = { ...payload, live };
-        const hasContent = Boolean(payload.hero || payload.live || payload.rails.some((rail) => rail.items.length > 0));
+        const hasContent = Boolean(
+          payload.hero ||
+          payload.live ||
+          payload.rails.some((rail) => rail.items.length > 0) ||
+          (latestSermonResult.status === 'fulfilled' && latestSermonResult.value) ||
+          (featuredResult.status === 'fulfilled' && featuredResult.value.length > 0) ||
+          (latestResult.status === 'fulfilled' && latestResult.value.length > 0) ||
+          (sermonsResult.status === 'fulfilled' && sermonsResult.value.length > 0) ||
+          (shortsResult.status === 'fulfilled' && shortsResult.value.length > 0)
+        );
         setHomePayload(hasContent ? nextPayload : fallbackMediaHome);
         setEndpointRails(railsResult.status === 'fulfilled' ? railsResult.value : []);
         setLatestSermon(latestSermonResult.status === 'fulfilled' ? latestSermonResult.value : null);
@@ -127,22 +122,23 @@ const MediaPage = () => {
 
   const rails = useMemo(() => {
     const railMap = new Map([...endpointRails, ...homePayload.rails].map((rail) => [rail.key, rail]));
+    const useFallback = status === 'fallback';
 
     return {
-      featured: mergeRail(railMap.get('featured'), fallbackMediaHome.rails[0], featuredItems),
-      series: mergeRail(railMap.get('series') || railMap.get('sermons'), fallbackMediaHome.rails[1], sermonItems),
-      latest: mergeRail(railMap.get('latest'), fallbackMediaHome.rails[2], latestItems),
-      shorts: mergeRail(railMap.get('shorts') || railMap.get('highlights'), fallbackMediaHome.rails[3], shortItems),
+      featured: mergeRail(railMap.get('featured'), fallbackMediaHome.rails[0], featuredItems, useFallback),
+      series: mergeRail(railMap.get('series') || railMap.get('sermons'), fallbackMediaHome.rails[1], sermonItems, useFallback),
+      latest: mergeRail(railMap.get('latest'), fallbackMediaHome.rails[2], latestItems, useFallback),
+      shorts: mergeRail(railMap.get('shorts') || railMap.get('highlights'), fallbackMediaHome.rails[3], shortItems, useFallback),
     };
-  }, [endpointRails, featuredItems, homePayload.rails, latestItems, sermonItems, shortItems]);
-  const selectedHero = useMemo(() => selectMediaHero(homePayload, latestSermon), [homePayload, latestSermon]);
+  }, [endpointRails, featuredItems, homePayload.rails, latestItems, sermonItems, shortItems, status]);
+  const heroSermon = useMemo(() => selectHeroSermon(homePayload, latestSermon, status === 'fallback'), [homePayload, latestSermon, status]);
 
   return (
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader activePath="/media" darkMode={darkMode} onToggleTheme={toggleTheme} />
 
       <main className={`flex-1 transition-colors duration-500 ${darkMode ? 'bg-[#050505] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
-        <MediaHero darkMode={darkMode} heroItem={selectedHero.heroItem} home={homePayload} mode={selectedHero.mode} />
+        <MediaHero darkMode={darkMode} heroItem={heroSermon} home={homePayload} />
         <MediaCategoryTabs darkMode={darkMode} mediaTypes={mediaTypes} />
 
         <section className="grid gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[14.5rem_1fr] lg:py-10 xl:px-8">
