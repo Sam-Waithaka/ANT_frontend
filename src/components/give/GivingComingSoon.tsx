@@ -9,7 +9,7 @@ const GivingComingSoon = ({ darkMode }: GivingComingSoonProps) => (
         className={`rounded-3xl border p-6 sm:p-8 ${
           darkMode
             ? 'border-white/10 bg-white/5 text-stone-100'
-            : 'border-black/10 bg-white/70 text-zinc-950'
+            : 'border-black/10 bg-[#fffaf0]/85 text-zinc-950 shadow-sm'
         }`}
       >
         <p className="text-xs font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">

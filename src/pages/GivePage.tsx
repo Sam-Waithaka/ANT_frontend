@@ -12,7 +12,13 @@ const GivePage = () => {
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader activePath="/give" darkMode={darkMode} onToggleTheme={toggleTheme} />
 
-      <main className="flex-1 bg-[radial-gradient(circle_at_top_left,rgba(153,27,27,0.42),transparent_34%),linear-gradient(135deg,#080808,#171717_54%,#260b0b)]">
+      <main
+        className={`flex-1 ${
+          darkMode
+            ? 'bg-[radial-gradient(circle_at_top_left,rgba(153,27,27,0.42),transparent_34%),linear-gradient(135deg,#080808,#171717_54%,#260b0b)]'
+            : 'bg-[radial-gradient(circle_at_top_left,rgba(153,27,27,0.12),transparent_32%),linear-gradient(135deg,#f8f5ef,#fffaf0_52%,#ece7de)]'
+        }`}
+      >
         <GiveHero darkMode={darkMode} />
         <GivingInstructionsCard darkMode={darkMode} />
         <GivingComingSoon darkMode={darkMode} />
