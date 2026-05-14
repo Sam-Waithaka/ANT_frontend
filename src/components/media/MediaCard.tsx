@@ -9,8 +9,8 @@ type MediaCardProps = {
 };
 
 const variantClass = {
-  compact: 'aspect-[16/9]',
-  landscape: 'aspect-[16/10]',
+  compact: 'aspect-[16/10]',
+  landscape: 'aspect-[16/11]',
   portrait: 'aspect-[9/14]',
 };
 

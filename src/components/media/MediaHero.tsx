@@ -1,4 +1,4 @@
-import { BookOpen, Play, Radio, Share2 } from 'lucide-react';
+import { BookOpen, Play } from 'lucide-react';
 import type { AudioVisualHomePayload, AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
 
@@ -41,24 +41,6 @@ const MediaHero = ({ darkMode, heroItem, home }: MediaHeroProps) => {
             <p className={`mt-5 max-w-2xl text-lg leading-8 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
               Centered on God&apos;s Word. Led by the Holy Spirit. Watch, listen and be strengthened in faith.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={home.live?.item?.externalUrl || home.live?.item?.embedUrl || '#'}
-                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-red-800 px-6 text-base font-black text-white shadow-lg shadow-red-950/30 transition hover:-translate-y-0.5 hover:bg-red-700"
-              >
-                <Radio size={18} />
-                {home.live?.ctaLabel || 'Watch Live'}
-              </a>
-              <button
-                type="button"
-                className={`inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border px-6 text-base font-black backdrop-blur transition ${
-                  darkMode ? 'border-white/10 bg-black/30 text-white hover:bg-white/10' : 'border-black/10 bg-white text-zinc-950 shadow-lg shadow-zinc-900/10 hover:bg-[#fffaf0]'
-                }`}
-              >
-                <Share2 size={18} />
-                Share
-              </button>
-            </div>
           </div>
 
           <a

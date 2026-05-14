@@ -1,7 +1,10 @@
 export type AudioVisualLookup = {
+  description?: string;
   id?: number | string;
+  itemCount?: number;
   name: string;
   slug?: string;
+  thumbnailUrl?: string;
 };
 
 export type AudioVisualItem = {

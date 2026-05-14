@@ -60,9 +60,12 @@ const normalizeLookup = (value: unknown): AudioVisualLookup => {
   const name = readString(record, ['name', 'title', 'label'], 'Media');
 
   return {
+    description: readString(record, ['description']),
     id: typeof record.id === 'number' || typeof record.id === 'string' ? record.id : undefined,
+    itemCount: readNumber(record, ['item_count', 'itemCount', 'items_count', 'itemsCount', 'count']),
     name,
     slug: readString(record, ['slug'], name.toLowerCase().replace(/\s+/g, '-')),
+    thumbnailUrl: readString(record, ['thumbnail_url', 'thumbnailUrl', 'cover_image', 'coverImage']),
   };
 };
 
