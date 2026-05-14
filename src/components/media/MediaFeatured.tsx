@@ -29,7 +29,7 @@ const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
 
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1fr_0.85fr]">
         <div className="relative aspect-video overflow-hidden rounded-2xl border border-white/10 bg-black">
-          <img src={featured.thumbnailUrl || '/images/church-front-left-1920.jpg'} alt="" className="size-full object-cover opacity-85" />
+          <img src={featured.thumbnailUrl || '/images/church-front-left-1920.jpg'} alt="" className="size-full object-contain opacity-95" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
           <div className="absolute inset-0 grid place-items-center">
             <span className="grid size-16 place-items-center rounded-full border border-white/30 bg-black/40 text-white backdrop-blur">
@@ -77,7 +77,7 @@ const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
               className={`grid grid-cols-[5.5rem_1fr] gap-3 rounded-xl p-2 transition ${darkMode ? 'hover:bg-white/10' : 'hover:bg-[#fffaf0]'}`}
             >
               <div className="relative aspect-video overflow-hidden rounded-lg bg-black">
-                <img src={item.thumbnailUrl || '/images/church-front-left-1920.jpg'} alt="" className="size-full object-cover opacity-80" />
+                <img src={item.thumbnailUrl || '/images/church-front-left-1920.jpg'} alt="" className="size-full object-contain opacity-95" />
                 {item.durationSeconds && <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-black text-white">{formatDuration(item.durationSeconds)}</span>}
               </div>
               <div>

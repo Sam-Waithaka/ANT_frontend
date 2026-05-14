@@ -50,7 +50,7 @@ const MediaHero = ({ darkMode, heroItem, home }: MediaHeroProps) => {
             }`}
           >
             <div className="relative aspect-video">
-              <img src={background} alt="" className="size-full object-cover opacity-90 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
+              <img src={background} alt="" className="size-full object-contain opacity-95 transition duration-300 group-hover:opacity-100" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
               <div className="absolute inset-0 grid place-items-center">
                 <span className="grid size-20 place-items-center rounded-full border border-white/30 bg-black/45 text-white backdrop-blur transition group-hover:scale-105 group-hover:bg-red-800">

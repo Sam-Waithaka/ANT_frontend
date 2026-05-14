@@ -32,20 +32,20 @@ const MediaSeriesRail = ({ darkMode, items }: MediaSeriesRailProps) => {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+      <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-5">
         {visibleItems.map((series) => (
           <a
             key={series.slug || series.name}
             href={series.slug ? `/media/series/${series.slug}` : '#'}
-            className={`group overflow-hidden rounded-2xl border shadow-lg transition duration-300 hover:-translate-y-1 ${
+            className={`group mb-4 block break-inside-avoid overflow-hidden rounded-2xl border shadow-lg transition duration-300 hover:-translate-y-1 ${
               darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25 hover:shadow-red-950/25' : 'border-black/10 bg-white shadow-zinc-900/10 hover:shadow-zinc-900/15'
             }`}
           >
-            <div className={`relative aspect-[16/11] ${darkMode ? 'bg-[#171717]' : 'bg-[#ece7de]'}`}>
+            <div className={`relative ${darkMode ? 'bg-[#171717]' : 'bg-[#ece7de]'}`}>
               {series.thumbnailUrl ? (
-                <img src={series.thumbnailUrl} alt="" className="size-full object-cover opacity-85 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
+                <img src={series.thumbnailUrl} alt="" className="h-auto max-h-72 w-full object-contain opacity-95 transition duration-300 group-hover:opacity-100" />
               ) : (
-                <div className="grid size-full place-items-center">
+                <div className="grid min-h-48 place-items-center">
                   <Layers size={34} className={darkMode ? 'text-stone-500' : 'text-zinc-500'} />
                 </div>
               )}

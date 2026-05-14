@@ -8,10 +8,10 @@ type MediaCardProps = {
   variant?: 'landscape' | 'portrait' | 'compact';
 };
 
-const variantClass = {
-  compact: 'aspect-[16/10]',
-  landscape: 'aspect-[16/11]',
-  portrait: 'aspect-[9/14]',
+const imageClass = {
+  compact: 'max-h-64',
+  landscape: 'max-h-72',
+  portrait: 'max-h-[34rem]',
 };
 
 const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) => {
@@ -30,12 +30,12 @@ const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) =>
         <div
           className={`relative overflow-hidden rounded-2xl border shadow-lg transition duration-300 group-hover:-translate-y-1 ${
             darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25 group-hover:shadow-red-950/25' : 'border-black/10 bg-white shadow-zinc-900/10 group-hover:shadow-zinc-900/15'
-          } ${variantClass[variant]}`}
+          }`}
         >
           {item.thumbnailUrl ? (
-            <img src={item.thumbnailUrl} alt="" className="size-full object-cover opacity-85 transition duration-500 group-hover:scale-105 group-hover:opacity-100" />
+            <img src={item.thumbnailUrl} alt="" className={`h-auto w-full object-contain opacity-95 transition duration-300 group-hover:opacity-100 ${imageClass[variant]}`} />
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
           <div className="absolute left-3 top-3 rounded-full bg-black/60 px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-white backdrop-blur">
             {item.series?.name || item.mediaTypeLabel}
           </div>

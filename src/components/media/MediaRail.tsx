@@ -21,8 +21,8 @@ const MediaRail = ({ darkMode, initialVisibleItems = INITIAL_VISIBLE_ITEMS, item
   const visibleItems = expanded ? items : items.slice(0, initialVisibleItems);
   const gridClass =
     variant === 'portrait'
-      ? 'grid-cols-2 md:grid-cols-3 xl:grid-cols-5'
-      : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5';
+      ? 'columns-2 gap-4 md:columns-3 xl:columns-5'
+      : 'columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-5';
 
   return (
     <section>
@@ -38,9 +38,11 @@ const MediaRail = ({ darkMode, initialVisibleItems = INITIAL_VISIBLE_ITEMS, item
           </button>
         )}
       </div>
-      <div className={`grid gap-4 ${gridClass}`}>
+      <div className={gridClass}>
         {visibleItems.map((item) => (
-          <MediaCard key={`${title}-${item.slug}`} darkMode={darkMode} item={item} variant={variant} />
+          <div key={`${title}-${item.slug}`} className="mb-4 break-inside-avoid">
+            <MediaCard darkMode={darkMode} item={item} variant={variant} />
+          </div>
         ))}
       </div>
     </section>
