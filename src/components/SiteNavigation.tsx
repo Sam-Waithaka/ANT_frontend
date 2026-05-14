@@ -158,9 +158,7 @@ const SiteNavigation = ({
           ? 'bg-[#fffaf0] text-zinc-950 shadow-md shadow-white/10 hover:bg-white'
           : 'bg-[#080808] text-white shadow-md shadow-zinc-950/20 hover:bg-[#111111]';
         const activeClass = routeActive
-          ? darkMode
-            ? 'ring-2 ring-white/40'
-            : 'ring-2 ring-black/25'
+          ? 'ring-2 ring-red-700 ring-offset-2 ring-offset-transparent'
           : '';
 
         return `${shapeClass} ${themeClass} ${activeClass}`;
