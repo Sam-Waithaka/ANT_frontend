@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import RelatedMediaRow from '../components/media/watch/RelatedMediaRow';
 import ScriptureReferenceCard from '../components/media/watch/ScriptureReferenceCard';
 import VideoMeta from '../components/media/watch/VideoMeta';
-import VideoPlayer from '../components/media/watch/VideoPlayer';
+import VideoPlayer, { prefetchVideoPlayer } from '../components/media/watch/VideoPlayer';
 import { parseScriptureReferences } from '../components/media/watch/mediaWatchUtils';
 import { getMediaWatchPath } from '../components/media/mediaLinks';
 import SiteFooter from '../components/SiteFooter';
@@ -25,6 +25,10 @@ const MediaWatchPage = () => {
   const [relatedItems, setRelatedItems] = useState<AudioVisualItem[]>([]);
   const [autoPlayNext, setAutoPlayNext] = useState(false);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+
+  useEffect(() => {
+    prefetchVideoPlayer();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
