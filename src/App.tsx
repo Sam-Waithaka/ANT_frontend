@@ -5,6 +5,7 @@ import ContactPage from './pages/ContactPage';
 import GivePage from './pages/GivePage';
 import LandingPage from './pages/LandingPage';
 import MediaPage from './pages/MediaPage';
+import MediaWatchPage from './pages/MediaWatchPage';
 import MinistriesPage from './pages/MinistriesPage';
 import Project52Page from './pages/Project52Page';
 import ScripturePage from './pages/ScripturePage';
@@ -22,6 +23,7 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/give" element={<GivePage />} />
             <Route path="/media" element={<MediaPage />} />
+            <Route path="/media/watch/:slug" element={<MediaWatchPage />} />
             <Route path="/ministries" element={<MinistriesPage />} />
             <Route path="/project52" element={<Project52Page />} />
             <Route path="/scripture" element={<ScripturePage />} />

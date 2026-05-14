@@ -1,6 +1,7 @@
 import { BookOpen, Play } from 'lucide-react';
 import type { AudioVisualHomePayload, AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
+import { getMediaWatchPath } from './mediaLinks';
 
 type MediaHeroProps = {
   darkMode: boolean;
@@ -12,7 +13,7 @@ const MediaHero = ({ darkMode, heroItem, home }: MediaHeroProps) => {
   const sermon = heroItem;
   const background = sermon?.thumbnailUrl || home.hero?.thumbnailUrl || '/images/church-front-left-1920.jpg';
   const meta = sermon ? [sermon.speaker, formatMediaDate(sermon.publishedAt)].filter(Boolean).join(' • ') : '';
-  const ctaHref = sermon?.externalUrl || sermon?.embedUrl || '#';
+  const ctaHref = getMediaWatchPath(sermon);
   const duration = formatDuration(sermon?.durationSeconds);
 
   return (
@@ -82,7 +83,6 @@ const MediaHero = ({ darkMode, heroItem, home }: MediaHeroProps) => {
             </div>
           </a>
         </div>
-
       </div>
     </section>
   );

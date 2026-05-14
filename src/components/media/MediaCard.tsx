@@ -1,6 +1,7 @@
 import { Play } from 'lucide-react';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
+import { getMediaWatchPath } from './mediaLinks';
 
 type MediaCardProps = {
   darkMode: boolean;
@@ -17,13 +18,11 @@ const imageClass = {
 const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) => {
   const duration = formatDuration(item.durationSeconds);
   const date = formatMediaDate(item.publishedAt);
-  const href = item.externalUrl || item.embedUrl || '#';
+  const href = getMediaWatchPath(item);
 
   return (
     <a
       href={href}
-      target={href === '#' ? undefined : '_blank'}
-      rel={href === '#' ? undefined : 'noopener noreferrer'}
       className="group block min-w-0"
     >
       <article className="grid gap-3">

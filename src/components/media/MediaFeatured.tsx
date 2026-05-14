@@ -1,6 +1,7 @@
 import { Plus, Play } from 'lucide-react';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
+import { getMediaWatchPath } from './mediaLinks';
 
 type MediaFeaturedProps = {
   darkMode: boolean;
@@ -53,7 +54,7 @@ const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
             <p className={`mt-3 text-sm font-black uppercase tracking-[0.12em] ${darkMode ? 'text-red-200' : 'text-red-800'}`}>{featured.scriptureReference}</p>
           )}
           <div className="mt-6 flex flex-wrap gap-3">
-            <a href={featured.externalUrl || '#'} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-red-800 px-4 text-sm font-black text-white hover:bg-red-700">
+            <a href={getMediaWatchPath(featured)} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-red-800 px-4 text-sm font-black text-white hover:bg-red-700">
               <Play size={16} fill="currentColor" />
               Watch now
             </a>
@@ -73,7 +74,7 @@ const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
           {rest.slice(0, 3).map((item) => (
             <a
               key={item.slug}
-              href={item.externalUrl || '#'}
+              href={getMediaWatchPath(item)}
               className={`grid grid-cols-[5.5rem_1fr] gap-3 rounded-xl p-2 transition ${darkMode ? 'hover:bg-white/10' : 'hover:bg-[#fffaf0]'}`}
             >
               <div className="relative aspect-video overflow-hidden rounded-lg bg-black">
