@@ -7,10 +7,10 @@ const MediaPage = () => {
   const { darkMode, toggleTheme } = useTheme();
 
   return (
-    <div className={`min-h-screen overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
+    <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader activePath="/media" darkMode={darkMode} onToggleTheme={toggleTheme} />
 
-      <main>
+      <main className="flex-1">
         <MediaIntro darkMode={darkMode} />
       </main>
 

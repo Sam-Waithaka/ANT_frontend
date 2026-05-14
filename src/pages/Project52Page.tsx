@@ -127,12 +127,12 @@ const Project52Page = () => {
       <div className="flex h-screen overflow-hidden">
         <SiteSideNav activePath="/project52" darkMode={darkMode} onToggleTheme={toggleTheme} />
 
-        <div className="min-w-0 flex-1 overflow-y-auto">
+        <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
           <div className="lg:hidden">
             <SiteHeader activePath="/project52" darkMode={darkMode} onToggleTheme={toggleTheme} />
           </div>
 
-          <main>
+          <main className="flex-1">
             <section className="relative px-4 pb-10 pt-8 sm:px-6 sm:pb-14 lg:pt-12">
               <div className="absolute inset-0 -z-10 overflow-hidden">
                 <div className={`h-full ${darkMode ? 'bg-[radial-gradient(circle_at_top_left,rgba(185,28,28,0.30),transparent_34%),linear-gradient(135deg,#080808,#171717_55%,#260b0b)]' : 'bg-[radial-gradient(circle_at_top_left,rgba(153,27,27,0.16),transparent_35%),linear-gradient(135deg,#fffaf0,#f8f5ef_50%,#ece7de)]'}`} />
