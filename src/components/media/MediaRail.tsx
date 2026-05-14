@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { ArrowDown, ArrowRight } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import LandingButton from '../landing/LandingButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import MediaCard from './MediaCard';
@@ -11,10 +10,8 @@ type MediaRailProps = {
   items: AudioVisualItem[];
   loadingMore?: boolean;
   onLoadMore?: () => void;
-  onViewMore?: () => void;
   title: string;
   variant?: 'landscape' | 'portrait' | 'compact';
-  viewMoreLabel?: string;
 };
 
 const INITIAL_VISIBLE_ITEMS = 10;
@@ -26,17 +23,12 @@ const MediaRail = ({
   items,
   loadingMore = false,
   onLoadMore,
-  onViewMore,
   title,
   variant = 'landscape',
-  viewMoreLabel = 'View more',
 }: MediaRailProps) => {
-  const [expanded, setExpanded] = useState(false);
-
   if (items.length === 0) return null;
 
-  const canExpand = !onViewMore && items.length > initialVisibleItems;
-  const visibleItems = expanded || onLoadMore ? items : items.slice(0, initialVisibleItems);
+  const visibleItems = onLoadMore ? items : items.slice(0, initialVisibleItems);
   const gridClass =
     variant === 'portrait'
       ? 'columns-2 gap-4 md:columns-3 xl:columns-5'
@@ -56,19 +48,6 @@ const MediaRail = ({
           </div>
         ))}
       </div>
-      {(onViewMore || canExpand) && (
-        <div className="mt-6 flex justify-center">
-          {onViewMore ? (
-            <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
-              {viewMoreLabel}
-            </LandingButton>
-          ) : (
-            <LandingButton darkMode={darkMode} icon={expanded ? null : ArrowRight} iconPosition="after" variant="secondary" onClick={() => setExpanded((current) => !current)}>
-              {expanded ? 'Show less' : 'View more'}
-            </LandingButton>
-          )}
-        </div>
-      )}
       {onLoadMore && canLoadMore && (
         <div className="mt-6 flex justify-center">
           <LandingButton darkMode={darkMode} icon={ArrowDown} variant="secondary" onClick={loadingMore ? undefined : onLoadMore}>

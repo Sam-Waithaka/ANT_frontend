@@ -1,25 +1,19 @@
-import { useState } from 'react';
-import { ArrowRight, Layers, Play } from 'lucide-react';
-import LandingButton from '../landing/LandingButton';
+import { Layers, Play } from 'lucide-react';
 import type { AudioVisualLookup } from '../../types/audioVisual';
 
 type MediaSeriesRailProps = {
   darkMode: boolean;
   items: AudioVisualLookup[];
-  onViewMore?: () => void;
   onSeriesSelect?: (series: AudioVisualLookup) => void;
   selectedSlug?: string;
 };
 
 const INITIAL_VISIBLE_SERIES = 10;
 
-const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selectedSlug }: MediaSeriesRailProps) => {
-  const [expanded, setExpanded] = useState(false);
-
+const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, selectedSlug }: MediaSeriesRailProps) => {
   if (items.length === 0) return null;
 
-  const canExpand = items.length > INITIAL_VISIBLE_SERIES;
-  const visibleItems = expanded ? items : items.slice(0, INITIAL_VISIBLE_SERIES);
+  const visibleItems = items.slice(0, INITIAL_VISIBLE_SERIES);
 
   return (
     <section>
@@ -76,19 +70,6 @@ const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selected
           </button>
         ))}
       </div>
-      {(onViewMore || canExpand) && (
-        <div className="mt-6 flex justify-center">
-          {onViewMore ? (
-            <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
-              View more
-            </LandingButton>
-          ) : (
-            <LandingButton darkMode={darkMode} icon={expanded ? null : ArrowRight} iconPosition="after" variant="secondary" onClick={() => setExpanded((current) => !current)}>
-              {expanded ? 'Show less' : 'View more'}
-            </LandingButton>
-          )}
-        </div>
-      )}
     </section>
   );
 };

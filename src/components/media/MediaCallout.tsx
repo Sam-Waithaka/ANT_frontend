@@ -1,4 +1,5 @@
-import { BookOpen } from 'lucide-react';
+import LandingButton from '../landing/LandingButton';
+import { assetPaths } from '../../constants/assets';
 
 type MediaCalloutProps = {
   darkMode: boolean;
@@ -9,10 +10,10 @@ const MediaCallout = ({ darkMode }: MediaCalloutProps) => (
     <div className={`grid gap-6 rounded-2xl border p-6 shadow-2xl md:grid-cols-[auto_1fr_auto] md:items-center md:p-8 ${
       darkMode ? 'border-red-300/20 bg-red-950/55 shadow-red-950/25' : 'border-black/10 bg-[#fffaf0] shadow-zinc-900/10'
     }`}>
-      <div className={`grid size-16 place-items-center rounded-full border ${
-        darkMode ? 'border-white/20 bg-white/10 text-white' : 'border-red-900/15 bg-red-50 text-red-900'
+      <div className={`grid size-16 place-items-center overflow-hidden rounded-full border p-2 ${
+        darkMode ? 'border-white/20 bg-white/10' : 'border-red-900/15 bg-white'
       }`}>
-        <BookOpen size={30} />
+        <img src={assetPaths.circleLogo} alt="A.I.C Njoro Town Church" className="size-full object-contain" />
       </div>
       <div>
         <h2 className={`text-2xl font-extrabold tracking-normal ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Stay nourished by God&apos;s Word</h2>
@@ -20,11 +21,9 @@ const MediaCallout = ({ darkMode }: MediaCalloutProps) => (
           Join us this Sunday for worship, fellowship, and life-giving messages from God&apos;s Word.
         </p>
       </div>
-      <a href="/contact" className={`inline-flex min-h-12 items-center justify-center rounded-full px-5 text-sm font-black transition hover:-translate-y-0.5 ${
-        darkMode ? 'bg-white text-red-900' : 'bg-red-800 text-white shadow-lg shadow-red-950/20 hover:bg-red-700'
-      }`}>
+      <LandingButton darkMode={darkMode} to="/contact">
         Join us this Sunday
-      </a>
+      </LandingButton>
     </div>
   </section>
 );

@@ -376,22 +376,20 @@ const MediaPage = () => {
             )}
             {activeTab === 'all' && (
               <>
-                <MediaFeatured darkMode={darkMode} items={rails.featured.items} onViewAll={() => setActiveTab('featured')} />
+                <MediaFeatured darkMode={darkMode} items={rails.featured.items} />
                 <MediaSeriesRail
                   darkMode={darkMode}
                   items={sermonSeries}
-                  onViewMore={() => setActiveTab('series')}
                   selectedSlug={selectedSeries?.slug}
                   onSeriesSelect={handleSeriesSelect}
                 />
-                <MediaRail darkMode={darkMode} title="Latest Sermons" items={rails.latestSermons.items} onViewMore={() => setActiveTab('sermons')} />
+                <MediaRail darkMode={darkMode} title="Latest Sermons" items={rails.latestSermons.items} />
                 <MediaRail
                   darkMode={darkMode}
                   initialVisibleItems={5}
                   title="Shorts & Highlights"
                   items={rails.shorts.items}
                   variant="portrait"
-                  onViewMore={() => setActiveTab('shorts')}
                 />
               </>
             )}
