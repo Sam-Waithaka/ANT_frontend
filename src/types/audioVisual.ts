@@ -36,6 +36,13 @@ export type AudioVisualRail = {
   items: AudioVisualItem[];
 };
 
+export type AudioVisualItemPage = {
+  count: number;
+  items: AudioVisualItem[];
+  next: string | null;
+  previous: string | null;
+};
+
 export type AudioVisualLiveCta = {
   ctaLabel: string;
   item: AudioVisualItem | null;
@@ -60,6 +67,8 @@ export type AudioVisualListQuery = {
   language?: string;
   liveStatus?: string;
   ordering?: 'latest' | 'oldest' | 'priority' | 'title';
+  page?: number;
+  pageSize?: number;
   search?: string;
   series?: string;
   type?: string;

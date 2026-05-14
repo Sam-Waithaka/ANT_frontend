@@ -1,6 +1,7 @@
 import type {
   AudioVisualHomePayload,
   AudioVisualGroupDetail,
+  AudioVisualItemPage,
   AudioVisualItem,
   AudioVisualListQuery,
   AudioVisualLiveCta,
@@ -53,6 +54,18 @@ const normalizeItemList = (payload: unknown) => {
   const source = Array.isArray(payload) ? payload : readArray(record, ['results', 'items']);
 
   return source.map(normalizeAudioVisualItem).filter(Boolean) as AudioVisualItem[];
+};
+
+const normalizeItemPage = (payload: unknown): AudioVisualItemPage => {
+  const record = readRecord(payload);
+  const items = normalizeItemList(payload);
+
+  return {
+    count: readNumber(record, ['count']) || items.length,
+    items,
+    next: readString(record, ['next']) || null,
+    previous: readString(record, ['previous']) || null,
+  };
 };
 
 const normalizeLookup = (value: unknown): AudioVisualLookup => {
@@ -169,7 +182,7 @@ const createQueryString = (query: AudioVisualListQuery = {}) => {
       return;
     }
 
-    const apiKey = key === 'liveStatus' ? 'live_status' : key;
+    const apiKey = key === 'liveStatus' ? 'live_status' : key === 'pageSize' ? 'page_size' : key;
     params.set(apiKey, String(value));
   });
 
@@ -185,6 +198,16 @@ export const fetchAudioVisualItems = async (query: AudioVisualListQuery = {}, si
   });
 
   return normalizeItemList(payload);
+};
+
+export const fetchAudioVisualItemPage = async (query: AudioVisualListQuery = {}, signal?: AbortSignal) => {
+  const payload = await apiGet<unknown>(`/v1/audio-visual/${createQueryString(query)}`, {
+    cache: 'memory',
+    signal,
+    timeoutMs: 12000,
+  });
+
+  return normalizeItemPage(payload);
 };
 
 export const fetchAudioVisualRails = async (signal?: AbortSignal) => {

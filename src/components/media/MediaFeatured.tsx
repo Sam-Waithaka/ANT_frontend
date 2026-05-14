@@ -6,9 +6,10 @@ import { getMediaWatchPath } from './mediaLinks';
 type MediaFeaturedProps = {
   darkMode: boolean;
   items: AudioVisualItem[];
+  onViewAll?: () => void;
 };
 
-const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
+const MediaFeatured = ({ darkMode, items, onViewAll }: MediaFeaturedProps) => {
   const [featured, ...rest] = items;
 
   if (!featured) return null;
@@ -21,11 +22,10 @@ const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
           : 'border-black/10 bg-white shadow-zinc-900/10'
       }`}
     >
-      <div className="mb-5 flex items-center justify-between gap-4">
-        <h2 className={`text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Featured Sermon</h2>
-        <a href="#featured" className={`text-sm font-black ${darkMode ? 'text-red-200 hover:text-white' : 'text-red-800 hover:text-zinc-950'}`}>
-          View all featured
-        </a>
+      <div className="mb-5 flex items-center gap-4">
+        <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
+        <h2 className={`shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Featured Sermon</h2>
+        <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1fr_0.85fr]">
@@ -89,6 +89,21 @@ const MediaFeatured = ({ darkMode, items }: MediaFeaturedProps) => {
           ))}
         </div>
       </div>
+      {onViewAll && (
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={onViewAll}
+            className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
+              darkMode
+                ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
+                : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
+            }`}
+          >
+            View all featured
+          </button>
+        </div>
+      )}
     </section>
   );
 };

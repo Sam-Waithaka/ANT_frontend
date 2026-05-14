@@ -5,13 +5,14 @@ import type { AudioVisualLookup } from '../../types/audioVisual';
 type MediaSeriesRailProps = {
   darkMode: boolean;
   items: AudioVisualLookup[];
+  onViewMore?: () => void;
   onSeriesSelect?: (series: AudioVisualLookup) => void;
   selectedSlug?: string;
 };
 
 const INITIAL_VISIBLE_SERIES = 10;
 
-const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, selectedSlug }: MediaSeriesRailProps) => {
+const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selectedSlug }: MediaSeriesRailProps) => {
   const [expanded, setExpanded] = useState(false);
 
   if (items.length === 0) return null;
@@ -21,17 +22,10 @@ const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, selectedSlug }: Medi
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className={`text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Sermon Series</h2>
-        {canExpand && (
-          <button
-            type="button"
-            onClick={() => setExpanded((current) => !current)}
-            className={`text-sm font-black ${darkMode ? 'text-red-200 hover:text-white' : 'text-red-800 hover:text-zinc-950'}`}
-          >
-            {expanded ? 'Show less' : 'View more'}
-          </button>
-        )}
+      <div className="mb-5 flex items-center gap-4">
+        <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
+        <h2 className={`shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Sermon Series</h2>
+        <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
       </div>
 
       <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-5">
@@ -81,6 +75,35 @@ const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, selectedSlug }: Medi
           </button>
         ))}
       </div>
+      {(onViewMore || canExpand) && (
+        <div className="mt-6 flex justify-center">
+          {onViewMore ? (
+            <button
+              type="button"
+              onClick={onViewMore}
+              className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
+                darkMode
+                  ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
+                  : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
+              }`}
+            >
+              View more
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setExpanded((current) => !current)}
+              className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
+                darkMode
+                  ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
+                  : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
+              }`}
+            >
+              {expanded ? 'Show less' : 'View more'}
+            </button>
+          )}
+        </div>
+      )}
     </section>
   );
 };
