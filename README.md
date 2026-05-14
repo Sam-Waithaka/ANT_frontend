@@ -5,6 +5,11 @@ A client-side React Router app for **A.I.C Njoro Town Church**. The current phas
 ## Current Scope
 
 - `/` - church landing/home page for the current phase.
+- `/about` - skeleton page for church profile content from the Core API.
+- `/contact` - skeleton page for contact, service-time, and social-link content from the Core API.
+- `/give` - premium M-PESA giving instruction page.
+- `/media` - skeleton page for audio-visual content from the Media API.
+- `/ministries` - skeleton page for ministry content from the Ministries API.
 - `/project52` - full 52-week Bible reading plan.
 - `/scripture` - Scripture reader, Project 52 widget, Bible tools, search, sharing, and comparison flows.
 - `*` - unmatched client routes render the landing page.

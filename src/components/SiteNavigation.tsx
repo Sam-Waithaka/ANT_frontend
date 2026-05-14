@@ -1,10 +1,34 @@
-import { BookOpen, CalendarDays, Heart, HelpCircle, Home, Menu, Moon, Settings, Sun, X } from 'lucide-react';
+import {
+  BookOpen,
+  CalendarDays,
+  Heart,
+  HelpCircle,
+  Home,
+  Info,
+  Menu,
+  Moon,
+  Phone,
+  PlayCircle,
+  Radio,
+  Settings,
+  Sun,
+  Users,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { assetPaths } from '../constants/assets';
 import { useCompactHeader } from '../hooks/useCompactHeader';
 
-export type SiteNavPath = '/' | '/scripture' | '/project52';
+export type SiteNavPath =
+  | '/'
+  | '/about'
+  | '/contact'
+  | '/give'
+  | '/media'
+  | '/ministries'
+  | '/scripture'
+  | '/project52';
 
 type SiteNavigationProps = {
   activePath?: SiteNavPath;
@@ -14,12 +38,54 @@ type SiteNavigationProps = {
   sticky?: boolean;
 };
 
-const navItems = [
+type SiteNavItem = {
+  label: string;
+  href: string;
+  icon: typeof Home;
+};
+
+const navItems: SiteNavItem[] = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Scripture', href: '/scripture', icon: BookOpen },
   { label: 'Project 52', href: '/project52', icon: CalendarDays },
-  { label: 'Giving', href: '#', icon: Heart },
-] as const;
+  { label: 'Media', href: '/media', icon: PlayCircle },
+  { label: 'Ministries', href: '/ministries', icon: Users },
+  { label: 'About', href: '/about', icon: Info },
+  { label: 'Contact', href: '/contact', icon: Phone },
+];
+const giveNavItem: SiteNavItem = { label: 'Give', href: '/give', icon: Heart };
+const mobileNavSections: { title: string; items: SiteNavItem[] }[] = [
+  {
+    title: 'Explore',
+    items: [
+      { label: 'Home', href: '/', icon: Home },
+      { label: 'About', href: '/about', icon: Info },
+      { label: 'Contact', href: '/contact', icon: Phone },
+    ],
+  },
+  {
+    title: 'Spiritual Growth',
+    items: [
+      { label: 'Scripture', href: '/scripture', icon: BookOpen },
+      { label: 'Project 52', href: '/project52', icon: CalendarDays },
+      { label: 'Media', href: '/media', icon: PlayCircle },
+    ],
+  },
+  {
+    title: 'Community',
+    items: [
+      { label: 'Ministries', href: '/ministries', icon: Users },
+      { label: 'Events', href: '#', icon: CalendarDays },
+    ],
+  },
+  {
+    title: 'Actions',
+    items: [
+      giveNavItem,
+      { label: 'Watch Live', href: '/media', icon: Radio },
+    ],
+  },
+];
 
 const churchWebsiteUrl = 'https://aicnjoro.org';
 const isRouteHref = (href: string) => href.startsWith('/');
@@ -38,7 +104,7 @@ const SiteNavigation = ({
   const getNavItemClass = (active: boolean, shape: 'side' | 'top' | 'drawer') => {
     const shapeClass = {
       side: 'flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition',
-      top: 'inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-bold transition',
+      top: 'inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-sm font-bold transition',
       drawer: 'flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-bold transition',
     }[shape];
     const stateClass = active
@@ -50,7 +116,7 @@ const SiteNavigation = ({
     return `${shapeClass} ${stateClass}`;
   };
   const renderNavItem = (
-    { href, icon: Icon, label }: (typeof navItems)[number],
+    { href, icon: Icon, label }: SiteNavItem,
     shape: 'side' | 'top' | 'drawer',
     onClick?: () => void,
   ) => {
@@ -63,7 +129,7 @@ const SiteNavigation = ({
           onClick={onClick}
           className={({ isActive: routeActive }) => getNavItemClass(routeActive, shape)}
         >
-          <Icon size={shape === 'top' ? 16 : shape === 'drawer' ? 18 : 17} />
+          {shape !== 'top' && <Icon size={shape === 'drawer' ? 18 : 17} />}
           {label}
         </NavLink>
       );
@@ -71,11 +137,33 @@ const SiteNavigation = ({
 
     return (
       <a key={label} href={href} onClick={onClick} className={getNavItemClass(isActive(href), shape)}>
-        <Icon size={shape === 'top' ? 16 : shape === 'drawer' ? 18 : 17} />
+        {shape !== 'top' && <Icon size={shape === 'drawer' ? 18 : 17} />}
         {label}
       </a>
     );
   };
+  const renderGiveButton = (shape: 'side' | 'top' | 'drawer', onClick?: () => void) => (
+    <NavLink
+      key={giveNavItem.label}
+      to={giveNavItem.href}
+      onClick={onClick}
+      className={({ isActive: routeActive }) => {
+        const shapeClass = {
+          side: 'flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition',
+          top: 'inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-sm font-black transition hover:-translate-y-0.5',
+          drawer: 'flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-black transition',
+        }[shape];
+        const stateClass = routeActive
+          ? 'bg-red-700 text-white shadow-md shadow-red-950/25'
+          : 'bg-red-800 text-white shadow-md shadow-red-950/20 hover:bg-red-700';
+
+        return `${shapeClass} ${stateClass}`;
+      }}
+    >
+      <Heart size={shape === 'top' ? 16 : shape === 'drawer' ? 18 : 17} />
+      {giveNavItem.label}
+    </NavLink>
+  );
 
   if (layout === 'side') {
     return (
@@ -105,6 +193,7 @@ const SiteNavigation = ({
 
         <nav className="mt-10 grid gap-2" aria-label="Site navigation">
           {navItems.map((item) => renderNavItem(item, 'side'))}
+          {renderGiveButton('side')}
         </nav>
 
         <div className="mt-auto grid gap-2">
@@ -182,7 +271,7 @@ const SiteNavigation = ({
         darkMode ? 'border-white/10 bg-black/75' : 'border-black/10 bg-[#f8f5ef]/85'
       }`}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <a
           href={churchWebsiteUrl}
           target="_blank"
@@ -208,6 +297,7 @@ const SiteNavigation = ({
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Site navigation">
             {navItems.map((item) => renderNavItem(item, 'top'))}
           </nav>
+          <div className="hidden lg:block">{renderGiveButton('top')}</div>
           <div className="relative">
             <button
               type="button"
@@ -321,8 +411,26 @@ const SiteNavigation = ({
               </button>
             </div>
 
-            <nav className="mt-8 grid gap-2" aria-label="Mobile site navigation">
-              {navItems.map((item) => renderNavItem(item, 'drawer', () => setDrawerOpen(false)))}
+            <nav className="mt-8 grid gap-6 overflow-y-auto pb-4" aria-label="Mobile site navigation">
+              {mobileNavSections.map((section) => (
+                <section key={section.title} aria-labelledby={`mobile-nav-${section.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                  <p
+                    id={`mobile-nav-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
+                    className={`mb-2 px-2 text-[11px] font-black uppercase tracking-[0.16em] ${
+                      darkMode ? 'text-stone-500' : 'text-zinc-500'
+                    }`}
+                  >
+                    {section.title}
+                  </p>
+                  <div className="grid gap-2">
+                    {section.items.map((item) =>
+                      item.href === giveNavItem.href
+                        ? renderGiveButton('drawer', () => setDrawerOpen(false))
+                        : renderNavItem(item, 'drawer', () => setDrawerOpen(false)),
+                    )}
+                  </div>
+                </section>
+              ))}
             </nav>
 
             <div className="mt-auto grid gap-2 border-t border-black/10 pt-4 dark:border-white/10">
