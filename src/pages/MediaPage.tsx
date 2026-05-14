@@ -65,6 +65,28 @@ const mergeMediaItems = (current: AudioVisualItem[], next: AudioVisualItem[]) =>
   return [...current, ...next.filter((item) => !seen.has(item.slug))];
 };
 
+const getPreviewCounts = () => {
+  if (typeof window === 'undefined') {
+    return { sermons: 10, shorts: 6 };
+  }
+
+  const width = window.innerWidth;
+
+  if (width >= 1536) {
+    return { sermons: 15, shorts: 5 };
+  }
+
+  if (width >= 1024) {
+    return { sermons: 12, shorts: 5 };
+  }
+
+  if (width >= 640) {
+    return { sermons: 8, shorts: 6 };
+  }
+
+  return { sermons: 6, shorts: 6 };
+};
+
 const selectHeroSermon = (home: AudioVisualHomePayload, latestSermon: AudioVisualItem | null, useFallback: boolean) =>
   latestSermon || home.hero || (useFallback ? fallbackMediaHome.hero : null);
 
@@ -134,6 +156,7 @@ const MediaPage = () => {
   const [selectedSeriesStatus, setSelectedSeriesStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [shortItems, setShortItems] = useState<AudioVisualItem[]>([]);
   const [activeTab, setActiveTab] = useState<MediaTabKey>('all');
+  const [previewCounts, setPreviewCounts] = useState(getPreviewCounts);
   const [pagedMedia, setPagedMedia] = useState<Record<PagedMediaKey, PagedMediaState>>({
     featured: emptyPagedState(),
     livestreams: emptyPagedState(),
@@ -142,6 +165,13 @@ const MediaPage = () => {
     shorts: emptyPagedState(),
   });
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
+
+  useEffect(() => {
+    const handleResize = () => setPreviewCounts(getPreviewCounts());
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -376,20 +406,28 @@ const MediaPage = () => {
             )}
             {activeTab === 'all' && (
               <>
-                <MediaFeatured darkMode={darkMode} items={rails.featured.items} />
+                <MediaFeatured darkMode={darkMode} items={rails.featured.items} onViewMore={() => setActiveTab('featured')} />
                 <MediaSeriesRail
                   darkMode={darkMode}
                   items={sermonSeries}
+                  onViewMore={() => setActiveTab('series')}
                   selectedSlug={selectedSeries?.slug}
                   onSeriesSelect={handleSeriesSelect}
                 />
-                <MediaRail darkMode={darkMode} title="Latest Sermons" items={rails.latestSermons.items} />
                 <MediaRail
                   darkMode={darkMode}
-                  initialVisibleItems={5}
+                  initialVisibleItems={previewCounts.sermons}
+                  title="Latest Sermons"
+                  items={rails.latestSermons.items}
+                  onViewMore={() => setActiveTab('sermons')}
+                />
+                <MediaRail
+                  darkMode={darkMode}
+                  initialVisibleItems={previewCounts.shorts}
                   title="Shorts & Highlights"
                   items={rails.shorts.items}
                   variant="portrait"
+                  onViewMore={() => setActiveTab('shorts')}
                 />
               </>
             )}

@@ -1,4 +1,4 @@
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, ArrowRight } from 'lucide-react';
 import LandingButton from '../landing/LandingButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import MediaCard from './MediaCard';
@@ -10,6 +10,7 @@ type MediaRailProps = {
   items: AudioVisualItem[];
   loadingMore?: boolean;
   onLoadMore?: () => void;
+  onViewMore?: () => void;
   title: string;
   variant?: 'landscape' | 'portrait' | 'compact';
 };
@@ -23,6 +24,7 @@ const MediaRail = ({
   items,
   loadingMore = false,
   onLoadMore,
+  onViewMore,
   title,
   variant = 'landscape',
 }: MediaRailProps) => {
@@ -48,6 +50,13 @@ const MediaRail = ({
           </div>
         ))}
       </div>
+      {onViewMore && (
+        <div className="mt-6 flex justify-center">
+          <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
+            View more
+          </LandingButton>
+        </div>
+      )}
       {onLoadMore && canLoadMore && (
         <div className="mt-6 flex justify-center">
           <LandingButton darkMode={darkMode} icon={ArrowDown} variant="secondary" onClick={loadingMore ? undefined : onLoadMore}>
