@@ -83,6 +83,7 @@ const MediaPage = () => {
   const [endpointRails, setEndpointRails] = useState<AudioVisualRail[]>([]);
   const [featuredItems, setFeaturedItems] = useState<AudioVisualItem[]>([]);
   const [livestreamItems, setLivestreamItems] = useState<AudioVisualItem[]>([]);
+  const [musicItems, setMusicItems] = useState<AudioVisualItem[]>([]);
   const [sermonItems, setSermonItems] = useState<AudioVisualItem[]>([]);
   const [seriesItems, setSeriesItems] = useState<AudioVisualLookup[]>([]);
   const [shortItems, setShortItems] = useState<AudioVisualItem[]>([]);
@@ -99,6 +100,7 @@ const MediaPage = () => {
       fetchLatestSermon(controller.signal),
       fetchFeaturedAudioVisualItems(controller.signal),
       fetchAudioVisualItems({ type: 'livestream', ordering: 'latest' }, controller.signal),
+      fetchAudioVisualItems({ type: 'worship', ordering: 'latest' }, controller.signal),
       fetchAudioVisualItems({ type: 'sermon', ordering: 'latest' }, controller.signal),
       fetchAudioVisualSeries(controller.signal),
       fetchAudioVisualItems({ type: 'short', ordering: 'latest' }, controller.signal),
@@ -110,6 +112,7 @@ const MediaPage = () => {
         latestSermonResult,
         featuredResult,
         livestreamsResult,
+        musicResult,
         sermonsResult,
         seriesResult,
         shortsResult,
@@ -124,6 +127,7 @@ const MediaPage = () => {
           (latestSermonResult.status === 'fulfilled' && latestSermonResult.value) ||
           (featuredResult.status === 'fulfilled' && featuredResult.value.length > 0) ||
           (livestreamsResult.status === 'fulfilled' && livestreamsResult.value.length > 0) ||
+          (musicResult.status === 'fulfilled' && musicResult.value.length > 0) ||
           (sermonsResult.status === 'fulfilled' && sermonsResult.value.length > 0) ||
           (seriesResult.status === 'fulfilled' && seriesResult.value.length > 0) ||
           (shortsResult.status === 'fulfilled' && shortsResult.value.length > 0)
@@ -133,6 +137,7 @@ const MediaPage = () => {
         setLatestSermon(latestSermonResult.status === 'fulfilled' ? latestSermonResult.value : null);
         setFeaturedItems(featuredResult.status === 'fulfilled' ? featuredResult.value : []);
         setLivestreamItems(livestreamsResult.status === 'fulfilled' ? livestreamsResult.value : []);
+        setMusicItems(musicResult.status === 'fulfilled' ? musicResult.value : []);
         setSermonItems(sermonsResult.status === 'fulfilled' ? sermonsResult.value : []);
         setSeriesItems(seriesResult.status === 'fulfilled' ? seriesResult.value : []);
         setShortItems(shortsResult.status === 'fulfilled' ? shortsResult.value : []);
@@ -169,10 +174,11 @@ const MediaPage = () => {
     return {
       featured: mergeRail(railMap.get('featured'), fallbackMediaHome.rails[0], featuredItems, useFallback),
       livestreams: mergeRail(undefined, fallbackMediaHome.rails[2], livestreamItems, useFallback),
+      music: mergeRail(undefined, fallbackMediaHome.rails[2], musicItems, useFallback),
       latestSermons: mergeRail(undefined, fallbackMediaHome.rails[2], sermonItems, useFallback),
       shorts: mergeRail(railMap.get('shorts') || railMap.get('highlights'), fallbackMediaHome.rails[3], shortItems, useFallback),
     };
-  }, [endpointRails, featuredItems, homePayload.rails, livestreamItems, sermonItems, shortItems, status]);
+  }, [endpointRails, featuredItems, homePayload.rails, livestreamItems, musicItems, sermonItems, shortItems, status]);
   const heroSermon = useMemo(() => selectHeroSermon(homePayload, latestSermon, status === 'fallback'), [homePayload, latestSermon, status]);
   const sermonSeries = useMemo(() => (seriesItems.length > 0 ? seriesItems : status === 'fallback' ? fallbackSeries() : []), [seriesItems, status]);
 
@@ -222,6 +228,9 @@ const MediaPage = () => {
             )}
             {activeTab === 'livestreams' && (
               <MediaRail darkMode={darkMode} title="Livestreams" items={rails.livestreams.items} />
+            )}
+            {activeTab === 'music' && (
+              <MediaRail darkMode={darkMode} title="Music" items={rails.music.items} />
             )}
           </div>
         </section>
