@@ -22,7 +22,7 @@ const GivingInstructionsCard = ({ darkMode }: GivingInstructionsCardProps) => {
     <section id="mpesa-paybill" className="px-4 pb-10 sm:px-6 sm:pb-14">
       <div className="mx-auto max-w-5xl">
         <div
-          className={`overflow-hidden rounded-[2rem] border shadow-2xl backdrop-blur-xl ${
+          className={`overflow-hidden rounded-4xl border shadow-2xl backdrop-blur-xl ${
             darkMode
               ? 'border-white/10 bg-zinc-950/90 shadow-black/30'
               : 'border-white/50 bg-[#fffaf0]/95 shadow-red-950/15'

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import MediaCallout from '../components/media/MediaCallout';
 import MediaCategoryTabs from '../components/media/MediaCategoryTabs';
+import type { MediaTabKey } from '../components/media/MediaCategoryTabs';
 import MediaFeatured from '../components/media/MediaFeatured';
 import MediaHero from '../components/media/MediaHero';
 import MediaRail from '../components/media/MediaRail';
@@ -15,7 +16,6 @@ import {
   fetchAudioVisualRails,
   fetchAudioVisualSeries,
   fetchFeaturedAudioVisualItems,
-  fetchLatestAudioVisualItems,
   fetchLatestSermon,
   fetchLiveAudioVisualCta,
 } from '../services/audioVisualApi';
@@ -56,10 +56,11 @@ const MediaPage = () => {
   const [latestSermon, setLatestSermon] = useState<AudioVisualItem | null>(null);
   const [endpointRails, setEndpointRails] = useState<AudioVisualRail[]>([]);
   const [featuredItems, setFeaturedItems] = useState<AudioVisualItem[]>([]);
-  const [latestItems, setLatestItems] = useState<AudioVisualItem[]>([]);
+  const [livestreamItems, setLivestreamItems] = useState<AudioVisualItem[]>([]);
   const [sermonItems, setSermonItems] = useState<AudioVisualItem[]>([]);
   const [seriesItems, setSeriesItems] = useState<AudioVisualLookup[]>([]);
   const [shortItems, setShortItems] = useState<AudioVisualItem[]>([]);
+  const [activeTab, setActiveTab] = useState<MediaTabKey>('all');
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
 
   useEffect(() => {
@@ -71,7 +72,7 @@ const MediaPage = () => {
       fetchLiveAudioVisualCta(controller.signal),
       fetchLatestSermon(controller.signal),
       fetchFeaturedAudioVisualItems(controller.signal),
-      fetchLatestAudioVisualItems(controller.signal),
+      fetchAudioVisualItems({ type: 'livestream', ordering: 'latest' }, controller.signal),
       fetchAudioVisualItems({ type: 'sermon', ordering: 'latest' }, controller.signal),
       fetchAudioVisualSeries(controller.signal),
       fetchAudioVisualItems({ type: 'short', ordering: 'latest' }, controller.signal),
@@ -82,7 +83,7 @@ const MediaPage = () => {
         liveResult,
         latestSermonResult,
         featuredResult,
-        latestResult,
+        livestreamsResult,
         sermonsResult,
         seriesResult,
         shortsResult,
@@ -96,7 +97,7 @@ const MediaPage = () => {
           payload.rails.some((rail) => rail.items.length > 0) ||
           (latestSermonResult.status === 'fulfilled' && latestSermonResult.value) ||
           (featuredResult.status === 'fulfilled' && featuredResult.value.length > 0) ||
-          (latestResult.status === 'fulfilled' && latestResult.value.length > 0) ||
+          (livestreamsResult.status === 'fulfilled' && livestreamsResult.value.length > 0) ||
           (sermonsResult.status === 'fulfilled' && sermonsResult.value.length > 0) ||
           (seriesResult.status === 'fulfilled' && seriesResult.value.length > 0) ||
           (shortsResult.status === 'fulfilled' && shortsResult.value.length > 0)
@@ -105,7 +106,7 @@ const MediaPage = () => {
         setEndpointRails(railsResult.status === 'fulfilled' ? railsResult.value : []);
         setLatestSermon(latestSermonResult.status === 'fulfilled' ? latestSermonResult.value : null);
         setFeaturedItems(featuredResult.status === 'fulfilled' ? featuredResult.value : []);
-        setLatestItems(latestResult.status === 'fulfilled' ? latestResult.value : []);
+        setLivestreamItems(livestreamsResult.status === 'fulfilled' ? livestreamsResult.value : []);
         setSermonItems(sermonsResult.status === 'fulfilled' ? sermonsResult.value : []);
         setSeriesItems(seriesResult.status === 'fulfilled' ? seriesResult.value : []);
         setShortItems(shortsResult.status === 'fulfilled' ? shortsResult.value : []);
@@ -121,11 +122,11 @@ const MediaPage = () => {
 
     return {
       featured: mergeRail(railMap.get('featured'), fallbackMediaHome.rails[0], featuredItems, useFallback),
+      livestreams: mergeRail(undefined, fallbackMediaHome.rails[2], livestreamItems, useFallback),
       latestSermons: mergeRail(undefined, fallbackMediaHome.rails[2], sermonItems, useFallback),
-      latestMedia: mergeRail(railMap.get('latest'), fallbackMediaHome.rails[2], latestItems, useFallback),
       shorts: mergeRail(railMap.get('shorts') || railMap.get('highlights'), fallbackMediaHome.rails[3], shortItems, useFallback),
     };
-  }, [endpointRails, featuredItems, homePayload.rails, latestItems, sermonItems, shortItems, status]);
+  }, [endpointRails, featuredItems, homePayload.rails, livestreamItems, sermonItems, shortItems, status]);
   const heroSermon = useMemo(() => selectHeroSermon(homePayload, latestSermon, status === 'fallback'), [homePayload, latestSermon, status]);
   const sermonSeries = useMemo(() => (seriesItems.length > 0 ? seriesItems : status === 'fallback' ? fallbackSeries() : []), [seriesItems, status]);
 
@@ -133,9 +134,9 @@ const MediaPage = () => {
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader activePath="/media" darkMode={darkMode} onToggleTheme={toggleTheme} />
 
-      <main className={`flex-1 transition-colors duration-500 ${darkMode ? 'bg-[#050505] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
+      <main className={`flex-1 pb-24 transition-colors duration-500 lg:pb-0 ${darkMode ? 'bg-[#050505] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
         <MediaHero darkMode={darkMode} heroItem={heroSermon} home={homePayload} />
-        <MediaCategoryTabs darkMode={darkMode} />
+        <MediaCategoryTabs activeTab={activeTab} darkMode={darkMode} onTabChange={setActiveTab} />
 
         <section className="px-4 py-8 sm:px-6 lg:py-10 xl:px-8">
           <div className="grid gap-8">
@@ -153,11 +154,29 @@ const MediaPage = () => {
                 Loading media library...
               </div>
             )}
-            <MediaFeatured darkMode={darkMode} items={rails.featured.items} />
-            <MediaSeriesRail darkMode={darkMode} items={sermonSeries} />
-            <MediaRail darkMode={darkMode} title="Latest Sermons" items={rails.latestSermons.items} />
-            <MediaRail darkMode={darkMode} title="Latest Media" items={rails.latestMedia.items} />
-            <MediaRail darkMode={darkMode} initialVisibleItems={5} title="Shorts & Highlights" items={rails.shorts.items} variant="portrait" />
+            {activeTab === 'all' && (
+              <>
+                <MediaFeatured darkMode={darkMode} items={rails.featured.items} />
+                <MediaSeriesRail darkMode={darkMode} items={sermonSeries} />
+                <MediaRail darkMode={darkMode} title="Latest Sermons" items={rails.latestSermons.items} />
+                <MediaRail darkMode={darkMode} initialVisibleItems={5} title="Shorts & Highlights" items={rails.shorts.items} variant="portrait" />
+              </>
+            )}
+            {activeTab === 'shorts' && (
+              <MediaRail darkMode={darkMode} title="Shorts & Highlights" items={rails.shorts.items} variant="portrait" />
+            )}
+            {activeTab === 'sermons' && (
+              <MediaRail darkMode={darkMode} title="Latest Sermons" items={rails.latestSermons.items} />
+            )}
+            {activeTab === 'featured' && (
+              <MediaFeatured darkMode={darkMode} items={rails.featured.items} />
+            )}
+            {activeTab === 'series' && (
+              <MediaSeriesRail darkMode={darkMode} items={sermonSeries} />
+            )}
+            {activeTab === 'livestreams' && (
+              <MediaRail darkMode={darkMode} title="Livestreams" items={rails.livestreams.items} />
+            )}
           </div>
         </section>
 
