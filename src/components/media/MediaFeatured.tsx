@@ -1,4 +1,5 @@
-import { Plus, Play } from 'lucide-react';
+import { ArrowRight, Plus, Play } from 'lucide-react';
+import LandingButton from '../landing/LandingButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
 import { getMediaWatchPath } from './mediaLinks';
@@ -91,17 +92,9 @@ const MediaFeatured = ({ darkMode, items, onViewAll }: MediaFeaturedProps) => {
       </div>
       {onViewAll && (
         <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={onViewAll}
-            className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
-              darkMode
-                ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
-                : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
-            }`}
-          >
-            View all featured
-          </button>
+          <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewAll}>
+            View more
+          </LandingButton>
         </div>
       )}
     </section>

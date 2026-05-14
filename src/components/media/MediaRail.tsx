@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { ArrowDown, ArrowRight } from 'lucide-react';
+import LandingButton from '../landing/LandingButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import MediaCard from './MediaCard';
 
@@ -57,46 +59,21 @@ const MediaRail = ({
       {(onViewMore || canExpand) && (
         <div className="mt-6 flex justify-center">
           {onViewMore ? (
-            <button
-              type="button"
-              onClick={onViewMore}
-              className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
-                darkMode
-                  ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
-                  : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
-              }`}
-            >
+            <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
               {viewMoreLabel}
-            </button>
+            </LandingButton>
           ) : (
-            <button
-              type="button"
-              onClick={() => setExpanded((current) => !current)}
-              className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
-                darkMode
-                  ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
-                  : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
-              }`}
-            >
+            <LandingButton darkMode={darkMode} icon={expanded ? null : ArrowRight} iconPosition="after" variant="secondary" onClick={() => setExpanded((current) => !current)}>
               {expanded ? 'Show less' : 'View more'}
-            </button>
+            </LandingButton>
           )}
         </div>
       )}
       {onLoadMore && canLoadMore && (
         <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            disabled={loadingMore}
-            onClick={onLoadMore}
-            className={`inline-flex min-h-12 items-center justify-center rounded-full border px-6 text-sm font-black shadow-lg transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-65 ${
-              darkMode
-                ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
-                : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
-            }`}
-          >
+          <LandingButton darkMode={darkMode} icon={ArrowDown} variant="secondary" onClick={loadingMore ? undefined : onLoadMore}>
             {loadingMore ? 'Loading more...' : 'Load more'}
-          </button>
+          </LandingButton>
         </div>
       )}
     </section>

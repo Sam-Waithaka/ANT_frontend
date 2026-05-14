@@ -1,9 +1,13 @@
 import { ArrowRight, BookOpen } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 type LandingButtonProps = {
-  children: string;
+  children: ReactNode;
   darkMode: boolean;
+  icon?: LucideIcon | null;
+  iconPosition?: 'before' | 'after';
   onClick?: () => void;
   to?: string;
   variant?: 'primary' | 'secondary';
@@ -24,13 +28,14 @@ const variantClass = (variant: Required<LandingButtonProps>['variant'], darkMode
     : 'border border-white/55 bg-white/10 text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_16px_34px_rgba(24,24,27,0.10)] hover:bg-white/20 focus:ring-offset-[#f8f5ef]';
 };
 
-const LandingButton = ({ children, darkMode, onClick, to, variant = 'primary' }: LandingButtonProps) => {
-  const Icon = variant === 'primary' ? ArrowRight : BookOpen;
+const LandingButton = ({ children, darkMode, icon, iconPosition, onClick, to, variant = 'primary' }: LandingButtonProps) => {
+  const Icon = icon === null ? null : icon || (variant === 'primary' ? ArrowRight : BookOpen);
+  const resolvedIconPosition = iconPosition || (variant === 'primary' ? 'after' : 'before');
   const content = (
     <>
-      {variant === 'secondary' ? <Icon size={18} aria-hidden="true" /> : null}
+      {resolvedIconPosition === 'before' && Icon ? <Icon size={18} aria-hidden="true" /> : null}
       {children}
-      {variant === 'primary' ? <Icon size={18} aria-hidden="true" /> : null}
+      {resolvedIconPosition === 'after' && Icon ? <Icon size={18} aria-hidden="true" /> : null}
     </>
   );
   const className = `${baseClass} ${variantClass(variant, darkMode)}`;

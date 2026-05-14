@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Layers, Play } from 'lucide-react';
+import { ArrowRight, Layers, Play } from 'lucide-react';
+import LandingButton from '../landing/LandingButton';
 import type { AudioVisualLookup } from '../../types/audioVisual';
 
 type MediaSeriesRailProps = {
@@ -78,29 +79,13 @@ const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selected
       {(onViewMore || canExpand) && (
         <div className="mt-6 flex justify-center">
           {onViewMore ? (
-            <button
-              type="button"
-              onClick={onViewMore}
-              className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
-                darkMode
-                  ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
-                  : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
-              }`}
-            >
+            <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
               View more
-            </button>
+            </LandingButton>
           ) : (
-            <button
-              type="button"
-              onClick={() => setExpanded((current) => !current)}
-              className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black shadow-lg transition hover:-translate-y-0.5 ${
-                darkMode
-                  ? 'border-white/10 bg-white/10 text-white shadow-black/25 hover:bg-white/15'
-                  : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/10 hover:bg-[#fffaf0]'
-              }`}
-            >
+            <LandingButton darkMode={darkMode} icon={expanded ? null : ArrowRight} iconPosition="after" variant="secondary" onClick={() => setExpanded((current) => !current)}>
               {expanded ? 'Show less' : 'View more'}
-            </button>
+            </LandingButton>
           )}
         </div>
       )}
