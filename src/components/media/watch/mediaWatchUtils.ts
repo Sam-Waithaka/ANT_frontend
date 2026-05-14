@@ -5,11 +5,13 @@ export type ParsedScriptureReference = {
   book: string;
   chapter: number;
   display: string;
+  endVerse?: number;
+  startVerse?: number;
 };
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const scripturePattern = new RegExp(
-  `\\b(${bookNames.map(escapeRegExp).join('|')})\\s+(\\d+)(?::\\s*\\d+(?:\\s*[-\\u2013\\u2014]\\s*\\d+)?)?`,
+  `\\b(${bookNames.map(escapeRegExp).join('|')})\\s+(\\d+)(?::\\s*(\\d+)(?:\\s*[-\\u2013\\u2014]\\s*(\\d+))?)?`,
   'gi'
 );
 
@@ -38,6 +40,8 @@ export const parseScriptureReferences = (value?: string): ParsedScriptureReferen
   while ((match = scripturePattern.exec(source)) !== null) {
     const book = canonicalBookName(match[1]);
     const chapter = Number(match[2]);
+    const startVerse = match[3] ? Number(match[3]) : undefined;
+    const endVerse = match[4] ? Number(match[4]) : startVerse;
 
     if (!book || !Number.isFinite(chapter) || chapter <= 0) {
       continue;
@@ -54,6 +58,8 @@ export const parseScriptureReferences = (value?: string): ParsedScriptureReferen
       book,
       chapter,
       display: `${book} ${chapter}`,
+      endVerse,
+      startVerse,
     });
   }
 
