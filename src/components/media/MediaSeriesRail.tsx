@@ -5,11 +5,13 @@ import type { AudioVisualLookup } from '../../types/audioVisual';
 type MediaSeriesRailProps = {
   darkMode: boolean;
   items: AudioVisualLookup[];
+  onSeriesSelect?: (series: AudioVisualLookup) => void;
+  selectedSlug?: string;
 };
 
 const INITIAL_VISIBLE_SERIES = 10;
 
-const MediaSeriesRail = ({ darkMode, items }: MediaSeriesRailProps) => {
+const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, selectedSlug }: MediaSeriesRailProps) => {
   const [expanded, setExpanded] = useState(false);
 
   if (items.length === 0) return null;
@@ -34,11 +36,18 @@ const MediaSeriesRail = ({ darkMode, items }: MediaSeriesRailProps) => {
 
       <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-5">
         {visibleItems.map((series) => (
-          <a
+          <button
             key={series.slug || series.name}
-            href={series.slug ? `/media/series/${series.slug}` : '#'}
-            className={`group mb-4 block break-inside-avoid overflow-hidden rounded-2xl border shadow-lg transition duration-300 hover:-translate-y-1 ${
-              darkMode ? 'border-white/10 bg-zinc-950 shadow-black/25 hover:shadow-red-950/25' : 'border-black/10 bg-white shadow-zinc-900/10 hover:shadow-zinc-900/15'
+            type="button"
+            onClick={() => onSeriesSelect?.(series)}
+            className={`group mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border text-left shadow-lg transition duration-300 hover:-translate-y-1 ${
+              selectedSlug && series.slug === selectedSlug
+                ? darkMode
+                  ? 'border-red-400/60 bg-red-950/25 shadow-red-950/30'
+                  : 'border-red-800/45 bg-red-50 shadow-red-900/15'
+                : darkMode
+                  ? 'border-white/10 bg-zinc-950 shadow-black/25 hover:shadow-red-950/25'
+                  : 'border-black/10 bg-white shadow-zinc-900/10 hover:shadow-zinc-900/15'
             }`}
           >
             <div className={`relative ${darkMode ? 'bg-[#171717]' : 'bg-[#ece7de]'}`}>
@@ -69,7 +78,7 @@ const MediaSeriesRail = ({ darkMode, items }: MediaSeriesRailProps) => {
                 </p>
               )}
             </div>
-          </a>
+          </button>
         ))}
       </div>
     </section>
