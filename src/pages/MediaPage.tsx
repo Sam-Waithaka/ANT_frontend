@@ -15,6 +15,7 @@ import {
   fetchAudioVisualItems,
   fetchAudioVisualRails,
   fetchAudioVisualSeries,
+  fetchAudioVisualSeriesDetail,
   fetchFeaturedAudioVisualItems,
   fetchLatestSermon,
   fetchLiveAudioVisualCta,
@@ -48,6 +49,31 @@ const fallbackSeries = () => {
     });
 
   return Array.from(seriesMap.values());
+};
+
+const hydrateSeriesThumbnails = async (series: AudioVisualLookup[], signal: AbortSignal) => {
+  const visibleSeries = series.slice(0, 10);
+  const hydratedEntries = await Promise.allSettled(
+    visibleSeries.map(async (item) => {
+      if (item.thumbnailUrl || !item.slug) {
+        return item;
+      }
+
+      const detail = await fetchAudioVisualSeriesDetail(item.slug, signal);
+      const fallbackThumbnail = detail.items.find((video) => video.thumbnailUrl)?.thumbnailUrl;
+
+      return fallbackThumbnail ? { ...item, thumbnailUrl: fallbackThumbnail } : item;
+    })
+  );
+
+  const hydratedBySlug = new Map<string, AudioVisualLookup>();
+  hydratedEntries.forEach((entry) => {
+    if (entry.status === 'fulfilled') {
+      hydratedBySlug.set(entry.value.slug || entry.value.name, entry.value);
+    }
+  });
+
+  return series.map((item) => hydratedBySlug.get(item.slug || item.name) || item);
 };
 
 const MediaPage = () => {
@@ -115,6 +141,26 @@ const MediaPage = () => {
 
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    if (seriesItems.length === 0 || seriesItems.every((series) => series.thumbnailUrl || !series.slug)) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    hydrateSeriesThumbnails(seriesItems, controller.signal)
+      .then((hydratedSeries) => {
+        const addedThumbnail = hydratedSeries.some((series, index) => !seriesItems[index]?.thumbnailUrl && Boolean(series.thumbnailUrl));
+
+        if (!controller.signal.aborted && addedThumbnail) {
+          setSeriesItems(hydratedSeries);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [seriesItems]);
 
   const rails = useMemo(() => {
     const railMap = new Map([...endpointRails, ...homePayload.rails].map((rail) => [rail.key, rail]));
