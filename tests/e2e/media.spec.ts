@@ -22,6 +22,7 @@ test('media landing page consumes curated media endpoints and renders core secti
   await expect(page.locator('span', { hasText: /^Latest sermon$/ })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Dying Well' }).first()).toBeVisible();
   await expect(page.getByText('Featured Sermon')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Teachings' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Latest Sermons' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Music' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Livestreams' })).toBeVisible();
@@ -34,14 +35,16 @@ test('media landing page consumes curated media endpoints and renders core secti
     '/v1/audio-visual/latest-sermon/',
     '/v1/audio-visual/featured/',
     '/v1/audio-visual/?type=sermon&ordering=latest',
-    '/v1/audio-visual/?type=worship&ordering=latest',
+    '/v1/audio-visual/?type=music&ordering=latest',
+    '/v1/audio-visual/?type=teaching&ordering=latest',
     '/v1/audio-visual/?type=livestream&ordering=latest',
     '/v1/audio-visual/?type=short&ordering=latest',
+    '/v1/audio-visual/?ordering=latest',
     '/v1/audio-visual/series/',
   ]));
 });
 
-test('media tabs show filtered content, series detail, podcasts placeholder, and load more requests', async ({ page }) => {
+test('media tabs show filtered content, series detail, explore tab, and load more requests', async ({ page }) => {
   const pagedRequests: string[] = [];
   page.on('request', (request) => {
     const url = new URL(request.url());
@@ -51,6 +54,10 @@ test('media tabs show filtered content, series detail, podcasts placeholder, and
   });
 
   await page.goto('/media');
+
+  await page.getByRole('button', { name: /Teachings/i }).click();
+  await expect(page.getByRole('heading', { name: 'Teachings' })).toBeVisible();
+  await expect(page.getByText('Learning to Trust God in Every Season')).toBeVisible();
 
   await page.getByRole('button', { name: /Music/i }).click();
   await expect(page.getByRole('heading', { name: 'Music' })).toBeVisible();
@@ -73,9 +80,10 @@ test('media tabs show filtered content, series detail, podcasts placeholder, and
   await expect(page.getByRole('heading', { name: 'Dying Well Messages' })).toBeVisible();
   await expect(page.getByText('Purpose Proceeds without permission')).toBeVisible();
 
-  await page.getByRole('button', { name: /Podcasts/i }).click();
-  await expect(page.getByRole('heading', { name: 'Podcasts are coming soon' })).toBeVisible();
-  await expect(page.getByText('Spotify collection in preparation')).toBeVisible();
+  await page.getByRole('button', { name: /Explore/i }).click();
+  await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
+  await expect(page.getByText('Sunday Service II English')).toBeVisible();
+  await expect(page.getByText('God Loves to Forgive Repentant Sinners')).toBeVisible();
 });
 
 test('media watch page plays selected content, previews scripture, and preserves return navigation', async ({ page }) => {
@@ -99,7 +107,7 @@ test('media watch page plays selected content, previews scripture, and preserves
   await expect(page).toHaveURL(/\/media\/watch\/dying-well$/);
 });
 
-test('mobile media collections dock opens tabs and renders podcasts placeholder', async ({ page }) => {
+test('mobile media collections dock opens tabs and renders explore content', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/media');
 
@@ -111,6 +119,7 @@ test('mobile media collections dock opens tabs and renders podcasts placeholder'
   await expect(page.getByText('Nipiga Makasia')).toBeVisible();
 
   await page.getByRole('button', { name: /Collections/i }).click();
-  await page.getByRole('dialog', { name: 'Media collections' }).getByRole('button', { name: /Podcasts/i }).click();
-  await expect(page.getByRole('heading', { name: 'Podcasts are coming soon' })).toBeVisible();
+  await page.getByRole('dialog', { name: 'Media collections' }).getByRole('button', { name: /Explore/i }).click();
+  await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
+  await expect(page.getByText('Sunday Service II English')).toBeVisible();
 });

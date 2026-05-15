@@ -1,18 +1,19 @@
-import { ChevronDown, Grid2X2, Layers, ListVideo, Mic2, Music2, PlayCircle, Radio, Star, Tv, X } from 'lucide-react';
+import { BookOpenCheck, ChevronDown, Compass, Grid2X2, Layers, ListVideo, Music2, PlayCircle, Radio, Star, Tv, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 
-export type MediaTabKey = 'all' | 'sermons' | 'featured' | 'series' | 'livestreams' | 'shorts' | 'music' | 'podcasts';
+export type MediaTabKey = 'all' | 'sermons' | 'featured' | 'teachings' | 'series' | 'livestreams' | 'music' | 'shorts' | 'explore';
 
 const tabs: Array<{ icon: LucideIcon; key: MediaTabKey; label: string }> = [
   { label: 'All', icon: Grid2X2, key: 'all' },
   { label: 'Sermons', icon: PlayCircle, key: 'sermons' },
   { label: 'Featured', icon: Star, key: 'featured' },
+  { label: 'Teachings', icon: BookOpenCheck, key: 'teachings' },
   { label: 'Series', icon: ListVideo, key: 'series' },
   { label: 'Livestreams', icon: Tv, key: 'livestreams' },
-  { label: 'Shorts', icon: Radio, key: 'shorts' },
   { label: 'Music', icon: Music2, key: 'music' },
-  { label: 'Podcasts', icon: Mic2, key: 'podcasts' },
+  { label: 'Shorts', icon: Radio, key: 'shorts' },
+  { label: 'Explore', icon: Compass, key: 'explore' },
 ];
 
 type MediaCategoryTabsProps = {
@@ -24,7 +25,7 @@ type MediaCategoryTabsProps = {
 const MediaCategoryTabs = ({ activeTab, darkMode, onTabChange }: MediaCategoryTabsProps) => (
   <>
     <nav className="-mt-7 hidden px-4 sm:px-6 lg:block xl:px-8" aria-label="Media categories">
-      <div className={`relative z-10 grid gap-2 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl md:grid-cols-4 xl:grid-cols-8 ${
+      <div className={`relative z-10 grid gap-2 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl md:grid-cols-5 xl:grid-cols-9 ${
         darkMode ? 'border-white/10 bg-black/55 shadow-black/30' : 'border-black/10 bg-white/90 shadow-zinc-900/10'
       }`}>
         {tabs.map(({ icon: Icon, key, label }) => {

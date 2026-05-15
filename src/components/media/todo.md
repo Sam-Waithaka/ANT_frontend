@@ -36,7 +36,7 @@ These items are intentionally parked until the `audio_visual` backend API is enh
   - Subcategories should include at least:
     - `Praise and Worship`
     - `Choir`
-- The Music tab should then query backend-driven values instead of assuming `type=worship`.
+- The Music tab now uses `type=music`; the next pass should add backend-driven subcategory filters for `choir` and `praise-and-worship`.
 
 ## Collections And Browse
 

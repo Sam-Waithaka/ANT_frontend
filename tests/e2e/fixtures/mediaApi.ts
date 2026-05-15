@@ -103,6 +103,19 @@ export const worshipSong = mediaItem({
   speaker: 'Praise and Worship Team',
 });
 
+export const teachingMessage = mediaItem({
+  title: 'Learning to Trust God in Every Season',
+  slug: 'learning-to-trust-god-in-every-season',
+  categories: [{ name: 'Teaching', slug: 'teaching' }],
+  collections: [{ name: 'Teachings', slug: 'teachings' }],
+  description_excerpt: 'A teaching for trusting God in difficult seasons.',
+  duration_seconds: 2520,
+  media_type: 'teaching',
+  media_type_detail: { name: 'Teaching' },
+  series: null,
+  speaker: 'Peter Wanjohi',
+});
+
 const allItems = [
   dyingWell,
   purposeProceeds,
@@ -112,6 +125,7 @@ const allItems = [
   secondShort,
   choirSong,
   worshipSong,
+  teachingMessage,
 ];
 
 const pagePayload = (items: unknown[], count = items.length) => ({
@@ -153,8 +167,12 @@ const itemsForQuery = (url: URL) => {
     return [shortClip, secondShort];
   }
 
-  if (type === 'worship') {
+  if (type === 'music') {
     return [choirSong, worshipSong];
+  }
+
+  if (type === 'teaching') {
+    return [teachingMessage];
   }
 
   return allItems;
@@ -226,6 +244,7 @@ export const mockMediaApi = async (page: Page) => {
       await fulfillJson(route, [
         { name: 'Sermon', slug: 'sermon', count: 3 },
         { name: 'Music', slug: 'music', count: 2 },
+        { name: 'Teaching', slug: 'teaching', count: 1 },
       ]);
       return;
     }

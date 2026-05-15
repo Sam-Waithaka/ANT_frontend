@@ -4,7 +4,6 @@ import MediaCategoryTabs from '../components/media/MediaCategoryTabs';
 import type { MediaTabKey } from '../components/media/MediaCategoryTabs';
 import MediaFeatured from '../components/media/MediaFeatured';
 import MediaHero from '../components/media/MediaHero';
-import MediaPodcastComingSoon from '../components/media/MediaPodcastComingSoon';
 import MediaRail from '../components/media/MediaRail';
 import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import MediaSeriesRail from '../components/media/MediaSeriesRail';
@@ -25,7 +24,7 @@ import {
 } from '../services/audioVisualApi';
 import type { AudioVisualGroupDetail, AudioVisualHomePayload, AudioVisualItem, AudioVisualLookup, AudioVisualRail } from '../types/audioVisual';
 
-type PagedMediaKey = Extract<MediaTabKey, 'featured' | 'livestreams' | 'music' | 'sermons' | 'shorts'>;
+type PagedMediaKey = Extract<MediaTabKey, 'explore' | 'featured' | 'livestreams' | 'music' | 'sermons' | 'shorts' | 'teachings'>;
 
 type PagedMediaState = {
   count: number;
@@ -44,20 +43,24 @@ const emptyPagedState = (): PagedMediaState => ({
 });
 
 const isPagedMediaTab = (tab: MediaTabKey): tab is PagedMediaKey =>
-  ['featured', 'livestreams', 'music', 'sermons', 'shorts'].includes(tab);
+  ['explore', 'featured', 'livestreams', 'music', 'sermons', 'shorts', 'teachings'].includes(tab);
 
 const pagedQueryForTab = (tab: PagedMediaKey) => {
   switch (tab) {
+    case 'explore':
+      return { ordering: 'latest' as const };
     case 'featured':
       return { featured: true, ordering: 'latest' as const };
     case 'livestreams':
       return { type: 'livestream', ordering: 'latest' as const };
     case 'music':
-      return { type: 'worship', ordering: 'latest' as const };
+      return { type: 'music', ordering: 'latest' as const };
     case 'sermons':
       return { type: 'sermon', ordering: 'latest' as const };
     case 'shorts':
       return { type: 'short', ordering: 'latest' as const };
+    case 'teachings':
+      return { type: 'teaching', ordering: 'latest' as const };
   }
 };
 
@@ -148,6 +151,7 @@ const MediaPage = () => {
   const [latestSermon, setLatestSermon] = useState<AudioVisualItem | null>(null);
   const [endpointRails, setEndpointRails] = useState<AudioVisualRail[]>([]);
   const [featuredItems, setFeaturedItems] = useState<AudioVisualItem[]>([]);
+  const [exploreItems, setExploreItems] = useState<AudioVisualItem[]>([]);
   const [livestreamItems, setLivestreamItems] = useState<AudioVisualItem[]>([]);
   const [musicItems, setMusicItems] = useState<AudioVisualItem[]>([]);
   const [sermonItems, setSermonItems] = useState<AudioVisualItem[]>([]);
@@ -156,14 +160,17 @@ const MediaPage = () => {
   const [selectedSeriesDetail, setSelectedSeriesDetail] = useState<AudioVisualGroupDetail | null>(null);
   const [selectedSeriesStatus, setSelectedSeriesStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [shortItems, setShortItems] = useState<AudioVisualItem[]>([]);
+  const [teachingItems, setTeachingItems] = useState<AudioVisualItem[]>([]);
   const [activeTab, setActiveTab] = useState<MediaTabKey>('all');
   const [previewCounts, setPreviewCounts] = useState(getPreviewCounts);
   const [pagedMedia, setPagedMedia] = useState<Record<PagedMediaKey, PagedMediaState>>({
+    explore: emptyPagedState(),
     featured: emptyPagedState(),
     livestreams: emptyPagedState(),
     music: emptyPagedState(),
     sermons: emptyPagedState(),
     shorts: emptyPagedState(),
+    teachings: emptyPagedState(),
   });
   const [status, setStatus] = useState<'loading' | 'ready' | 'fallback'>('loading');
 
@@ -185,10 +192,12 @@ const MediaPage = () => {
       fetchLatestSermon(controller.signal),
       fetchFeaturedAudioVisualItems(controller.signal),
       fetchAudioVisualItems({ type: 'livestream', ordering: 'latest' }, controller.signal),
-      fetchAudioVisualItems({ type: 'worship', ordering: 'latest' }, controller.signal),
+      fetchAudioVisualItems({ type: 'music', ordering: 'latest' }, controller.signal),
       fetchAudioVisualItems({ type: 'sermon', ordering: 'latest' }, controller.signal),
+      fetchAudioVisualItems({ type: 'teaching', ordering: 'latest' }, controller.signal),
       fetchAudioVisualSeries(controller.signal),
       fetchAudioVisualItems({ type: 'short', ordering: 'latest' }, controller.signal),
+      fetchAudioVisualItems({ ordering: 'latest' }, controller.signal),
     ])
       .then(([
         homeResult,
@@ -199,8 +208,10 @@ const MediaPage = () => {
         livestreamsResult,
         musicResult,
         sermonsResult,
+        teachingsResult,
         seriesResult,
         shortsResult,
+        exploreResult,
       ]) => {
         const payload = homeResult.status === 'fulfilled' ? homeResult.value : fallbackMediaHome;
         const live = liveResult.status === 'fulfilled' && liveResult.value ? liveResult.value : payload.live;
@@ -214,8 +225,10 @@ const MediaPage = () => {
           (livestreamsResult.status === 'fulfilled' && livestreamsResult.value.length > 0) ||
           (musicResult.status === 'fulfilled' && musicResult.value.length > 0) ||
           (sermonsResult.status === 'fulfilled' && sermonsResult.value.length > 0) ||
+          (teachingsResult.status === 'fulfilled' && teachingsResult.value.length > 0) ||
           (seriesResult.status === 'fulfilled' && seriesResult.value.length > 0) ||
-          (shortsResult.status === 'fulfilled' && shortsResult.value.length > 0)
+          (shortsResult.status === 'fulfilled' && shortsResult.value.length > 0) ||
+          (exploreResult.status === 'fulfilled' && exploreResult.value.length > 0)
         );
         setHomePayload(hasContent ? nextPayload : fallbackMediaHome);
         setEndpointRails(railsResult.status === 'fulfilled' ? railsResult.value : []);
@@ -224,8 +237,10 @@ const MediaPage = () => {
         setLivestreamItems(livestreamsResult.status === 'fulfilled' ? livestreamsResult.value : []);
         setMusicItems(musicResult.status === 'fulfilled' ? musicResult.value : []);
         setSermonItems(sermonsResult.status === 'fulfilled' ? sermonsResult.value : []);
+        setTeachingItems(teachingsResult.status === 'fulfilled' ? teachingsResult.value : []);
         setSeriesItems(seriesResult.status === 'fulfilled' ? seriesResult.value : []);
         setShortItems(shortsResult.status === 'fulfilled' ? shortsResult.value : []);
+        setExploreItems(exploreResult.status === 'fulfilled' ? exploreResult.value : []);
         setStatus(homeResult.status === 'fulfilled' && hasContent ? 'ready' : 'fallback');
       });
 
@@ -325,12 +340,14 @@ const MediaPage = () => {
 
     return {
       featured: mergeRail(railMap.get('featured'), fallbackMediaHome.rails[0], featuredItems, useFallback),
+      explore: mergeRail(undefined, fallbackMediaHome.rails[2], exploreItems, useFallback),
       livestreams: mergeRail(undefined, fallbackMediaHome.rails[2], livestreamItems, useFallback),
       music: mergeRail(undefined, fallbackMediaHome.rails[2], musicItems, useFallback),
       latestSermons: mergeRail(undefined, fallbackMediaHome.rails[2], sermonItems, useFallback),
       shorts: mergeRail(railMap.get('shorts') || railMap.get('highlights'), fallbackMediaHome.rails[3], shortItems, useFallback),
+      teachings: mergeRail(undefined, fallbackMediaHome.rails[2], teachingItems, useFallback),
     };
-  }, [endpointRails, featuredItems, homePayload.rails, livestreamItems, musicItems, sermonItems, shortItems, status]);
+  }, [endpointRails, exploreItems, featuredItems, homePayload.rails, livestreamItems, musicItems, sermonItems, shortItems, status, teachingItems]);
   const heroSermon = useMemo(() => selectHeroSermon(homePayload, latestSermon, status === 'fallback'), [homePayload, latestSermon, status]);
   const sermonSeries = useMemo(() => (seriesItems.length > 0 ? seriesItems : status === 'fallback' ? fallbackSeries() : []), [seriesItems, status]);
   const handleSeriesSelect = (series: AudioVisualLookup) => {
@@ -413,6 +430,15 @@ const MediaPage = () => {
             {activeTab === 'all' && (
               <>
                 <MediaFeatured darkMode={darkMode} items={rails.featured.items} onViewMore={() => setActiveTab('featured')} />
+                {rails.teachings.items.length > 0 && (
+                  <MediaRail
+                    darkMode={darkMode}
+                    initialVisibleItems={resolvedPreviewCounts.sermons}
+                    title="Teachings"
+                    items={rails.teachings.items}
+                    onViewMore={() => setActiveTab('teachings')}
+                  />
+                )}
                 <MediaSeriesRail
                   darkMode={darkMode}
                   items={sermonSeries}
@@ -482,6 +508,16 @@ const MediaPage = () => {
                 onLoadMore={() => handleLoadMore('featured')}
               />
             )}
+            {activeTab === 'teachings' && (
+              <MediaRail
+                canLoadMore={canLoadMore('teachings')}
+                darkMode={darkMode}
+                items={tabItems('teachings', rails.teachings.items)}
+                loadingMore={pagedMedia.teachings.status === 'loading'}
+                title="Teachings"
+                onLoadMore={() => handleLoadMore('teachings')}
+              />
+            )}
             {activeTab === 'series' && (
               <>
                 <MediaSeriesRail
@@ -513,7 +549,16 @@ const MediaPage = () => {
                 onLoadMore={() => handleLoadMore('music')}
               />
             )}
-            {activeTab === 'podcasts' && <MediaPodcastComingSoon darkMode={darkMode} />}
+            {activeTab === 'explore' && (
+              <MediaRail
+                canLoadMore={canLoadMore('explore')}
+                darkMode={darkMode}
+                items={tabItems('explore', rails.explore.items)}
+                loadingMore={pagedMedia.explore.status === 'loading'}
+                title="Explore Media"
+                onLoadMore={() => handleLoadMore('explore')}
+              />
+            )}
           </div>
         </section>
 
