@@ -48,7 +48,7 @@ const isPagedMediaTab = (tab: MediaTabKey): tab is PagedMediaKey =>
 const pagedQueryForTab = (tab: PagedMediaKey) => {
   switch (tab) {
     case 'explore':
-      return { ordering: 'latest' as const };
+      return { type: 'other', ordering: 'latest' as const };
     case 'featured':
       return { featured: true, ordering: 'latest' as const };
     case 'livestreams':
@@ -197,7 +197,7 @@ const MediaPage = () => {
       fetchAudioVisualItems({ type: 'teaching', ordering: 'latest' }, controller.signal),
       fetchAudioVisualSeries(controller.signal),
       fetchAudioVisualItems({ type: 'short', ordering: 'latest' }, controller.signal),
-      fetchAudioVisualItems({ ordering: 'latest' }, controller.signal),
+      fetchAudioVisualItems({ type: 'other', ordering: 'latest' }, controller.signal),
     ])
       .then(([
         homeResult,

@@ -39,7 +39,7 @@ test('media landing page consumes curated media endpoints and renders core secti
     '/v1/audio-visual/?type=teaching&ordering=latest',
     '/v1/audio-visual/?type=livestream&ordering=latest',
     '/v1/audio-visual/?type=short&ordering=latest',
-    '/v1/audio-visual/?ordering=latest',
+    '/v1/audio-visual/?type=other&ordering=latest',
     '/v1/audio-visual/series/',
   ]));
 });
@@ -82,8 +82,7 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
 
   await page.getByRole('button', { name: /Explore/i }).click();
   await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
-  await expect(page.getByText('Sunday Service II English')).toBeVisible();
-  await expect(page.getByText('God Loves to Forgive Repentant Sinners')).toBeVisible();
+  await expect(page.getByText('Church Family Update')).toBeVisible();
 });
 
 test('media watch page plays selected content, previews scripture, and preserves return navigation', async ({ page }) => {
@@ -121,5 +120,5 @@ test('mobile media collections dock opens tabs and renders explore content', asy
   await page.getByRole('button', { name: /Collections/i }).click();
   await page.getByRole('dialog', { name: 'Media collections' }).getByRole('button', { name: /Explore/i }).click();
   await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
-  await expect(page.getByText('Sunday Service II English')).toBeVisible();
+  await expect(page.getByText('Church Family Update')).toBeVisible();
 });

@@ -116,6 +116,19 @@ export const teachingMessage = mediaItem({
   speaker: 'Peter Wanjohi',
 });
 
+export const otherVideo = mediaItem({
+  title: 'Church Family Update',
+  slug: 'church-family-update',
+  categories: [{ name: 'Other', slug: 'other' }],
+  collections: [{ name: 'Explore', slug: 'explore' }],
+  description_excerpt: 'An update from the life of the church.',
+  duration_seconds: 420,
+  media_type: 'other',
+  media_type_detail: { name: 'Other' },
+  series: null,
+  speaker: 'A.I.C Njoro Town',
+});
+
 const allItems = [
   dyingWell,
   purposeProceeds,
@@ -126,6 +139,7 @@ const allItems = [
   choirSong,
   worshipSong,
   teachingMessage,
+  otherVideo,
 ];
 
 const pagePayload = (items: unknown[], count = items.length) => ({
@@ -173,6 +187,10 @@ const itemsForQuery = (url: URL) => {
 
   if (type === 'teaching') {
     return [teachingMessage];
+  }
+
+  if (type === 'other') {
+    return [otherVideo];
   }
 
   return allItems;
