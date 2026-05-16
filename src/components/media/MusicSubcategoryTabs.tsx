@@ -20,11 +20,7 @@ const MusicSubcategoryTabs = ({ activeTab, darkMode, onTabChange }: MusicSubcate
   <div
     aria-label="Music subcategories"
     role="navigation"
-    className={`flex flex-wrap justify-center gap-3 rounded-3xl border px-4 py-3 backdrop-blur-xl ${
-      darkMode
-        ? 'border-white/10 bg-white/[0.035]'
-        : 'border-white/55 bg-white/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_16px_34px_rgba(24,24,27,0.08)]'
-    }`}
+    className="flex flex-wrap justify-center gap-3"
   >
     {musicTabs.map(({ icon: Icon, key, label }) => {
       const isActive = activeTab === key;
