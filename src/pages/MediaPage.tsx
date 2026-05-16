@@ -10,6 +10,7 @@ import MediaSeriesRail from '../components/media/MediaSeriesRail';
 import MusicSubcategoryTabs from '../components/media/MusicSubcategoryTabs';
 import type { MusicSubcategoryKey } from '../components/media/MusicSubcategoryTabs';
 import { fallbackMediaHome } from '../components/media/mediaContent';
+import { selectMediaHeroItem } from '../components/media/mediaHeroSelection';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { useTheme } from '../hooks/useTheme';
@@ -99,9 +100,6 @@ const getPreviewCounts = () => {
 
   return { livestreams: 2, music: 2, sermons: 6, shorts: 6 };
 };
-
-const selectHeroSermon = (home: AudioVisualHomePayload, latestSermon: AudioVisualItem | null, useFallback: boolean) =>
-  latestSermon || home.hero || (useFallback ? fallbackMediaHome.hero : null);
 
 const mergeRail = (rail: AudioVisualRail | undefined, fallback: AudioVisualRail, endpointItems: AudioVisualItem[] = [], useFallback = false) => {
   if (rail && rail.items.length > 0) {
@@ -409,7 +407,10 @@ const MediaPage = () => {
       teachings: mergeRail(undefined, fallbackMediaHome.rails[2], teachingItems, useFallback),
     };
   }, [endpointRails, exploreItems, featuredItems, homePayload.rails, livestreamItems, musicItems, sermonItems, shortItems, status, teachingItems]);
-  const heroSermon = useMemo(() => selectHeroSermon(homePayload, latestSermon, status === 'fallback'), [homePayload, latestSermon, status]);
+  const heroSermon = useMemo(
+    () => selectMediaHeroItem({ home: homePayload, latestSermon, useFallback: status === 'fallback' }),
+    [homePayload, latestSermon, status]
+  );
   const sermonSeries = useMemo(() => (seriesItems.length > 0 ? seriesItems : status === 'fallback' ? fallbackSeries() : []), [seriesItems, status]);
   const handleSeriesSelect = (series: AudioVisualLookup) => {
     if (!series.slug) {

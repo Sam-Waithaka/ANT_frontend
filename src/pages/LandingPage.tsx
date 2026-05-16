@@ -1,5 +1,6 @@
 import DailyVerseSection from '../components/landing/DailyVerseSection';
 import LandingHero from '../components/landing/LandingHero';
+import LandingMediaHighlight from '../components/landing/LandingMediaHighlight';
 import Project52LandingSection from '../components/landing/Project52LandingSection';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
@@ -16,6 +17,7 @@ const LandingPage = () => {
         <LandingHero darkMode={darkMode} />
         <DailyVerseSection darkMode={darkMode} />
         <Project52LandingSection darkMode={darkMode} />
+        <LandingMediaHighlight darkMode={darkMode} />
       </main>
 
       <SiteFooter darkMode={darkMode} />

@@ -7,6 +7,39 @@ test.beforeEach(async ({ page }) => {
   await mockMediaApi(page);
 });
 
+test('home page surfaces a premium media highlight below Project 52', async ({ page }) => {
+  const mediaRequests: string[] = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith('/v1/audio-visual/')) {
+      mediaRequests.push(`${url.pathname}${url.search}`);
+    }
+  });
+
+  await page.goto('/');
+
+  const mediaSection = page.locator('#latest-media');
+  await expect(mediaSection.getByText('Latest From Media')).toBeVisible();
+  await expect(mediaSection.getByRole('heading', { name: 'Stay nourished beyond Sunday.' })).toBeVisible();
+  await expect(mediaSection.getByRole('heading', { name: 'Dying Well' })).toBeVisible();
+  await expect(mediaSection.getByText('Rooted in Scripture.').first()).toBeVisible();
+  await expect(mediaSection.getByText('Curated by A.N.T Media Crew')).toHaveCount(0);
+  await expect(mediaSection.getByText('Sunday Service II English')).toBeVisible();
+  await expect(mediaSection.getByText('My Final Instructions')).toBeVisible();
+  await expect(mediaSection.getByText('Mercy Masika Wastahili Cover')).toBeVisible();
+
+  await mediaSection.getByRole('link', { name: /Explore Library/i }).click();
+  await expect(page).toHaveURL(/\/media$/);
+  expect(mediaRequests).toEqual(expect.arrayContaining([
+    '/v1/audio-visual/live/',
+    '/v1/audio-visual/latest-sermon/',
+    '/v1/audio-visual/featured/',
+    '/v1/audio-visual/?type=livestream&ordering=latest&page_size=1',
+    '/v1/audio-visual/?type=sermon&featured=true&ordering=latest&page_size=3',
+    '/v1/audio-visual/?type=music&music_subcategory=pnw&ordering=latest&page_size=1',
+  ]));
+});
+
 test('media landing page consumes curated media endpoints and renders core sections', async ({ page }) => {
   const mediaRequests: string[] = [];
   page.on('request', (request) => {
