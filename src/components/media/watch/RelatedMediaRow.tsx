@@ -25,8 +25,10 @@ const RelatedMediaRow = ({
     {items.length > 0 && onOrderingChange && (
       <div className="flex justify-center sm:justify-end">
         <div
-          className={`inline-flex rounded-full border p-1 ${
-            darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-black/10 bg-white/70 shadow-sm shadow-zinc-900/5'
+          className={`inline-flex rounded-full border p-1 shadow-lg ${
+            darkMode
+              ? 'border-white/15 bg-white/10 shadow-black/20'
+              : 'border-white/55 bg-white/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_16px_34px_rgba(24,24,27,0.10)]'
           }`}
         >
           {([
@@ -40,12 +42,14 @@ const RelatedMediaRow = ({
                 key={value}
                 type="button"
                 onClick={() => onOrderingChange(value)}
-                className={`min-h-9 rounded-full px-4 text-xs font-black transition ${
+                className={`min-h-9 rounded-full px-4 text-xs font-black transition hover:-translate-y-0.5 ${
                   isActive
-                    ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                    ? darkMode
+                      ? 'border border-white/15 bg-white/15 text-white shadow-sm shadow-black/20'
+                      : 'border border-red-900/15 bg-white/70 text-red-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_10px_24px_rgba(127,29,29,0.10)]'
                     : darkMode
-                      ? 'text-stone-300 hover:bg-white/10'
-                      : 'text-zinc-700 hover:bg-[#fffaf0]'
+                      ? 'border border-transparent text-stone-300 hover:bg-white/10'
+                      : 'border border-transparent text-zinc-700 hover:bg-white/35'
                 }`}
               >
                 {label}

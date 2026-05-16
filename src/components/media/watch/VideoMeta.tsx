@@ -1,10 +1,12 @@
-import { CalendarDays, Clock, Layers, UserRound } from 'lucide-react';
+import { CalendarDays, Check, Clock, Layers, Share2, UserRound } from 'lucide-react';
 import type { AudioVisualItem } from '../../../types/audioVisual';
 import { formatDuration, formatMediaDate } from '../mediaFormat';
 
 type VideoMetaProps = {
   darkMode: boolean;
   item: AudioVisualItem;
+  onShare?: () => void;
+  shareStatus?: 'copied' | 'idle';
 };
 
 const limitWords = (value: string, maxWords: number) => {
@@ -17,7 +19,7 @@ const limitWords = (value: string, maxWords: number) => {
   return `${words.slice(0, maxWords).join(' ')}...`;
 };
 
-const VideoMeta = ({ darkMode, item }: VideoMetaProps) => {
+const VideoMeta = ({ darkMode, item, onShare, shareStatus = 'idle' }: VideoMetaProps) => {
   const description = limitWords(item.description || item.descriptionExcerpt, 70);
   const metaItems = [
     item.speaker ? { icon: UserRound, label: item.speaker } : null,
@@ -37,6 +39,17 @@ const VideoMeta = ({ darkMode, item }: VideoMetaProps) => {
 
       {metaItems.length > 0 && (
         <div className="flex flex-wrap gap-3">
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex min-h-10 items-center gap-2 rounded-full bg-red-800 px-4 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 dark:focus:ring-offset-black"
+              aria-live="polite"
+            >
+              {shareStatus === 'copied' ? <Check size={16} /> : <Share2 size={16} />}
+              {shareStatus === 'copied' ? 'Link copied' : 'Share'}
+            </button>
+          )}
           {metaItems.map(({ icon: Icon, label }) => (
             <span
               key={label}
