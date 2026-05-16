@@ -1,38 +1,91 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-const getScrollTop = (target?: EventTarget | null) => {
-  if (target instanceof Document) {
-    return window.scrollY || target.documentElement.scrollTop || target.body.scrollTop || 0;
-  }
+const getWindowScrollTop = () => window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
 
-  if (target instanceof Window) {
-    return target.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-  }
-
-  if (target instanceof HTMLElement) {
-    return target.scrollTop;
-  }
-
-  return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+const getEventScrollTop = (target?: EventTarget | null) => {
+  if (target instanceof HTMLElement) return target.scrollTop;
+  if (target instanceof Document || target instanceof Window) return getWindowScrollTop();
+  return getWindowScrollTop();
 };
 
-export const useCompactHeader = (enabled = true, threshold = 24) => {
+type CompactHeaderOptions = {
+  collapseAfter?: number;
+  expandBefore?: number;
+  observeNestedScroll?: boolean;
+};
+
+export const getNextCompactHeaderState = ({
+  collapseAfter,
+  current,
+  expandBefore,
+  scrollTop,
+}: {
+  collapseAfter: number;
+  current: boolean;
+  expandBefore: number;
+  scrollTop: number;
+}) => {
+  if (!current && scrollTop >= collapseAfter) return true;
+  if (current && scrollTop <= expandBefore) return false;
+  return current;
+};
+
+export const useCompactHeader = (
+  enabled = true,
+  {
+    collapseAfter = 96,
+    expandBefore = 24,
+    observeNestedScroll = false,
+  }: CompactHeaderOptions = {},
+) => {
   const [compact, setCompact] = useState(false);
+  const compactRef = useRef(false);
+  const frameRef = useRef<number | null>(null);
+  const nextScrollTopRef = useRef(0);
 
   useEffect(() => {
     if (!enabled) {
+      compactRef.current = false;
       setCompact(false);
       return;
     }
 
-    const updateCompactState = (event?: Event) => {
-      setCompact(getScrollTop(event?.target) > threshold);
+    const updateCompactState = () => {
+      frameRef.current = null;
+      const nextCompact = getNextCompactHeaderState({
+        collapseAfter,
+        current: compactRef.current,
+        expandBefore,
+        scrollTop: nextScrollTopRef.current,
+      });
+
+      if (nextCompact !== compactRef.current) {
+        compactRef.current = nextCompact;
+        setCompact(nextCompact);
+      }
     };
 
+    const scheduleUpdate = (event?: Event) => {
+      nextScrollTopRef.current = observeNestedScroll ? getEventScrollTop(event?.target) : getWindowScrollTop();
+
+      if (frameRef.current === null) {
+        frameRef.current = window.requestAnimationFrame(updateCompactState);
+      }
+    };
+
+    nextScrollTopRef.current = getWindowScrollTop();
     updateCompactState();
-    window.addEventListener('scroll', updateCompactState, true);
-    return () => window.removeEventListener('scroll', updateCompactState, true);
-  }, [enabled, threshold]);
+    window.addEventListener('scroll', scheduleUpdate, { capture: observeNestedScroll, passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+
+    return () => {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+      }
+      window.removeEventListener('scroll', scheduleUpdate, { capture: observeNestedScroll });
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+  }, [collapseAfter, enabled, expandBefore, observeNestedScroll]);
 
   return compact;
 };

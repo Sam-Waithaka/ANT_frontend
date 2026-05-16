@@ -33,6 +33,7 @@ export type SiteNavPath =
 
 type SiteNavigationProps = {
   activePath?: SiteNavPath;
+  compact?: boolean;
   darkMode: boolean;
   layout: 'top' | 'side';
   onToggleTheme: () => void;
@@ -93,6 +94,7 @@ const isRouteHref = (href: string) => href.startsWith('/');
 
 const SiteNavigation = ({
   activePath,
+  compact,
   darkMode,
   layout,
   onToggleTheme,
@@ -100,7 +102,8 @@ const SiteNavigation = ({
 }: SiteNavigationProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const compactSmallHeader = useCompactHeader(layout === 'top');
+  const observedCompactHeader = useCompactHeader(layout === 'top' && compact === undefined, { observeNestedScroll: true });
+  const compactSmallHeader = compact ?? observedCompactHeader;
   const isActive = (href: string) => href === activePath;
   const getNavItemClass = (active: boolean, shape: 'side' | 'top' | 'drawer') => {
     const shapeClass = {

@@ -36,7 +36,7 @@ const ScripturePage = () => {
   const [focusVerseNumber, setFocusVerseNumber] = useState<number | null>(null);
   const [actionMessage, setActionMessage] = useState('');
   const [studyMode, setStudyMode] = useState(false);
-  const compactHeader = useCompactHeader();
+  const compactHeader = useCompactHeader(true, { observeNestedScroll: true });
   const {
     books,
     chapters,
