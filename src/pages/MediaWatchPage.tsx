@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import RelatedMediaRow from '../components/media/watch/RelatedMediaRow';
@@ -23,6 +23,56 @@ import type { AudioVisualItem } from '../types/audioVisual';
 import { copyToClipboard } from '../utils/copyToClipboard';
 
 const RELATED_PAGE_SIZE = 10;
+const UP_NEXT_SECONDS = 8;
+
+type AutoplayMode = 'general' | 'music' | 'series' | 'shorts';
+
+const autoplayModeForItem = (item: AudioVisualItem | null, context?: MediaWatchContext): AutoplayMode => {
+  if (item?.mediaType.toLowerCase() === 'short') return 'shorts';
+  if (context?.series || item?.series?.slug) return 'series';
+  if (context?.type?.toLowerCase() === 'music' || item?.mediaType.toLowerCase() === 'music') return 'music';
+  return 'general';
+};
+
+const shouldDefaultAutoplay = (item: AudioVisualItem | null, context?: MediaWatchContext) => {
+  const mode = autoplayModeForItem(item, context);
+  return mode === 'shorts' || mode === 'series';
+};
+
+const autoplayLimitReached = (mode: AutoplayMode, startedAt: number, count: number) => {
+  const elapsedMinutes = (Date.now() - startedAt) / 60000;
+
+  if (mode === 'shorts') return count >= 20 || elapsedMinutes >= 30;
+  if (mode === 'series') return count >= 3 || elapsedMinutes >= 180;
+  if (mode === 'music') return elapsedMinutes >= 90;
+  return count >= 5 || elapsedMinutes >= 120;
+};
+
+const mediaTime = (item?: AudioVisualItem | null) => {
+  const time = item?.publishedAt ? new Date(item.publishedAt).getTime() : Number.NaN;
+  return Number.isFinite(time) ? time : 0;
+};
+
+const selectNextRelatedItem = (
+  current: AudioVisualItem | null,
+  relatedItems: AudioVisualItem[],
+  ordering: RelatedMediaOrdering
+) => {
+  if (!current) return relatedItems[0];
+  const currentTime = mediaTime(current);
+
+  if (currentTime) {
+    const directionalNext = relatedItems.find((candidate) => {
+      const candidateTime = mediaTime(candidate);
+      if (!candidateTime) return false;
+      return ordering === 'oldest' ? candidateTime > currentTime : candidateTime < currentTime;
+    });
+
+    if (directionalNext) return directionalNext;
+  }
+
+  return relatedItems[0];
+};
 
 const MediaWatchPage = () => {
   const { slug = '' } = useParams();
@@ -37,9 +87,17 @@ const MediaWatchPage = () => {
   const [relatedPage, setRelatedPage] = useState(1);
   const [relatedStatus, setRelatedStatus] = useState<'idle' | 'loading' | 'loading-more' | 'ready'>('idle');
   const [autoPlayNext, setAutoPlayNext] = useState(false);
+  const [autoplayCount, setAutoplayCount] = useState(0);
+  const [autoplayEnabled, setAutoplayEnabled] = useState(false);
+  const [autoplayStartedAt, setAutoplayStartedAt] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  const [pendingNextItem, setPendingNextItem] = useState<AudioVisualItem | null>(null);
+  const [showStillWatching, setShowStillWatching] = useState(false);
   const [shareStatus, setShareStatus] = useState<'copied' | 'idle'>('idle');
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const relatedContext = location.state?.relatedContext as MediaWatchContext | undefined;
+  const shouldAutoplayCurrent = location.state?.autoplayNext === true;
+  const countdownTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     prefetchVideoPlayer();
@@ -55,6 +113,10 @@ const MediaWatchPage = () => {
     setRelatedNext(null);
     setRelatedPage(1);
     setRelatedStatus('idle');
+    setAutoPlayNext(shouldAutoplayCurrent);
+    setCountdown(0);
+    setPendingNextItem(null);
+    setShowStillWatching(false);
 
     fetchAudioVisualWatchItem(slug, controller.signal)
       .then(async (mediaItem) => {
@@ -66,6 +128,7 @@ const MediaWatchPage = () => {
         setItem(mediaItem);
         setStatus('ready');
         setRelatedOrdering(defaultRelatedOrdering(mediaItem, relatedContext));
+        setAutoplayEnabled(shouldDefaultAutoplay(mediaItem, relatedContext));
       })
       .catch(() => {
         if (!controller.signal.aborted) {
@@ -74,7 +137,28 @@ const MediaWatchPage = () => {
       });
 
     return () => controller.abort();
-  }, [relatedContext, slug]);
+  }, [relatedContext, shouldAutoplayCurrent, slug]);
+
+  useEffect(() => {
+    if (!autoplayEnabled) {
+      setAutoplayStartedAt(0);
+      setAutoplayCount(0);
+      setCountdown(0);
+      setPendingNextItem(null);
+      setShowStillWatching(false);
+      return;
+    }
+
+    setAutoplayStartedAt((current) => current || Date.now());
+  }, [autoplayEnabled]);
+
+  useEffect(() => {
+    return () => {
+      if (countdownTimerRef.current) {
+        window.clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!item) {
@@ -112,7 +196,8 @@ const MediaWatchPage = () => {
   const isShort = item?.mediaType.toLowerCase() === 'short';
   const isSermon = item?.mediaType.toLowerCase() === 'sermon';
   const showScriptureBesideMeta = Boolean(isSermon && scriptureReferences.length > 0);
-  const nextShort = isShort ? relatedItems.find((candidate) => candidate.mediaType.toLowerCase() === 'short') : undefined;
+  const autoplayMode = autoplayModeForItem(item, relatedContext);
+  const nextRelatedItem = selectNextRelatedItem(item, relatedItems, relatedOrdering);
   const canLoadMoreRelated = Boolean(relatedNext) || relatedCount > relatedItems.length + (item ? 1 : 0);
 
   const handleRelatedLoadMore = () => {
@@ -139,13 +224,69 @@ const MediaWatchPage = () => {
       .catch(() => setRelatedStatus('ready'));
   };
 
-  const handlePlayerEnded = () => {
-    if (!isShort || !nextShort) {
-      return;
+  const playNextItem = (nextItem: AudioVisualItem) => {
+    if (countdownTimerRef.current) {
+      window.clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
     }
 
     setAutoPlayNext(true);
-    navigate(getMediaWatchPath(nextShort));
+    setAutoplayCount((count) => count + 1);
+    setCountdown(0);
+    setPendingNextItem(null);
+    setShowStillWatching(false);
+    navigate(getMediaWatchPath(nextItem), {
+      state: {
+        autoplayNext: true,
+        from: typeof location.state?.from === 'string' ? location.state.from : '/media',
+        relatedContext,
+      },
+    });
+  };
+
+  const cancelAutoplayCountdown = () => {
+    if (countdownTimerRef.current) {
+      window.clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+
+    setCountdown(0);
+    setPendingNextItem(null);
+  };
+
+  const beginAutoplayCountdown = (nextItem: AudioVisualItem) => {
+    cancelAutoplayCountdown();
+    setPendingNextItem(nextItem);
+    setCountdown(UP_NEXT_SECONDS);
+
+    countdownTimerRef.current = window.setInterval(() => {
+      setCountdown((current) => {
+        if (current <= 1) {
+          if (countdownTimerRef.current) {
+            window.clearInterval(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+          }
+          playNextItem(nextItem);
+          return 0;
+        }
+
+        return current - 1;
+      });
+    }, 1000);
+  };
+
+  const handlePlayerEnded = () => {
+    if (!autoplayEnabled || !nextRelatedItem) {
+      return;
+    }
+
+    if (autoplayLimitReached(autoplayMode, autoplayStartedAt || Date.now(), autoplayCount)) {
+      setPendingNextItem(nextRelatedItem);
+      setShowStillWatching(true);
+      return;
+    }
+
+    beginAutoplayCountdown(nextRelatedItem);
   };
 
   const handleBack = () => {
@@ -237,6 +378,93 @@ const MediaWatchPage = () => {
           {item && (
             <div className="grid gap-10">
               <VideoPlayer autoPlay={autoPlayNext} darkMode={darkMode} isShort={isShort} item={item} onEnded={handlePlayerEnded} />
+              <section
+                className={`rounded-3xl border p-4 shadow-xl ${
+                  darkMode ? 'border-white/10 bg-white/[0.05] shadow-black/20' : 'border-black/10 bg-white/80 shadow-zinc-900/10'
+                }`}
+              >
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-red-700">Autoplay</p>
+                    <p className={`mt-1 text-sm font-bold ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
+                      {autoplayEnabled
+                        ? `Up next follows this ${autoplayMode === 'series' ? 'series' : autoplayMode === 'music' ? 'music queue' : autoplayMode === 'shorts' ? 'shorts queue' : 'related queue'}.`
+                        : 'Autoplay is off. Turn it on to continue through related media.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAutoplayEnabled((enabled) => !enabled)}
+                    aria-pressed={autoplayEnabled}
+                    className={`inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-sm font-black transition ${
+                      autoplayEnabled
+                        ? 'border-red-800 bg-red-800 text-white shadow-lg shadow-red-950/20 hover:bg-red-700'
+                        : darkMode
+                          ? 'border-white/15 bg-white/10 text-stone-100 hover:bg-white/15'
+                          : 'border-black/10 bg-white text-zinc-800 shadow-sm hover:bg-[#fffaf0]'
+                    }`}
+                  >
+                    Autoplay {autoplayEnabled ? 'On' : 'Off'}
+                  </button>
+                </div>
+
+                {pendingNextItem && countdown > 0 && (
+                  <div className={`mt-4 rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-black/20' : 'border-black/10 bg-[#fffaf0]'}`}>
+                    <p className={`text-sm font-bold ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>Up next in {countdown}s</p>
+                    <h3 className={`mt-1 text-lg font-black ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{pendingNextItem.title}</h3>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <button type="button" onClick={() => playNextItem(pendingNextItem)} className="inline-flex min-h-10 items-center rounded-full bg-red-800 px-4 text-sm font-black text-white hover:bg-red-700">
+                        Play now
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelAutoplayCountdown}
+                        className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-black ${
+                          darkMode ? 'border-white/10 text-stone-200 hover:bg-white/10' : 'border-black/10 text-zinc-800 hover:bg-white'
+                        }`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {showStillWatching && pendingNextItem && (
+                  <div className={`mt-4 rounded-2xl border p-4 ${darkMode ? 'border-red-200/15 bg-red-950/20' : 'border-red-900/15 bg-red-50'}`}>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-red-700">Still watching?</p>
+                    <h3 className={`mt-2 text-lg font-black ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{pendingNextItem.title}</h3>
+                    <p className={`mt-1 text-sm ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
+                      We paused autoplay so the queue does not keep running unattended.
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAutoplayCount(0);
+                          setAutoplayStartedAt(Date.now());
+                          playNextItem(pendingNextItem);
+                        }}
+                        className="inline-flex min-h-10 items-center rounded-full bg-red-800 px-4 text-sm font-black text-white hover:bg-red-700"
+                      >
+                        Continue
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAutoplayEnabled(false);
+                          setShowStillWatching(false);
+                          setPendingNextItem(null);
+                        }}
+                        className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-black ${
+                          darkMode ? 'border-white/10 text-stone-200 hover:bg-white/10' : 'border-black/10 text-zinc-800 hover:bg-white'
+                        }`}
+                      >
+                        Stop autoplay
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </section>
 
               {showScriptureBesideMeta ? (
                 <div className="grid gap-8 md:grid-cols-[minmax(0,0.9fr)_minmax(22rem,1.1fr)] md:items-start xl:grid-cols-[minmax(0,0.82fr)_minmax(30rem,1.18fr)]">
