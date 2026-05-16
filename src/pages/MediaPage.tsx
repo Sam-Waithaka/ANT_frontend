@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import MediaCallout from '../components/media/MediaCallout';
 import MediaCategoryTabs from '../components/media/MediaCategoryTabs';
 import type { MediaTabKey } from '../components/media/MediaCategoryTabs';
@@ -7,6 +7,8 @@ import MediaHero from '../components/media/MediaHero';
 import MediaRail from '../components/media/MediaRail';
 import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import MediaSeriesRail from '../components/media/MediaSeriesRail';
+import MusicSubcategoryTabs from '../components/media/MusicSubcategoryTabs';
+import type { MusicSubcategoryKey } from '../components/media/MusicSubcategoryTabs';
 import { fallbackMediaHome } from '../components/media/mediaContent';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
@@ -24,7 +26,7 @@ import {
 } from '../services/audioVisualApi';
 import type { AudioVisualGroupDetail, AudioVisualHomePayload, AudioVisualItem, AudioVisualLookup, AudioVisualRail } from '../types/audioVisual';
 
-type PagedMediaKey = Extract<MediaTabKey, 'explore' | 'featured' | 'livestreams' | 'music' | 'sermons' | 'shorts' | 'teachings'>;
+type PagedMediaKey = Extract<MediaTabKey, 'explore' | 'featured' | 'livestreams' | 'sermons' | 'shorts' | 'teachings'>;
 
 type PagedMediaState = {
   count: number;
@@ -43,7 +45,7 @@ const emptyPagedState = (): PagedMediaState => ({
 });
 
 const isPagedMediaTab = (tab: MediaTabKey): tab is PagedMediaKey =>
-  ['explore', 'featured', 'livestreams', 'music', 'sermons', 'shorts', 'teachings'].includes(tab);
+  ['explore', 'featured', 'livestreams', 'sermons', 'shorts', 'teachings'].includes(tab);
 
 const pagedQueryForTab = (tab: PagedMediaKey) => {
   switch (tab) {
@@ -53,8 +55,6 @@ const pagedQueryForTab = (tab: PagedMediaKey) => {
       return { featured: true, ordering: 'latest' as const };
     case 'livestreams':
       return { type: 'livestream', ordering: 'latest' as const };
-    case 'music':
-      return { type: 'music', ordering: 'latest' as const };
     case 'sermons':
       return { type: 'sermon', ordering: 'latest' as const };
     case 'shorts':
@@ -63,6 +63,15 @@ const pagedQueryForTab = (tab: PagedMediaKey) => {
       return { type: 'teaching', ordering: 'latest' as const };
   }
 };
+
+const musicSubcategoryQuery = (subcategory: MusicSubcategoryKey) => ({
+  type: 'music',
+  ordering: 'latest' as const,
+  ...(subcategory === 'all' ? {} : { musicSubcategory: subcategory }),
+});
+
+const musicSubcategoryTitle = (subcategory: MusicSubcategoryKey) =>
+  subcategory === 'all' ? 'Music' : subcategory === 'pnw' ? 'Praise and Worship' : subcategory === 'choir' ? 'Choir' : 'Explore Music';
 
 const mergeMediaItems = (current: AudioVisualItem[], next: AudioVisualItem[]) => {
   const seen = new Set(current.map((item) => item.slug));
@@ -161,13 +170,20 @@ const MediaPage = () => {
   const [selectedSeriesStatus, setSelectedSeriesStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [shortItems, setShortItems] = useState<AudioVisualItem[]>([]);
   const [teachingItems, setTeachingItems] = useState<AudioVisualItem[]>([]);
+  const [activeMusicSubcategory, setActiveMusicSubcategory] = useState<MusicSubcategoryKey>('all');
+  const musicRequestsInFlight = useRef(new Set<MusicSubcategoryKey>());
+  const [musicPagedMedia, setMusicPagedMedia] = useState<Record<MusicSubcategoryKey, PagedMediaState>>({
+    all: emptyPagedState(),
+    choir: emptyPagedState(),
+    other: emptyPagedState(),
+    pnw: emptyPagedState(),
+  });
   const [activeTab, setActiveTab] = useState<MediaTabKey>('all');
   const [previewCounts, setPreviewCounts] = useState(getPreviewCounts);
   const [pagedMedia, setPagedMedia] = useState<Record<PagedMediaKey, PagedMediaState>>({
     explore: emptyPagedState(),
     featured: emptyPagedState(),
     livestreams: emptyPagedState(),
-    music: emptyPagedState(),
     sermons: emptyPagedState(),
     shorts: emptyPagedState(),
     teachings: emptyPagedState(),
@@ -334,6 +350,51 @@ const MediaPage = () => {
     return () => controller.abort();
   }, [activeTab]);
 
+  useEffect(() => {
+    const currentState = musicPagedMedia[activeMusicSubcategory];
+
+    if (activeTab !== 'music' || currentState.status !== 'idle' || musicRequestsInFlight.current.has(activeMusicSubcategory)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const query = musicSubcategoryQuery(activeMusicSubcategory);
+    musicRequestsInFlight.current.add(activeMusicSubcategory);
+
+    setMusicPagedMedia((current) => ({
+      ...current,
+      [activeMusicSubcategory]: { ...current[activeMusicSubcategory], status: 'loading' },
+    }));
+
+    fetchAudioVisualItemPage({ ...query, page: 1, pageSize: PAGE_SIZE }, controller.signal)
+      .then((page) => {
+        if (controller.signal.aborted) return;
+
+        setMusicPagedMedia((current) => ({
+          ...current,
+          [activeMusicSubcategory]: {
+            count: page.count,
+            items: page.items,
+            page: 1,
+            status: 'ready',
+          },
+        }));
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+
+        setMusicPagedMedia((current) => ({
+          ...current,
+          [activeMusicSubcategory]: { ...current[activeMusicSubcategory], status: 'error' },
+        }));
+      })
+      .finally(() => {
+        musicRequestsInFlight.current.delete(activeMusicSubcategory);
+      });
+
+    return () => controller.abort();
+  }, [activeMusicSubcategory, activeTab]);
+
   const rails = useMemo(() => {
     const railMap = new Map([...endpointRails, ...homePayload.rails].map((rail) => [rail.key, rail]));
     const useFallback = status === 'fallback';
@@ -393,11 +454,50 @@ const MediaPage = () => {
     }
   };
 
+  const handleMusicLoadMore = async () => {
+    const currentPage = musicPagedMedia[activeMusicSubcategory];
+
+    if (currentPage.status === 'loading' || currentPage.items.length >= currentPage.count) {
+      return;
+    }
+
+    const nextPage = currentPage.page + 1;
+    const query = musicSubcategoryQuery(activeMusicSubcategory);
+
+    setMusicPagedMedia((current) => ({
+      ...current,
+      [activeMusicSubcategory]: { ...current[activeMusicSubcategory], status: 'loading' },
+    }));
+
+    try {
+      const page = await fetchAudioVisualItemPage({ ...query, page: nextPage, pageSize: PAGE_SIZE });
+
+      setMusicPagedMedia((current) => ({
+        ...current,
+        [activeMusicSubcategory]: {
+          count: page.count,
+          items: mergeMediaItems(current[activeMusicSubcategory].items, page.items),
+          page: nextPage,
+          status: 'ready',
+        },
+      }));
+    } catch {
+      setMusicPagedMedia((current) => ({
+        ...current,
+        [activeMusicSubcategory]: { ...current[activeMusicSubcategory], status: 'error' },
+      }));
+    }
+  };
+
   const tabItems = (tab: PagedMediaKey, fallbackItems: AudioVisualItem[]) =>
     pagedMedia[tab].items.length > 0 ? pagedMedia[tab].items : fallbackItems;
 
   const canLoadMore = (tab: PagedMediaKey) =>
     pagedMedia[tab].count > 0 && pagedMedia[tab].items.length < pagedMedia[tab].count;
+  const activeMusicState = musicPagedMedia[activeMusicSubcategory];
+  const musicTabItems = activeMusicState.items.length > 0 ? activeMusicState.items : activeMusicSubcategory === 'all' ? rails.music.items : [];
+  const canLoadMoreMusic = activeMusicState.count > 0 && activeMusicState.items.length < activeMusicState.count;
+  const activeMusicTitle = musicSubcategoryTitle(activeMusicSubcategory);
   const resolvedPreviewCounts = {
     ...getPreviewCounts(),
     ...previewCounts,
@@ -540,14 +640,34 @@ const MediaPage = () => {
               />
             )}
             {activeTab === 'music' && (
-              <MediaRail
-                canLoadMore={canLoadMore('music')}
-                darkMode={darkMode}
-                items={tabItems('music', rails.music.items)}
-                loadingMore={pagedMedia.music.status === 'loading'}
-                title="Music"
-                onLoadMore={() => handleLoadMore('music')}
-              />
+              <section className="grid gap-8">
+                <MusicSubcategoryTabs
+                  activeTab={activeMusicSubcategory}
+                  darkMode={darkMode}
+                  onTabChange={setActiveMusicSubcategory}
+                />
+                <div className="flex items-center gap-4">
+                  <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
+                  <h2 className={`shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{activeMusicTitle}</h2>
+                  <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
+                </div>
+                <MediaRail
+                  canLoadMore={canLoadMoreMusic}
+                  darkMode={darkMode}
+                  items={musicTabItems}
+                  loadingMore={activeMusicState.status === 'loading'}
+                  showHeader={false}
+                  title={activeMusicTitle}
+                  onLoadMore={handleMusicLoadMore}
+                />
+                {activeMusicState.status === 'ready' && musicTabItems.length === 0 && (
+                  <div className={`rounded-3xl border px-5 py-8 text-center text-sm font-bold ${
+                    darkMode ? 'border-white/10 bg-white/[0.04] text-stone-300' : 'border-black/10 bg-white text-zinc-700 shadow-sm shadow-zinc-900/5'
+                  }`}>
+                    No music has been published in this collection yet.
+                  </div>
+                )}
+              </section>
             )}
             {activeTab === 'explore' && (
               <MediaRail

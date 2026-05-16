@@ -66,6 +66,7 @@ export type AudioVisualListQuery = {
   featured?: boolean;
   language?: string;
   liveStatus?: string;
+  musicSubcategory?: string;
   ordering?: 'latest' | 'oldest' | 'priority' | 'title';
   page?: number;
   pageSize?: number;

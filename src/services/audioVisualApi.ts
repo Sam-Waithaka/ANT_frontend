@@ -182,7 +182,7 @@ const createQueryString = (query: AudioVisualListQuery = {}) => {
       return;
     }
 
-    const apiKey = key === 'liveStatus' ? 'live_status' : key === 'pageSize' ? 'page_size' : key;
+    const apiKey = key === 'liveStatus' ? 'live_status' : key === 'pageSize' ? 'page_size' : key === 'musicSubcategory' ? 'music_subcategory' : key;
     params.set(apiKey, String(value));
   });
 

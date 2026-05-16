@@ -103,6 +103,19 @@ export const worshipSong = mediaItem({
   speaker: 'Praise and Worship Team',
 });
 
+export const musicOtherVideo = mediaItem({
+  title: 'A.I.C Njoro Town Music Moment',
+  slug: 'aic-njoro-town-music-moment',
+  categories: [{ name: 'Music Explore', slug: 'music-explore' }],
+  collections: [{ name: 'Music', slug: 'music' }],
+  description_excerpt: 'A music moment awaiting a more specific subcategory.',
+  duration_seconds: 180,
+  media_type: 'Music',
+  media_type_detail: { name: 'Music' },
+  series: null,
+  speaker: 'A.I.C Njoro Town',
+});
+
 export const teachingMessage = mediaItem({
   title: 'Learning to Trust God in Every Season',
   slug: 'learning-to-trust-god-in-every-season',
@@ -138,6 +151,7 @@ const allItems = [
   secondShort,
   choirSong,
   worshipSong,
+  musicOtherVideo,
   teachingMessage,
   otherVideo,
 ];
@@ -156,6 +170,7 @@ const itemsForQuery = (url: URL) => {
   const featured = url.searchParams.get('featured');
   const series = url.searchParams.get('series');
   const category = url.searchParams.get('category');
+  const musicSubcategory = url.searchParams.get('music_subcategory');
 
   if (featured === 'true') {
     return [dyingWell, finalInstructions];
@@ -182,6 +197,18 @@ const itemsForQuery = (url: URL) => {
   }
 
   if (type === 'music') {
+    if (musicSubcategory === 'choir') {
+      return [choirSong];
+    }
+
+    if (musicSubcategory === 'pnw') {
+      return [worshipSong];
+    }
+
+    if (musicSubcategory === 'other') {
+      return [musicOtherVideo];
+    }
+
     return [choirSong, worshipSong];
   }
 

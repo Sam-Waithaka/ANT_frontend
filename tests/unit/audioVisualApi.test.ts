@@ -112,6 +112,7 @@ describe('audioVisualApi', () => {
       featured: true,
       language: 'english',
       liveStatus: 'live',
+      musicSubcategory: 'choir',
       ordering: 'priority',
       page: 2,
       pageSize: 20,
@@ -134,6 +135,7 @@ describe('audioVisualApi', () => {
     expect(url.searchParams.get('featured')).toBe('true');
     expect(url.searchParams.get('language')).toBe('english');
     expect(url.searchParams.get('live_status')).toBe('live');
+    expect(url.searchParams.get('music_subcategory')).toBe('choir');
     expect(url.searchParams.get('ordering')).toBe('priority');
     expect(url.searchParams.get('page')).toBe('2');
     expect(url.searchParams.get('page_size')).toBe('20');

@@ -60,9 +60,20 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
   await expect(page.getByText('Learning to Trust God in Every Season')).toBeVisible();
 
   await page.getByRole('button', { name: /Music/i }).click();
+  const musicSubcategories = page.getByRole('navigation', { name: 'Music subcategories' });
   await expect(page.getByRole('heading', { name: 'Music' })).toBeVisible();
   await expect(page.getByText('Nipiga Makasia')).toBeVisible();
   await expect(page.getByText('Mercy Masika Wastahili Cover')).toBeVisible();
+  await musicSubcategories.getByRole('button', { name: /^Choir$/i }).click();
+  await expect(page.getByRole('heading', { name: 'Choir' })).toBeVisible();
+  await expect(page.getByText('Nipiga Makasia')).toBeVisible();
+  await expect(page.getByText('Mercy Masika Wastahili Cover')).toHaveCount(0);
+  await musicSubcategories.getByRole('button', { name: /Praise and Worship/i }).click();
+  await expect(page.getByRole('heading', { name: 'Praise and Worship' })).toBeVisible();
+  await expect(page.getByText('Mercy Masika Wastahili Cover')).toBeVisible();
+  await musicSubcategories.getByRole('button', { name: /^Explore$/i }).click();
+  await expect(page.getByRole('heading', { name: 'Explore Music' })).toBeVisible();
+  await expect(page.getByText('A.I.C Njoro Town Music Moment')).toBeVisible();
 
   await page.getByRole('button', { name: /Livestreams/i }).click();
   await expect(page.getByRole('heading', { name: 'Livestreams' })).toBeVisible();

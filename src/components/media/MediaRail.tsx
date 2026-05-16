@@ -11,6 +11,7 @@ type MediaRailProps = {
   loadingMore?: boolean;
   onLoadMore?: () => void;
   onViewMore?: () => void;
+  showHeader?: boolean;
   title: string;
   variant?: 'landscape' | 'portrait' | 'compact';
 };
@@ -25,6 +26,7 @@ const MediaRail = ({
   loadingMore = false,
   onLoadMore,
   onViewMore,
+  showHeader = true,
   title,
   variant = 'landscape',
 }: MediaRailProps) => {
@@ -38,11 +40,13 @@ const MediaRail = ({
 
   return (
     <section>
-      <div className="mb-5 flex items-center gap-4">
-        <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
-        <h2 className={`shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{title}</h2>
-        <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
-      </div>
+      {showHeader && (
+        <div className="mb-5 flex items-center gap-4">
+          <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
+          <h2 className={`shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{title}</h2>
+          <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
+        </div>
+      )}
       <div className={gridClass}>
         {visibleItems.map((item) => (
           <div key={`${title}-${item.slug}`} className="min-w-0">
