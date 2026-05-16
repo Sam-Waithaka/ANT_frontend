@@ -140,10 +140,10 @@ const MediaMobileCollections = ({
             className="absolute inset-0 bg-black/55"
             onClick={() => setOpen(false)}
           />
-          <div className={`absolute inset-x-0 bottom-0 rounded-t-3xl border p-4 shadow-2xl ${
+          <div className={`absolute inset-x-0 bottom-0 flex max-h-[min(76vh,38rem)] flex-col overflow-hidden rounded-t-3xl border p-4 shadow-2xl ${
             darkMode ? 'border-white/10 bg-[#080808] text-stone-100 shadow-black/50' : 'border-black/10 bg-[#f8f5ef] text-zinc-950 shadow-zinc-900/20'
           }`}>
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex shrink-0 items-center justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-red-700">Media</p>
                 <h2 className="text-xl font-black">Collections</h2>
@@ -159,7 +159,8 @@ const MediaMobileCollections = ({
                 <X size={18} />
               </button>
             </div>
-            <div className="grid gap-2">
+            <div className="min-h-0 overflow-y-auto overscroll-contain pr-1">
+              <div className="grid gap-2">
               {tabs.map(({ icon: Icon, key, label }) => {
                 const isActive = activeTab === key;
 
@@ -215,6 +216,7 @@ const MediaMobileCollections = ({
                   </div>
                 );
               })}
+              </div>
             </div>
           </div>
         </div>

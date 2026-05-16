@@ -1,4 +1,4 @@
-import { ArrowRight, Plus, Play } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 import LandingButton from '../landing/LandingButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
@@ -59,15 +59,6 @@ const MediaFeatured = ({ darkMode, items, onViewMore }: MediaFeaturedProps) => {
               <Play size={16} fill="currentColor" />
               Watch now
             </a>
-            <button
-              type="button"
-              className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-black ${
-                darkMode ? 'border-white/10 text-stone-200 hover:bg-white/10' : 'border-black/10 text-zinc-800 hover:bg-[#fffaf0]'
-              }`}
-            >
-              <Plus size={16} />
-              My list
-            </button>
           </div>
         </div>
 
