@@ -46,6 +46,7 @@ const SiteFooter = ({ darkMode }: SiteFooterProps) => {
 
   return (
     <footer
+      data-site-footer="true"
       className={`mt-auto border-t px-4 py-8 text-sm sm:px-6 ${
         darkMode
           ? 'border-white/10 bg-[#050505] text-stone-400'

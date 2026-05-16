@@ -64,17 +64,17 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
   await expect(page.getByRole('heading', { name: 'Music' })).toBeVisible();
   await expect(page.getByText('Nipiga Makasia')).toBeVisible();
   await expect(page.getByText('Mercy Masika Wastahili Cover')).toBeVisible();
-  await musicSubcategories.getByRole('button', { name: /^Choir$/i }).click();
+  await musicSubcategories.getByRole('button', { name: /^Music Choir$/i }).click();
   await expect(page.getByRole('heading', { name: 'Choir' })).toBeVisible();
   await expect(page.getByText('Nipiga Makasia')).toBeVisible();
   await expect(page.getByText('Mercy Masika Wastahili Cover')).toHaveCount(0);
   await page.getByRole('button', { name: /Load more/i }).click();
   await expect.poll(() => pagedRequests.some((url) => url.includes('type=music') && url.includes('music_subcategory=choir') && url.includes('page=2'))).toBe(true);
   await expect(page.getByText('Kanji Mbugua Mfalme Mkuu Cover')).toBeVisible();
-  await musicSubcategories.getByRole('button', { name: /Praise and Worship/i }).click();
+  await musicSubcategories.getByRole('button', { name: /Music Praise and Worship/i }).click();
   await expect(page.getByRole('heading', { name: 'Praise and Worship' })).toBeVisible();
   await expect(page.getByText('Mercy Masika Wastahili Cover')).toBeVisible();
-  await musicSubcategories.getByRole('button', { name: /^Explore$/i }).click();
+  await musicSubcategories.getByRole('button', { name: /^Music Explore$/i }).click();
   await expect(page.getByRole('heading', { name: 'Explore Music' })).toBeVisible();
   await expect(page.getByText('A.I.C Njoro Town Music Moment')).toBeVisible();
 
@@ -129,10 +129,17 @@ test('mobile media collections dock opens tabs and renders explore content', asy
 
   await expect(collections).toBeVisible();
   await collections.getByRole('button', { name: /Music/i }).click();
+  await expect(collections.getByRole('button', { name: /^Music Choir$/i })).toBeVisible();
+  await collections.getByRole('button', { name: /^Music Choir$/i }).click();
   await expect(page.getByText('Nipiga Makasia')).toBeVisible();
 
   await page.getByRole('button', { name: /Collections/i }).click();
-  await page.getByRole('dialog', { name: 'Media collections' }).getByRole('button', { name: /Explore/i }).click();
+  await page.getByRole('dialog', { name: 'Media collections' }).getByRole('button', { name: 'Explore', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
   await expect(page.getByText('Church Family Update')).toBeVisible();
+
+  await page.locator('footer').scrollIntoViewIfNeeded();
+  await expect(page.getByRole('button', { name: /Collections/i })).toBeHidden();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page.getByRole('button', { name: /Collections/i })).toBeVisible();
 });

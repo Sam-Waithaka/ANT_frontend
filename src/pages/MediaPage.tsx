@@ -509,7 +509,13 @@ const MediaPage = () => {
 
       <main className={`flex-1 pb-24 transition-colors duration-500 lg:pb-0 ${darkMode ? 'bg-[#050505] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
         <MediaHero darkMode={darkMode} heroItem={heroSermon} home={homePayload} />
-        <MediaCategoryTabs activeTab={activeTab} darkMode={darkMode} onTabChange={setActiveTab} />
+        <MediaCategoryTabs
+          activeMusicSubcategory={activeMusicSubcategory}
+          activeTab={activeTab}
+          darkMode={darkMode}
+          onMusicSubcategoryChange={setActiveMusicSubcategory}
+          onTabChange={setActiveTab}
+        />
 
         <section className="px-4 py-8 sm:px-6 lg:py-10 xl:px-8">
           <div className="grid gap-8">
