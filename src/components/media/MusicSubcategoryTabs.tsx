@@ -20,34 +20,36 @@ const MusicSubcategoryTabs = ({ activeTab, darkMode, onTabChange }: MusicSubcate
   <div
     aria-label="Music subcategories"
     role="navigation"
-    className={`rounded-3xl border p-2 shadow-2xl backdrop-blur-xl ${
-      darkMode ? 'border-white/10 bg-white/[0.045] shadow-black/30' : 'border-black/10 bg-white/85 shadow-zinc-900/10'
+    className={`flex flex-wrap justify-center gap-3 rounded-3xl border px-4 py-3 backdrop-blur-xl ${
+      darkMode
+        ? 'border-white/10 bg-white/[0.035]'
+        : 'border-white/55 bg-white/35 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_16px_34px_rgba(24,24,27,0.08)]'
     }`}
   >
-    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-      {musicTabs.map(({ icon: Icon, key, label }) => {
-        const isActive = activeTab === key;
+    {musicTabs.map(({ icon: Icon, key, label }) => {
+      const isActive = activeTab === key;
 
-        return (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={isActive}
-            onClick={() => onTabChange(key)}
-            className={`flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-black transition ${
-              isActive
-                ? 'bg-red-800 text-white shadow-lg shadow-red-950/25'
-                : darkMode
-                  ? 'text-stone-300 hover:bg-white/10 hover:text-white'
-                  : 'text-zinc-700 hover:bg-[#fffaf0] hover:text-zinc-950'
-            }`}
-          >
-            <Icon size={17} />
-            {label}
-          </button>
-        );
-      })}
-    </div>
+      return (
+        <button
+          key={key}
+          type="button"
+          aria-pressed={isActive}
+          onClick={() => onTabChange(key)}
+          className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${
+            isActive
+              ? darkMode
+                ? 'border-red-200/25 bg-white/15 text-white shadow-lg shadow-red-950/20 focus:ring-offset-[#080808]'
+                : 'border-red-900/15 bg-white/70 text-red-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_16px_34px_rgba(127,29,29,0.13)] focus:ring-offset-[#f8f5ef]'
+              : darkMode
+                ? 'border-white/15 bg-white/10 text-stone-100 hover:bg-white/15 focus:ring-offset-[#080808]'
+                : 'border-white/55 bg-white/10 text-zinc-950 shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_16px_34px_rgba(24,24,27,0.10)] hover:bg-white/20 focus:ring-offset-[#f8f5ef]'
+          }`}
+        >
+          <Icon size={17} />
+          {label}
+        </button>
+      );
+    })}
   </div>
 );
 
