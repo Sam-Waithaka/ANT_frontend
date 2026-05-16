@@ -49,7 +49,12 @@ const MediaSeriesDetail = ({ darkMode, series, status }: MediaSeriesDetailProps)
         </p>
       </div>
 
-      <MediaRail darkMode={darkMode} items={series.items} title={`${series.name} Messages`} />
+      <MediaRail
+        darkMode={darkMode}
+        items={series.items}
+        relatedContext={{ label: series.name, series: series.slug }}
+        title={`${series.name} Messages`}
+      />
     </section>
   );
 };

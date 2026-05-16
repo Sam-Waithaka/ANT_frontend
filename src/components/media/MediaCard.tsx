@@ -1,11 +1,15 @@
 import { Play } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
 import { getMediaWatchPath } from './mediaLinks';
+import { relatedContextState } from './mediaWatchContext';
+import type { MediaWatchContext } from './mediaWatchContext';
 
 type MediaCardProps = {
   darkMode: boolean;
   item: AudioVisualItem;
+  relatedContext?: MediaWatchContext;
   variant?: 'landscape' | 'portrait' | 'compact';
 };
 
@@ -15,14 +19,20 @@ const imageClass = {
   portrait: 'h-full',
 };
 
-const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) => {
+const MediaCard = ({ darkMode, item, relatedContext, variant = 'landscape' }: MediaCardProps) => {
+  const location = useLocation();
   const duration = formatDuration(item.durationSeconds);
   const date = formatMediaDate(item.publishedAt);
   const href = getMediaWatchPath(item);
+  const state = {
+    from: `${location.pathname}${location.search}${location.hash}`,
+    ...relatedContextState(relatedContext),
+  };
 
   return (
-    <a
-      href={href}
+    <Link
+      to={href}
+      state={state}
       className="group block min-w-0"
     >
       <article className="grid gap-3">
@@ -73,7 +83,7 @@ const MediaCard = ({ darkMode, item, variant = 'landscape' }: MediaCardProps) =>
           </div>
         )}
       </article>
-    </a>
+    </Link>
   );
 };
 

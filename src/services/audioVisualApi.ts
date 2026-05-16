@@ -103,6 +103,7 @@ export const normalizeAudioVisualItem = (value: unknown): AudioVisualItem | null
     mediaType,
     mediaTypeLabel: readString(mediaTypeRecord, ['name', 'label'], mediaType),
     language: readString(record, ['language']),
+    musicSubcategory: readString(record, ['music_subcategory', 'musicSubcategory']),
     provider: readString(record, ['provider']),
     durationSeconds: readNumber(record, ['duration_seconds', 'durationSeconds']),
     publishedAt: readString(record, ['published_at', 'publishedAt']),

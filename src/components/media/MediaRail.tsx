@@ -2,6 +2,7 @@ import { ArrowDown, ArrowRight } from 'lucide-react';
 import LandingButton from '../landing/LandingButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import MediaCard from './MediaCard';
+import type { MediaWatchContext } from './mediaWatchContext';
 
 type MediaRailProps = {
   canLoadMore?: boolean;
@@ -11,6 +12,7 @@ type MediaRailProps = {
   loadingMore?: boolean;
   onLoadMore?: () => void;
   onViewMore?: () => void;
+  relatedContext?: MediaWatchContext;
   showHeader?: boolean;
   title: string;
   variant?: 'landscape' | 'portrait' | 'compact';
@@ -26,6 +28,7 @@ const MediaRail = ({
   loadingMore = false,
   onLoadMore,
   onViewMore,
+  relatedContext,
   showHeader = true,
   title,
   variant = 'landscape',
@@ -50,7 +53,7 @@ const MediaRail = ({
       <div className={gridClass}>
         {visibleItems.map((item) => (
           <div key={`${title}-${item.slug}`} className="min-w-0">
-            <MediaCard darkMode={darkMode} item={item} variant={variant} />
+            <MediaCard darkMode={darkMode} item={item} relatedContext={relatedContext} variant={variant} />
           </div>
         ))}
       </div>

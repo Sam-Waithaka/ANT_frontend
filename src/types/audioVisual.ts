@@ -17,6 +17,7 @@ export type AudioVisualItem = {
   mediaType: string;
   mediaTypeLabel: string;
   language?: string;
+  musicSubcategory?: string;
   provider?: string;
   durationSeconds?: number;
   publishedAt?: string;

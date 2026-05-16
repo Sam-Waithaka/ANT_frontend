@@ -7,14 +7,21 @@ import VideoMeta from '../components/media/watch/VideoMeta';
 import VideoPlayer, { prefetchVideoPlayer } from '../components/media/watch/VideoPlayer';
 import { parseScriptureReferences } from '../components/media/watch/mediaWatchUtils';
 import { getMediaWatchPath } from '../components/media/mediaLinks';
+import {
+  buildRelatedMediaQuery,
+  defaultRelatedOrdering,
+} from '../components/media/mediaWatchContext';
+import type { MediaWatchContext, RelatedMediaOrdering } from '../components/media/mediaWatchContext';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { useTheme } from '../hooks/useTheme';
 import {
-  fetchAudioVisualItems,
+  fetchAudioVisualItemPage,
   fetchAudioVisualWatchItem,
 } from '../services/audioVisualApi';
 import type { AudioVisualItem } from '../types/audioVisual';
+
+const RELATED_PAGE_SIZE = 10;
 
 const MediaWatchPage = () => {
   const { slug = '' } = useParams();
@@ -23,8 +30,14 @@ const MediaWatchPage = () => {
   const { darkMode, toggleTheme } = useTheme();
   const [item, setItem] = useState<AudioVisualItem | null>(null);
   const [relatedItems, setRelatedItems] = useState<AudioVisualItem[]>([]);
+  const [relatedCount, setRelatedCount] = useState(0);
+  const [relatedNext, setRelatedNext] = useState<string | null>(null);
+  const [relatedOrdering, setRelatedOrdering] = useState<RelatedMediaOrdering>('latest');
+  const [relatedPage, setRelatedPage] = useState(1);
+  const [relatedStatus, setRelatedStatus] = useState<'idle' | 'loading' | 'loading-more' | 'ready'>('idle');
   const [autoPlayNext, setAutoPlayNext] = useState(false);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const relatedContext = location.state?.relatedContext as MediaWatchContext | undefined;
 
   useEffect(() => {
     prefetchVideoPlayer();
@@ -36,6 +49,10 @@ const MediaWatchPage = () => {
     setStatus('loading');
     setItem(null);
     setRelatedItems([]);
+    setRelatedCount(0);
+    setRelatedNext(null);
+    setRelatedPage(1);
+    setRelatedStatus('idle');
 
     fetchAudioVisualWatchItem(slug, controller.signal)
       .then(async (mediaItem) => {
@@ -46,28 +63,7 @@ const MediaWatchPage = () => {
 
         setItem(mediaItem);
         setStatus('ready');
-
-        const isShort = mediaItem.mediaType.toLowerCase() === 'short';
-        const seriesSlug = mediaItem.series?.slug;
-        const categorySlug = mediaItem.categories[0]?.slug;
-        const related =
-          isShort
-            ? await fetchAudioVisualItems({ type: 'short', ordering: 'latest' }, controller.signal)
-            : seriesSlug
-            ? await fetchAudioVisualItems({ series: seriesSlug, ordering: 'latest' }, controller.signal)
-            : categorySlug
-              ? await fetchAudioVisualItems({ category: categorySlug, ordering: 'latest' }, controller.signal)
-              : await fetchAudioVisualItems({ type: mediaItem.mediaType, ordering: 'latest' }, controller.signal);
-
-        const filteredRelated = related.filter((candidate) => candidate.slug !== mediaItem.slug).slice(0, 10);
-
-        if (filteredRelated.length > 0) {
-          setRelatedItems(filteredRelated);
-          return;
-        }
-
-        const fallbackRelated = await fetchAudioVisualItems({ ordering: 'latest' }, controller.signal);
-        setRelatedItems(fallbackRelated.filter((candidate) => candidate.slug !== mediaItem.slug).slice(0, 10));
+        setRelatedOrdering(defaultRelatedOrdering(mediaItem, relatedContext));
       })
       .catch(() => {
         if (!controller.signal.aborted) {
@@ -76,13 +72,70 @@ const MediaWatchPage = () => {
       });
 
     return () => controller.abort();
-  }, [slug]);
+  }, [relatedContext, slug]);
+
+  useEffect(() => {
+    if (!item) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const query = buildRelatedMediaQuery(item, relatedOrdering, relatedContext);
+
+    setRelatedStatus('loading');
+    setRelatedItems([]);
+    setRelatedCount(0);
+    setRelatedNext(null);
+    setRelatedPage(1);
+
+    fetchAudioVisualItemPage({ ...query, page: 1, pageSize: RELATED_PAGE_SIZE }, controller.signal)
+      .then((page) => {
+        if (controller.signal.aborted) return;
+
+        setRelatedItems(page.items.filter((candidate) => candidate.slug !== item.slug));
+        setRelatedCount(page.count);
+        setRelatedNext(page.next);
+        setRelatedStatus('ready');
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setRelatedStatus('ready');
+        }
+      });
+
+    return () => controller.abort();
+  }, [item, relatedContext, relatedOrdering]);
 
   const scriptureReferences = useMemo(() => parseScriptureReferences(item?.scriptureReference), [item?.scriptureReference]);
   const isShort = item?.mediaType.toLowerCase() === 'short';
   const isSermon = item?.mediaType.toLowerCase() === 'sermon';
   const showScriptureBesideMeta = Boolean(isSermon && scriptureReferences.length > 0);
   const nextShort = isShort ? relatedItems.find((candidate) => candidate.mediaType.toLowerCase() === 'short') : undefined;
+  const canLoadMoreRelated = Boolean(relatedNext) || relatedCount > relatedItems.length + (item ? 1 : 0);
+
+  const handleRelatedLoadMore = () => {
+    if (!item || relatedStatus === 'loading-more') {
+      return;
+    }
+
+    const nextPage = relatedPage + 1;
+    const controller = new AbortController();
+    const query = buildRelatedMediaQuery(item, relatedOrdering, relatedContext);
+
+    setRelatedStatus('loading-more');
+    fetchAudioVisualItemPage({ ...query, page: nextPage, pageSize: RELATED_PAGE_SIZE }, controller.signal)
+      .then((page) => {
+        const seen = new Set(relatedItems.map((candidate) => candidate.slug));
+        const nextItems = page.items.filter((candidate) => candidate.slug !== item.slug && !seen.has(candidate.slug));
+
+        setRelatedItems((current) => [...current, ...nextItems]);
+        setRelatedCount(page.count);
+        setRelatedNext(page.next);
+        setRelatedPage(nextPage);
+        setRelatedStatus('ready');
+      })
+      .catch(() => setRelatedStatus('ready'));
+  };
 
   const handlePlayerEnded = () => {
     if (!isShort || !nextShort) {
@@ -191,7 +244,15 @@ const MediaWatchPage = () => {
                 </>
               )}
 
-              <RelatedMediaRow darkMode={darkMode} items={relatedItems} />
+              <RelatedMediaRow
+                canLoadMore={canLoadMoreRelated}
+                darkMode={darkMode}
+                items={relatedItems}
+                loadingMore={relatedStatus === 'loading-more'}
+                ordering={relatedOrdering}
+                onLoadMore={handleRelatedLoadMore}
+                onOrderingChange={setRelatedOrdering}
+              />
             </div>
           )}
         </div>

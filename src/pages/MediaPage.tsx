@@ -549,6 +549,7 @@ const MediaPage = () => {
                   initialVisibleItems={resolvedPreviewCounts.sermons}
                   title="Latest Sermons"
                   items={rails.latestSermons.items}
+                  relatedContext={{ type: 'sermon' }}
                   onViewMore={() => setActiveTab('sermons')}
                 />
                 <MediaRail
@@ -556,6 +557,7 @@ const MediaPage = () => {
                   initialVisibleItems={resolvedPreviewCounts.music}
                   title="Music"
                   items={rails.music.items}
+                  relatedContext={{ label: 'Music', type: 'music' }}
                   onViewMore={() => setActiveTab('music')}
                 />
                 {rails.teachings.items.length > 0 && (
@@ -564,6 +566,7 @@ const MediaPage = () => {
                     initialVisibleItems={resolvedPreviewCounts.sermons}
                     title="Teachings"
                     items={rails.teachings.items}
+                    relatedContext={{ type: 'teaching' }}
                     onViewMore={() => setActiveTab('teachings')}
                   />
                 )}
@@ -572,6 +575,7 @@ const MediaPage = () => {
                   initialVisibleItems={resolvedPreviewCounts.livestreams}
                   title="Livestreams"
                   items={rails.livestreams.items.slice(0, resolvedPreviewCounts.livestreams)}
+                  relatedContext={{ type: 'livestream' }}
                   onViewMore={() => setActiveTab('livestreams')}
                 />
                 <MediaRail
@@ -579,6 +583,7 @@ const MediaPage = () => {
                   initialVisibleItems={resolvedPreviewCounts.shorts}
                   title="Shorts & Highlights"
                   items={rails.shorts.items}
+                  relatedContext={{ type: 'short' }}
                   variant="portrait"
                   onViewMore={() => setActiveTab('shorts')}
                 />
@@ -590,6 +595,7 @@ const MediaPage = () => {
                 darkMode={darkMode}
                 items={tabItems('shorts', rails.shorts.items)}
                 loadingMore={pagedMedia.shorts.status === 'loading'}
+                relatedContext={{ type: 'short' }}
                 title="Shorts & Highlights"
                 variant="portrait"
                 onLoadMore={() => handleLoadMore('shorts')}
@@ -601,6 +607,7 @@ const MediaPage = () => {
                 darkMode={darkMode}
                 items={tabItems('sermons', rails.latestSermons.items)}
                 loadingMore={pagedMedia.sermons.status === 'loading'}
+                relatedContext={{ type: 'sermon' }}
                 title="Sermons"
                 onLoadMore={() => handleLoadMore('sermons')}
               />
@@ -611,6 +618,7 @@ const MediaPage = () => {
                 darkMode={darkMode}
                 items={tabItems('featured', rails.featured.items)}
                 loadingMore={pagedMedia.featured.status === 'loading'}
+                relatedContext={{ type: 'sermon' }}
                 title="Featured"
                 onLoadMore={() => handleLoadMore('featured')}
               />
@@ -621,6 +629,7 @@ const MediaPage = () => {
                 darkMode={darkMode}
                 items={tabItems('teachings', rails.teachings.items)}
                 loadingMore={pagedMedia.teachings.status === 'loading'}
+                relatedContext={{ type: 'teaching' }}
                 title="Teachings"
                 onLoadMore={() => handleLoadMore('teachings')}
               />
@@ -642,6 +651,7 @@ const MediaPage = () => {
                 darkMode={darkMode}
                 items={tabItems('livestreams', rails.livestreams.items)}
                 loadingMore={pagedMedia.livestreams.status === 'loading'}
+                relatedContext={{ type: 'livestream' }}
                 title="Livestreams"
                 onLoadMore={() => handleLoadMore('livestreams')}
               />
@@ -663,6 +673,11 @@ const MediaPage = () => {
                   darkMode={darkMode}
                   items={musicTabItems}
                   loadingMore={activeMusicState.status === 'loading'}
+                  relatedContext={{
+                    label: activeMusicTitle,
+                    type: 'music',
+                    ...(activeMusicSubcategory === 'all' ? {} : { musicSubcategory: activeMusicSubcategory }),
+                  }}
                   showHeader={false}
                   title={activeMusicTitle}
                   onLoadMore={handleMusicLoadMore}
@@ -682,6 +697,7 @@ const MediaPage = () => {
                 darkMode={darkMode}
                 items={tabItems('explore', rails.explore.items)}
                 loadingMore={pagedMedia.explore.status === 'loading'}
+                relatedContext={{ type: 'other' }}
                 title="Explore Media"
                 onLoadMore={() => handleLoadMore('explore')}
               />
