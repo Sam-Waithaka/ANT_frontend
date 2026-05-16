@@ -5,7 +5,7 @@ import ContactPage from './pages/ContactPage';
 import GivePage from './pages/GivePage';
 import LandingPage from './pages/LandingPage';
 import MediaPage from './pages/MediaPage';
-import MediaWatchPage from './pages/MediaWatchPage';
+import MediaWatchPage from './components/media/watch/MediaWatchPage';
 import MinistriesPage from './pages/MinistriesPage';
 import Project52Page from './pages/Project52Page';
 import ScripturePage from './pages/ScripturePage';
