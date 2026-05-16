@@ -9,7 +9,7 @@ import type { MediaWatchContext, RelatedMediaOrdering } from '../mediaWatchConte
 import {
   autoplayModeForItem,
   resolveAutoplayDecision,
-  shouldDefaultAutoplay,
+  shouldEnableAutoplayOnLoad,
 } from './mediaAutoplay';
 import { parseScriptureReferences } from './mediaWatchUtils';
 import { prefetchVideoPlayer } from './VideoPlayer';
@@ -78,7 +78,7 @@ export const useMediaWatchController = () => {
         setItem(mediaItem);
         setStatus('ready');
         setRelatedOrdering(defaultRelatedOrdering(mediaItem, relatedContext));
-        setAutoplayEnabled(shouldDefaultAutoplay(mediaItem, relatedContext));
+        setAutoplayEnabled(shouldEnableAutoplayOnLoad(mediaItem, relatedContext, shouldAutoplayCurrent));
       })
       .catch(() => {
         if (!controller.signal.aborted) {

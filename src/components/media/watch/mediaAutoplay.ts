@@ -22,6 +22,12 @@ export const shouldDefaultAutoplay = (item: AudioVisualItem | null, context?: Me
   return mode === 'shorts' || mode === 'series';
 };
 
+export const shouldEnableAutoplayOnLoad = (
+  item: AudioVisualItem | null,
+  context: MediaWatchContext | undefined,
+  requestedByAutoplay: boolean
+) => requestedByAutoplay || shouldDefaultAutoplay(item, context);
+
 export const autoplayLimitReached = (mode: AutoplayMode, startedAt: number, count: number, now = Date.now()) => {
   const elapsedMinutes = (now - startedAt) / 60000;
 

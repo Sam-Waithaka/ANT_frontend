@@ -6,6 +6,7 @@ import {
   resolveAutoplayDecision,
   selectNextAutoplayItem,
   shouldDefaultAutoplay,
+  shouldEnableAutoplayOnLoad,
 } from '../../src/components/media/watch/mediaAutoplay';
 import type { AudioVisualItem } from '../../src/types/audioVisual';
 
@@ -120,6 +121,13 @@ describe('media autoplay', () => {
     expect(shouldDefaultAutoplay(item(1, { series: { name: 'Dying Well', slug: 'dying-well' } }))).toBe(true);
     expect(shouldDefaultAutoplay(item(1, { mediaType: 'music' }))).toBe(false);
     expect(shouldDefaultAutoplay(item(1, { mediaType: 'sermon' }))).toBe(false);
+  });
+
+  it('keeps music autoplay enabled across autoplay-driven route changes', () => {
+    const musicItem = item(1, { mediaType: 'music', mediaTypeLabel: 'Music' });
+
+    expect(shouldEnableAutoplayOnLoad(musicItem, { type: 'music' }, false)).toBe(false);
+    expect(shouldEnableAutoplayOnLoad(musicItem, { type: 'music' }, true)).toBe(true);
   });
 
   it('uses the source context to detect music and series queues', () => {
