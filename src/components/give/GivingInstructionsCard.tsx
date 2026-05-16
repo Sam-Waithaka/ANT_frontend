@@ -1,5 +1,6 @@
 import { Check, Copy } from 'lucide-react';
 import { useState } from 'react';
+import { copyToClipboard } from '../../utils/copyToClipboard';
 
 type GivingInstructionsCardProps = {
   darkMode: boolean;
@@ -12,10 +13,13 @@ const accountReasons = ['Tithe', 'Thanksgiving', 'Missions', 'Mercy Ministry', '
 const GivingInstructionsCard = ({ darkMode }: GivingInstructionsCardProps) => {
   const [copiedValue, setCopiedValue] = useState('');
 
-  const copyToClipboard = async (value: string) => {
-    await navigator.clipboard?.writeText(value);
-    setCopiedValue(value);
-    window.setTimeout(() => setCopiedValue(''), 1800);
+  const handleCopy = async (value: string) => {
+    const copied = await copyToClipboard(value);
+
+    if (copied) {
+      setCopiedValue(value);
+      window.setTimeout(() => setCopiedValue(''), 1800);
+    }
   };
 
   return (
@@ -59,7 +63,7 @@ const GivingInstructionsCard = ({ darkMode }: GivingInstructionsCardProps) => {
                     <p className="text-4xl font-black leading-none tracking-normal sm:text-5xl">{businessNumber}</p>
                     <button
                       type="button"
-                      onClick={() => copyToClipboard(businessNumber)}
+                      onClick={() => handleCopy(businessNumber)}
                       className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-black transition focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
                         darkMode
                           ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-zinc-950 hover:bg-white/15'

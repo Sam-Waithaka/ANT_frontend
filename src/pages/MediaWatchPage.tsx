@@ -20,6 +20,7 @@ import {
   fetchAudioVisualWatchItem,
 } from '../services/audioVisualApi';
 import type { AudioVisualItem } from '../types/audioVisual';
+import { copyToClipboard } from '../utils/copyToClipboard';
 
 const RELATED_PAGE_SIZE = 10;
 
@@ -181,16 +182,12 @@ const MediaWatchPage = () => {
       }
     }
 
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl);
-      }
-    } catch {
-      // The visible URL is already shareable; keep the UI calm if clipboard permissions are blocked.
-    }
+    const copied = await copyToClipboard(shareUrl);
 
-    setShareStatus('copied');
-    window.setTimeout(() => setShareStatus('idle'), 2200);
+    if (copied) {
+      setShareStatus('copied');
+      window.setTimeout(() => setShareStatus('idle'), 2200);
+    }
   };
 
   return (
