@@ -74,7 +74,7 @@ const PrimaryMediaCard = ({ darkMode, item }: { darkMode: boolean; item: AudioVi
       <article
         className={`relative min-h-[30rem] overflow-hidden rounded-[1.75rem] border shadow-2xl transition duration-300 hover:-translate-y-1 sm:min-h-[28rem] ${
           darkMode
-            ? 'border-white/10 bg-black shadow-red-950/25 hover:border-red-400/30'
+            ? 'border-red-100/15 bg-black shadow-red-950/35 hover:border-red-200/30'
             : 'border-black/10 bg-zinc-950 shadow-zinc-900/20 hover:border-red-800/25'
         }`}
       >
@@ -138,12 +138,16 @@ const PrimaryMediaCard = ({ darkMode, item }: { darkMode: boolean; item: AudioVi
   );
 };
 
-const ContinueCard = ({ item }: { item: AudioVisualItem }) => {
+const ContinueCard = ({ darkMode, item }: { darkMode: boolean; item: AudioVisualItem }) => {
   const duration = formatDuration(item.durationSeconds);
 
   return (
     <Link to={getMediaWatchPath(item)} className="group block">
-      <article className="relative min-h-44 overflow-hidden rounded-2xl bg-black text-white shadow-xl shadow-black/10 transition duration-300 hover:-translate-y-1">
+      <article
+        className={`relative min-h-44 overflow-hidden rounded-2xl border bg-black text-white shadow-xl transition duration-300 hover:-translate-y-1 ${
+          darkMode ? 'border-white/[0.12] shadow-black/35 hover:border-red-200/25' : 'border-black/10 shadow-black/10'
+        }`}
+      >
         {item.thumbnailUrl ? (
           <img
             src={item.thumbnailUrl}
@@ -261,20 +265,20 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
       <div
         className={`mx-auto w-full max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[2rem] border shadow-2xl sm:max-w-[calc(100vw-2rem)] lg:max-w-[calc(100vw-2.5rem)] ${
           darkMode
-            ? 'border-white/10 bg-gradient-to-br from-zinc-950 via-[#120305] to-black shadow-black/35'
+            ? 'border-red-200/15 bg-[radial-gradient(circle_at_78%_8%,rgba(185,28,28,0.20),transparent_30%),linear-gradient(135deg,#17100f_0%,#1a0508_42%,#070707_100%)] shadow-black/45'
             : 'border-red-950/10 bg-gradient-to-br from-white via-[#fbf7f0] to-[#eee8df] shadow-zinc-900/10'
         }`}
       >
         <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[0.38fr_0.62fr] lg:p-12 xl:grid-cols-[0.36fr_0.64fr]">
           <div className="flex flex-col justify-center gap-7">
-            <p className={`text-xs font-black uppercase tracking-[0.24em] ${darkMode ? 'text-red-200' : 'text-red-800'}`}>
+            <p className={`text-xs font-black uppercase tracking-[0.24em] ${darkMode ? 'text-red-100' : 'text-red-800'}`}>
               Latest From Media
             </p>
             <div className="hidden sm:block">
               <h2 className={`max-w-lg text-5xl font-extrabold leading-tight lg:text-6xl ${darkMode ? 'text-white' : 'text-zinc-950'}`}>
                 Stay nourished beyond Sunday.
               </h2>
-              <p className={`mt-6 max-w-md text-base leading-7 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
+              <p className={`mt-6 max-w-md text-base leading-7 ${darkMode ? 'text-stone-200' : 'text-zinc-700'}`}>
                 Watch, listen, and return to messages that keep God&apos;s Word close through the week.
               </p>
             </div>
@@ -288,15 +292,6 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
               </LandingButton>
             </div>
 
-            <div className="hidden items-center gap-4 sm:flex">
-              <span className={`grid size-14 place-items-center rounded-full ${darkMode ? 'bg-red-950/75 text-red-100' : 'bg-red-50 text-red-800'}`}>
-                <BookOpen size={24} aria-hidden="true" />
-              </span>
-              <div>
-                <p className={`text-sm font-black ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Rooted in Scripture.</p>
-                <p className={`mt-1 text-sm ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>Centered on truth. Led by the Spirit.</p>
-              </div>
-            </div>
           </div>
 
           <div className="grid gap-7">
@@ -324,7 +319,7 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
                   </div>
                   <Link
                     to="/media"
-                    className={`inline-flex items-center gap-2 text-sm font-black transition hover:translate-x-1 ${darkMode ? 'text-red-100' : 'text-red-800'}`}
+                    className={`inline-flex items-center gap-2 text-sm font-black transition hover:translate-x-1 ${darkMode ? 'text-red-50' : 'text-red-800'}`}
                   >
                     View All
                     <ArrowRight size={18} aria-hidden="true" />
@@ -332,7 +327,7 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   {supporting.map((item) => (
-                    <ContinueCard key={itemKey(item)} item={item} />
+                    <ContinueCard key={itemKey(item)} darkMode={darkMode} item={item} />
                   ))}
                 </div>
               </div>
@@ -347,15 +342,6 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
               <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to="/media" variant="secondary">
                 Explore Library
               </LandingButton>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className={`grid size-12 place-items-center rounded-full ${darkMode ? 'bg-red-950/75 text-red-100' : 'bg-red-50 text-red-800'}`}>
-                <BookOpen size={22} aria-hidden="true" />
-              </span>
-              <div>
-                <p className={`text-sm font-black ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Rooted in Scripture.</p>
-                <p className={`mt-1 text-xs ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>Centered on truth. Led by the Spirit.</p>
-              </div>
             </div>
           </div>
         </div>
@@ -381,7 +367,7 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               {supporting.map((item) => (
-                <ContinueCard key={itemKey(item)} item={item} />
+                <ContinueCard key={itemKey(item)} darkMode={darkMode} item={item} />
               ))}
             </div>
           </div>

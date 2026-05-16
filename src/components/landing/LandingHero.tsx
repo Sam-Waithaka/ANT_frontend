@@ -1,6 +1,15 @@
+import { useEffect, useState } from 'react';
 import { assetPaths } from '../../constants/assets';
 import { useProject52 } from '../../contexts/Project52Context';
 import { useOpenProject52Reading } from '../../hooks/useOpenProject52Reading';
+import {
+  fetchAudioVisualHome,
+  fetchLatestSermon,
+  fetchLiveAudioVisualCta,
+} from '../../services/audioVisualApi';
+import type { AudioVisualItem } from '../../types/audioVisual';
+import { selectMediaHeroItem } from '../media/mediaHeroSelection';
+import { getMediaWatchPath } from '../media/mediaLinks';
 import LandingButton from './LandingButton';
 import { heroCtas } from './landingContent';
 import { landingContainer } from './LandingSection';
@@ -17,11 +26,42 @@ const overlayClass = (darkMode: boolean) =>
 const LandingHero = ({ darkMode }: LandingHeroProps) => {
   const { currentWeek, readingTarget, weeks } = useProject52();
   const openProject52Reading = useOpenProject52Reading();
+  const [heroMediaItem, setHeroMediaItem] = useState<AudioVisualItem | null>(null);
   const activeWeek = weeks.find((week) => week.week === currentWeek);
   const highlightedDay = activeWeek?.items[readingTarget.dayIndex];
   const openHighlightedNewTestamentReading = () => {
     openProject52Reading(highlightedDay?.newTestament || []);
   };
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadHeroMedia = async () => {
+      const [homeResult, liveResult, latestSermonResult] = await Promise.allSettled([
+        fetchAudioVisualHome(controller.signal),
+        fetchLiveAudioVisualCta(controller.signal),
+        fetchLatestSermon(controller.signal),
+      ]);
+
+      const latestSermon = latestSermonResult.status === 'fulfilled' ? latestSermonResult.value : null;
+
+      if (controller.signal.aborted) return;
+
+      if (homeResult.status !== 'fulfilled') {
+        setHeroMediaItem(latestSermon);
+        return;
+      }
+
+      const live = liveResult.status === 'fulfilled' ? liveResult.value : homeResult.value.live;
+      const home = { ...homeResult.value, live };
+
+      setHeroMediaItem(selectMediaHeroItem({ home, latestSermon, useFallback: false }));
+    };
+
+    void loadHeroMedia();
+
+    return () => controller.abort();
+  }, []);
 
   return (
     <section className={`relative isolate overflow-hidden px-4 py-20 sm:px-6 sm:py-24 lg:py-32 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
@@ -77,6 +117,17 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => {
               </LandingButton>
             );
           })}
+          {heroMediaItem && (
+            <span className="self-center sm:self-auto">
+              <LandingButton
+                darkMode={darkMode}
+                to={getMediaWatchPath(heroMediaItem)}
+                variant="tertiary"
+              >
+                Watch Now
+              </LandingButton>
+            </span>
+          )}
         </div>
       </div>
     </div>
