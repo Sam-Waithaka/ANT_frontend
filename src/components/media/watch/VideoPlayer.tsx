@@ -15,10 +15,12 @@ type VideoPlayerProps = {
   isShort?: boolean;
   item: AudioVisualItem;
   onEnded?: () => void;
+  pausePlayback?: boolean;
 };
 
-const VideoPlayer = ({ autoPlay = false, darkMode, isShort = false, item, onEnded }: VideoPlayerProps) => {
+const VideoPlayer = ({ autoPlay = false, darkMode, isShort = false, item, onEnded, pausePlayback = false }: VideoPlayerProps) => {
   const url = getPlayableMediaUrl(item);
+  const playing = pausePlayback ? false : autoPlay ? true : undefined;
 
   return (
     <section className={`relative ${isShort ? 'mx-auto w-full max-w-[30rem]' : ''}`}>
@@ -40,7 +42,7 @@ const VideoPlayer = ({ autoPlay = false, darkMode, isShort = false, item, onEnde
                 height="100%"
                 light={autoPlay ? false : item.thumbnailUrl || false}
                 onEnded={onEnded}
-                playing={autoPlay ? true : undefined}
+                playing={playing}
                 src={url}
                 width="100%"
               />

@@ -92,6 +92,7 @@ const MediaWatchPage = () => {
   const [autoplayStartedAt, setAutoplayStartedAt] = useState(0);
   const [countdown, setCountdown] = useState(0);
   const [pendingNextItem, setPendingNextItem] = useState<AudioVisualItem | null>(null);
+  const [pauseEndedPlayback, setPauseEndedPlayback] = useState(false);
   const [showStillWatching, setShowStillWatching] = useState(false);
   const [shareStatus, setShareStatus] = useState<'copied' | 'idle'>('idle');
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -116,6 +117,7 @@ const MediaWatchPage = () => {
     setAutoPlayNext(shouldAutoplayCurrent);
     setCountdown(0);
     setPendingNextItem(null);
+    setPauseEndedPlayback(false);
     setShowStillWatching(false);
 
     fetchAudioVisualWatchItem(slug, controller.signal)
@@ -234,6 +236,7 @@ const MediaWatchPage = () => {
     setAutoplayCount((count) => count + 1);
     setCountdown(0);
     setPendingNextItem(null);
+    setPauseEndedPlayback(false);
     setShowStillWatching(false);
     navigate(getMediaWatchPath(nextItem), {
       state: {
@@ -252,11 +255,13 @@ const MediaWatchPage = () => {
 
     setCountdown(0);
     setPendingNextItem(null);
+    setPauseEndedPlayback(false);
   };
 
   const beginAutoplayCountdown = (nextItem: AudioVisualItem) => {
     cancelAutoplayCountdown();
     setPendingNextItem(nextItem);
+    setPauseEndedPlayback(true);
     setCountdown(UP_NEXT_SECONDS);
 
     countdownTimerRef.current = window.setInterval(() => {
@@ -282,6 +287,7 @@ const MediaWatchPage = () => {
 
     if (autoplayLimitReached(autoplayMode, autoplayStartedAt || Date.now(), autoplayCount)) {
       setPendingNextItem(nextRelatedItem);
+      setPauseEndedPlayback(true);
       setShowStillWatching(true);
       return;
     }
@@ -377,7 +383,14 @@ const MediaWatchPage = () => {
 
           {item && (
             <div className="grid gap-10">
-              <VideoPlayer autoPlay={autoPlayNext} darkMode={darkMode} isShort={isShort} item={item} onEnded={handlePlayerEnded} />
+              <VideoPlayer
+                autoPlay={autoPlayNext}
+                darkMode={darkMode}
+                isShort={isShort}
+                item={item}
+                onEnded={handlePlayerEnded}
+                pausePlayback={pauseEndedPlayback}
+              />
               <section
                 className={`rounded-3xl border p-4 shadow-xl ${
                   darkMode ? 'border-white/10 bg-white/[0.05] shadow-black/20' : 'border-black/10 bg-white/80 shadow-zinc-900/10'
@@ -442,6 +455,7 @@ const MediaWatchPage = () => {
                         onClick={() => {
                           setAutoplayCount(0);
                           setAutoplayStartedAt(Date.now());
+                          setPauseEndedPlayback(false);
                           playNextItem(pendingNextItem);
                         }}
                         className="inline-flex min-h-10 items-center rounded-full bg-red-800 px-4 text-sm font-black text-white hover:bg-red-700"
@@ -452,6 +466,7 @@ const MediaWatchPage = () => {
                         type="button"
                         onClick={() => {
                           setAutoplayEnabled(false);
+                          setPauseEndedPlayback(false);
                           setShowStillWatching(false);
                           setPendingNextItem(null);
                         }}
