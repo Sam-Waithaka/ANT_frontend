@@ -66,6 +66,7 @@ const RelatedMediaRow = ({
       items={items}
       loadingMore={loadingMore}
       title="Related"
+      variant={items.every((item) => item.mediaType.toLowerCase() === 'short') ? 'portrait' : 'landscape'}
       onLoadMore={onLoadMore}
     />
   </section>
