@@ -536,15 +536,6 @@ const MediaPage = () => {
             {activeTab === 'all' && (
               <>
                 <MediaFeatured darkMode={darkMode} items={rails.featured.items} onViewMore={() => setActiveTab('featured')} />
-                {rails.teachings.items.length > 0 && (
-                  <MediaRail
-                    darkMode={darkMode}
-                    initialVisibleItems={resolvedPreviewCounts.sermons}
-                    title="Teachings"
-                    items={rails.teachings.items}
-                    onViewMore={() => setActiveTab('teachings')}
-                  />
-                )}
                 <MediaSeriesRail
                   darkMode={darkMode}
                   items={sermonSeries}
@@ -566,6 +557,15 @@ const MediaPage = () => {
                   items={rails.music.items}
                   onViewMore={() => setActiveTab('music')}
                 />
+                {rails.teachings.items.length > 0 && (
+                  <MediaRail
+                    darkMode={darkMode}
+                    initialVisibleItems={resolvedPreviewCounts.sermons}
+                    title="Teachings"
+                    items={rails.teachings.items}
+                    onViewMore={() => setActiveTab('teachings')}
+                  />
+                )}
                 <MediaRail
                   darkMode={darkMode}
                   initialVisibleItems={resolvedPreviewCounts.livestreams}

@@ -220,16 +220,14 @@ const MediaMobileCollections = ({
         </div>
       )}
 
-      <div className={`fixed inset-x-0 bottom-0 z-40 border-t px-4 py-3 backdrop-blur-xl transition duration-300 lg:hidden ${
+      <div className={`fixed inset-x-0 bottom-0 z-40 px-4 py-3 transition duration-300 lg:hidden ${
         dockHidden ? 'invisible pointer-events-none translate-y-full opacity-0' : 'visible translate-y-0 opacity-100'
       }`}>
-        <div className={`mx-auto flex max-w-md items-center gap-2 rounded-2xl border p-2 shadow-2xl ${
-          darkMode ? 'border-white/10 bg-black/70 shadow-black/40' : 'border-black/10 bg-white/90 shadow-zinc-900/15'
-        }`}>
+        <div className="mx-auto flex max-w-md items-center gap-2">
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-red-800 px-4 text-sm font-black text-white shadow-lg shadow-red-950/25"
+            className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-red-800 px-4 text-sm font-black text-white shadow-2xl shadow-red-950/30 transition hover:-translate-y-0.5 hover:bg-red-700"
           >
             <Layers size={18} />
             Collections
