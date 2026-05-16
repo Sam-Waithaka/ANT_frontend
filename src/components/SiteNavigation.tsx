@@ -10,7 +10,6 @@ import {
   Moon,
   Phone,
   PlayCircle,
-  Radio,
   Settings,
   Sun,
   Users,
@@ -82,10 +81,7 @@ const mobileNavSections: { title: string; items: SiteNavItem[] }[] = [
   },
   {
     title: 'Actions',
-    items: [
-      giveNavItem,
-      { label: 'Watch Live', href: '/media', icon: Radio },
-    ],
+    items: [giveNavItem],
   },
 ];
 
