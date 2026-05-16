@@ -5,6 +5,11 @@ import RelatedMediaRow from '../components/media/watch/RelatedMediaRow';
 import ScriptureReferenceCard from '../components/media/watch/ScriptureReferenceCard';
 import VideoMeta from '../components/media/watch/VideoMeta';
 import VideoPlayer, { prefetchVideoPlayer } from '../components/media/watch/VideoPlayer';
+import {
+  autoplayModeForItem,
+  resolveAutoplayDecision,
+  shouldDefaultAutoplay,
+} from '../components/media/watch/mediaAutoplay';
 import { parseScriptureReferences } from '../components/media/watch/mediaWatchUtils';
 import { getMediaWatchPath } from '../components/media/mediaLinks';
 import {
@@ -24,55 +29,6 @@ import { copyToClipboard } from '../utils/copyToClipboard';
 
 const RELATED_PAGE_SIZE = 10;
 const UP_NEXT_SECONDS = 3;
-
-type AutoplayMode = 'general' | 'music' | 'series' | 'shorts';
-
-const autoplayModeForItem = (item: AudioVisualItem | null, context?: MediaWatchContext): AutoplayMode => {
-  if (item?.mediaType.toLowerCase() === 'short') return 'shorts';
-  if (context?.series || item?.series?.slug) return 'series';
-  if (context?.type?.toLowerCase() === 'music' || item?.mediaType.toLowerCase() === 'music') return 'music';
-  return 'general';
-};
-
-const shouldDefaultAutoplay = (item: AudioVisualItem | null, context?: MediaWatchContext) => {
-  const mode = autoplayModeForItem(item, context);
-  return mode === 'shorts' || mode === 'series';
-};
-
-const autoplayLimitReached = (mode: AutoplayMode, startedAt: number, count: number) => {
-  const elapsedMinutes = (Date.now() - startedAt) / 60000;
-
-  if (mode === 'shorts') return count >= 20 || elapsedMinutes >= 30;
-  if (mode === 'series') return count >= 3 || elapsedMinutes >= 180;
-  if (mode === 'music') return elapsedMinutes >= 90;
-  return count >= 5 || elapsedMinutes >= 120;
-};
-
-const mediaTime = (item?: AudioVisualItem | null) => {
-  const time = item?.publishedAt ? new Date(item.publishedAt).getTime() : Number.NaN;
-  return Number.isFinite(time) ? time : 0;
-};
-
-const selectNextRelatedItem = (
-  current: AudioVisualItem | null,
-  relatedItems: AudioVisualItem[],
-  ordering: RelatedMediaOrdering
-) => {
-  if (!current) return relatedItems[0];
-  const currentTime = mediaTime(current);
-
-  if (currentTime) {
-    const directionalNext = relatedItems.find((candidate) => {
-      const candidateTime = mediaTime(candidate);
-      if (!candidateTime) return false;
-      return ordering === 'oldest' ? candidateTime > currentTime : candidateTime < currentTime;
-    });
-
-    if (directionalNext) return directionalNext;
-  }
-
-  return relatedItems[0];
-};
 
 const MediaWatchPage = () => {
   const { slug = '' } = useParams();
@@ -199,31 +155,36 @@ const MediaWatchPage = () => {
   const isSermon = item?.mediaType.toLowerCase() === 'sermon';
   const showScriptureBesideMeta = Boolean(isSermon && scriptureReferences.length > 0);
   const autoplayMode = autoplayModeForItem(item, relatedContext);
-  const nextRelatedItem = selectNextRelatedItem(item, relatedItems, relatedOrdering);
   const canLoadMoreRelated = Boolean(relatedNext) || relatedCount > relatedItems.length + (item ? 1 : 0);
+
+  const loadRelatedPage = async (nextPage: number, currentItems = relatedItems) => {
+    if (!item) {
+      return { count: relatedCount, items: currentItems, next: relatedNext };
+    }
+
+    const query = buildRelatedMediaQuery(item, relatedOrdering, relatedContext);
+
+    setRelatedStatus('loading-more');
+    const page = await fetchAudioVisualItemPage({ ...query, page: nextPage, pageSize: RELATED_PAGE_SIZE });
+    const seen = new Set(currentItems.map((candidate) => candidate.slug));
+    const nextItems = page.items.filter((candidate) => candidate.slug !== item.slug && !seen.has(candidate.slug));
+    const mergedItems = [...currentItems, ...nextItems];
+
+    setRelatedItems(mergedItems);
+    setRelatedCount(page.count);
+    setRelatedNext(page.next);
+    setRelatedPage(nextPage);
+    setRelatedStatus('ready');
+
+    return { count: page.count, items: mergedItems, next: page.next };
+  };
 
   const handleRelatedLoadMore = () => {
     if (!item || relatedStatus === 'loading-more') {
       return;
     }
 
-    const nextPage = relatedPage + 1;
-    const controller = new AbortController();
-    const query = buildRelatedMediaQuery(item, relatedOrdering, relatedContext);
-
-    setRelatedStatus('loading-more');
-    fetchAudioVisualItemPage({ ...query, page: nextPage, pageSize: RELATED_PAGE_SIZE }, controller.signal)
-      .then((page) => {
-        const seen = new Set(relatedItems.map((candidate) => candidate.slug));
-        const nextItems = page.items.filter((candidate) => candidate.slug !== item.slug && !seen.has(candidate.slug));
-
-        setRelatedItems((current) => [...current, ...nextItems]);
-        setRelatedCount(page.count);
-        setRelatedNext(page.next);
-        setRelatedPage(nextPage);
-        setRelatedStatus('ready');
-      })
-      .catch(() => setRelatedStatus('ready'));
+    loadRelatedPage(relatedPage + 1).catch(() => setRelatedStatus('ready'));
   };
 
   const playNextItem = (nextItem: AudioVisualItem) => {
@@ -281,18 +242,55 @@ const MediaWatchPage = () => {
   };
 
   const handlePlayerEnded = () => {
-    if (!autoplayEnabled || !nextRelatedItem) {
+    if (!autoplayEnabled || !item || relatedStatus === 'loading-more') {
       return;
     }
 
-    if (autoplayLimitReached(autoplayMode, autoplayStartedAt || Date.now(), autoplayCount)) {
-      setPendingNextItem(nextRelatedItem);
-      setPauseEndedPlayback(true);
-      setShowStillWatching(true);
-      return;
-    }
+    const handleDecision = async () => {
+      const allowWrap = Boolean(isShort);
+      let decision = resolveAutoplayDecision({
+        allowWrap,
+        count: autoplayCount,
+        current: item,
+        hasMore: canLoadMoreRelated,
+        mode: autoplayMode,
+        ordering: relatedOrdering,
+        relatedItems,
+        startedAt: autoplayStartedAt || Date.now(),
+      });
 
-    beginAutoplayCountdown(nextRelatedItem);
+      if (decision.type === 'load-more') {
+        try {
+          const loaded = await loadRelatedPage(relatedPage + 1);
+          decision = resolveAutoplayDecision({
+            allowWrap,
+            count: autoplayCount,
+            current: item,
+            hasMore: Boolean(loaded.next) || loaded.count > loaded.items.length + 1,
+            mode: autoplayMode,
+            ordering: relatedOrdering,
+            relatedItems: loaded.items,
+            startedAt: autoplayStartedAt || Date.now(),
+          });
+        } catch {
+          setRelatedStatus('ready');
+          return;
+        }
+      }
+
+      if (decision.type === 'still-watching') {
+        setPendingNextItem(decision.item);
+        setPauseEndedPlayback(true);
+        setShowStillWatching(true);
+        return;
+      }
+
+      if (decision.type === 'next') {
+        beginAutoplayCountdown(decision.item);
+      }
+    };
+
+    void handleDecision();
   };
 
   const handleBack = () => {

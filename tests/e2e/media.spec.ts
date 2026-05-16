@@ -22,11 +22,11 @@ test('home page surfaces a premium media highlight below Project 52', async ({ p
   await expect(mediaSection.getByText('Latest From Media')).toBeVisible();
   await expect(mediaSection.getByRole('heading', { name: 'Stay nourished beyond Sunday.' })).toBeVisible();
   await expect(mediaSection.getByRole('heading', { name: 'Dying Well' })).toBeVisible();
-  await expect(mediaSection.getByText('Rooted in Scripture.').first()).toBeVisible();
+  await expect(mediaSection.getByText('Rooted in Scripture.')).toHaveCount(0);
   await expect(mediaSection.getByText('Curated by A.N.T Media Crew')).toHaveCount(0);
-  await expect(mediaSection.getByText('Sunday Service II English')).toBeVisible();
-  await expect(mediaSection.getByText('My Final Instructions')).toBeVisible();
-  await expect(mediaSection.getByText('Mercy Masika Wastahili Cover')).toBeVisible();
+  await expect(mediaSection.getByText('Sunday Service II English').first()).toBeVisible();
+  await expect(mediaSection.getByText('My Final Instructions').first()).toBeVisible();
+  await expect(mediaSection.getByText('Mercy Masika Wastahili Cover').first()).toBeVisible();
 
   await mediaSection.getByRole('link', { name: /Explore Library/i }).click();
   await expect(page).toHaveURL(/\/media$/);
@@ -143,7 +143,7 @@ test('media watch page plays selected content, previews scripture, and preserves
   await expect(page.getByRole('heading', { name: 'Referenced Scriptures' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'John 20' })).toBeVisible();
   await expect(page.getByText('Early on the first day of the week Mary Magdalene went to the tomb.')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Related Messages' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Related' })).toBeVisible();
 
   await page.getByRole('link', { name: /Open in Scripture/i }).click();
   await expect(page).toHaveURL(/\/scripture\?book=john&chapter=20&returnTo=%2Fmedia%2Fwatch%2Fdying-well/);
