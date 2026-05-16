@@ -23,7 +23,7 @@ import type { AudioVisualItem } from '../types/audioVisual';
 import { copyToClipboard } from '../utils/copyToClipboard';
 
 const RELATED_PAGE_SIZE = 10;
-const UP_NEXT_SECONDS = 8;
+const UP_NEXT_SECONDS = 3;
 
 type AutoplayMode = 'general' | 'music' | 'series' | 'shorts';
 
