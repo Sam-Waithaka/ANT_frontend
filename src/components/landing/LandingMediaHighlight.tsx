@@ -1,14 +1,16 @@
 import { ArrowRight, BookOpen, Clock, Play } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { AudioVisualItem, AudioVisualLiveCta } from '../../types/audioVisual';
+import type { AudioVisualHomePayload, AudioVisualItem, AudioVisualLiveCta } from '../../types/audioVisual';
 import {
+  fetchAudioVisualHome,
   fetchAudioVisualItemPage,
   fetchFeaturedAudioVisualItems,
   fetchLatestSermon,
   fetchLiveAudioVisualCta,
 } from '../../services/audioVisualApi';
 import { formatDuration, formatMediaDate } from '../media/mediaFormat';
+import { selectMediaHeroItem } from '../media/mediaHeroSelection';
 import { getMediaWatchPath } from '../media/mediaLinks';
 import LandingButton from './LandingButton';
 
@@ -18,6 +20,7 @@ type LandingMediaHighlightProps = {
 
 type MediaHighlightState = {
   featured: AudioVisualItem[];
+  home: AudioVisualHomePayload | null;
   latestFeaturedSermon: AudioVisualItem | null;
   latestLiveService: AudioVisualItem | null;
   latestSermon: AudioVisualItem | null;
@@ -28,17 +31,13 @@ type MediaHighlightState = {
 
 const initialState: MediaHighlightState = {
   featured: [],
+  home: null,
   latestFeaturedSermon: null,
   latestLiveService: null,
   latestSermon: null,
   latestWorship: null,
   live: null,
   status: 'loading',
-};
-
-const isLiveNowOrUpcoming = (item: AudioVisualItem | null | undefined) => {
-  const status = item?.liveStatus?.toLowerCase();
-  return status === 'live' || status === 'upcoming';
 };
 
 const itemKey = (item: AudioVisualItem) => item.slug || String(item.id || item.title);
@@ -95,7 +94,7 @@ const PrimaryMediaCard = ({ darkMode, item }: { darkMode: boolean; item: AudioVi
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-black/35 px-4 py-2 text-[0.65rem] font-black uppercase tracking-[0.18em] backdrop-blur">
               <span className="size-2 rounded-full bg-red-500" aria-hidden="true" />
-              {isLiveNowOrUpcoming(item) ? 'Live service' : 'Latest message'}
+              {item.liveStatus === 'live' || item.liveStatus === 'upcoming' ? 'Live service' : 'Latest message'}
             </span>
           </div>
 
@@ -187,6 +186,7 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
 
     const loadMedia = async () => {
       const [
+        homeResult,
         liveResult,
         sermonResult,
         featuredResult,
@@ -194,6 +194,7 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
         featuredSermonResult,
         worshipResult,
       ] = await Promise.allSettled([
+        fetchAudioVisualHome(controller.signal),
         fetchLiveAudioVisualCta(controller.signal),
         fetchLatestSermon(controller.signal),
         fetchFeaturedAudioVisualItems(controller.signal),
@@ -204,7 +205,9 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
 
       if (controller.signal.aborted) return;
 
+      const home = homeResult.status === 'fulfilled' ? homeResult.value : null;
       const live = liveResult.status === 'fulfilled' ? liveResult.value : null;
+      const resolvedHome = home ? { ...home, live: live || home.live } : null;
       const latestSermon = sermonResult.status === 'fulfilled' ? sermonResult.value : null;
       const featured = featuredResult.status === 'fulfilled' ? featuredResult.value : [];
       const latestLiveService = liveServiceResult.status === 'fulfilled' ? liveServiceResult.value.items[0] || null : null;
@@ -216,12 +219,13 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
 
       setState({
         featured,
+        home: resolvedHome,
         latestFeaturedSermon,
         latestLiveService,
         latestSermon,
         latestWorship,
         live,
-        status: live?.item || latestSermon || featured.length > 0 ? 'ready' : 'empty',
+        status: resolvedHome?.hero || resolvedHome?.live?.item || live?.item || latestSermon || featured.length > 0 ? 'ready' : 'empty',
       });
     };
 
@@ -231,8 +235,9 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
   }, []);
 
   const { primary, supporting } = useMemo(() => {
-    const primaryItem =
-      isLiveNowOrUpcoming(state.live?.item) ? state.live?.item || null : state.latestSermon || state.featured[0] || state.live?.item || null;
+    const primaryItem = state.home
+      ? selectMediaHeroItem({ home: state.home, latestSermon: state.latestSermon, useFallback: false })
+      : state.latestSermon || state.featured[0] || state.live?.item || null;
 
     return {
       primary: primaryItem,
@@ -242,7 +247,7 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
         state.latestWorship,
       ]).filter((item) => !primaryItem || itemKey(item) !== itemKey(primaryItem)).slice(0, 3),
     };
-  }, [state.featured, state.latestFeaturedSermon, state.latestLiveService, state.latestSermon, state.latestWorship, state.live]);
+  }, [state.featured, state.home, state.latestFeaturedSermon, state.latestLiveService, state.latestSermon, state.latestWorship, state.live]);
 
   if (state.status === 'empty') {
     return null;

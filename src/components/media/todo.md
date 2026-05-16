@@ -52,7 +52,6 @@ These items are intentionally parked until the `audio_visual` backend API is enh
 - `MediaSidebar.tsx` should either be deleted or replaced by the future filter dock/panel described above.
 
 
-Fix the sitting of collections in the media page, maybe when you hit the footer the buttons can dissappear?
 
 Add share CTA button in the media player, that shares the video link, when clicked, and calls the default behavior of the device
 
