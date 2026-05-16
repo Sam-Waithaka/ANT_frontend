@@ -40,7 +40,7 @@ const VideoPlayer = ({ autoPlay = false, darkMode, isShort = false, item, onEnde
                 height="100%"
                 light={autoPlay ? false : item.thumbnailUrl || false}
                 onEnded={onEnded}
-                playing={autoPlay}
+                playing={autoPlay ? true : undefined}
                 src={url}
                 width="100%"
               />
