@@ -90,6 +90,19 @@ export const choirSong = mediaItem({
   speaker: 'A.I.C Njoro Town Church Choir',
 });
 
+export const choirEncore = mediaItem({
+  title: 'Kanji Mbugua Mfalme Mkuu Cover',
+  slug: 'kanji-mbugua-mfalme-mkuu-cover',
+  categories: [{ name: 'Choir', slug: 'choir' }],
+  collections: [{ name: 'Music', slug: 'music' }],
+  description_excerpt: 'A choir cover from A.I.C Njoro Town.',
+  duration_seconds: 312,
+  media_type: 'Music',
+  media_type_detail: { name: 'Music' },
+  series: null,
+  speaker: 'A.I.C Njoro Town Church Choir',
+});
+
 export const worshipSong = mediaItem({
   title: 'Mercy Masika Wastahili Cover',
   slug: 'mercy-masika-wastahili-cover',
@@ -150,6 +163,7 @@ const allItems = [
   shortClip,
   secondShort,
   choirSong,
+  choirEncore,
   worshipSong,
   musicOtherVideo,
   teachingMessage,
@@ -171,6 +185,7 @@ const itemsForQuery = (url: URL) => {
   const series = url.searchParams.get('series');
   const category = url.searchParams.get('category');
   const musicSubcategory = url.searchParams.get('music_subcategory');
+  const page = Number(url.searchParams.get('page') || '1');
 
   if (featured === 'true') {
     return [dyingWell, finalInstructions];
@@ -198,7 +213,7 @@ const itemsForQuery = (url: URL) => {
 
   if (type === 'music') {
     if (musicSubcategory === 'choir') {
-      return [choirSong];
+      return page > 1 ? [choirEncore] : [choirSong];
     }
 
     if (musicSubcategory === 'pnw') {
@@ -221,6 +236,17 @@ const itemsForQuery = (url: URL) => {
   }
 
   return allItems;
+};
+
+const countForQuery = (url: URL, matchingItems: unknown[]) => {
+  const type = url.searchParams.get('type')?.toLowerCase();
+  const musicSubcategory = url.searchParams.get('music_subcategory');
+
+  if (type === 'music' && musicSubcategory === 'choir') {
+    return 2;
+  }
+
+  return matchingItems.length > 1 ? matchingItems.length + 2 : matchingItems.length;
 };
 
 export const mockMediaApi = async (page: Page) => {
@@ -325,7 +351,7 @@ export const mockMediaApi = async (page: Page) => {
 
     if (pathname === '/v1/audio-visual/') {
       const matchingItems = itemsForQuery(url);
-      await fulfillJson(route, pagePayload(matchingItems, matchingItems.length > 1 ? matchingItems.length + 2 : matchingItems.length));
+      await fulfillJson(route, pagePayload(matchingItems, countForQuery(url, matchingItems)));
       return;
     }
 

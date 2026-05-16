@@ -68,6 +68,9 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
   await expect(page.getByRole('heading', { name: 'Choir' })).toBeVisible();
   await expect(page.getByText('Nipiga Makasia')).toBeVisible();
   await expect(page.getByText('Mercy Masika Wastahili Cover')).toHaveCount(0);
+  await page.getByRole('button', { name: /Load more/i }).click();
+  await expect.poll(() => pagedRequests.some((url) => url.includes('type=music') && url.includes('music_subcategory=choir') && url.includes('page=2'))).toBe(true);
+  await expect(page.getByText('Kanji Mbugua Mfalme Mkuu Cover')).toBeVisible();
   await musicSubcategories.getByRole('button', { name: /Praise and Worship/i }).click();
   await expect(page.getByRole('heading', { name: 'Praise and Worship' })).toBeVisible();
   await expect(page.getByText('Mercy Masika Wastahili Cover')).toBeVisible();
