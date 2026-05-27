@@ -285,7 +285,7 @@ Unit tests use Vitest.
 End-to-end tests use Playwright. The focused phase-one suite is:
 
 ```bash
-npm run test:e2e -- tests/e2e/project52-scripture.spec.ts
+pnpm test:e2e -- tests/e2e/project52-scripture.spec.ts
 ```
 
 This suite covers:
@@ -305,7 +305,7 @@ This suite covers:
 
 - React `StrictMode` may make dev-only render/effect behavior appear doubled.
 - Scripture API requests are cached by URL to avoid duplicate identical network work.
-- Full `npm run lint` may reveal legacy warnings outside recently touched areas; focused lint has been used for changed files.
+- Full `pnpm lint` may reveal legacy warnings outside recently touched areas; focused lint has been used for changed files.
 - Bible version availability is currently surfaced as: "We are working toward adding more Bible versions and more languages."
 
 ## Future Work

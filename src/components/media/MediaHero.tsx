@@ -32,7 +32,7 @@ const MediaHero = ({ darkMode, heroItem, home }: MediaHeroProps) => {
       <div className="relative">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.92fr)_minmax(26rem,0.78fr)] lg:items-center">
           <div className="mx-auto max-w-4xl text-left lg:mx-0">
-            <p className="text-sm font-black uppercase tracking-[0.16em] text-red-700">AIC Njoro Town</p>
+            <p className="text-sm font-black uppercase tracking-[0.16em] text-red-700">A.I.C Njoro Town</p>
             <h1 className={`mt-4 max-w-4xl font-serif text-5xl font-bold leading-[0.98] tracking-normal sm:text-6xl lg:text-7xl ${darkMode ? 'text-white' : 'text-zinc-950'}`}>
               Exalting Christ.
               <span className="block text-red-700">Equipping His People.</span>

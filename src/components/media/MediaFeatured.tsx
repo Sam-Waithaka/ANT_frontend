@@ -25,7 +25,7 @@ const MediaFeatured = ({ darkMode, items, onViewMore }: MediaFeaturedProps) => {
     >
       <div className="mb-5 flex items-center gap-4">
         <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
-        <h2 className={`shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Featured Sermon</h2>
+        <h2 className={`shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] ${darkMode ? 'text-white' : 'text-zinc-950'}`}>Featured</h2>
         <div className={`h-px flex-1 ${darkMode ? 'bg-white/10' : 'bg-black/10'}`} />
       </div>
 

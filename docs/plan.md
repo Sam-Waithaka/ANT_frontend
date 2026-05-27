@@ -621,7 +621,7 @@ Development behavior:
 Production behavior:
 
 - Vite bakes `VITE_API_BASE_URL` into the built bundle.
-- `.env` must be correct before `npm run build`.
+- `.env` must be correct before `pnpm build`.
 
 ### 7.2 Keep Main Church Logo Link Separate
 
@@ -722,4 +722,4 @@ This refactor is complete when:
 - Chapter source/license credit is shown.
 - Comparison behavior is shared, tested, and handles missing readings.
 - Tests cover normal, empty, paginated, error, and omitted-verse API responses.
-- Production build still only requires the correct `.env` values before `npm run build`.
+- Production build still only requires the correct `.env` values before `pnpm build`.

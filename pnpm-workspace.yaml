@@ -1,0 +1,6 @@
+packages:
+  - .
+
+# Seven days in minutes. This delays newly published direct and transitive
+# package versions to reduce exposure to supply-chain compromise windows.
+minimumReleaseAge: 10080

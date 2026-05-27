@@ -66,12 +66,12 @@ The app is built with React, React Router, TypeScript, Vite, Tailwind CSS, and l
 ## Scripts
 
 ```bash
-npm install
-npm run dev
-npm run build
-npm run lint
-npm test
-npm run test:e2e
+pnpm install
+pnpm dev
+pnpm build
+pnpm lint
+pnpm test
+pnpm test:e2e
 ```
 
 Default dev URL:
@@ -112,7 +112,17 @@ VITE_SITE_BASE_URL=https://staging.aicnjoro.org
 VITE_API_BASE_URL=https://api.aicnjoro.org
 ```
 
-Vite reads these values at build time. If you upload a prebuilt `dist` folder to cPanel, set the values before running `npm run build`; cPanel runtime environment variables will not change an already-built static bundle.
+Vite reads these values at build time. If you upload a prebuilt `dist` folder to cPanel, set the values before running `pnpm build`; cPanel runtime environment variables will not change an already-built static bundle.
+
+## Package Manager
+
+This project uses pnpm. The pinned package manager version is declared in `package.json`, and `pnpm-workspace.yaml` enforces `minimumReleaseAge: 10080`, which means pnpm will only resolve package versions that have been published for at least seven days.
+
+Use frozen lockfile installs in CI and deployment:
+
+```bash
+pnpm install --frozen-lockfile
+```
 
 During local development, the frontend still requests `/v1/...` from `localhost:5173`. The Vite dev server proxies those requests to `VITE_API_BASE_URL`, which keeps one API host setting while avoiding browser CORS issues.
 
@@ -183,10 +193,10 @@ Unit tests live under `tests/unit`. Playwright tests live under `tests/e2e`, wit
 Useful commands:
 
 ```bash
-npm test
-npm run test:e2e
-npm run test:e2e -- tests/e2e/project52-scripture.spec.ts
-npm run test:e2e -- tests/e2e/ui-comprehensive.spec.ts
+pnpm test
+pnpm test:e2e
+pnpm test:e2e -- tests/e2e/project52-scripture.spec.ts
+pnpm test:e2e -- tests/e2e/ui-comprehensive.spec.ts
 ```
 
 The app uses React `StrictMode` in development. Dev mode may mount effects twice, but Scripture API calls are cached to avoid duplicate identical network work.
