@@ -2,6 +2,7 @@ import {
   BookOpen,
   BookMarked,
   CalendarDays,
+  FileText,
   Heart,
   HelpCircle,
   Home,
@@ -12,6 +13,7 @@ import {
   PlayCircle,
   Settings,
   Sun,
+  UserCircle,
   Users,
   X,
 } from 'lucide-react';
@@ -27,6 +29,7 @@ export type SiteNavPath =
   | '/give'
   | '/media'
   | '/ministries'
+  | '/resources'
   | '/scripture'
   | '/project52';
 
@@ -49,12 +52,14 @@ const navItems: SiteNavItem[] = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Scripture', href: '/scripture', icon: BookOpen },
   { label: 'Project 52', href: '/project52', icon: BookMarked },
+  { label: 'Resources', href: '/resources', icon: FileText },
   { label: 'Media', href: '/media', icon: PlayCircle },
   { label: 'Ministries', href: '/ministries', icon: Users },
   { label: 'About', href: '/about', icon: Info },
   { label: 'Contact', href: '/contact', icon: Phone },
 ];
 const giveNavItem: SiteNavItem = { label: 'Give', href: '/give', icon: Heart };
+const signInNavItem: SiteNavItem = { label: 'Sign in', href: '#portal-sign-in', icon: UserCircle };
 const mobileNavSections: { title: string; items: SiteNavItem[] }[] = [
   {
     title: 'Explore',
@@ -69,6 +74,7 @@ const mobileNavSections: { title: string; items: SiteNavItem[] }[] = [
     items: [
       { label: 'Scripture', href: '/scripture', icon: BookOpen },
       { label: 'Project 52', href: '/project52', icon: BookMarked },
+      { label: 'Resources', href: '/resources', icon: FileText },
       { label: 'Media', href: '/media', icon: PlayCircle },
     ],
   },
@@ -97,7 +103,6 @@ const SiteNavigation = ({
   sticky = true,
 }: SiteNavigationProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const observedCompactHeader = useCompactHeader(layout === 'top' && compact === undefined, { observeNestedScroll: true });
   const compactSmallHeader = compact ?? observedCompactHeader;
   const isActive = (href: string) => href === activePath;
@@ -229,6 +234,7 @@ const SiteNavigation = ({
                 ? renderGiveButton(shape, onRouteClick)
                 : renderNavItem(item, shape, onRouteClick),
             )}
+            {section.title === 'Actions' && renderNavItem(signInNavItem, shape, onRouteClick)}
           </div>
         </section>
       ))}
@@ -320,12 +326,12 @@ const SiteNavigation = ({
         darkMode ? 'border-white/10 bg-black/75' : 'border-black/10 bg-[#f8f5ef]/85'
       }`}
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto grid w-full max-w-none grid-cols-[auto_1fr_auto] items-center gap-6 px-4 py-3 sm:px-6 xl:px-8">
         <a
           href={churchWebsiteUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-w-0 items-center gap-3 rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2"
+          className="flex shrink-0 items-center gap-3 rounded-2xl transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2"
           aria-label="Open the AIC Njoro Town website"
         >
           <img
@@ -342,65 +348,36 @@ const SiteNavigation = ({
             </p>
           </div>
         </a>
-        <div className="flex shrink-0 items-center gap-3">
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Site navigation">
+        <div className="hidden min-w-0 items-center justify-center gap-3 lg:flex">
+          <nav className="flex items-center gap-1" aria-label="Site navigation">
             {navItems.map((item) => renderNavItem(item, 'top'))}
           </nav>
-          <div className="hidden lg:block">{renderGiveButton('top')}</div>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setSettingsOpen((current) => !current)}
-              className={`hidden min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-bold transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:inline-flex ${
-                settingsOpen
-                  ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-                  : darkMode
-                    ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
-                    : 'border-black/10 bg-white text-zinc-700 shadow-sm focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
-              }`}
-              aria-expanded={settingsOpen}
-              aria-haspopup="menu"
-            >
-              <Settings size={17} />
-              <span className="hidden sm:inline">Settings</span>
-            </button>
-
-            {settingsOpen && (
-              <div
-                className={`absolute right-0 top-full z-40 mt-3 w-56 rounded-2xl border p-2 shadow-2xl ${
-                  darkMode
-                    ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/40'
-                    : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/15'
-                }`}
-                role="menu"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    onToggleTheme();
-                    setSettingsOpen(false);
-                  }}
-                  className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition ${
-                    darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-[#fffaf0]'
-                  }`}
-                  role="menuitem"
-                >
-                  {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-                  {darkMode ? 'Light theme' : 'Dark theme'}
-                </button>
-                <a
-                  className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
-                    darkMode ? 'text-stone-400 hover:bg-white/10' : 'text-zinc-600 hover:bg-[#fffaf0]'
-                  }`}
-                  href="#"
-                  role="menuitem"
-                >
-                  <HelpCircle size={17} />
-                  Help
-                </a>
-              </div>
-            )}
-          </div>
+          {renderGiveButton('top')}
+        </div>
+        <div className="flex shrink-0 items-center justify-end gap-3">
+          <a
+            href={signInNavItem.href}
+            className={`hidden size-11 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:grid ${
+              darkMode
+                ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
+                : 'border-black/10 bg-white text-zinc-700 shadow-sm focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
+            }`}
+            aria-label="Sign in"
+          >
+            <UserCircle size={18} />
+          </a>
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className={`hidden size-11 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:grid ${
+              darkMode
+                ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
+                : 'border-black/10 bg-white text-zinc-700 shadow-sm focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
+            }`}
+            aria-label={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+          >
+            {darkMode ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
