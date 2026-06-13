@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import SignInModal from './auth/SignInModal';
 import { assetPaths } from '../constants/assets';
 import { useCompactHeader } from '../hooks/useCompactHeader';
 
@@ -103,6 +104,7 @@ const SiteNavigation = ({
   sticky = true,
 }: SiteNavigationProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
   const observedCompactHeader = useCompactHeader(layout === 'top' && compact === undefined, { observeNestedScroll: true });
   const compactSmallHeader = compact ?? observedCompactHeader;
   const isActive = (href: string) => href === activePath;
@@ -234,7 +236,19 @@ const SiteNavigation = ({
                 ? renderGiveButton(shape, onRouteClick)
                 : renderNavItem(item, shape, onRouteClick),
             )}
-            {section.title === 'Actions' && renderNavItem(signInNavItem, shape, onRouteClick)}
+            {section.title === 'Actions' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  setSignInOpen(true);
+                }}
+                className={getUtilityItemClass(shape)}
+              >
+                <UserCircle size={shape === 'drawer' ? 18 : 17} />
+                {signInNavItem.label}
+              </button>
+            )}
           </div>
         </section>
       ))}
@@ -355,8 +369,9 @@ const SiteNavigation = ({
           {renderGiveButton('top')}
         </div>
         <div className="flex shrink-0 items-center justify-end gap-3">
-          <a
-            href={signInNavItem.href}
+          <button
+            type="button"
+            onClick={() => setSignInOpen(true)}
             className={`hidden size-11 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:grid ${
               darkMode
                 ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
@@ -365,7 +380,7 @@ const SiteNavigation = ({
             aria-label="Sign in"
           >
             <UserCircle size={18} />
-          </a>
+          </button>
           <button
             type="button"
             onClick={onToggleTheme}
@@ -445,6 +460,7 @@ const SiteNavigation = ({
           </aside>
         </div>
       )}
+      <SignInModal darkMode={darkMode} open={signInOpen} onClose={() => setSignInOpen(false)} />
     </>
   );
 };
