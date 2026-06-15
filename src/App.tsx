@@ -10,30 +10,33 @@ import MinistriesPage from './pages/MinistriesPage';
 import Project52Page from './pages/Project52Page';
 import ResourcesPage from './pages/ResourcesPage';
 import ScripturePage from './pages/ScripturePage';
+import { AuthProvider } from './contexts/AuthContext';
 import { Project52Provider } from './contexts/Project52Context';
 import { ScriptureReaderProvider } from './contexts/ScriptureReaderContext';
 
 function App() {
   return (
-    <Project52Provider>
-      <ScriptureReaderProvider>
-        <RouteTransition>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/give" element={<GivePage />} />
-            <Route path="/media" element={<MediaPage />} />
-            <Route path="/media/watch/:slug" element={<MediaWatchPage />} />
-            <Route path="/ministries" element={<MinistriesPage />} />
-            <Route path="/project52" element={<Project52Page />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/scripture" element={<ScripturePage />} />
-            <Route path="*" element={<LandingPage />} />
-          </Routes>
-        </RouteTransition>
-      </ScriptureReaderProvider>
-    </Project52Provider>
+    <AuthProvider>
+      <Project52Provider>
+        <ScriptureReaderProvider>
+          <RouteTransition>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/give" element={<GivePage />} />
+              <Route path="/media" element={<MediaPage />} />
+              <Route path="/media/watch/:slug" element={<MediaWatchPage />} />
+              <Route path="/ministries" element={<MinistriesPage />} />
+              <Route path="/project52" element={<Project52Page />} />
+              <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/scripture" element={<ScripturePage />} />
+              <Route path="*" element={<LandingPage />} />
+            </Routes>
+          </RouteTransition>
+        </ScriptureReaderProvider>
+      </Project52Provider>
+    </AuthProvider>
   );
 }
 

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { KeyRound, Mail, UserCircle, X } from 'lucide-react';
-import { requestPasswordReset, signIn } from '../../services/authApi';
+import { requestPasswordReset } from '../../services/authApi';
+import { useAuth } from '../../hooks/useAuth';
 
 type SignInModalProps = {
   darkMode: boolean;
@@ -12,7 +13,8 @@ type SignInModalProps = {
 const accountMissingMessage = 'We could not find an account with those details. Please contact the church admin for account creation.';
 
 const SignInModal = ({ darkMode, onClose, open }: SignInModalProps) => {
-  const [email, setEmail] = useState('');
+  const auth = useAuth();
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [resetMessage, setResetMessage] = useState('');
@@ -28,8 +30,8 @@ const SignInModal = ({ darkMode, onClose, open }: SignInModalProps) => {
     setSubmitting(true);
 
     try {
-      const result = await signIn(email, password);
-      window.location.assign(result.isStaff ? '/portal' : '/me');
+      await auth.signIn(identifier, password);
+      window.location.assign('/portal');
     } catch {
       setError(accountMissingMessage);
     } finally {
@@ -38,8 +40,8 @@ const SignInModal = ({ darkMode, onClose, open }: SignInModalProps) => {
   };
 
   const handleReset = async () => {
-    if (!email.trim()) {
-      setError('Enter your email address first, then request a password reset.');
+    if (!identifier.trim()) {
+      setError('Enter your email, phone, or username first, then request a password reset.');
       return;
     }
 
@@ -48,7 +50,7 @@ const SignInModal = ({ darkMode, onClose, open }: SignInModalProps) => {
     setResetting(true);
 
     try {
-      await requestPasswordReset(email);
+      await requestPasswordReset(identifier);
       setResetMessage('If this account exists, password reset instructions will be sent to the email address provided.');
     } catch {
       setError(accountMissingMessage);
@@ -92,15 +94,15 @@ const SignInModal = ({ darkMode, onClose, open }: SignInModalProps) => {
 
         <div className="mt-6 grid gap-4">
           <label className="grid gap-2 text-sm font-bold">
-            Email address
+            Email, phone, or username
             <span className={`flex min-h-12 items-center gap-3 rounded-2xl border px-4 ${darkMode ? 'border-white/10 bg-white/[0.06]' : 'border-black/10 bg-white'}`}>
               <Mail size={17} className={darkMode ? 'text-stone-400' : 'text-zinc-500'} />
               <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                type="text"
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
                 className="min-w-0 flex-1 bg-transparent text-sm outline-none"
-                autoComplete="email"
+                autoComplete="username"
                 required
               />
             </span>
