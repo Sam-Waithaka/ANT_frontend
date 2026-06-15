@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import RouteTransition from './components/RouteTransition';
+import RequireAuth from './components/auth/RequireAuth';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import GivePage from './pages/GivePage';
@@ -8,6 +9,7 @@ import MediaPage from './pages/MediaPage';
 import MediaWatchPage from './components/media/watch/MediaWatchPage';
 import MinistriesPage from './pages/MinistriesPage';
 import Project52Page from './pages/Project52Page';
+import PortalPage from './pages/PortalPage';
 import ResourcesPage from './pages/ResourcesPage';
 import ScripturePage from './pages/ScripturePage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -28,6 +30,7 @@ function App() {
               <Route path="/media" element={<MediaPage />} />
               <Route path="/media/watch/:slug" element={<MediaWatchPage />} />
               <Route path="/ministries" element={<MinistriesPage />} />
+              <Route path="/portal" element={<RequireAuth><PortalPage /></RequireAuth>} />
               <Route path="/project52" element={<Project52Page />} />
               <Route path="/resources" element={<ResourcesPage />} />
               <Route path="/scripture" element={<ScripturePage />} />

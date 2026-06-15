@@ -2,11 +2,14 @@ import {
   BookOpen,
   BookMarked,
   CalendarDays,
+  ChevronDown,
   FileText,
   Heart,
   HelpCircle,
   Home,
   Info,
+  LayoutDashboard,
+  LogOut,
   Menu,
   Moon,
   Phone,
@@ -18,10 +21,11 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import SignInModal from './auth/SignInModal';
 import { assetPaths } from '../constants/assets';
 import { useCompactHeader } from '../hooks/useCompactHeader';
+import { useAuth } from '../hooks/useAuth';
 
 export type SiteNavPath =
   | '/'
@@ -94,6 +98,13 @@ const mobileNavSections: { title: string; items: SiteNavItem[] }[] = [
 
 const churchWebsiteUrl = 'https://aicnjoro.org';
 const isRouteHref = (href: string) => href.startsWith('/');
+const initialsFor = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'A';
 
 const SiteNavigation = ({
   activePath,
@@ -103,11 +114,20 @@ const SiteNavigation = ({
   onToggleTheme,
   sticky = true,
 }: SiteNavigationProps) => {
+  const auth = useAuth();
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const observedCompactHeader = useCompactHeader(layout === 'top' && compact === undefined, { observeNestedScroll: true });
   const compactSmallHeader = compact ?? observedCompactHeader;
   const isActive = (href: string) => href === activePath;
+  const accountName = auth.user
+    ? [auth.user.firstName, auth.user.lastName].filter(Boolean).join(' ') || auth.user.username || 'Account'
+    : '';
+  const accountLabel = auth.user?.firstName || accountName;
+  const accountInitials = initialsFor(accountName);
+  const avatarUrl = auth.user?.profile?.profilePhoto;
   const getNavItemClass = (active: boolean, shape: 'side' | 'top' | 'drawer') => {
     const shapeClass = {
       side: 'flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition',
@@ -236,7 +256,26 @@ const SiteNavigation = ({
                 ? renderGiveButton(shape, onRouteClick)
                 : renderNavItem(item, shape, onRouteClick),
             )}
-            {section.title === 'Actions' && (
+            {section.title === 'Actions' && auth.user && (
+              <>
+                {renderNavItem({ label: 'Profile', href: '/portal#profile', icon: UserCircle }, shape, onRouteClick)}
+                {renderNavItem({ label: 'My Account', href: '/portal#account', icon: UserCircle }, shape, onRouteClick)}
+                {renderNavItem({ label: 'Portal Dashboard', href: '/portal', icon: LayoutDashboard }, shape, onRouteClick)}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setDrawerOpen(false);
+                    await auth.signOut();
+                    navigate('/');
+                  }}
+                  className={getUtilityItemClass(shape)}
+                >
+                  <LogOut size={shape === 'drawer' ? 18 : 17} />
+                  Logout
+                </button>
+              </>
+            )}
+            {section.title === 'Actions' && !auth.user && (
               <button
                 type="button"
                 onClick={() => {
@@ -369,30 +408,117 @@ const SiteNavigation = ({
           {renderGiveButton('top')}
         </div>
         <div className="flex shrink-0 items-center justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => setSignInOpen(true)}
-            className={`hidden size-11 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:grid ${
-              darkMode
-                ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
-                : 'border-black/10 bg-white text-zinc-700 shadow-sm focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
-            }`}
-            aria-label="Sign in"
-          >
-            <UserCircle size={18} />
-          </button>
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className={`hidden size-11 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:grid ${
-              darkMode
-                ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
-                : 'border-black/10 bg-white text-zinc-700 shadow-sm focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
-            }`}
-            aria-label={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
-          >
-            {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
+          {auth.user ? (
+            <div className="relative hidden lg:block">
+              <button
+                type="button"
+                onClick={() => setAccountOpen((current) => !current)}
+                className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-2.5 pr-3 text-sm font-black shadow-sm transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 ${
+                  darkMode
+                    ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
+                    : 'border-black/10 bg-white text-zinc-900 shadow-zinc-900/5 focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
+                }`}
+                aria-expanded={accountOpen}
+                aria-haspopup="menu"
+              >
+                <span className={`grid size-8 place-items-center overflow-hidden rounded-full ${darkMode ? 'bg-red-950/60 text-red-100' : 'bg-red-950/5 text-red-800'}`}>
+                  {avatarUrl ? <img src={avatarUrl} alt="" className="size-full object-cover" /> : accountInitials}
+                </span>
+                <span className="max-w-28 truncate">{accountLabel}</span>
+                <ChevronDown size={15} />
+              </button>
+
+              {accountOpen && (
+                <div
+                  className={`absolute right-0 top-full z-40 mt-3 w-64 rounded-2xl border p-2 shadow-2xl ${
+                    darkMode
+                      ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/40'
+                      : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/15'
+                  }`}
+                  role="menu"
+                >
+                  <div className={`mb-2 rounded-xl px-3 py-3 ${darkMode ? 'bg-white/[0.04]' : 'bg-[#f8f5ef]'}`}>
+                    <p className="truncate text-sm font-black">{accountName}</p>
+                    <p className={`truncate text-xs ${darkMode ? 'text-stone-400' : 'text-zinc-500'}`}>{auth.user.email || auth.user.phoneNumber}</p>
+                  </div>
+                  {[
+                    { href: '/portal#profile', icon: UserCircle, label: 'Profile' },
+                    { href: '/portal#account', icon: UserCircle, label: 'My Account' },
+                    { href: '/portal', icon: LayoutDashboard, label: 'Portal Dashboard' },
+                  ].map(({ href, icon: Icon, label }) => (
+                    <Link
+                      key={label}
+                      to={href}
+                      onClick={() => setAccountOpen(false)}
+                      className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-bold transition ${
+                        darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-[#fffaf0]'
+                      }`}
+                      role="menuitem"
+                    >
+                      <Icon size={17} />
+                      {label}
+                    </Link>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onToggleTheme();
+                      setAccountOpen(false);
+                    }}
+                    className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition ${
+                      darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-[#fffaf0]'
+                    }`}
+                    role="menuitem"
+                  >
+                    {darkMode ? <Sun size={17} /> : <Moon size={17} />}
+                    {darkMode ? 'Light theme' : 'Dark theme'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setAccountOpen(false);
+                      await auth.signOut();
+                      navigate('/');
+                    }}
+                    className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition ${
+                      darkMode ? 'text-stone-300 hover:bg-white/10' : 'text-zinc-700 hover:bg-[#fffaf0]'
+                    }`}
+                    role="menuitem"
+                  >
+                    <LogOut size={17} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setSignInOpen(true)}
+              className={`hidden size-11 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:grid ${
+                darkMode
+                  ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
+                  : 'border-black/10 bg-white text-zinc-700 shadow-sm focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
+              }`}
+              aria-label="Sign in"
+            >
+              <UserCircle size={18} />
+            </button>
+          )}
+          {!auth.user && (
+            <button
+              type="button"
+              onClick={onToggleTheme}
+              className={`hidden size-11 place-items-center rounded-full border transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 lg:grid ${
+                darkMode
+                  ? 'border-white/10 bg-white/10 text-stone-100 focus:ring-offset-black hover:bg-white/15'
+                  : 'border-black/10 bg-white text-zinc-700 shadow-sm focus:ring-offset-[#f8f5ef] hover:bg-[#fffaf0]'
+              }`}
+              aria-label={darkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+            >
+              {darkMode ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setDrawerOpen(true)}
