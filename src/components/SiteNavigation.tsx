@@ -34,6 +34,7 @@ export type SiteNavPath =
   | '/give'
   | '/media'
   | '/ministries'
+  | '/portal'
   | '/resources'
   | '/scripture'
   | '/project52';
@@ -65,6 +66,18 @@ const navItems: SiteNavItem[] = [
 ];
 const giveNavItem: SiteNavItem = { label: 'Give', href: '/give', icon: Heart };
 const signInNavItem: SiteNavItem = { label: 'Sign in', href: '#portal-sign-in', icon: UserCircle };
+const mobileMainNavItems = navItems.slice(0, 5);
+const mobileCommunityNavItems: SiteNavItem[] = [
+  { label: 'Ministries', href: '/ministries', icon: Users },
+  { label: 'Events', href: '#', icon: CalendarDays },
+  { label: 'About', href: '/about', icon: Info },
+  { label: 'Contact', href: '/contact', icon: Phone },
+];
+const mobileAccountNavItems: SiteNavItem[] = [
+  { label: 'Portal Dashboard', href: '/portal', icon: LayoutDashboard },
+  { label: 'Profile', href: '/portal#profile', icon: UserCircle },
+  { label: 'My Account', href: '/portal#account', icon: UserCircle },
+];
 const mobileNavSections: { title: string; items: SiteNavItem[] }[] = [
   {
     title: 'Explore',
@@ -132,13 +145,22 @@ const SiteNavigation = ({
     const shapeClass = {
       side: 'flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-bold transition',
       top: 'inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-sm font-bold transition',
-      drawer: 'flex min-h-12 items-center gap-3 rounded-2xl px-4 text-sm font-bold transition',
+      drawer: 'flex min-h-12 items-center gap-3 rounded-2xl border-l-4 px-4 text-sm font-bold transition',
     }[shape];
-    const stateClass = active
-      ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
-      : darkMode
-        ? 'text-stone-300 hover:bg-white/10'
-        : 'text-zinc-700 hover:bg-white';
+    const stateClass =
+      shape === 'drawer'
+        ? active
+          ? darkMode
+            ? 'border-red-200/70 bg-white/[0.06] text-red-100'
+            : 'border-red-800 bg-red-950/5 text-red-900'
+          : darkMode
+            ? 'border-transparent text-stone-300 hover:bg-white/10'
+            : 'border-transparent text-zinc-700 hover:bg-white'
+        : active
+          ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+          : darkMode
+            ? 'text-stone-300 hover:bg-white/10'
+            : 'text-zinc-700 hover:bg-white';
 
     return `${shapeClass} ${stateClass}`;
   };
@@ -244,6 +266,92 @@ const SiteNavigation = ({
         </a>
       </div>
     </section>
+  );
+  const renderMobileSection = (title: string, items: SiteNavItem[], onRouteClick?: () => void) => (
+    <section aria-labelledby={`drawer-nav-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+      {renderSectionTitle(title, 'drawer')}
+      <div className="grid gap-2">{items.map((item) => renderNavItem(item, 'drawer', onRouteClick))}</div>
+    </section>
+  );
+  const renderMobileUserCard = () =>
+    auth.user && (
+      <div
+        className={`mt-6 rounded-3xl border p-4 shadow-sm ${
+          darkMode ? 'border-white/10 bg-white/[0.04] shadow-black/20' : 'border-black/10 bg-white shadow-zinc-900/5'
+        }`}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            className={`grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl text-sm font-black ${
+              darkMode ? 'bg-red-950/60 text-red-100' : 'bg-red-950/5 text-red-800'
+            }`}
+          >
+            {avatarUrl ? <img src={avatarUrl} alt="" className="size-full object-cover" /> : accountInitials}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-black">{accountName}</p>
+            <p className={`truncate text-xs ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+              {auth.user.email || auth.user.username || auth.user.phoneNumber}
+            </p>
+          </div>
+        </div>
+        <p
+          className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[11px] font-black ${
+            darkMode ? 'bg-white/10 text-stone-300' : 'bg-red-950/5 text-red-800'
+          }`}
+        >
+          Signed in
+        </p>
+      </div>
+    );
+  const renderAuthenticatedMobileNavigation = (onRouteClick?: () => void) => (
+    <>
+      {renderMobileSection('Main', mobileMainNavItems, onRouteClick)}
+      {renderMobileSection('Community', mobileCommunityNavItems, onRouteClick)}
+      {renderMobileSection('Account', mobileAccountNavItems, onRouteClick)}
+      <section aria-labelledby="drawer-nav-support">
+        {renderSectionTitle('Support', 'drawer')}
+        <div className="grid gap-2">{renderGiveButton('drawer', onRouteClick)}</div>
+      </section>
+      <section aria-labelledby="drawer-nav-preferences">
+        {renderSectionTitle('Preferences', 'drawer')}
+        <div className="grid gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              onToggleTheme();
+              setDrawerOpen(false);
+            }}
+            className={getUtilityItemClass('drawer')}
+          >
+            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            {darkMode ? 'Light theme' : 'Dark theme'}
+          </button>
+          <a href="#" className={getUtilityItemClass('drawer')}>
+            <Settings size={18} />
+            Settings
+          </a>
+          <a href="#" className={getUtilityItemClass('drawer')}>
+            <HelpCircle size={18} />
+            Help
+          </a>
+          <button
+            type="button"
+            onClick={async () => {
+              setDrawerOpen(false);
+              await auth.signOut();
+              navigate('/');
+            }}
+            className={`${getUtilityItemClass('drawer')} mt-2 border-t pt-4 ${
+              darkMode ? 'border-white/10 text-stone-400' : 'border-black/10 text-zinc-600'
+            }`}
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
+        </div>
+      </section>
+    </>
   );
   const renderGroupedNavigation = (shape: 'side' | 'drawer', onRouteClick?: () => void) => (
     <>
@@ -580,8 +688,12 @@ const SiteNavigation = ({
               </button>
             </div>
 
+            {renderMobileUserCard()}
+
             <nav className="mt-8 grid gap-6 overflow-y-auto pb-4" aria-label="Mobile site navigation">
-              {renderGroupedNavigation('drawer', () => setDrawerOpen(false))}
+              {auth.user
+                ? renderAuthenticatedMobileNavigation(() => setDrawerOpen(false))
+                : renderGroupedNavigation('drawer', () => setDrawerOpen(false))}
             </nav>
           </aside>
         </div>
