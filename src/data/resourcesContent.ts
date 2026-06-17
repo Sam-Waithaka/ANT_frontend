@@ -90,6 +90,33 @@ export const mockFeaturedArticles: ResourceArticle[] = [
   },
 ];
 
+export const mockLatestArticles: ResourceArticle[] = [
+  {
+    accent: 'Reflection',
+    author: 'A.I.C Njoro Town',
+    imageTone: 'from-zinc-950 via-[#34251d] to-stone-200',
+    minutes: 6,
+    title: 'Learning to Wait in Prayer',
+    type: 'Reflection',
+  },
+  {
+    accent: 'Bible Study',
+    author: 'Discipleship Team',
+    imageTone: 'from-zinc-950 via-[#2e3228] to-amber-100',
+    minutes: 14,
+    title: 'Reading the Psalms With the Church',
+    type: 'Bible Study',
+  },
+  {
+    accent: 'Guide',
+    author: 'Pastoral Team',
+    imageTone: 'from-zinc-950 via-red-950 to-stone-200',
+    minutes: 9,
+    title: 'A Simple Pattern for Family Devotion',
+    type: 'Guide',
+  },
+];
+
 export const mockResourceTypes: ResourceType[] = [
   { count: 128, icon: Flower2, name: 'Devotionals' },
   { count: 96, icon: BookOpen, name: 'Bible Studies' },

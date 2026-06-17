@@ -5,11 +5,11 @@ import {
   mockCollections,
   mockFeaturedArticle,
   mockFeaturedArticles,
+  mockLatestArticles,
   mockMinistries,
   mockResourceTypes,
   mockScriptureBooks,
   resourceArrowIcon,
-  resourceSproutIcon,
   type BrowseItem,
   type ResourceArticle,
   type ResourceCollection,
@@ -26,9 +26,9 @@ type ImageBlockProps = {
 };
 
 const ArrowIcon = resourceArrowIcon;
-const SproutIcon = resourceSproutIcon;
 
 const sectionLabelClass = 'text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-200';
+const heroLabelClass = 'text-sm font-black uppercase tracking-[0.16em] text-red-700';
 const centeredSectionHeaderClass = 'shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] text-zinc-950 dark:text-stone-100';
 
 const ImageBlock = ({ className = '', tone }: ImageBlockProps) => (
@@ -67,7 +67,7 @@ const FeaturedArticleCard = ({ darkMode }: { darkMode: boolean }) => (
           <MetaItem icon={UserRound}>{mockFeaturedArticle.authors.join(', ')}</MetaItem>
         </div>
         <div className="mt-7">
-          <SiteButton darkMode={darkMode} href="#featured" icon={ArrowRight} iconPosition="after">
+          <SiteButton darkMode={darkMode} href="#featured" icon={ArrowRight} iconPosition="after" variant="tertiary">
             Read Article
           </SiteButton>
         </div>
@@ -167,6 +167,17 @@ const CenteredSectionHeader = ({ id, title }: { id?: string; title: string }) =>
   </div>
 );
 
+const LatestArticlesSection = () => (
+  <section aria-labelledby="resources-latest">
+    <CenteredSectionHeader id="resources-latest" title="Latest" />
+    <div className="grid min-w-0 gap-5 md:grid-cols-3">
+      {mockLatestArticles.map((article) => (
+        <ResourceArticleCard article={article} key={article.title} />
+      ))}
+    </div>
+  </section>
+);
+
 const ResourcesSubscribeStrip = ({ darkMode }: { darkMode: boolean }) => (
   <section className="rounded-2xl border border-black/10 bg-[#fffaf0] p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717] dark:shadow-black/25">
     <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -200,28 +211,33 @@ const ResourcesLanding = ({ darkMode }: ResourcesLandingProps) => (
     className={`flex-1 ${
       darkMode
         ? 'bg-[#080808] text-stone-100'
-        : 'bg-[radial-gradient(circle_at_12%_22%,rgba(153,27,27,0.05),transparent_23%),linear-gradient(180deg,#f8f5ef,#fffaf0_38%,#f8f5ef)] text-zinc-950'
+        : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)] text-zinc-950'
     }`}
   >
-    <section className="border-b border-black/10 px-4 py-12 dark:border-white/10 sm:px-6 sm:py-16 lg:px-8">
-      <div className="grid gap-10 lg:grid-cols-[minmax(18rem,0.58fr)_minmax(0,1.25fr)] lg:items-center">
+    <section className="border-b border-black/10 px-4 py-16 dark:border-white/10 sm:px-6 sm:py-20 lg:px-8">
+      <div className="grid gap-12 lg:grid-cols-[minmax(19rem,0.55fr)_minmax(0,1.2fr)] lg:items-center">
         <div className="max-w-xl xl:pl-16">
-          <p className={sectionLabelClass}>A.I.C Njoro Town Library</p>
-          <h1 className="mt-5 font-serif text-6xl leading-none text-zinc-950 dark:text-stone-100 sm:text-7xl lg:text-8xl">
+          <p className={heroLabelClass}>THE LIBRARY</p>
+          <h1 className="mt-6 font-serif text-5xl font-bold leading-[0.98] tracking-normal text-zinc-950 dark:text-stone-100 sm:text-6xl lg:text-7xl">
             Read
           </h1>
-          <p className="mt-6 max-w-md font-serif text-2xl leading-tight text-zinc-700 dark:text-stone-300 sm:text-3xl">
+          <p className="mt-8 max-w-lg font-serif text-4xl font-bold leading-[1.05] tracking-normal text-zinc-950 dark:text-stone-100 sm:text-5xl">
+            Study deeply.
+            <span className="block">Reflect faithfully.</span>
+            <span className="block text-red-700">Live differently.</span>
+          </p>
+          <p className="mt-8 max-w-[30rem] text-lg leading-8 text-zinc-700 dark:text-stone-300">
             Articles, Bible studies, pastoral guidance, and devotional reflections.
           </p>
-          <div className="mt-8 flex items-center gap-3 text-red-800 dark:text-red-200" aria-hidden="true">
-            <span className="h-px w-12 bg-red-800/50 dark:bg-red-200/40" />
-            <SproutIcon size={18} />
-            <span className="h-px w-12 bg-red-800/50 dark:bg-red-200/40" />
-          </div>
+          <div className="mt-8 h-px w-16 bg-red-700" aria-hidden="true" />
           <div className="mt-8">
-            <SiteButton darkMode={darkMode} href="#featured" icon={ArrowRight} iconPosition="after" variant="tertiary">
+            <a
+              href="#featured"
+              className="inline-flex items-center gap-2 text-sm font-black text-red-800 transition hover:translate-x-1 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:text-red-100 dark:hover:text-red-200"
+            >
               Explore the library
-            </SiteButton>
+              <ArrowRight size={16} aria-hidden="true" />
+            </a>
           </div>
         </div>
         <FeaturedArticleCard darkMode={darkMode} />
@@ -271,6 +287,8 @@ const ResourcesLanding = ({ darkMode }: ResourcesLandingProps) => (
           <BrowseListCard title="Browse Ministry" items={mockMinistries} />
         </div>
       </section>
+
+      <LatestArticlesSection />
 
       <ResourcesSubscribeStrip darkMode={darkMode} />
     </div>
