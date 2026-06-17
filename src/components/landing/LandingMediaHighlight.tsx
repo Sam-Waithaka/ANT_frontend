@@ -12,7 +12,7 @@ import {
 import { formatDuration, formatMediaDate } from '../media/mediaFormat';
 import { selectMediaHeroItem } from '../media/mediaHeroSelection';
 import { getMediaWatchPath } from '../media/mediaLinks';
-import LandingButton from './LandingButton';
+import SiteButton from '../ui/SiteButton';
 
 type LandingMediaHighlightProps = {
   darkMode: boolean;
@@ -284,12 +284,12 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
             </div>
 
             <div className="hidden flex-wrap gap-4 sm:flex">
-              <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to={primary ? getMediaWatchPath(primary) : '/media'} variant="primary">
+              <SiteButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to={primary ? getMediaWatchPath(primary) : '/media'} variant="primary">
                 Watch Latest
-              </LandingButton>
-              <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to="/media" variant="secondary">
+              </SiteButton>
+              <SiteButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to="/media" variant="secondary">
                 Explore Library
-              </LandingButton>
+              </SiteButton>
             </div>
 
           </div>
@@ -336,12 +336,12 @@ const LandingMediaHighlight = ({ darkMode }: LandingMediaHighlightProps) => {
 
           <div className="grid gap-4 sm:hidden">
             <div className="grid grid-cols-2 gap-3">
-              <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to={primary ? getMediaWatchPath(primary) : '/media'} variant="primary">
+              <SiteButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to={primary ? getMediaWatchPath(primary) : '/media'} variant="primary">
                 Watch Latest
-              </LandingButton>
-              <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to="/media" variant="secondary">
+              </SiteButton>
+              <SiteButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" to="/media" variant="secondary">
                 Explore Library
-              </LandingButton>
+              </SiteButton>
             </div>
           </div>
         </div>

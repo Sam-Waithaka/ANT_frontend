@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowRight } from 'lucide-react';
-import LandingButton from '../landing/LandingButton';
+import SiteButton from '../ui/SiteButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import MediaCard from './MediaCard';
 import type { MediaWatchContext } from './mediaWatchContext';
@@ -59,16 +59,16 @@ const MediaRail = ({
       </div>
       {onViewMore && (
         <div className="mt-6 flex justify-center">
-          <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
+          <SiteButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
             View more
-          </LandingButton>
+          </SiteButton>
         </div>
       )}
       {onLoadMore && canLoadMore && (
         <div className="mt-6 flex justify-center">
-          <LandingButton darkMode={darkMode} icon={ArrowDown} variant="secondary" onClick={loadingMore ? undefined : onLoadMore}>
+          <SiteButton darkMode={darkMode} icon={ArrowDown} variant="secondary" onClick={loadingMore ? undefined : onLoadMore}>
             {loadingMore ? 'Loading more...' : 'Load more'}
-          </LandingButton>
+          </SiteButton>
         </div>
       )}
     </section>

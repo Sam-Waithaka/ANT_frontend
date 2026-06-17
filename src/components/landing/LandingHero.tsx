@@ -10,7 +10,7 @@ import {
 import type { AudioVisualItem } from '../../types/audioVisual';
 import { selectMediaHeroItem } from '../media/mediaHeroSelection';
 import { getMediaWatchPath } from '../media/mediaLinks';
-import LandingButton from './LandingButton';
+import SiteButton from '../ui/SiteButton';
 import { heroCtas } from './landingContent';
 import { landingContainer } from './LandingSection';
 
@@ -106,7 +106,7 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => {
             const ctaHref = 'href' in cta && typeof cta.href === 'string' ? cta.href : undefined;
 
             return (
-              <LandingButton
+              <SiteButton
                 key={cta.label}
                 darkMode={darkMode}
                 onClick={opensHighlightedReading ? openHighlightedNewTestamentReading : undefined}
@@ -114,18 +114,18 @@ const LandingHero = ({ darkMode }: LandingHeroProps) => {
                 variant={cta.variant}
               >
                 {cta.label}
-              </LandingButton>
+              </SiteButton>
             );
           })}
           {heroMediaItem && (
             <span className="self-center sm:self-auto">
-              <LandingButton
+              <SiteButton
                 darkMode={darkMode}
                 to={getMediaWatchPath(heroMediaItem)}
                 variant="tertiary"
               >
                 Watch Now
-              </LandingButton>
+              </SiteButton>
             </span>
           )}
         </div>

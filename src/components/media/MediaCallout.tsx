@@ -1,4 +1,4 @@
-import LandingButton from '../landing/LandingButton';
+import SiteButton from '../ui/SiteButton';
 import { assetPaths } from '../../constants/assets';
 
 type MediaCalloutProps = {
@@ -21,9 +21,9 @@ const MediaCallout = ({ darkMode }: MediaCalloutProps) => (
           Join us this Sunday for worship, fellowship, and life-giving messages from God&apos;s Word.
         </p>
       </div>
-      <LandingButton darkMode={darkMode} to="/contact">
+      <SiteButton darkMode={darkMode} to="/contact">
         Join us this Sunday
-      </LandingButton>
+      </SiteButton>
     </div>
   </section>
 );

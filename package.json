@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "pw:evaluate": "node scripts/playwright-evaluate.mjs",
     "lint": "eslint .",
     "optimize:hero": "node scripts/optimize-hero-image.cjs",
     "preview": "vite preview"

@@ -1,5 +1,5 @@
 import { ArrowRight, Play } from 'lucide-react';
-import LandingButton from '../landing/LandingButton';
+import SiteButton from '../ui/SiteButton';
 import type { AudioVisualItem } from '../../types/audioVisual';
 import { formatDuration, formatMediaDate } from './mediaFormat';
 import { getMediaWatchPath } from './mediaLinks';
@@ -83,9 +83,9 @@ const MediaFeatured = ({ darkMode, items, onViewMore }: MediaFeaturedProps) => {
       </div>
       {onViewMore && (
         <div className="mt-6 flex justify-center">
-          <LandingButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
+          <SiteButton darkMode={darkMode} icon={ArrowRight} iconPosition="after" variant="secondary" onClick={onViewMore}>
             View more
-          </LandingButton>
+          </SiteButton>
         </div>
       )}
     </section>
