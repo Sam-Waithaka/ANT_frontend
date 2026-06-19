@@ -1,11 +1,20 @@
-import { BookOpen, FileText, PlayCircle, UserCircle } from 'lucide-react';
+import { BookOpen, FileText, PenLine, PlayCircle, UserCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
+import { canAccessWritingStudio } from '../utils/permissions';
 
-const portalCards = [
+type PortalCard = {
+  description: string;
+  href: string;
+  icon: typeof UserCircle;
+  label?: string;
+  title: string;
+};
+
+const portalCards: PortalCard[] = [
   {
     description: 'Review your contact details and church profile information.',
     href: '/portal#profile',
@@ -36,6 +45,18 @@ const PortalPage = () => {
   const { darkMode, toggleTheme } = useTheme();
   const auth = useAuth();
   const name = [auth.user?.firstName, auth.user?.lastName].filter(Boolean).join(' ') || auth.user?.username || 'Church family';
+  const cards: PortalCard[] = canAccessWritingStudio(auth.permissions)
+    ? [
+        {
+          description: 'Create, review, publish, and curate Library resources.',
+          href: '/portal/writing',
+          icon: PenLine,
+          label: 'For website articles and resources',
+          title: 'Writing Studio',
+        },
+        ...portalCards,
+      ]
+    : portalCards;
 
   return (
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
@@ -54,7 +75,7 @@ const PortalPage = () => {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {portalCards.map(({ description, href, icon: Icon, title }) => (
+            {cards.map(({ description, href, icon: Icon, label, title }) => (
               <Link
                 key={title}
                 to={href}
@@ -67,8 +88,10 @@ const PortalPage = () => {
                 <span className={`grid size-12 place-items-center rounded-2xl ${darkMode ? 'bg-white/10 text-red-100' : 'bg-red-950/5 text-red-800'}`}>
                   <Icon size={22} />
                 </span>
+                {label ? <p className="mt-5 text-[11px] font-black uppercase tracking-[0.16em] text-red-800">{label}</p> : null}
                 <h2 className="mt-5 text-xl font-black">{title}</h2>
                 <p className={`mt-3 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>{description}</p>
+                {title === 'Writing Studio' ? <span className="mt-5 inline-flex text-sm font-black text-red-800">Open Studio</span> : null}
               </Link>
             ))}
           </div>

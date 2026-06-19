@@ -1,5 +1,6 @@
 import { ArrowRight, Clock3, Rss, UserRound } from 'lucide-react';
 import type { ReactNode } from 'react';
+import ResourcesCategoryTabs from './ResourcesCategoryTabs';
 import SiteButton from '../ui/SiteButton';
 import {
   mockCollections,
@@ -124,8 +125,8 @@ const CollectionCard = ({ collection }: { collection: ResourceCollection }) => (
   </a>
 );
 
-const BrowseListCard = ({ items, title }: { items: BrowseItem[]; title: string }) => (
-  <section>
+const BrowseListCard = ({ id, items, title }: { id?: string; items: BrowseItem[]; title: string }) => (
+  <section id={id} className="scroll-mt-28">
     <div className="mb-4 flex items-center justify-between gap-4">
       <h2 className={sectionLabelClass}>{title}</h2>
       <a
@@ -244,9 +245,11 @@ const ResourcesLanding = ({ darkMode }: ResourcesLandingProps) => (
       </div>
     </section>
 
+    <ResourcesCategoryTabs darkMode={darkMode} />
+
     <div className="grid gap-10 px-4 py-10 sm:px-6 lg:px-8">
-      <section id="featured" aria-labelledby="resources-featured">
-        <CenteredSectionHeader id="resources-featured" title="Featured" />
+      <section id="resources-featured" className="scroll-mt-28" aria-labelledby="resources-featured-heading">
+        <CenteredSectionHeader id="resources-featured-heading" title="Featured" />
         <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {mockFeaturedArticles.map((article) => (
             <ResourceArticleCard article={article} key={article.title} />
@@ -254,8 +257,8 @@ const ResourcesLanding = ({ darkMode }: ResourcesLandingProps) => (
         </div>
       </section>
 
-      <section aria-labelledby="resources-types">
-        <CenteredSectionHeader id="resources-types" title="Explore by Type" />
+      <section id="resources-types" className="scroll-mt-28" aria-labelledby="resources-types-heading">
+        <CenteredSectionHeader id="resources-types-heading" title="Explore by Type" />
         <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {mockResourceTypes.map((resourceType) => (
             <ResourceTypeCard key={resourceType.name} resourceType={resourceType} />
@@ -264,7 +267,7 @@ const ResourcesLanding = ({ darkMode }: ResourcesLandingProps) => (
       </section>
 
       <section className="grid min-w-0 gap-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <div className="min-w-0">
+        <div id="resources-collections" className="min-w-0 scroll-mt-28">
           <div className="mb-5 flex items-center justify-between gap-4">
             <h2 className={sectionLabelClass}>Featured Collections</h2>
             <a
@@ -283,8 +286,8 @@ const ResourcesLanding = ({ darkMode }: ResourcesLandingProps) => (
         </div>
 
         <div className="grid min-w-0 gap-8 md:grid-cols-2 xl:grid-cols-2">
-          <BrowseListCard title="Browse Scripture" items={mockScriptureBooks} />
-          <BrowseListCard title="Browse Ministry" items={mockMinistries} />
+          <BrowseListCard id="resources-scripture" title="Browse Scripture" items={mockScriptureBooks} />
+          <BrowseListCard id="resources-ministry" title="Browse Ministry" items={mockMinistries} />
         </div>
       </section>
 
