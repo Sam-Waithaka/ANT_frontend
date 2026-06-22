@@ -112,6 +112,7 @@ export type Writing = {
   resource_type?: number | string | null;
   resource_type_detail?: WritingResourceType | null;
   author_attributions?: WritingAuthorAttribution[];
+  categories?: WritingCategory[];
   ministries?: WritingMinistry[];
   series?: WritingSeries[];
   og_image?: number | string | null;
