@@ -12,6 +12,9 @@ export type WritingResourceType = {
   name: string;
   slug: string;
   description?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  sort_order?: number;
 };
 
 export type WritingCategory = {
@@ -19,6 +22,10 @@ export type WritingCategory = {
   name: string;
   slug: string;
   description?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  parent?: number | string | null;
+  sort_order?: number;
 };
 
 export type WritingSeries = {
@@ -27,6 +34,40 @@ export type WritingSeries = {
   name?: string;
   slug: string;
   description?: string;
+  is_active?: boolean;
+  is_featured?: boolean;
+  sort_order?: number;
+};
+
+export type WritingResourceTypeCategoryLink = {
+  id: number | string;
+  category: number | string;
+  category_detail?: WritingCategory | null;
+  is_active?: boolean;
+  is_featured?: boolean;
+  resource_type: number | string;
+  resource_type_detail?: WritingResourceType | null;
+  sort_order?: number;
+};
+
+export type WritingCategorySeriesLink = {
+  id: number | string;
+  category: number | string;
+  category_detail?: WritingCategory | null;
+  is_active?: boolean;
+  is_featured?: boolean;
+  series: number | string;
+  series_detail?: WritingSeries | null;
+  sort_order?: number;
+};
+
+export type ScriptureBookNavigationItem = {
+  id?: number | string;
+  name: string;
+  osis_id?: string;
+  osis?: string;
+  slug?: string;
+  writing_count?: number;
 };
 
 export type WritingAuthorAttribution = {
@@ -40,6 +81,7 @@ export type WritingMinistry = {
   id: number | string;
   name: string;
   slug?: string;
+  writing_count?: number;
 };
 
 export type WritingMediaAsset = {
@@ -56,7 +98,9 @@ export type Writing = {
   title: string;
   slug?: string;
   excerpt?: string;
-  content?: unknown;
+  content_json?: unknown;
+  content_html?: string;
+  content_text?: string;
   status: WritingStatus;
   reading_time_minutes?: number;
   readingTimeMinutes?: number;
@@ -88,17 +132,37 @@ export type WritingFilters = {
   status?: WritingStatus | 'ALL';
 };
 
+export type ResourcesNavigationFilters = {
+  category?: number | string;
+  category_slug?: string;
+  resource_type?: number | string;
+  resource_type_slug?: string;
+};
+
+export type ResourcesNavigation = {
+  categories: WritingCategory[];
+  category_series_links: WritingCategorySeriesLink[];
+  ministries: WritingMinistry[];
+  resource_type_category_links: WritingResourceTypeCategoryLink[];
+  resource_types: WritingResourceType[];
+  scripture_books: ScriptureBookNavigationItem[];
+  series: WritingSeries[];
+};
+
 export type WritingCreatePayload = {
-  content: unknown;
+  category_ids?: Array<number | string>;
+  content_json: unknown;
   excerpt?: string;
   resource_type?: number | string;
   status?: WritingStatus;
   title: string;
+  writing_type?: string;
 };
 
 export type WritingUpdatePayload = Partial<{
   author_attributions: WritingAuthorAttribution[];
-  content: unknown;
+  category_ids: Array<number | string>;
+  content_json: unknown;
   excerpt: string;
   featured_at: string | null;
   og_image: number | string | null;
@@ -106,7 +170,6 @@ export type WritingUpdatePayload = Partial<{
   status: WritingStatus;
   title: string;
 }>;
-
 export type WritingAssignment = {
   id: number | string;
   title: string;

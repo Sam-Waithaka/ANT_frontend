@@ -5,9 +5,11 @@ import type {
   Writing,
   WritingAssignment,
   WritingCategory,
+  WritingCategorySeriesLink,
   WritingCreatePayload,
   WritingFilters,
   WritingResourceType,
+  WritingResourceTypeCategoryLink,
   WritingSeries,
   WritingUpdatePayload,
 } from '../types/writing';
@@ -117,20 +119,32 @@ export const unfeatureWriting = (accessToken: string, id: string | number) =>
 export const fetchResourceTypes = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingResourceType>(await portalRequest<unknown>('/v1/writing-resource-types/', { accessToken, signal }));
 
+export const fetchResourceTypeCategoryLinks = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingResourceTypeCategoryLink>(await portalRequest<unknown>('/v1/writing-resource-type-categories/', { accessToken, signal }));
+
 export const fetchCategories = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingCategory>(await portalRequest<unknown>('/v1/writing-categories/', { accessToken, signal }));
 
 export const fetchSeries = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingSeries>(await portalRequest<unknown>('/v1/writing-series/', { accessToken, signal }));
 
+export const fetchCategorySeriesLinks = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingCategorySeriesLink>(await portalRequest<unknown>('/v1/writing-category-series/', { accessToken, signal }));
+
 export const createResourceType = (accessToken: string, body: Partial<WritingResourceType>) =>
   portalRequest<WritingResourceType>('/v1/writing-resource-types/', { accessToken, body, method: 'POST' });
+
+export const createResourceTypeCategoryLink = (accessToken: string, body: Partial<WritingResourceTypeCategoryLink>) =>
+  portalRequest<WritingResourceTypeCategoryLink>('/v1/writing-resource-type-categories/', { accessToken, body, method: 'POST' });
 
 export const createCategory = (accessToken: string, body: Partial<WritingCategory>) =>
   portalRequest<WritingCategory>('/v1/writing-categories/', { accessToken, body, method: 'POST' });
 
 export const createSeries = (accessToken: string, body: Partial<WritingSeries>) =>
   portalRequest<WritingSeries>('/v1/writing-series/', { accessToken, body, method: 'POST' });
+
+export const createCategorySeriesLink = (accessToken: string, body: Partial<WritingCategorySeriesLink>) =>
+  portalRequest<WritingCategorySeriesLink>('/v1/writing-category-series/', { accessToken, body, method: 'POST' });
 
 export const fetchAssignments = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingAssignment>(await portalRequest<unknown>('/v1/writing-assignments/', { accessToken, signal }));

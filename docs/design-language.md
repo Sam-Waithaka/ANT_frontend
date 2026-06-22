@@ -226,7 +226,7 @@ media_crew_black.png
 Footer link:
 
 ```text
-https://media-crew.aicnjorotown.org
+https://media-crew.aicnjoro.org
 ```
 
 ## 10. Header Pattern
@@ -262,7 +262,7 @@ Full Website coming soon.
 Rules:
 
 - Current year auto-updates.
-- Media crew logo links to `https://media-crew.aicnjorotown.org`.
+- Media crew logo links to `https://media-crew.aicnjoro.org`.
 - Footer should stay quiet and refined.
 
 ## 12. Button System

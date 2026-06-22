@@ -1,8 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../src/services/apiClient';
 import {
+  createCategorySeriesLink,
+  createResourceTypeCategoryLink,
+  fetchCategorySeriesLinks,
   createWriting,
   fetchMediaAssetUsage,
+  fetchResourceTypeCategoryLinks,
   fetchWritings,
   normalizePage,
   publishWriting,
@@ -68,19 +72,19 @@ describe('writingApi', () => {
     });
   });
 
-  it('creates a draft with minimal Lexical JSON content', async () => {
+  it('creates a draft with documented Lexical JSON content', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 7, status: 'DRAFT', title: 'Grace' }));
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(createWriting('access-token', {
-      content: { root: { children: [], type: 'root' } },
+      content_json: { root: { children: [], type: 'root' } },
       status: 'DRAFT',
       title: 'Grace',
     })).resolves.toMatchObject({ id: 7 });
 
     expect(fetchMock).toHaveBeenCalledWith('/v1/writings/', expect.objectContaining({
       body: JSON.stringify({
-        content: { root: { children: [], type: 'root' } },
+        content_json: { root: { children: [], type: 'root' } },
         status: 'DRAFT',
         title: 'Grace',
       }),
@@ -102,6 +106,31 @@ describe('writingApi', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writings/4/', expect.objectContaining({ method: 'PATCH' }));
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writings/4/publish/', expect.objectContaining({ method: 'POST' }));
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/media-assets/22/usage/', expect.objectContaining({ method: 'GET' }));
+  });
+
+  it('reads and creates reusable taxonomy curation links', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ results: [{ id: 1, resource_type: 2, category: 3 }] }))
+      .mockResolvedValueOnce(jsonResponse({ results: [{ id: 4, category: 3, series: 8 }] }))
+      .mockResolvedValueOnce(jsonResponse({ id: 5, resource_type: 2, category: 9 }))
+      .mockResolvedValueOnce(jsonResponse({ id: 6, category: 9, series: 10 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchResourceTypeCategoryLinks('access-token');
+    await fetchCategorySeriesLinks('access-token');
+    await createResourceTypeCategoryLink('access-token', { resource_type: 2, category: 9, sort_order: 1, is_active: true });
+    await createCategorySeriesLink('access-token', { category: 9, series: 10, sort_order: 1, is_active: true });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writing-resource-type-categories/', expect.objectContaining({ method: 'GET' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writing-category-series/', expect.objectContaining({ method: 'GET' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/writing-resource-type-categories/', expect.objectContaining({
+      body: JSON.stringify({ resource_type: 2, category: 9, sort_order: 1, is_active: true }),
+      method: 'POST',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/v1/writing-category-series/', expect.objectContaining({
+      body: JSON.stringify({ category: 9, series: 10, sort_order: 1, is_active: true }),
+      method: 'POST',
+    }));
   });
 
   it('preserves backend error detail and status', async () => {
