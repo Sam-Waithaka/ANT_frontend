@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import DocumentSettingsPanel from '../../../components/portal/writing/DocumentSettingsPanel';
+import WritingPreview from '../../../components/portal/writing/WritingPreview';
+import CoverImagePicker from '../../../components/portal/writing/media/CoverImagePicker';
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
-import DocumentSettingsPanel from '../../../components/portal/writing/DocumentSettingsPanel';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
+import type { MediaAsset } from '../../../services/mediaAssetsApi';
 import { createWriting, fetchResourceTypes } from '../../../services/writingApi';
 import type { WritingResourceType } from '../../../types/writing';
-import { canCreateWriting } from '../../../utils/permissions';
+import { canCreateWriting, canUploadMedia } from '../../../utils/permissions';
 
 const defaultTypes = ['Devotional', 'Bible Study', 'Pastoral Letter', 'Guide', 'Ministry Charter'];
 
@@ -18,8 +22,10 @@ const WritingNewArticlePage = () => {
   const { darkMode } = useTheme();
   const [category, setCategory] = useState('');
   const [contentJson, setContentJson] = useState<LexicalContentJson>(() => createEmptyLexicalContent());
+  const [coverImage, setCoverImage] = useState<MediaAsset | null>(null);
   const [error, setError] = useState('');
   const [excerpt, setExcerpt] = useState('');
+  const [previewMode, setPreviewMode] = useState(false);
   const [resourceType, setResourceType] = useState('');
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [saving, setSaving] = useState(false);
@@ -59,6 +65,7 @@ const WritingNewArticlePage = () => {
         category_ids: category ? [category] : undefined,
         content_json: contentJson,
         excerpt,
+        og_image: coverImage?.id || null,
         resource_type: resourceType,
         status: 'DRAFT',
         title: title.trim(),
@@ -88,21 +95,36 @@ const WritingNewArticlePage = () => {
     <WritingStudioShell intro={intro}>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <section className="min-w-0">
-          <label className="mb-4 grid gap-2 text-sm font-bold">
-            Working title
-            <input autoFocus className={fieldClass} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} />
-          </label>
-          <ArticleEditor contentJson={contentJson} darkMode={darkMode} onChange={(nextContent) => setContentJson(nextContent)} saveState="idle" />
+          {previewMode ? (
+            <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} title={title} />
+          ) : (
+            <>
+              <label className="mb-4 grid gap-2 text-sm font-bold">
+                Working title
+                <input autoFocus className={fieldClass} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} />
+              </label>
+              <ArticleEditor contentJson={contentJson} darkMode={darkMode} onChange={(nextContent) => setContentJson(nextContent)} saveState="idle" />
+            </>
+          )}
         </section>
 
         <DocumentSettingsPanel
-          actions={[{
-            disabled: saving || !canCreateWriting(auth.permissions),
-            label: saving ? 'Creating draft...' : 'Create draft',
-            onClick: () => void createDraft(),
-            variant: 'primary',
-          }]}
+          actions={[
+            {
+              icon: <Eye size={16} />,
+              label: previewMode ? 'Return to editor' : 'Preview',
+              onClick: () => setPreviewMode((current) => !current),
+              variant: 'secondary',
+            },
+            {
+              disabled: saving || !canCreateWriting(auth.permissions),
+              label: saving ? 'Creating draft...' : 'Create draft',
+              onClick: () => void createDraft(),
+              variant: 'primary',
+            },
+          ]}
           category={category}
+          coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onChange={setCoverImage} selectedAsset={coverImage} />}
           darkMode={darkMode}
           excerpt={excerpt}
           onCategoryChange={setCategory}

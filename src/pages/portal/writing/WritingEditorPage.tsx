@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Archive, ArrowLeft, Save, Send } from 'lucide-react';
+import { Archive, ArrowLeft, Eye, Save, Send } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
+import DocumentSettingsPanel, { type DocumentSettingsAction } from '../../../components/portal/writing/DocumentSettingsPanel';
+import WritingPreview from '../../../components/portal/writing/WritingPreview';
+import CoverImagePicker from '../../../components/portal/writing/media/CoverImagePicker';
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, normalizeLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
-import DocumentSettingsPanel, { type DocumentSettingsAction } from '../../../components/portal/writing/DocumentSettingsPanel';
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
+import type { MediaAsset } from '../../../services/mediaAssetsApi';
 import { archiveWriting, fetchResourceTypes, fetchWriting, publishWriting, updateWriting } from '../../../services/writingApi';
 import type { Writing, WritingResourceType, WritingUpdatePayload } from '../../../types/writing';
-import { canEditAnyWriting, canEditOwnWriting } from '../../../utils/permissions';
+import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
 import { getWritingPublishingActions } from '../../../utils/writingActions';
 
 const canEdit = (permissions: string[], writing?: Writing | null) => {
@@ -27,9 +30,12 @@ const WritingEditorPage = () => {
   const [actionSaving, setActionSaving] = useState(false);
   const [category, setCategory] = useState('');
   const [contentJson, setContentJson] = useState<LexicalContentJson>(() => createEmptyLexicalContent());
+  const [coverImage, setCoverImage] = useState<MediaAsset | null>(null);
+  const [coverImageId, setCoverImageId] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [previewMode, setPreviewMode] = useState(false);
   const [resourceType, setResourceType] = useState('');
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [title, setTitle] = useState('');
@@ -57,6 +63,8 @@ const WritingEditorPage = () => {
         setResourceType(nextWriting.resource_type ? String(nextWriting.resource_type) : '');
         setCategory(nextWriting.categories?.[0] ? String(nextWriting.categories[0].id) : '');
         setContentJson(normalizeLexicalContent(nextWriting.content_json));
+        setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
+        setCoverImageId(nextWriting.og_image ? String(nextWriting.og_image) : '');
       })
       .catch((err) => {
         if (!controller.signal.aborted) setMessage(err instanceof Error ? err.message : 'Unable to load writing.');
@@ -73,9 +81,10 @@ const WritingEditorPage = () => {
     category_ids: category ? [category] : [],
     content_json: contentJson,
     excerpt,
+    og_image: coverImageId || null,
     resource_type: resourceType || null,
     title,
-  }), [category, contentJson, excerpt, resourceType, title]);
+  }), [category, contentJson, coverImageId, excerpt, resourceType, title]);
 
   const persistDraft = useCallback(async (payload: WritingUpdatePayload) => {
     if (!writing) return;
@@ -114,7 +123,12 @@ const WritingEditorPage = () => {
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
   const publishingActions = writing ? getWritingPublishingActions(auth.permissions, writing.status) : { canArchive: false, canPublish: false };
 
-  const settingsActions: DocumentSettingsAction[] = [];
+  const settingsActions: DocumentSettingsAction[] = [{
+    icon: <Eye size={16} />,
+    label: previewMode ? 'Return to editor' : 'Preview',
+    onClick: () => setPreviewMode((current) => !current),
+    variant: 'secondary',
+  }];
   if (publishingActions.canPublish) {
     settingsActions.push({
       disabled: actionSaving,
@@ -141,6 +155,11 @@ const WritingEditorPage = () => {
     });
   }
 
+  const handleCoverImageChange = (asset: MediaAsset | null) => {
+    setCoverImage(asset);
+    setCoverImageId(asset ? String(asset.id) : '');
+  };
+
   return (
     <WritingStudioShell>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -154,20 +173,27 @@ const WritingEditorPage = () => {
       {writing ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
           <section className="min-w-0">
-            <div className="mb-4 flex flex-wrap items-center gap-3">
-              <WritingStatusBadge status={writing.status} />
-              <span className={'text-sm ' + mutedTextClass}>Draft saved through the Writing Studio.</span>
-            </div>
-            <label className="mb-4 grid gap-2 text-sm font-bold">
-              Working title
-              <input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} value={title} />
-            </label>
-            <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} onChange={(nextContent) => setContentJson(nextContent)} saveState={saveState} />
+            {previewMode ? (
+              <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} title={title} />
+            ) : (
+              <>
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                  <WritingStatusBadge status={writing.status} />
+                  <span className={'text-sm ' + mutedTextClass}>Draft saved through the Writing Studio.</span>
+                </div>
+                <label className="mb-4 grid gap-2 text-sm font-bold">
+                  Working title
+                  <input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} value={title} />
+                </label>
+                <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} onChange={(nextContent) => setContentJson(nextContent)} saveState={saveState} />
+              </>
+            )}
           </section>
 
           <DocumentSettingsPanel
             actions={settingsActions}
             category={category}
+            coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />}
             darkMode={darkMode}
             disabled={!editable}
             excerpt={excerpt}

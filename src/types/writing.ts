@@ -154,6 +154,7 @@ export type WritingCreatePayload = {
   category_ids?: Array<number | string>;
   content_json: unknown;
   excerpt?: string;
+    og_image?: number | string | null;
   resource_type?: number | string;
   status?: WritingStatus;
   title: string;

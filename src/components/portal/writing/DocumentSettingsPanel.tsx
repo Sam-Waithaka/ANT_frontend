@@ -14,6 +14,7 @@ export type DocumentSettingsAction = {
 type DocumentSettingsPanelProps = {
   actions: DocumentSettingsAction[];
   category: string;
+  coverImageControl?: ReactNode;
   darkMode: boolean;
   disabled?: boolean;
   excerpt: string;
@@ -31,6 +32,7 @@ const seriesName = (series: WritingSeries) => series.title || series.name || ser
 const DocumentSettingsPanel = ({
   actions,
   category,
+  coverImageControl,
   darkMode,
   disabled = false,
   excerpt,
@@ -138,6 +140,8 @@ const DocumentSettingsPanel = ({
           <textarea className={'min-h-28 w-full resize-y rounded-2xl border px-4 py-3 text-sm leading-6 outline-none focus:ring-2 focus:ring-red-800/30 ' + fieldClass} disabled={disabled} maxLength={320} onChange={(event) => onExcerptChange(event.target.value)} placeholder="A short invitation to read this resource." value={excerpt} />
         </label>
       </div>
+
+      {coverImageControl ? coverImageControl : null}
 
       {series.length ? (
         <div className={'mt-6 border-t pt-5 ' + (darkMode ? 'border-white/10' : 'border-black/10')}>
