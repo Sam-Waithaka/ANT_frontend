@@ -10,7 +10,7 @@ type EditorStatusProps = {
 const saveLabels: Record<EditorSaveState, string> = {
   error: 'Unable to save',
   idle: 'Not saved yet',
-  saved: 'Saved',
+  saved: 'Saved just now',
   saving: 'Saving...',
 };
 

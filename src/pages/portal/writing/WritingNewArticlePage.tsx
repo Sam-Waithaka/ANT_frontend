@@ -77,6 +77,10 @@ const WritingNewArticlePage = () => {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!canCreateWriting(auth.permissions)) return;
+    if (!title.trim() || !resourceType) {
+      setError('Add a title and resource type before creating the draft.');
+      return;
+    }
 
     setSaving(true);
     setError('');
