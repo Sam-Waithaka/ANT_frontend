@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ImagePlus, X } from 'lucide-react';
-import { fetchMediaAssets, mediaAssetImageUrl, type MediaAsset, uploadMediaAsset } from '../../../../services/mediaAssetsApi';
+import ResponsiveImage from '../../../media/ResponsiveImage';
+import { fetchMediaAsset, fetchMediaAssets, mediaAssetImageUrl, type MediaAsset, uploadMediaAsset } from '../../../../services/mediaAssetsApi';
 
 type CoverImagePickerProps = {
   accessToken: string;
@@ -67,13 +68,14 @@ const CoverImagePicker = ({
 
   const selectedImageUrl = mediaAssetImageUrl(selectedAsset);
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
+  const refreshAsset = (assetId: number | string) => () => fetchMediaAsset(accessToken, assetId);
 
   return (
     <div className={'border-t pt-5 ' + (darkMode ? 'border-white/10' : 'border-black/10')}>
       <p className="text-xs font-black uppercase tracking-[0.16em] text-red-800">Cover Image</p>
-      {selectedImageUrl ? (
+      {selectedAsset && selectedImageUrl ? (
         <div className="mt-3 overflow-hidden rounded-2xl border border-black/10">
-          <img alt={selectedAsset?.alt_text || selectedAsset?.title || 'Selected cover image'} className="aspect-video w-full object-cover" src={selectedImageUrl} />
+          <ResponsiveImage alt={selectedAsset?.alt_text || selectedAsset?.title || 'Selected cover image'} asset={selectedAsset} className="aspect-video w-full object-cover" onRefreshAsset={refreshAsset(selectedAsset.id)} preset="card" />
         </div>
       ) : selectedAssetId ? (
         <p className={'mt-3 text-sm leading-6 ' + mutedTextClass}>A cover image is selected for this article.</p>
@@ -111,7 +113,7 @@ const CoverImagePicker = ({
                 const imageUrl = mediaAssetImageUrl(asset);
                 return (
                   <button key={asset.id} className={'overflow-hidden rounded-xl border text-left transition hover:-translate-y-0.5 ' + (String(asset.id) === selectedAssetId ? 'border-red-800 ring-2 ring-red-800/20' : darkMode ? 'border-white/10' : 'border-black/10')} onClick={() => { onChange(asset); setIsOpen(false); }} type="button">
-                    {imageUrl ? <img alt={asset.alt_text || asset.title || ''} className="aspect-square w-full object-cover" src={imageUrl} /> : <span className={'grid aspect-square place-items-center text-xs ' + mutedTextClass}>Image</span>}
+                    {imageUrl ? <ResponsiveImage alt={asset.alt_text || asset.title || ''} asset={asset} className="aspect-square w-full object-cover" onRefreshAsset={refreshAsset(asset.id)} preset="thumbnail" /> : <span className={'grid aspect-square place-items-center text-xs ' + mutedTextClass}>Image</span>}
                   </button>
                 );
               })}
@@ -124,3 +126,7 @@ const CoverImagePicker = ({
 };
 
 export default CoverImagePicker;
+
+
+
+

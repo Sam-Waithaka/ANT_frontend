@@ -11,7 +11,7 @@ import WritingStudioShell from '../../../components/portal/writing/WritingStudio
 import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
-import type { MediaAsset } from '../../../services/mediaAssetsApi';
+import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
 import { archiveWriting, fetchResourceTypes, fetchWriting, publishWriting, updateWriting } from '../../../services/writingApi';
 import type { Writing, WritingResourceType, WritingUpdatePayload } from '../../../types/writing';
 import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
@@ -160,6 +160,12 @@ const WritingEditorPage = () => {
     setCoverImageId(asset ? String(asset.id) : '');
   };
 
+  const refreshCoverImage = useCallback(async () => {
+    if (!coverImage) return null;
+    const refreshedAsset = await fetchMediaAsset(auth.accessToken, coverImage.id);
+    setCoverImage(refreshedAsset);
+    return refreshedAsset;
+  }, [auth.accessToken, coverImage]);
   return (
     <WritingStudioShell>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -174,7 +180,7 @@ const WritingEditorPage = () => {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
           <section className="min-w-0">
             {previewMode ? (
-              <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} title={title} />
+              <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} onCoverImageRefresh={refreshCoverImage} title={title} />
             ) : (
               <>
                 <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -217,3 +223,5 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
+
+

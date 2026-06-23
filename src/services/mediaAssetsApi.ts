@@ -1,12 +1,34 @@
 import { ApiError, createApiUrl } from './apiClient';
 import type { PaginatedResponse, WritingMediaAsset } from '../types/writing';
 
+export type MediaAssetStatus = 'pending' | 'processing' | 'ready' | 'failed';
+export type MediaVariantFormat = 'avif' | 'webp' | 'jpeg';
+export type MediaVariantSize = 'thumb' | 'small' | 'medium' | 'large';
+
+export type MediaVariant = {
+  file_size: number | null;
+  format: MediaVariantFormat;
+  generated_at: string | null;
+  height: number;
+  id: number;
+  quality: number | null;
+  size_name: MediaVariantSize;
+  status: MediaAssetStatus;
+  url: string | null;
+  width: number;
+};
+
+export type MediaVariantMap = Partial<Record<MediaVariantFormat, Partial<Record<MediaVariantSize, MediaVariant>>>>;
+
 export type MediaAsset = WritingMediaAsset & {
-  caption?: string;
-  original_url?: string;
-  status?: string;
-  uuid?: string;
-  variant_map?: Record<string, Record<string, { height?: number; url: string; width?: number }>>;
+  caption: string;
+  height: number | null;
+  original_url: string | null;
+  status: MediaAssetStatus;
+  uuid: string;
+  variant_map: MediaVariantMap;
+  variants: MediaVariant[];
+  width: number | null;
 };
 
 const parseJson = async (response: Response) => {
@@ -68,6 +90,9 @@ export const normalizeMediaAssetPage = (payload: unknown): PaginatedResponse<Med
 export const fetchMediaAssets = async (accessToken: string, signal?: AbortSignal) =>
   normalizeMediaAssetPage(await mediaRequest<unknown>('/v1/media-assets/', accessToken, { signal }));
 
+export const fetchMediaAsset = (accessToken: string, id: number | string, signal?: AbortSignal) =>
+  mediaRequest<MediaAsset>(`/v1/media-assets/${id}/`, accessToken, { signal });
+
 export const uploadMediaAsset = async (
   accessToken: string,
   file: File,
@@ -85,9 +110,24 @@ export const uploadMediaAsset = async (
   });
 };
 
-export const mediaAssetImageUrl = (asset?: MediaAsset | null) => {
-  if (!asset) return '';
-  const webp = asset.variant_map?.webp;
-  const preferredVariant = webp?.medium || webp?.small || Object.values(webp || {})[0];
-  return preferredVariant?.url || asset.original_url || asset.url || asset.image || asset.file || '';
+const mediaVariantSizes: MediaVariantSize[] = ['thumb', 'small', 'medium', 'large'];
+
+export const readyMediaVariants = (asset: MediaAsset | null | undefined, format: MediaVariantFormat) => {
+  if (!asset || asset.status !== 'ready') return [];
+
+  return mediaVariantSizes
+    .map((size) => asset.variant_map[format]?.[size])
+    .filter((variant): variant is MediaVariant => Boolean(variant?.url && variant.status === 'ready'));
 };
+
+export const mediaAssetImageUrl = (asset?: MediaAsset | null) => {
+  if (!asset || asset.status !== 'ready') return '';
+  const preferredVariant = readyMediaVariants(asset, 'webp').find((variant) => variant.size_name === 'medium')
+    || readyMediaVariants(asset, 'webp')[0]
+    || readyMediaVariants(asset, 'jpeg').find((variant) => variant.size_name === 'medium')
+    || readyMediaVariants(asset, 'jpeg')[0]
+    || readyMediaVariants(asset, 'avif').find((variant) => variant.size_name === 'medium')
+    || readyMediaVariants(asset, 'avif')[0];
+  return preferredVariant?.url || asset.original_url || '';
+};
+

@@ -9,7 +9,7 @@ import { createEmptyLexicalContent, type LexicalContentJson } from '../../../com
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
-import type { MediaAsset } from '../../../services/mediaAssetsApi';
+import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
 import { createWriting, fetchResourceTypes } from '../../../services/writingApi';
 import type { WritingResourceType } from '../../../types/writing';
 import { canCreateWriting, canUploadMedia } from '../../../utils/permissions';
@@ -50,6 +50,13 @@ const WritingNewArticlePage = () => {
       : defaultTypes.map((name) => ({ id: name, name, slug: name.toLowerCase().replaceAll(' ', '-') })),
     [resourceTypes],
   );
+
+  const refreshCoverImage = async () => {
+    if (!coverImage) return null;
+    const refreshedAsset = await fetchMediaAsset(auth.accessToken, coverImage.id);
+    setCoverImage(refreshedAsset);
+    return refreshedAsset;
+  };
 
   const createDraft = async () => {
     if (!canCreateWriting(auth.permissions)) return;
@@ -96,7 +103,7 @@ const WritingNewArticlePage = () => {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <section className="min-w-0">
           {previewMode ? (
-            <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} title={title} />
+            <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} onCoverImageRefresh={refreshCoverImage} title={title} />
           ) : (
             <>
               <label className="mb-4 grid gap-2 text-sm font-bold">
