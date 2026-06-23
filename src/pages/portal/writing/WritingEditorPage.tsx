@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, ArrowLeft, Eye, Save } from 'lucide-react';
+import { Archive, ArrowLeft, Eye, MoreHorizontal, Save, Send } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import DocumentSettingsPanel, { type DocumentSettingsAction } from '../../../components/portal/writing/DocumentSettingsPanel';
 import WritingPreview from '../../../components/portal/writing/WritingPreview';
@@ -45,6 +45,7 @@ const WritingEditorPage = () => {
   const [message, setMessage] = useState('');
   const [mediaEmbeds, setMediaEmbeds] = useState<WritingMediaEmbedLike[]>([]);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [moreActionsOpen, setMoreActionsOpen] = useState(false);
   const [pendingMediaEmbed, setPendingMediaEmbed] = useState<WritingMediaEmbedLike | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [resourceType, setResourceType] = useState('');
@@ -169,7 +170,7 @@ const WritingEditorPage = () => {
     icon: <Save size={16} />,
     label: saveState === 'saving' ? 'Saving...' : 'Save draft',
     onClick: () => void saveNow(),
-    variant: 'primary',
+    variant: 'secondary',
   }];
   if (publishingActions.canArchive) {
     settingsActions.push({
@@ -242,70 +243,33 @@ const WritingEditorPage = () => {
       setMessage(err instanceof Error ? err.message : 'Unable to synchronize inline media.');
     });
   }, [auth.accessToken, writing]);
+  const saveStatusLabel = saveState === 'saved' ? 'Saved just now' : saveState === 'saving' ? 'Saving...' : saveState === 'error' ? 'Unable to save' : 'Draft changes are local';
+
   return (
-    <WritingStudioShell>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <Link className={darkMode ? 'inline-flex items-center gap-2 text-sm font-black text-stone-300' : 'inline-flex items-center gap-2 text-sm font-black text-zinc-700'} to="/portal/writing/articles">
-          <ArrowLeft size={16} /> Articles
-        </Link>
-      </div>
-
-      {loading ? <p className={mutedTextClass}>Loading editor...</p> : null}
-
-      {writing ? (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <section className="min-w-0">
-            {previewMode ? (
-              <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} mediaEmbeds={mediaEmbeds} onCoverImageRefresh={refreshCoverImage} title={title} />
-            ) : (
-              <>
-                <div className="mb-4 flex flex-wrap items-center gap-3">
-                  <WritingStatusBadge status={writing.status} />
-                  <span className={'text-sm ' + mutedTextClass}>Writing Studio saves changes quietly as you work.</span>
-                </div>
-                <label className="mb-4 grid gap-2 text-sm font-bold">
-                  Working title
-                  <input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} value={title} />
-                </label>
-                {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
-                <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
-              </>
-            )}
-          </section>
-
-          <DocumentSettingsPanel
-            actions={settingsActions}
-            category={category}
-            coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />}
-            darkMode={darkMode}
-            disabled={!editable}
-            excerpt={excerpt}
-            metadata={[
-              { label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' },
-              { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' },
-            ]}
-            onCategoryChange={setCategory}
-            onExcerptChange={setExcerpt}
-            onResourceTypeChange={setResourceType}
-            resourceType={resourceType}
-            resourceTypes={resourceTypes}
-            status={writing.status}
-            workflowControl={<WritingWorkflowControls {...workflowActions} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />}
-          />
+    <WritingStudioShell compact>
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-5 sm:mb-8">
+        <div>
+          <Link className={darkMode ? 'inline-flex items-center gap-2 text-xs font-bold text-stone-400 transition hover:text-stone-100' : 'inline-flex items-center gap-2 text-xs font-bold text-zinc-600 transition hover:text-zinc-950'} to="/portal/writing/articles"><ArrowLeft size={14} /> Back to Articles</Link>
+          <h1 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Writing Studio</h1>
+          <p className={'mt-2 text-sm leading-6 ' + mutedTextClass}>Create and craft resources that strengthen the church.</p>
         </div>
-      ) : null}
-
+        {writing ? <div className="flex flex-wrap items-center gap-3 pt-1"><WritingStatusBadge status={writing.status} /><span aria-live="polite" className={'inline-flex items-center gap-2 text-xs ' + mutedTextClass}><span className={'size-1.5 rounded-full ' + (saveState === 'error' ? 'bg-red-800' : saveState === 'saving' ? 'bg-amber-500' : 'bg-zinc-500')} />{saveStatusLabel}</span>{publishingActions.canArchive ? <div className="relative"><button aria-expanded={moreActionsOpen} aria-haspopup="menu" className={darkMode ? 'inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs font-bold text-stone-200 hover:bg-white/10' : 'inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-bold text-zinc-700 hover:bg-red-950/5'} onClick={() => setMoreActionsOpen((current) => !current)} type="button"><MoreHorizontal size={15} /> More actions</button>{moreActionsOpen ? <div className={darkMode ? 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-white/10 bg-[#171717] p-2 shadow-xl' : 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-black/10 bg-white p-2 shadow-xl'} role="menu"><button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-red-800 hover:bg-red-950/5" disabled={actionSaving} onClick={() => { setMoreActionsOpen(false); void runArchive(); }} role="menuitem" type="button"><Archive size={14} /> Archive</button></div> : null}</div> : null}</div> : null}
+      </header>
+      {loading ? <p className={mutedTextClass}>Loading editor...</p> : null}
+      {writing ? <div className="grid gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-8 lg:pb-0">
+        <section className="min-w-0">
+          {previewMode ? <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} mediaEmbeds={mediaEmbeds} onCoverImageRefresh={refreshCoverImage} title={title} /> : <>
+            <label className="mb-4 grid gap-2 text-sm font-bold"><span className="flex items-center justify-between gap-3">Working title <span className={'text-xs font-normal ' + mutedTextClass}>{title.length} / 120</span></span><input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} /></label>
+            {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
+            <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
+          </>}
+        </section>
+        <DocumentSettingsPanel actions={settingsActions} category={category} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} onCategoryChange={setCategory} onExcerptChange={setExcerpt} onResourceTypeChange={setResourceType} resourceType={resourceType} resourceTypes={resourceTypes} status={writing.status} workflowControl={<WritingWorkflowControls {...workflowActions} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
+      </div> : null}
+      {writing ? <div className={darkMode ? 'fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[#080808]/95 p-3 backdrop-blur lg:hidden' : 'fixed inset-x-0 bottom-0 z-20 border-t border-black/10 bg-[#f8f5ef]/95 p-3 backdrop-blur lg:hidden'}><div className="mx-auto grid max-w-lg grid-cols-3 gap-2"><button className={darkMode ? 'rounded-full border border-white/15 px-3 py-3 text-xs font-bold text-stone-100' : 'rounded-full border border-black/10 bg-white px-3 py-3 text-xs font-bold text-zinc-900'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save className="mx-auto mb-1 size-4" />Save</button><button className={darkMode ? 'rounded-full border border-white/15 px-3 py-3 text-xs font-bold text-stone-100' : 'rounded-full border border-red-900/30 bg-white px-3 py-3 text-xs font-bold text-red-800'} onClick={() => setPreviewMode((current) => !current)} type="button"><Eye className="mx-auto mb-1 size-4" />Preview</button>{workflowActions.canSubmitForReview ? <button className="rounded-full bg-red-800 px-3 py-3 text-xs font-bold text-white" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send className="mx-auto mb-1 size-4" />Submit</button> : <button className="rounded-full bg-red-800 px-3 py-3 text-xs font-bold text-white" onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button">Settings</button>}</div></div> : null}
       {message ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{message}</p> : null}
     </WritingStudioShell>
   );
 };
 
 export default WritingEditorPage;
-
-
-
-
-
-
-
-

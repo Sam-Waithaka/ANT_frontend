@@ -97,7 +97,7 @@ const ImageBlockDragPlugin = () => {
   return null;
 };
 
-const ArticleEditor = ({ contentJson, darkMode, editable = true, mediaDisabledLabel, mediaEmbeds = [], onChange, onImageBlocksChange, onPendingMediaInserted, onRequestMedia, pendingMediaEmbed, placeholder = 'Start writing your article...', saveState = 'idle' }: ArticleEditorProps) => {
+const ArticleEditor = ({ contentJson, darkMode, editable = true, mediaDisabledLabel, mediaEmbeds = [], onChange, onImageBlocksChange, onPendingMediaInserted, onRequestMedia, pendingMediaEmbed, placeholder = 'Type "/" for commands (scripture, callout, image, divider)', saveState = 'idle' }: ArticleEditorProps) => {
   const initialContent = useMemo(() => normalizeLexicalContent(contentJson), [contentJson]);
   const [plainText, setPlainText] = useState(() => lexicalContentToText(initialContent));
   const mediaInsertionPoint = useRef<LexicalSelectionBookmark | null>(null);
@@ -109,10 +109,10 @@ const ArticleEditor = ({ contentJson, darkMode, editable = true, mediaDisabledLa
   return (
     <ChurchBlockMediaContext.Provider value={media}>
       <LexicalComposer initialConfig={initialConfig}>
-        <section aria-label="Article body editor" className={'overflow-hidden rounded-3xl border shadow-lg ' + surfaceClass}>
+        <section aria-label="Article body editor" className={'overflow-hidden rounded-2xl border shadow-lg ' + surfaceClass}>
           {editable ? <EditorToolbar darkMode={darkMode} mediaDisabledLabel={mediaDisabledLabel} onRequestMedia={(bookmark) => { mediaInsertionPoint.current = bookmark; onRequestMedia?.(); }} /> : null}
-          <div className="relative min-h-96 px-5 py-6 sm:px-7 sm:py-8">
-            <RichTextPlugin ErrorBoundary={LexicalErrorBoundary} contentEditable={<ContentEditable aria-label="Article body" className={'min-h-80 whitespace-pre-wrap break-words outline-none ' + contentClass} contentEditable={editable} />} placeholder={<p className={'pointer-events-none absolute left-5 top-6 sm:left-7 sm:top-8 ' + (darkMode ? 'text-stone-500' : 'text-zinc-400')}>{placeholder}</p>} />
+          <div className="relative min-h-[55vh] px-5 py-6 sm:px-8 sm:py-8 lg:min-h-96">
+            <RichTextPlugin ErrorBoundary={LexicalErrorBoundary} contentEditable={<ContentEditable aria-label="Article body" className={'min-h-[48vh] whitespace-pre-wrap break-words text-base leading-8 outline-none sm:min-h-80 lg:text-lg ' + contentClass} contentEditable={editable} />} placeholder={<p className={'pointer-events-none absolute left-5 top-6 pr-5 sm:left-8 sm:top-8 ' + (darkMode ? 'text-stone-500' : 'text-zinc-400')}>{placeholder}</p>} />
           </div>
           <OnChangePlugin onChange={(editorState) => { const nextContent = normalizeLexicalContent(editorState.toJSON()); const nextText = editorState.read(() => $getRoot().getTextContent()); setPlainText(nextText); onChange?.(nextContent, nextText); onImageBlocksChange?.(extractImageBlocks(nextContent)); }} />
           <PendingMediaInsertion insertionPoint={mediaInsertionPoint.current} mediaEmbed={pendingMediaEmbed || null} onInserted={() => { mediaInsertionPoint.current = null; onPendingMediaInserted?.(); }} />
@@ -125,8 +125,3 @@ const ArticleEditor = ({ contentJson, darkMode, editable = true, mediaDisabledLa
 };
 
 export default ArticleEditor;
-
-
-
-
-

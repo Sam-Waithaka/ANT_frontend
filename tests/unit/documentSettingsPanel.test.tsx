@@ -62,6 +62,7 @@ describe('DocumentSettingsPanel', () => {
 
     expect(fetchMock).toHaveBeenCalledWith('/v1/resources/navigation/?resource_type_slug=bible-study', expect.anything());
     expect(container.textContent).toContain('Proverbs Lessons');
+    expect(container.textContent).toContain('0 / 200');
 
     const categorySelect = container.querySelectorAll('select')[2] as HTMLSelectElement;
     await act(async () => setSelectValue(categorySelect, '2'));

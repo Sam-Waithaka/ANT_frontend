@@ -59,7 +59,7 @@ const ToolbarButton = ({ active = false, children, darkMode, disabled = false, l
       : 'border-transparent text-zinc-700 hover:bg-black/5';
 
   return (
-    <button aria-label={label} className={'grid size-9 place-items-center rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-red-800/30 disabled:cursor-not-allowed disabled:opacity-40 ' + stateClass} disabled={disabled} onClick={onClick} title={label} type="button">
+    <button aria-label={label} className={'grid size-10 place-items-center rounded-xl border transition focus:outline-none focus:ring-2 focus:ring-red-800/30 disabled:cursor-not-allowed disabled:opacity-40 ' + stateClass} disabled={disabled} onClick={onClick} title={label} type="button">
       {children}
     </button>
   );
@@ -118,7 +118,7 @@ const EditorToolbar = ({ darkMode, mediaDisabledLabel, onRequestMedia }: EditorT
   const selectClass = darkMode ? 'border-white/10 bg-zinc-950 text-stone-100' : 'border-black/10 bg-[#fffaf0] text-zinc-950';
 
   return (
-    <div aria-label="Writing tools" className={'flex flex-wrap items-center gap-2 border-b px-3 py-2 ' + surfaceClass} role="toolbar">
+    <div aria-label="Writing tools" className={'flex min-w-max items-center gap-2 border-b px-3 py-2 ' + surfaceClass} role="toolbar">
       <div className={'relative flex items-center rounded-xl border ' + selectClass}>
         <AlignLeft aria-hidden="true" className="ml-3 size-4 text-red-800" />
         <select aria-label="Block type" className="appearance-none bg-transparent py-2 pl-2 pr-8 text-xs font-bold outline-none" defaultValue="paragraph" onChange={(event) => insertBlock(event.target.value as 'h2' | 'h3' | 'paragraph' | 'quote')}>
@@ -159,6 +159,3 @@ const EditorToolbar = ({ darkMode, mediaDisabledLabel, onRequestMedia }: EditorT
 };
 
 export default EditorToolbar;
-
-
-
