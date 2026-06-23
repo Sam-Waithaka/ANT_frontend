@@ -9,9 +9,10 @@ type WritingPreviewProps = {
   excerpt?: string;
   onCoverImageRefresh?: () => Promise<MediaAsset | null>;
   title: string;
+  mediaEmbeds?: import('../writing/editor/nodes/ChurchBlockMediaContext').WritingMediaEmbedLike[];
 };
 
-const WritingPreview = ({ contentJson, coverImage, darkMode, excerpt, onCoverImageRefresh, title }: WritingPreviewProps) => {
+const WritingPreview = ({ contentJson, coverImage, darkMode, excerpt, mediaEmbeds, onCoverImageRefresh, title }: WritingPreviewProps) => {
   const surfaceClass = darkMode ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/25' : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/5';
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
 
@@ -23,7 +24,7 @@ const WritingPreview = ({ contentJson, coverImage, darkMode, excerpt, onCoverIma
         <h1 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">{title || 'Untitled article'}</h1>
         {excerpt ? <p className={'mt-5 max-w-2xl text-lg leading-8 ' + mutedTextClass}>{excerpt}</p> : null}
         <div className={'mt-8 border-t pt-8 ' + (darkMode ? 'border-white/10' : 'border-black/10')}>
-          <WritingContentRenderer contentJson={contentJson} darkMode={darkMode} emptyMessage="Begin writing to see the article preview." />
+          <WritingContentRenderer contentJson={contentJson} darkMode={darkMode} emptyMessage="Begin writing to see the article preview." mediaEmbeds={mediaEmbeds} />
         </div>
       </div>
     </article>
@@ -31,3 +32,5 @@ const WritingPreview = ({ contentJson, coverImage, darkMode, excerpt, onCoverIma
 };
 
 export default WritingPreview;
+
+

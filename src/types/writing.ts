@@ -1,5 +1,15 @@
 export type WritingStatus = 'DRAFT' | 'IN_REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED';
 
+export type WritingWorkflowNote = {
+  action: string;
+  action_display: string;
+  created_at: string;
+  created_by: number | string;
+  created_by_name: string;
+  id: number | string;
+  note: string;
+};
+
 export type PaginatedResponse<T> = {
   count?: number;
   next?: string | null;
@@ -93,6 +103,15 @@ export type WritingMediaAsset = {
   url?: string;
 };
 
+export type WritingMediaEmbed = {
+  alt_text_override?: string;
+  caption_override?: string;
+  id: number | string;
+  media_asset: number | string;
+  media_asset_detail?: WritingMediaAsset | null;
+  position_hint?: string;
+  writing: number | string;
+};
 export type Writing = {
   id: number | string;
   title: string;
@@ -108,6 +127,7 @@ export type Writing = {
   published_at?: string | null;
   scheduled_for?: string | null;
   updated_at?: string;
+  workflow_notes?: WritingWorkflowNote[];
   created_at?: string;
   resource_type?: number | string | null;
   resource_type_detail?: WritingResourceType | null;
@@ -117,7 +137,7 @@ export type Writing = {
   series?: WritingSeries[];
   og_image?: number | string | null;
   og_image_detail?: WritingMediaAsset | null;
-  media_embeds?: Array<{ media_asset?: number | string; media_asset_detail?: WritingMediaAsset | null }>;
+  media_embeds?: WritingMediaEmbed[];
 };
 
 export type WritingFilters = {
@@ -188,4 +208,6 @@ export type MediaAssetUsage = {
   references?: Array<{ id?: number | string; title?: string; type?: string }>;
   usage_count?: number;
 };
+
+
 

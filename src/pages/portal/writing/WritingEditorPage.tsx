@@ -1,27 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Archive, ArrowLeft, Eye, Save, Send } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Archive, ArrowLeft, Eye, Save } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import DocumentSettingsPanel, { type DocumentSettingsAction } from '../../../components/portal/writing/DocumentSettingsPanel';
 import WritingPreview from '../../../components/portal/writing/WritingPreview';
+import WritingWorkflowControls from '../../../components/portal/writing/WritingWorkflowControls';
+import WritingMediaEmbedPicker from '../../../components/portal/writing/media/WritingMediaEmbedPicker';
 import CoverImagePicker from '../../../components/portal/writing/media/CoverImagePicker';
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, normalizeLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
+import { extractImageBlocks, type ImageBlockMetadata } from '../../../components/portal/writing/editor/imageBlocks';
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { archiveWriting, fetchResourceTypes, fetchWriting, publishWriting, updateWriting } from '../../../services/writingApi';
+import { archiveWriting, createWritingMediaEmbed, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
 import type { Writing, WritingResourceType, WritingUpdatePayload } from '../../../types/writing';
+import type { WritingMediaEmbedLike } from '../../../components/portal/writing/editor/nodes/ChurchBlockMediaContext';
 import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
-import { getWritingPublishingActions } from '../../../utils/writingActions';
+import { getWritingPublishingActions, getWritingWorkflowActions } from '../../../utils/writingActions';
 
 const canEdit = (permissions: string[], writing?: Writing | null) => {
   if (!writing) return false;
   if (canEditAnyWriting(permissions)) return true;
   return canEditOwnWriting(permissions) && ['DRAFT', 'IN_REVIEW', 'SCHEDULED'].includes(writing.status);
 };
+
+type WorkflowAction = 'returnToDraft' | 'schedule' | 'submitForReview' | 'unschedule';
 
 const WritingEditorPage = () => {
   const { id = '' } = useParams();
@@ -35,11 +41,16 @@ const WritingEditorPage = () => {
   const [excerpt, setExcerpt] = useState('');
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [mediaEmbeds, setMediaEmbeds] = useState<WritingMediaEmbedLike[]>([]);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const [pendingMediaEmbed, setPendingMediaEmbed] = useState<WritingMediaEmbedLike | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [resourceType, setResourceType] = useState('');
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [title, setTitle] = useState('');
   const [writing, setWriting] = useState<Writing | null>(null);
+  const imageBlockSnapshot = useRef('');
+  const knownImageEmbedIds = useRef(new Set<string>());
 
   useEffect(() => {
     const controller = new AbortController();
@@ -65,6 +76,9 @@ const WritingEditorPage = () => {
         setContentJson(normalizeLexicalContent(nextWriting.content_json));
         setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
         setCoverImageId(nextWriting.og_image ? String(nextWriting.og_image) : '');
+        setMediaEmbeds((nextWriting.media_embeds || []) as WritingMediaEmbedLike[]);
+        knownImageEmbedIds.current = new Set(extractImageBlocks(nextWriting.content_json).flatMap((block) => block.embedId === undefined ? [] : [String(block.embedId)]));
+        imageBlockSnapshot.current = JSON.stringify(extractImageBlocks(nextWriting.content_json));
       })
       .catch((err) => {
         if (!controller.signal.aborted) setMessage(err instanceof Error ? err.message : 'Unable to load writing.');
@@ -99,19 +113,38 @@ const WritingEditorPage = () => {
     value: draftPayload,
   });
 
-  const runAction = async (action: 'archive' | 'publish') => {
+  const runArchive = async () => {
     if (!writing) return;
     setActionSaving(true);
     setMessage('');
-
     try {
-      const nextWriting = action === 'publish'
-        ? await publishWriting(auth.accessToken, writing.id)
-        : await archiveWriting(auth.accessToken, writing.id);
-      setWriting(nextWriting);
-      setMessage(action === 'publish' ? 'Article published.' : 'Article archived.');
+      setWriting(await archiveWriting(auth.accessToken, writing.id));
+      setMessage('Article archived.');
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Action failed.');
+      setMessage(err instanceof Error ? err.message : 'Unable to archive this article.');
+    } finally {
+      setActionSaving(false);
+    }
+  };
+
+  const runWorkflowAction = async (action: WorkflowAction, value = ''): Promise<boolean> => {
+    if (!writing) return false;
+    setActionSaving(true);
+    setMessage('');
+    try {
+      const nextWriting = action === 'submitForReview'
+        ? await submitWritingForReview(auth.accessToken, writing.id, value)
+        : action === 'returnToDraft'
+          ? await returnWritingToDraft(auth.accessToken, writing.id, value)
+          : action === 'schedule'
+            ? await scheduleWriting(auth.accessToken, writing.id, value)
+            : await unscheduleWriting(auth.accessToken, writing.id);
+      setWriting(nextWriting);
+      setMessage(action === 'submitForReview' ? 'Article submitted for review.' : action === 'returnToDraft' ? 'Article returned to draft.' : action === 'schedule' ? 'Publication scheduled.' : 'Scheduling cancelled.');
+      return true;
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Editorial action failed.');
+      return false;
     } finally {
       setActionSaving(false);
     }
@@ -122,35 +155,26 @@ const WritingEditorPage = () => {
     : 'w-full rounded-2xl border border-black/10 bg-[#fffaf0] px-4 py-3 text-sm text-zinc-950 outline-none focus:ring-2 focus:ring-red-800/30';
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
   const publishingActions = writing ? getWritingPublishingActions(auth.permissions, writing.status) : { canArchive: false, canPublish: false };
+  const workflowActions = writing ? getWritingWorkflowActions(auth.permissions, writing.status) : { canReturnToDraft: false, canSchedule: false, canSubmitForReview: false, canUnschedule: false };
 
   const settingsActions: DocumentSettingsAction[] = [{
     icon: <Eye size={16} />,
     label: previewMode ? 'Return to editor' : 'Preview',
     onClick: () => setPreviewMode((current) => !current),
     variant: 'secondary',
-  }];
-  if (publishingActions.canPublish) {
-    settingsActions.push({
-      disabled: actionSaving,
-      icon: <Send size={16} />,
-      label: 'Publish',
-      onClick: () => void runAction('publish'),
-      variant: 'primary',
-    });
-  }
-  settingsActions.push({
+  }, {
     disabled: !editable || saveState === 'saving',
     icon: <Save size={16} />,
     label: saveState === 'saving' ? 'Saving...' : 'Save draft',
     onClick: () => void saveNow(),
-    variant: publishingActions.canPublish ? 'secondary' : 'primary',
-  });
+    variant: 'primary',
+  }];
   if (publishingActions.canArchive) {
     settingsActions.push({
       disabled: actionSaving,
       icon: <Archive size={16} />,
       label: 'Archive',
-      onClick: () => void runAction('archive'),
+      onClick: () => void runArchive(),
       variant: 'danger',
     });
   }
@@ -166,6 +190,40 @@ const WritingEditorPage = () => {
     setCoverImage(refreshedAsset);
     return refreshedAsset;
   }, [auth.accessToken, coverImage]);
+
+  const insertMediaEmbed = async (asset: MediaAsset) => {
+    if (!writing) return;
+    const created = await createWritingMediaEmbed(auth.accessToken, {
+      media_asset: asset.id,
+      position_hint: 'root.children',
+      writing: writing.id,
+    });
+    const mediaEmbed = { ...created, media_asset_detail: created.media_asset_detail || asset } as unknown as WritingMediaEmbedLike;
+    setMediaEmbeds((current) => [...current, mediaEmbed]);
+    setPendingMediaEmbed(mediaEmbed);
+  };
+  const syncImageBlocks = useCallback((blocks: ImageBlockMetadata[]) => {
+    if (!writing) return;
+    const snapshot = JSON.stringify(blocks);
+    if (snapshot === imageBlockSnapshot.current) return;
+    imageBlockSnapshot.current = snapshot;
+    const currentIds = new Set(blocks.flatMap((block) => block.embedId === undefined ? [] : [String(block.embedId)]));
+    const removedIds = [...knownImageEmbedIds.current].filter((embedId) => !currentIds.has(embedId));
+    knownImageEmbedIds.current = currentIds;
+
+    void Promise.all([
+      ...blocks.filter((block) => block.embedId !== undefined).map((block) => updateWritingMediaEmbed(auth.accessToken, block.embedId as number | string, {
+        alt_text_override: block.altText,
+        caption_override: block.caption,
+        position_hint: block.positionHint,
+      })),
+      ...removedIds.map((embedId) => deleteWritingMediaEmbed(auth.accessToken, embedId)),
+    ]).then(() => {
+      setMediaEmbeds((current) => current.filter((embed) => currentIds.has(String(embed.id))));
+    }).catch((err) => {
+      setMessage(err instanceof Error ? err.message : 'Unable to synchronize inline media.');
+    });
+  }, [auth.accessToken, writing]);
   return (
     <WritingStudioShell>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -180,18 +238,19 @@ const WritingEditorPage = () => {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
           <section className="min-w-0">
             {previewMode ? (
-              <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} onCoverImageRefresh={refreshCoverImage} title={title} />
+              <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} mediaEmbeds={mediaEmbeds} onCoverImageRefresh={refreshCoverImage} title={title} />
             ) : (
               <>
                 <div className="mb-4 flex flex-wrap items-center gap-3">
                   <WritingStatusBadge status={writing.status} />
-                  <span className={'text-sm ' + mutedTextClass}>Draft saved through the Writing Studio.</span>
+                  <span className={'text-sm ' + mutedTextClass}>Writing Studio saves changes quietly as you work.</span>
                 </div>
                 <label className="mb-4 grid gap-2 text-sm font-bold">
                   Working title
                   <input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} value={title} />
                 </label>
-                <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} onChange={(nextContent) => setContentJson(nextContent)} saveState={saveState} />
+                {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
+                <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
               </>
             )}
           </section>
@@ -213,6 +272,7 @@ const WritingEditorPage = () => {
             resourceType={resourceType}
             resourceTypes={resourceTypes}
             status={writing.status}
+            workflowControl={<WritingWorkflowControls {...workflowActions} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />}
           />
         </div>
       ) : null}
@@ -223,5 +283,9 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
+
+
+
+
 
 

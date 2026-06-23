@@ -25,6 +25,7 @@ type DocumentSettingsPanelProps = {
   resourceType: string;
   resourceTypes: WritingResourceType[];
   status: WritingStatus;
+  workflowControl?: ReactNode;
 };
 
 const seriesName = (series: WritingSeries) => series.title || series.name || series.slug;
@@ -43,6 +44,7 @@ const DocumentSettingsPanel = ({
   resourceType,
   resourceTypes,
   status,
+  workflowControl,
 }: DocumentSettingsPanelProps) => {
   const [categories, setCategories] = useState<WritingCategory[]>([]);
   const [series, setSeries] = useState<WritingSeries[]>([]);
@@ -142,6 +144,7 @@ const DocumentSettingsPanel = ({
       </div>
 
       {coverImageControl ? coverImageControl : null}
+      {workflowControl ? workflowControl : null}
 
       {series.length ? (
         <div className={'mt-6 border-t pt-5 ' + (darkMode ? 'border-white/10' : 'border-black/10')}>
@@ -180,3 +183,4 @@ const DocumentSettingsPanel = ({
 };
 
 export default DocumentSettingsPanel;
+

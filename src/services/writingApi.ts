@@ -8,6 +8,7 @@ import type {
   WritingCategorySeriesLink,
   WritingCreatePayload,
   WritingFilters,
+  WritingMediaEmbed,
   WritingResourceType,
   WritingResourceTypeCategoryLink,
   WritingSeries,
@@ -110,6 +111,17 @@ export const publishWriting = (accessToken: string, id: string | number) =>
 export const archiveWriting = (accessToken: string, id: string | number) =>
   portalRequest<Writing>(`/v1/writings/${id}/archive/`, { accessToken, method: 'POST' });
 
+export const submitWritingForReview = (accessToken: string, id: string | number, note = '') =>
+  portalRequest<Writing>(`/v1/writings/${id}/submit-for-review/`, { accessToken, body: { note }, method: 'POST' });
+
+export const returnWritingToDraft = (accessToken: string, id: string | number, note = '') =>
+  portalRequest<Writing>(`/v1/writings/${id}/return-to-draft/`, { accessToken, body: { note }, method: 'POST' });
+
+export const scheduleWriting = (accessToken: string, id: string | number, scheduledFor: string) =>
+  portalRequest<Writing>(`/v1/writings/${id}/schedule/`, { accessToken, body: { scheduled_for: scheduledFor }, method: 'POST' });
+
+export const unscheduleWriting = (accessToken: string, id: string | number) =>
+  portalRequest<Writing>(`/v1/writings/${id}/unschedule/`, { accessToken, method: 'POST' });
 export const featureWriting = (accessToken: string, id: string | number) =>
   portalRequest<Writing>(`/v1/writings/${id}/feature/`, { accessToken, method: 'POST' });
 
@@ -146,6 +158,13 @@ export const createSeries = (accessToken: string, body: Partial<WritingSeries>) 
 export const createCategorySeriesLink = (accessToken: string, body: Partial<WritingCategorySeriesLink>) =>
   portalRequest<WritingCategorySeriesLink>('/v1/writing-category-series/', { accessToken, body, method: 'POST' });
 
+export const createWritingMediaEmbed = (accessToken: string, body: Pick<WritingMediaEmbed, 'media_asset' | 'position_hint' | 'writing'> & Partial<Pick<WritingMediaEmbed, 'alt_text_override' | 'caption_override'>>) =>
+  portalRequest<WritingMediaEmbed>('/v1/writing-media-embeds/', { accessToken, body, method: 'POST' });
+export const updateWritingMediaEmbed = (accessToken: string, id: number | string, body: Partial<Pick<WritingMediaEmbed, 'alt_text_override' | 'caption_override' | 'position_hint'>>) =>
+  portalRequest<WritingMediaEmbed>(`/v1/writing-media-embeds/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteWritingMediaEmbed = (accessToken: string, id: number | string) =>
+  portalRequest<null>(`/v1/writing-media-embeds/${id}/`, { accessToken, method: 'DELETE' });
 export const fetchAssignments = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingAssignment>(await portalRequest<unknown>('/v1/writing-assignments/', { accessToken, signal }));
 
@@ -160,3 +179,8 @@ export const deleteAssignment = (accessToken: string, id: string | number) =>
 
 export const fetchMediaAssetUsage = (accessToken: string, id: string | number, signal?: AbortSignal) =>
   portalRequest<MediaAssetUsage>(`/v1/media-assets/${id}/usage/`, { accessToken, signal });
+
+
+
+
+
