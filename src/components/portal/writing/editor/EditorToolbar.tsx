@@ -36,7 +36,8 @@ import { $createDefaultChurchBlock } from './nodes/ChurchBlockNode';
 
 type EditorToolbarProps = {
   darkMode: boolean;
-  onRequestMedia?: () => void;
+  onRequestMedia?: (bookmark: import('./selectionBookmark').LexicalSelectionBookmark | null) => void;
+  mediaDisabledLabel?: string;
 };
 
 type ToolbarButtonProps = {
@@ -68,7 +69,7 @@ const ToolbarGroup = ({ children, darkMode, separated = true }: { children: Reac
   <div className={'flex items-center gap-1 ' + (separated ? 'border-l pl-2 ' + (darkMode ? 'border-white/10' : 'border-black/10') : '')}>{children}</div>
 );
 
-const EditorToolbar = ({ darkMode, onRequestMedia }: EditorToolbarProps) => {
+const EditorToolbar = ({ darkMode, mediaDisabledLabel, onRequestMedia }: EditorToolbarProps) => {
   const [editor] = useLexicalComposerContext();
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
   const [canRedo, setCanRedo] = useState(false);
@@ -102,6 +103,17 @@ const EditorToolbar = ({ darkMode, onRequestMedia }: EditorToolbarProps) => {
     if (url !== null) editor.dispatchCommand(TOGGLE_LINK_COMMAND, url.trim() || null);
   };
 
+  const requestMedia = () => {
+    let bookmark: import('./selectionBookmark').LexicalSelectionBookmark | null = null;
+    editor.getEditorState().read(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) bookmark = {
+        anchor: { key: selection.anchor.key, offset: selection.anchor.offset, type: selection.anchor.type },
+        focus: { key: selection.focus.key, offset: selection.focus.offset, type: selection.focus.type },
+      };
+    });
+    onRequestMedia?.(bookmark);
+  };
   const surfaceClass = darkMode ? 'border-white/10 bg-[#171717] text-stone-100' : 'border-black/10 bg-white text-zinc-950';
   const selectClass = darkMode ? 'border-white/10 bg-zinc-950 text-stone-100' : 'border-black/10 bg-[#fffaf0] text-zinc-950';
 
@@ -135,7 +147,7 @@ const EditorToolbar = ({ darkMode, onRequestMedia }: EditorToolbarProps) => {
 
       <ToolbarGroup darkMode={darkMode}>
         <ToolbarButton darkMode={darkMode} label="Insert divider" onClick={() => insertChurchBlock('divider')}><Minus size={16} /></ToolbarButton>
-        {onRequestMedia ? <ToolbarButton darkMode={darkMode} label="Insert image" onClick={onRequestMedia}><Image size={16} /></ToolbarButton> : null}
+        {onRequestMedia ? <ToolbarButton darkMode={darkMode} label="Insert image" onClick={requestMedia}><Image size={16} /></ToolbarButton> : mediaDisabledLabel ? <ToolbarButton darkMode={darkMode} disabled label={mediaDisabledLabel} onClick={() => undefined}><Image size={16} /></ToolbarButton> : null}
       </ToolbarGroup>
 
       <ToolbarGroup darkMode={darkMode}>
@@ -147,3 +159,6 @@ const EditorToolbar = ({ darkMode, onRequestMedia }: EditorToolbarProps) => {
 };
 
 export default EditorToolbar;
+
+
+

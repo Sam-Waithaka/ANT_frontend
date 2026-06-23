@@ -63,7 +63,7 @@ const ChurchBlockView = ({ data, nodeKey }: { data: ChurchBlockData; nodeKey: No
           <ImageLayoutButton active={alignment === 'wide'} icon={<Maximize2 size={15} />} label="Make image wide" onClick={() => update({ alignment: 'wide' })} />
           <button aria-label="Remove image block" className="grid size-8 place-items-center rounded-lg text-red-800 hover:bg-red-50" onClick={() => editor.update(() => { const node = $getNodeByKey(nodeKey); if ($isChurchBlockNode(node)) node.remove(); })} title="Remove image block" type="button"><Trash2 size={15} /></button>
         </div> : null}
-        {asset ? <ResponsiveImage alt={data.altText || asset.alt_text || asset.title || ''} asset={asset} className="aspect-video w-full object-cover" preset="articleCover" /> : <div className="grid aspect-video place-items-center bg-red-950/[0.03] text-sm text-zinc-600 dark:text-stone-300"><span className="inline-flex items-center gap-2"><ImageIcon size={16} /> Media image</span></div>}
+        {asset?.status === 'ready' ? <ResponsiveImage alt={data.altText || asset.alt_text || asset.title || ''} asset={asset} className="aspect-video w-full object-cover" preset="articleCover" /> : <div className="grid aspect-video place-items-center bg-red-950/[0.03] text-sm text-zinc-600 dark:text-stone-300"><span className="inline-flex items-center gap-2"><ImageIcon size={16} /> {asset?.status === 'failed' ? 'Image processing failed' : 'Preparing image...'}</span></div>}
         <figcaption className="grid gap-2 px-4 py-3 text-sm leading-6 text-zinc-600 dark:text-stone-400">{editable ? <><input aria-label="Image alternative text" className={inputClass} onChange={(event) => update({ altText: event.target.value })} placeholder="Describe this image" value={data.altText || ''} /><input aria-label="Image caption" className={inputClass} onChange={(event) => update({ caption: event.target.value })} placeholder="Add a caption" value={data.caption || ''} /></> : data.caption}</figcaption>
       </figure>
     );
@@ -91,3 +91,4 @@ export class ChurchBlockNode extends DecoratorNode<ReactNode> {
 export const $createChurchBlockNode = (data: ChurchBlockData) => $applyNodeReplacement(new ChurchBlockNode(data));
 export const $createDefaultChurchBlock = (kind: Exclude<ChurchBlockKind, 'image'>) => $createChurchBlockNode(defaults[kind]);
 export const $isChurchBlockNode = (node: LexicalNode | null | undefined): node is ChurchBlockNode => node instanceof ChurchBlockNode;
+

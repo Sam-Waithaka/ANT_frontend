@@ -29,6 +29,8 @@ const canEdit = (permissions: string[], writing?: Writing | null) => {
 
 type WorkflowAction = 'returnToDraft' | 'schedule' | 'submitForReview' | 'unschedule';
 
+const waitForMedia = (milliseconds: number) => new Promise((resolve) => globalThis.setTimeout(resolve, milliseconds));
+
 const WritingEditorPage = () => {
   const { id = '' } = useParams();
   const auth = useAuth();
@@ -191,6 +193,21 @@ const WritingEditorPage = () => {
     return refreshedAsset;
   }, [auth.accessToken, coverImage]);
 
+  const refreshInlineMedia = useCallback(async (assetId: number | string) => {
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await waitForMedia(2_000);
+      const asset = await fetchMediaAsset(auth.accessToken, assetId);
+      if (asset.status === 'ready') {
+        setMediaEmbeds((current) => current.map((embed) => String(embed.media_asset) === String(assetId) ? { ...embed, media_asset_detail: asset } : embed));
+        return;
+      }
+      if (asset.status === 'failed') {
+        setMessage('The uploaded image could not be processed.');
+        return;
+      }
+    }
+  }, [auth.accessToken]);
+
   const insertMediaEmbed = async (asset: MediaAsset) => {
     if (!writing) return;
     const created = await createWritingMediaEmbed(auth.accessToken, {
@@ -201,6 +218,7 @@ const WritingEditorPage = () => {
     const mediaEmbed = { ...created, media_asset_detail: created.media_asset_detail || asset } as unknown as WritingMediaEmbedLike;
     setMediaEmbeds((current) => [...current, mediaEmbed]);
     setPendingMediaEmbed(mediaEmbed);
+    if (asset.status !== 'ready') void refreshInlineMedia(asset.id).catch(() => setMessage('Unable to refresh the uploaded image.'));
   };
   const syncImageBlocks = useCallback((blocks: ImageBlockMetadata[]) => {
     if (!writing) return;
@@ -249,7 +267,7 @@ const WritingEditorPage = () => {
                   Working title
                   <input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} value={title} />
                 </label>
-                {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
+                {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
                 <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
               </>
             )}
@@ -283,6 +301,8 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
+
+
 
 
 

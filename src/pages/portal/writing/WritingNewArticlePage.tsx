@@ -110,7 +110,7 @@ const WritingNewArticlePage = () => {
                 Working title
                 <input autoFocus className={fieldClass} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} />
               </label>
-              <ArticleEditor contentJson={contentJson} darkMode={darkMode} onChange={(nextContent) => setContentJson(nextContent)} saveState="idle" />
+              <ArticleEditor contentJson={contentJson} darkMode={darkMode} mediaDisabledLabel="Save draft to insert images" onChange={(nextContent) => setContentJson(nextContent)} saveState="idle" />
             </>
           )}
         </section>
@@ -149,3 +149,5 @@ const WritingNewArticlePage = () => {
 };
 
 export default WritingNewArticlePage;
+
+
