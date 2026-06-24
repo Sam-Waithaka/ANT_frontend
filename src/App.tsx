@@ -22,11 +22,13 @@ import WritingStudioPage from './pages/portal/writing/WritingStudioPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { Project52Provider } from './contexts/Project52Context';
 import { ScriptureReaderProvider } from './contexts/ScriptureReaderContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 function App() {
   return (
-    <AuthProvider>
-      <Project52Provider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Project52Provider>
         <ScriptureReaderProvider>
           <RouteTransition>
             <Routes>
@@ -52,9 +54,11 @@ function App() {
             </Routes>
           </RouteTransition>
         </ScriptureReaderProvider>
-      </Project52Provider>
-    </AuthProvider>
+        </Project52Provider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
 export default App;
+
