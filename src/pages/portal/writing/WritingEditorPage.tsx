@@ -246,7 +246,7 @@ const WritingEditorPage = () => {
   const saveStatusLabel = saveState === 'saved' ? 'Saved just now' : saveState === 'saving' ? 'Saving...' : saveState === 'error' ? 'Unable to save' : 'Draft changes are local';
 
   return (
-    <WritingStudioShell compact>
+    <WritingStudioShell compact hideNavigation>
       <header className="mb-6 flex flex-wrap items-start justify-between gap-5 sm:mb-8">
         <div>
           <Link className={darkMode ? 'inline-flex items-center gap-2 text-xs font-bold text-stone-400 transition hover:text-stone-100' : 'inline-flex items-center gap-2 text-xs font-bold text-zinc-600 transition hover:text-zinc-950'} to="/portal/writing/articles"><ArrowLeft size={14} /> Back to Articles</Link>

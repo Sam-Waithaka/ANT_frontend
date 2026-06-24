@@ -99,7 +99,7 @@ const WritingNewArticlePage = () => {
   );
 
   return (
-    <WritingStudioShell intro={intro}>
+    <WritingStudioShell hideNavigation intro={intro}>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <section className="min-w-0">
           {previewMode ? (
@@ -149,5 +149,3 @@ const WritingNewArticlePage = () => {
 };
 
 export default WritingNewArticlePage;
-
-
