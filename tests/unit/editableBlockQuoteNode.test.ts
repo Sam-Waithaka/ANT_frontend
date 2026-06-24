@@ -13,4 +13,24 @@ describe('EditableBlockQuoteNode', () => {
     });
     expect(serialized).toMatchObject({ data: { content: 'An updated quotation.' }, type: 'editorial-blockquote' });
   });
+
+  it('persists quotation attribution and context separately from the quote text', () => {
+    const editor = createEditor({ nodes: [EditableBlockQuoteNode] });
+    let serialized: unknown;
+    editor.update(() => {
+      serialized = $createEditableBlockQuoteNode({
+        attribution: 'Tim Keller',
+        content: 'To be loved and to be known.',
+        context: 'On prayer',
+      }).exportJSON();
+    });
+    expect(serialized).toMatchObject({
+      data: {
+        attribution: 'Tim Keller',
+        content: 'To be loved and to be known.',
+        context: 'On prayer',
+      },
+      type: 'editorial-blockquote',
+    });
+  });
 });
