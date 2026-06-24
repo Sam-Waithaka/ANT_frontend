@@ -12,6 +12,9 @@ import { normalizeLexicalContent } from '../portal/writing/editor/serialization'
 import { ChurchBlockNode } from '../portal/writing/editor/nodes/ChurchBlockNode';
 import { ScriptureBlockNode } from '../portal/writing/editor/nodes/ScriptureBlockNode';
 import { ScriptureReferenceNode } from '../portal/writing/editor/nodes/ScriptureReferenceNode';
+import { ReflectionBlockNode } from '../portal/writing/editor/nodes/ReflectionBlockNode';
+import { PrayerBlockNode } from '../portal/writing/editor/nodes/PrayerBlockNode';
+import { ApplicationBlockNode } from '../portal/writing/editor/nodes/ApplicationBlockNode';
 import { ChurchBlockMediaContext, mediaEmbedMap, type WritingMediaEmbedLike } from '../portal/writing/editor/nodes/ChurchBlockMediaContext';
 import { writingEditorTheme } from './lexicalTheme';
 
@@ -27,7 +30,7 @@ const WritingContentRenderer = ({ contentJson, darkMode, emptyMessage = 'This ar
   const media = useMemo(() => mediaEmbedMap(mediaEmbeds), [mediaEmbeds]);
   const initialConfig = useMemo(() => ({
     editable: false, editorState: JSON.stringify(initialContent), namespace: 'aic-njoro-writing-content',
-    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, ChurchBlockNode, ScriptureBlockNode, ScriptureReferenceNode],
+    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, ChurchBlockNode, ScriptureBlockNode, ScriptureReferenceNode, ReflectionBlockNode, PrayerBlockNode, ApplicationBlockNode],
     onError: (error: Error) => { throw error; }, theme: writingEditorTheme,
   }), [initialContent]);
 

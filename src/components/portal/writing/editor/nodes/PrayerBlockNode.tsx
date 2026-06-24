@@ -1,0 +1,7 @@
+import type { ReactNode } from 'react';
+import { $applyNodeReplacement, DecoratorNode, type NodeKey, type SerializedLexicalNode } from 'lexical';
+import PastoralBlockView from './PastoralBlockView';
+import type { PastoralBlockData } from './pastoralTypes';
+export type SerializedPrayerBlockNode = SerializedLexicalNode & { data: PastoralBlockData; type: 'prayer-block'; version: 1; };
+export class PrayerBlockNode extends DecoratorNode<ReactNode> { __data: PastoralBlockData; static getType(): string { return 'prayer-block'; } static clone(node: PrayerBlockNode): PrayerBlockNode { return new PrayerBlockNode(node.__data, node.__key); } static importJSON(serialized: SerializedPrayerBlockNode): PrayerBlockNode { return $createPrayerBlockNode(serialized.data); } constructor(data: PastoralBlockData, key?: NodeKey) { super(key); this.__data = data; } createDOM(): HTMLElement { return document.createElement('div'); } updateDOM(): false { return false; } exportJSON(): SerializedPrayerBlockNode { return { ...super.exportJSON(), data: this.__data, type: 'prayer-block', version: 1 }; } decorate(): ReactNode { return <PastoralBlockView data={this.__data} kind="prayer" />; } }
+export const $createPrayerBlockNode = (data: PastoralBlockData) => $applyNodeReplacement(new PrayerBlockNode(data));
