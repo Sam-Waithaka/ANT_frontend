@@ -10,6 +10,7 @@ describe('Pastoral Lexical blocks', () => {
     let serialized: unknown;
     editor.update(() => { serialized = $createReflectionBlockNode({ authorVoice: 'Pastoral Reflection', content: 'All things work together for good.', title: 'Meditation' }).exportJSON(); });
     expect(serialized).toMatchObject({ data: { authorVoice: 'Pastoral Reflection', content: 'All things work together for good.', title: 'Meditation' }, type: 'reflection-block' });
+    editor.update(() => { const node = $createReflectionBlockNode({ content: 'Initial reflection.' }); node.setData({ authorVoice: 'Pastoral Reflection', content: 'Updated reflection.' }); expect(node.getData()).toEqual({ authorVoice: 'Pastoral Reflection', content: 'Updated reflection.' }); });
   });
 
   it('keeps prayer and application as distinct content types', () => {

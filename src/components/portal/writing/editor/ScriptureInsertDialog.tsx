@@ -7,13 +7,13 @@ import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../../..
 import type { ScriptureData, ScriptureDisplay } from './nodes/scriptureTypes';
 import { formatScriptureVerseSelection } from './scriptureSelection';
 
-type ScriptureInsertDialogProps = { darkMode: boolean; onClose: () => void; onInsert: (data: ScriptureData) => void; };
+type ScriptureInsertDialogProps = { darkMode: boolean; initialData?: ScriptureData; onClose: () => void; onInsert: (data: ScriptureData) => void; };
 type Mode = 'library' | 'manual';
 type PickerMenu = 'version' | ReferencePickerMenu;
 
-const ScriptureInsertDialog = ({ darkMode, onClose, onInsert }: ScriptureInsertDialogProps) => {
-  const [mode, setMode] = useState<Mode>('library');
-  const [display, setDisplay] = useState<ScriptureDisplay>('block');
+const ScriptureInsertDialog = ({ darkMode, initialData, onClose, onInsert }: ScriptureInsertDialogProps) => {
+  const [mode, setMode] = useState<Mode>(initialData ? 'manual' : 'library');
+  const [display, setDisplay] = useState<ScriptureDisplay>(initialData?.display || 'block');
   const [versions, setVersions] = useState<BibleVersion[]>([]);
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [chapters, setChapters] = useState<BibleChapter[]>([]);
@@ -22,9 +22,9 @@ const ScriptureInsertDialog = ({ darkMode, onClose, onInsert }: ScriptureInsertD
   const [bookId, setBookId] = useState('');
   const [chapterId, setChapterId] = useState('');
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
-  const [manualReference, setManualReference] = useState('');
-  const [manualVersion, setManualVersion] = useState('');
-  const [manualText, setManualText] = useState('');
+  const [manualReference, setManualReference] = useState(initialData?.reference || '');
+  const [manualVersion, setManualVersion] = useState(initialData?.version || '');
+  const [manualText, setManualText] = useState(initialData?.text || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [openPicker, setOpenPicker] = useState<PickerMenu>(null);

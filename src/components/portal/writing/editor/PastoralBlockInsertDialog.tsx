@@ -2,14 +2,14 @@ import { HandHeart, MessageSquareQuote, Target, X } from 'lucide-react';
 import { useState } from 'react';
 import type { PastoralBlockData, PastoralBlockKind } from './nodes/pastoralTypes';
 
-type PastoralBlockInsertDialogProps = { darkMode: boolean; onClose: () => void; onInsert: (kind: PastoralBlockKind, data: PastoralBlockData) => void; };
+type PastoralBlockInsertDialogProps = { darkMode: boolean; initialData?: PastoralBlockData; initialKind?: PastoralBlockKind; onClose: () => void; onInsert: (kind: PastoralBlockKind, data: PastoralBlockData) => void; };
 const tabs = [{ kind: 'reflection', label: 'Reflection', subtitle: 'Set apart the reflection', icon: MessageSquareQuote }, { kind: 'prayer', label: 'Prayer', subtitle: 'Set apart the prayer', icon: HandHeart }, { kind: 'application', label: 'Application', subtitle: 'Set apart the application', icon: Target }] as const;
 
-const PastoralBlockInsertDialog = ({ darkMode, onClose, onInsert }: PastoralBlockInsertDialogProps) => {
-  const [kind, setKind] = useState<PastoralBlockKind>('reflection');
-  const [title, setTitle] = useState('');
-  const [authorVoice, setAuthorVoice] = useState('');
-  const [content, setContent] = useState('');
+const PastoralBlockInsertDialog = ({ darkMode, initialData, initialKind = 'reflection', onClose, onInsert }: PastoralBlockInsertDialogProps) => {
+  const [kind, setKind] = useState<PastoralBlockKind>(initialKind);
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [authorVoice, setAuthorVoice] = useState(initialData?.authorVoice || '');
+  const [content, setContent] = useState(initialData?.content || '');
   const [error, setError] = useState('');
   const active = tabs.find((tab) => tab.kind === kind)!;
   const Icon = active.icon;
