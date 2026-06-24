@@ -10,6 +10,7 @@ import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { normalizeLexicalContent } from '../portal/writing/editor/serialization';
 import { ChurchBlockNode } from '../portal/writing/editor/nodes/ChurchBlockNode';
+import { EditableBlockQuoteNode } from '../portal/writing/editor/nodes/EditableBlockQuoteNode';
 import { ScriptureBlockNode } from '../portal/writing/editor/nodes/ScriptureBlockNode';
 import { ScriptureReferenceNode } from '../portal/writing/editor/nodes/ScriptureReferenceNode';
 import { ReflectionBlockNode } from '../portal/writing/editor/nodes/ReflectionBlockNode';
@@ -30,7 +31,7 @@ const WritingContentRenderer = ({ contentJson, darkMode, emptyMessage = 'This ar
   const media = useMemo(() => mediaEmbedMap(mediaEmbeds), [mediaEmbeds]);
   const initialConfig = useMemo(() => ({
     editable: false, editorState: JSON.stringify(initialContent), namespace: 'aic-njoro-writing-content',
-    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, ChurchBlockNode, ScriptureBlockNode, ScriptureReferenceNode, ReflectionBlockNode, PrayerBlockNode, ApplicationBlockNode],
+    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, ChurchBlockNode, EditableBlockQuoteNode, ScriptureBlockNode, ScriptureReferenceNode, ReflectionBlockNode, PrayerBlockNode, ApplicationBlockNode],
     onError: (error: Error) => { throw error; }, theme: writingEditorTheme,
   }), [initialContent]);
 
