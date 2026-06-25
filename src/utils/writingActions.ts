@@ -1,4 +1,4 @@
-import type { WritingStatus } from '../types/writing';
+﻿import type { WritingStatus } from '../types/writing';
 import { canArchiveWriting, canEditAnyWriting, canEditOwnWriting, canPublishWriting } from './permissions';
 
 const publishableStatuses: WritingStatus[] = ['DRAFT', 'IN_REVIEW', 'SCHEDULED'];
@@ -9,8 +9,10 @@ export const getWritingPublishingActions = (permissions: string[], status: Writi
 });
 
 export const getWritingWorkflowActions = (permissions: string[], status: WritingStatus) => ({
+  canPublish: canPublishWriting(permissions) && publishableStatuses.includes(status),
   canReturnToDraft: canEditAnyWriting(permissions) && status === 'IN_REVIEW',
   canSchedule: canPublishWriting(permissions) && status === 'IN_REVIEW',
   canSubmitForReview: (canEditOwnWriting(permissions) || canEditAnyWriting(permissions)) && status === 'DRAFT',
   canUnschedule: canPublishWriting(permissions) && status === 'SCHEDULED',
 });
+

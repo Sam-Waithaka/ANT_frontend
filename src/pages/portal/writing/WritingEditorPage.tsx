@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Archive, ArrowLeft, Eye, MoreHorizontal, Save, Send } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import DocumentSettingsPanel, { type DocumentSettingsAction } from '../../../components/portal/writing/DocumentSettingsPanel';
@@ -15,7 +15,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { archiveWriting, createWritingMediaEmbed, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
+import { archiveWriting, createWritingMediaEmbed, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
 import type { Writing, WritingResourceType, WritingUpdatePayload } from '../../../types/writing';
 import type { WritingMediaEmbedLike } from '../../../components/portal/writing/editor/nodes/ChurchBlockMediaContext';
 import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
@@ -116,6 +116,23 @@ const WritingEditorPage = () => {
     value: draftPayload,
   });
 
+
+  const runPublishNow = async (): Promise<boolean> => {
+    if (!writing) return false;
+    setActionSaving(true);
+    setMessage('');
+    try {
+      await saveNow();
+      setWriting(await publishWriting(auth.accessToken, writing.id));
+      setMessage('Article published.');
+      return true;
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to publish this article.');
+      return false;
+    } finally {
+      setActionSaving(false);
+    }
+  };
   const runArchive = async () => {
     if (!writing) return;
     setActionSaving(true);
@@ -158,7 +175,7 @@ const WritingEditorPage = () => {
     : 'w-full rounded-2xl border border-black/10 bg-[#fffaf0] px-4 py-3 text-sm text-zinc-950 outline-none focus:ring-2 focus:ring-red-800/30';
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
   const publishingActions = writing ? getWritingPublishingActions(auth.permissions, writing.status) : { canArchive: false, canPublish: false };
-  const workflowActions = writing ? getWritingWorkflowActions(auth.permissions, writing.status) : { canReturnToDraft: false, canSchedule: false, canSubmitForReview: false, canUnschedule: false };
+  const workflowActions = writing ? getWritingWorkflowActions(auth.permissions, writing.status) : { canPublish: false, canReturnToDraft: false, canSchedule: false, canSubmitForReview: false, canUnschedule: false };
 
   const settingsActions: DocumentSettingsAction[] = [{
     icon: <Eye size={16} />,
@@ -264,7 +281,7 @@ const WritingEditorPage = () => {
             <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
           </>}
         </section>
-        <DocumentSettingsPanel actions={settingsActions} category={category} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} onCategoryChange={setCategory} onExcerptChange={setExcerpt} onResourceTypeChange={setResourceType} resourceType={resourceType} resourceTypes={resourceTypes} status={writing.status} workflowControl={<WritingWorkflowControls {...workflowActions} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
+        <DocumentSettingsPanel actions={settingsActions} category={category} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} onCategoryChange={setCategory} onExcerptChange={setExcerpt} onResourceTypeChange={setResourceType} resourceType={resourceType} resourceTypes={resourceTypes} status={writing.status} workflowControl={<WritingWorkflowControls {...workflowActions} darkMode={darkMode} onPublish={runPublishNow} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
       </div> : null}
       {writing ? <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 px-4 lg:hidden"><div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-black/10 bg-white/80 shadow-zinc-900/15')}><button aria-label="Save draft" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-black/10 bg-[#fffaf0]/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save size={16} />{saveState === 'saving' ? 'Saving...' : 'Save'}</button><button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Back to editor' : 'Preview'}</button>{workflowActions.canSubmitForReview ? <button aria-label="Submit for review" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send size={16} />Submit</button> : <button aria-label="Open document settings" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-black/10 bg-[#fffaf0]/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80'} onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button"><MoreHorizontal size={16} />Settings</button>}</div></div> : null}
       {message ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{message}</p> : null}
@@ -273,4 +290,6 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
+
+
 
