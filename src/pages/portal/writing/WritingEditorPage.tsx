@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, ArrowLeft, Eye, MoreHorizontal, Save, Send } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Archive, ArrowLeft, Eye, MoreHorizontal, PenLine, Rocket, Save, Send } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import DocumentSettingsPanel, { type DocumentSettingsAction } from '../../../components/portal/writing/DocumentSettingsPanel';
 import WritingPreview from '../../../components/portal/writing/WritingPreview';
 import WritingWorkflowControls from '../../../components/portal/writing/WritingWorkflowControls';
@@ -15,7 +15,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { archiveWriting, createWritingMediaEmbed, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
+import { archiveWriting, createWritingMediaEmbed, createWritingRevision, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
 import type { Writing, WritingResourceType, WritingUpdatePayload } from '../../../types/writing';
 import type { WritingMediaEmbedLike } from '../../../components/portal/writing/editor/nodes/ChurchBlockMediaContext';
 import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
@@ -33,6 +33,7 @@ const waitForMedia = (milliseconds: number) => new Promise((resolve) => globalTh
 
 const WritingEditorPage = () => {
   const { id = '' } = useParams();
+  const navigate = useNavigate();
   const auth = useAuth();
   const { darkMode } = useTheme();
   const [actionSaving, setActionSaving] = useState(false);
@@ -133,6 +134,21 @@ const WritingEditorPage = () => {
       setActionSaving(false);
     }
   };
+
+  const runCreateRevision = async () => {
+    if (!writing) return;
+    setActionSaving(true);
+    setMessage('');
+    try {
+      const revision = await createWritingRevision(auth.accessToken, writing.id);
+      setMessage('Revision created. You can now modify the draft version.');
+      navigate(`/portal/writing/${revision.id}`);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to create a revision for this article.');
+    } finally {
+      setActionSaving(false);
+    }
+  };
   const runArchive = async () => {
     if (!writing) return;
     setActionSaving(true);
@@ -176,6 +192,7 @@ const WritingEditorPage = () => {
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
   const publishingActions = writing ? getWritingPublishingActions(auth.permissions, writing.status) : { canArchive: false, canPublish: false };
   const workflowActions = writing ? getWritingWorkflowActions(auth.permissions, writing.status) : { canPublish: false, canReturnToDraft: false, canSchedule: false, canSubmitForReview: false, canUnschedule: false };
+  const canModifyPublished = Boolean(writing && writing.status === 'PUBLISHED' && canEditAnyWriting(auth.permissions));
 
   const settingsActions: DocumentSettingsAction[] = [{
     icon: <Eye size={16} />,
@@ -270,7 +287,7 @@ const WritingEditorPage = () => {
           <h1 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Writing Studio</h1>
           <p className={'mt-2 text-sm leading-6 ' + mutedTextClass}>Create and craft resources that strengthen the church.</p>
         </div>
-        {writing ? <div className="flex flex-wrap items-center gap-3 pt-1"><WritingStatusBadge status={writing.status} /><span aria-live="polite" className={'inline-flex items-center gap-2 text-xs ' + mutedTextClass}><span className={'size-1.5 rounded-full ' + (saveState === 'error' ? 'bg-red-800' : saveState === 'saving' ? 'bg-amber-500' : 'bg-zinc-500')} />{saveStatusLabel}</span>{publishingActions.canArchive ? <div className="relative"><button aria-expanded={moreActionsOpen} aria-haspopup="menu" className={darkMode ? 'inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs font-bold text-stone-200 hover:bg-white/10' : 'inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-bold text-zinc-700 hover:bg-red-950/5'} onClick={() => setMoreActionsOpen((current) => !current)} type="button"><MoreHorizontal size={15} /> More actions</button>{moreActionsOpen ? <div className={darkMode ? 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-white/10 bg-[#171717] p-2 shadow-xl' : 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-black/10 bg-white p-2 shadow-xl'} role="menu"><button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-red-800 hover:bg-red-950/5" disabled={actionSaving} onClick={() => { setMoreActionsOpen(false); void runArchive(); }} role="menuitem" type="button"><Archive size={14} /> Archive</button></div> : null}</div> : null}</div> : null}
+        {writing ? <div className="flex flex-wrap items-center gap-3 pt-1"><WritingStatusBadge status={writing.status} /><span aria-live="polite" className={'inline-flex items-center gap-2 text-xs ' + mutedTextClass}><span className={'size-1.5 rounded-full ' + (saveState === 'error' ? 'bg-red-800' : saveState === 'saving' ? 'bg-amber-500' : 'bg-zinc-500')} />{saveStatusLabel}</span>{canModifyPublished ? <button className="inline-flex items-center gap-2 rounded-full border border-red-900/20 bg-white px-4 py-2 text-xs font-black text-red-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-950/5 disabled:cursor-not-allowed disabled:opacity-60" disabled={actionSaving} onClick={() => void runCreateRevision()} type="button"><PenLine size={15} /> Modify</button> : null}{publishingActions.canPublish ? <button className="inline-flex items-center gap-2 rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60" disabled={actionSaving} onClick={() => void runPublishNow()} type="button"><Rocket size={15} /> Publish</button> : null}{publishingActions.canArchive ? <div className="relative"><button aria-expanded={moreActionsOpen} aria-haspopup="menu" className={darkMode ? 'inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs font-bold text-stone-200 hover:bg-white/10' : 'inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-bold text-zinc-700 hover:bg-red-950/5'} onClick={() => setMoreActionsOpen((current) => !current)} type="button"><MoreHorizontal size={15} /> More actions</button>{moreActionsOpen ? <div className={darkMode ? 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-white/10 bg-[#171717] p-2 shadow-xl' : 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-black/10 bg-white p-2 shadow-xl'} role="menu"><button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-red-800 hover:bg-red-950/5" disabled={actionSaving} onClick={() => { setMoreActionsOpen(false); void runArchive(); }} role="menuitem" type="button"><Archive size={14} /> Archive</button></div> : null}</div> : null}</div> : null}
       </header>
       {loading ? <p className={mutedTextClass}>Loading editor...</p> : null}
       {writing ? <div className="grid gap-6 pb-24 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-8 lg:pb-0">
@@ -289,6 +306,11 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
+
+
+
+
+
 
 
 

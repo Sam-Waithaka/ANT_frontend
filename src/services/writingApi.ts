@@ -1,4 +1,4 @@
-import { ApiError, createApiUrl } from './apiClient';
+﻿import { ApiError, createApiUrl } from './apiClient';
 import type {
   MediaAssetUsage,
   PaginatedResponse,
@@ -111,6 +111,8 @@ export const publishWriting = (accessToken: string, id: string | number) =>
 export const archiveWriting = (accessToken: string, id: string | number) =>
   portalRequest<Writing>(`/v1/writings/${id}/archive/`, { accessToken, method: 'POST' });
 
+export const createWritingRevision = (accessToken: string, id: string | number) =>
+  portalRequest<Writing>(`/v1/writings/${id}/create-revision/`, { accessToken, method: 'POST' });
 export const submitWritingForReview = (accessToken: string, id: string | number, note = '') =>
   portalRequest<Writing>(`/v1/writings/${id}/submit-for-review/`, { accessToken, body: { note }, method: 'POST' });
 
@@ -179,6 +181,9 @@ export const deleteAssignment = (accessToken: string, id: string | number) =>
 
 export const fetchMediaAssetUsage = (accessToken: string, id: string | number, signal?: AbortSignal) =>
   portalRequest<MediaAssetUsage>(`/v1/media-assets/${id}/usage/`, { accessToken, signal });
+
+
+
 
 
 
