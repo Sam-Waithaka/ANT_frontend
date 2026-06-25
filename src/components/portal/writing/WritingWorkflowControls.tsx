@@ -1,17 +1,13 @@
-﻿import { CalendarClock, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Moon, Rocket, RotateCcw, Send, Sunrise, Sunset, X } from 'lucide-react';
+import { CalendarClock, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock3, Moon, Rocket, RotateCcw, Send, Sunrise, Sunset, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { WritingStatus, WritingWorkflowNote } from '../../../types/writing';
 
 type WritingWorkflowControlsProps = {
-  canPublish: boolean;
   canReturnToDraft: boolean;
-  canSchedule: boolean;
   canSubmitForReview: boolean;
   canUnschedule: boolean;
   darkMode: boolean;
-  onPublish: () => Promise<boolean>;
   onReturnToDraft: (note: string) => Promise<boolean>;
-  onSchedule: (scheduledFor: string) => Promise<boolean>;
   onSubmitForReview: (note: string) => Promise<boolean>;
   onUnschedule: () => Promise<boolean>;
   saving: boolean;
@@ -446,16 +442,87 @@ const PublishingScheduler = ({ darkMode, onSchedule, saving, scheduledFor }: { d
   );
 };
 
-const WritingWorkflowControls = ({
+
+export type WritingPublishingPanelProps = {
+  canPublish: boolean;
+  canSchedule: boolean;
+  darkMode: boolean;
+  onClose?: () => void;
+  onPublish: () => Promise<boolean>;
+  onSchedule: (scheduledFor: string) => Promise<boolean>;
+  saving: boolean;
+  scheduledFor?: string | null;
+};
+
+export const WritingPublishingPanel = ({
   canPublish,
-  canReturnToDraft,
   canSchedule,
+  darkMode,
+  onClose,
+  onPublish,
+  onSchedule,
+  saving,
+  scheduledFor,
+}: WritingPublishingPanelProps) => {
+  const [publicationTab, setPublicationTab] = useState<PublicationTab>(canPublish ? 'publish' : 'schedule');
+  const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
+  const cardClass = darkMode
+    ? 'border-white/10 bg-white/[0.04] text-stone-100'
+    : 'border-red-900/10 bg-[#fffaf0] text-zinc-950';
+
+  useEffect(() => {
+    if (publicationTab === 'publish' && !canPublish && canSchedule) setPublicationTab('schedule');
+    if (publicationTab === 'schedule' && !canSchedule && canPublish) setPublicationTab('publish');
+  }, [canPublish, canSchedule, publicationTab]);
+
+  const hasPublicationActions = canPublish || canSchedule;
+
+  return (
+    <aside aria-label="Publishing panel" className={`rounded-[1.6rem] border p-4 shadow-xl ${darkMode ? 'border-white/10 bg-[#111111] shadow-black/30' : 'border-black/10 bg-[#fffaf0] shadow-zinc-900/10'}`}>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Publishing</p>
+          <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>Choose when this article should become public.</p>
+        </div>
+        {onClose ? <button className={darkMode ? 'grid size-9 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-stone-100 hover:bg-white/10' : 'grid size-9 shrink-0 place-items-center rounded-full border border-black/10 bg-white text-zinc-800 hover:bg-red-950/[0.04]'} onClick={onClose} type="button"><X size={16} /></button> : null}
+      </div>
+
+      {hasPublicationActions ? (
+        <div className={`rounded-[1.35rem] border p-3 ${cardClass}`}>
+          <PublishingModeToggle canPublish={canPublish} canSchedule={canSchedule} darkMode={darkMode} mode={publicationTab} onModeChange={setPublicationTab} />
+
+          {publicationTab === 'publish' && canPublish ? (
+            <div className="px-1 pt-4 motion-safe:animate-[fadeIn_180ms_ease-out]" role="tabpanel">
+              <div className="flex items-start gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-red-800 text-white shadow-lg shadow-red-950/20"><Rocket size={17} /></span>
+                <div>
+                  <p className="text-sm font-black">Publish immediately</p>
+                  <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>This article will become publicly visible as soon as you publish it.</p>
+                </div>
+              </div>
+              <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-red-800 px-4 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0" disabled={saving} onClick={() => void onPublish()} type="button">
+                <Rocket size={16} /> Publish Article
+              </button>
+            </div>
+          ) : null}
+
+          {publicationTab === 'schedule' && canSchedule ? (
+            <div className="px-1 pt-4" role="tabpanel">
+              <PublishingScheduler darkMode={darkMode} onSchedule={onSchedule} saving={saving} scheduledFor={scheduledFor} />
+            </div>
+          ) : null}
+        </div>
+      ) : <p className={`text-sm leading-6 ${mutedTextClass}`}>Publishing actions are not available for this article.</p>}
+    </aside>
+  );
+};
+
+const WritingWorkflowControls = ({
+  canReturnToDraft,
   canSubmitForReview,
   canUnschedule,
   darkMode,
-  onPublish,
   onReturnToDraft,
-  onSchedule,
   onSubmitForReview,
   onUnschedule,
   saving,
@@ -465,13 +532,6 @@ const WritingWorkflowControls = ({
 }: WritingWorkflowControlsProps) => {
   const [note, setNote] = useState('');
   const [notesOpen, setNotesOpen] = useState(false);
-  const [publicationTab, setPublicationTab] = useState<PublicationTab>(canPublish ? 'publish' : 'schedule');
-
-  useEffect(() => {
-    if (publicationTab === 'publish' && !canPublish && canSchedule) setPublicationTab('schedule');
-    if (publicationTab === 'schedule' && !canSchedule && canPublish) setPublicationTab('publish');
-  }, [canPublish, canSchedule, publicationTab]);
-
   const fieldClass = darkMode
     ? 'border-white/10 bg-[#141414] text-stone-100 placeholder:text-stone-600'
     : 'border-black/10 bg-[#fffaf0] text-zinc-950 placeholder:text-zinc-400';
@@ -482,8 +542,7 @@ const WritingWorkflowControls = ({
   const dangerButtonClass = darkMode
     ? 'border border-red-700/30 bg-red-950/10 text-red-300 hover:bg-red-950/20'
     : 'border border-red-900/20 bg-white text-red-800 hover:bg-red-950/5';
-  const hasPublicationActions = canPublish || canSchedule;
-  const hasActions = hasPublicationActions || canSubmitForReview || canReturnToDraft || canUnschedule;
+  const hasActions = canSubmitForReview || canReturnToDraft || canUnschedule;
 
   const submitForReview = async () => {
     if (await onSubmitForReview(note.trim())) setNote('');
@@ -516,33 +575,6 @@ const WritingWorkflowControls = ({
             </button>
           ) : null}
 
-          {hasPublicationActions ? (
-            <div className={`rounded-[1.35rem] border p-3 ${cardClass}`}>
-              <PublishingModeToggle canPublish={canPublish} canSchedule={canSchedule} darkMode={darkMode} mode={publicationTab} onModeChange={setPublicationTab} />
-
-              {publicationTab === 'publish' && canPublish ? (
-                <div className="px-1 pt-4 motion-safe:animate-[fadeIn_180ms_ease-out]" role="tabpanel">
-                  <div className="flex items-start gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-red-800 text-white shadow-lg shadow-red-950/20"><Rocket size={17} /></span>
-                    <div>
-                      <p className="text-sm font-black">Publish immediately</p>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>This article will become publicly visible as soon as you publish it.</p>
-                    </div>
-                  </div>
-                  <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-red-800 px-4 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0" disabled={saving} onClick={() => void onPublish()} type="button">
-                    <Rocket size={16} /> Publish Article
-                  </button>
-                </div>
-              ) : null}
-
-              {publicationTab === 'schedule' && canSchedule ? (
-                <div className="px-1 pt-4" role="tabpanel">
-                  <PublishingScheduler darkMode={darkMode} onSchedule={onSchedule} saving={saving} scheduledFor={scheduledFor} />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
           {canUnschedule ? (
             <button className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${dangerButtonClass}`} disabled={saving} onClick={() => void onUnschedule()} type="button">
               <X size={16} /> Cancel scheduling
@@ -567,7 +599,7 @@ const WritingWorkflowControls = ({
                 <div key={item.id} className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${cardClass}`}>
                   <p className={darkMode ? 'font-black text-stone-200' : 'font-black text-zinc-900'}>{item.action_display}</p>
                   {item.note ? <p className={mutedTextClass}>{item.note}</p> : null}
-                  <p className={`mt-1 text-xs ${mutedTextClass}`}>{item.created_by_name} · {new Date(item.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: NAIROBI_TIME_ZONE })}</p>
+                  <p className={`mt-1 text-xs ${mutedTextClass}`}>{item.created_by_name} � {new Date(item.created_at).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: NAIROBI_TIME_ZONE })}</p>
                 </div>
               ))}
             </div>
@@ -579,11 +611,6 @@ const WritingWorkflowControls = ({
 };
 
 export default WritingWorkflowControls;
-
-
-
-
-
 
 
 
