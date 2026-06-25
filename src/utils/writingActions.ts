@@ -11,8 +11,9 @@ export const getWritingPublishingActions = (permissions: string[], status: Writi
 export const getWritingWorkflowActions = (permissions: string[], status: WritingStatus) => ({
   canPublish: canPublishWriting(permissions) && publishableStatuses.includes(status),
   canReturnToDraft: canEditAnyWriting(permissions) && status === 'IN_REVIEW',
-  canSchedule: canPublishWriting(permissions) && status === 'IN_REVIEW',
+  canSchedule: canPublishWriting(permissions) && ['DRAFT', 'IN_REVIEW'].includes(status),
   canSubmitForReview: (canEditOwnWriting(permissions) || canEditAnyWriting(permissions)) && status === 'DRAFT',
   canUnschedule: canPublishWriting(permissions) && status === 'SCHEDULED',
 });
+
 
