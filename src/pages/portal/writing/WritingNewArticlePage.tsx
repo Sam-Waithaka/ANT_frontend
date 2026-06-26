@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import DocumentSettingsPanel from '../../../components/portal/writing/DocumentSettingsPanel';
@@ -10,25 +10,32 @@ import WritingStudioShell from '../../../components/portal/writing/WritingStudio
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { createWriting, fetchResourceTypes } from '../../../services/writingApi';
-import type { WritingResourceType } from '../../../types/writing';
+import { createWriting, fetchResourceTypes, fetchWritingTags } from '../../../services/writingApi';
+import type { WritingAuthorAttribution, WritingResourceType, WritingTag } from '../../../types/writing';
 import { canCreateWriting, canUploadMedia } from '../../../utils/permissions';
 
-const defaultTypes = ['Devotional', 'Bible Study', 'Pastoral Letter', 'Guide', 'Ministry Charter'];
+const RESOURCE_TYPES_ERROR = 'Resource types could not be loaded. Please refresh and try again.';
 
 const WritingNewArticlePage = () => {
   const auth = useAuth();
   const navigate = useNavigate();
   const { darkMode } = useTheme();
+  const [authorAttributions, setAuthorAttributions] = useState<WritingAuthorAttribution[]>([]);
   const [category, setCategory] = useState('');
   const [contentJson, setContentJson] = useState<LexicalContentJson>(() => createEmptyLexicalContent());
   const [coverImage, setCoverImage] = useState<MediaAsset | null>(null);
   const [error, setError] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
+  const [ministryIds, setMinistryIds] = useState<Array<number | string>>([]);
   const [resourceType, setResourceType] = useState('');
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
+  const [resourceTypesError, setResourceTypesError] = useState('');
+  const [resourceTypesLoading, setResourceTypesLoading] = useState(true);
+  const [seriesIds, setSeriesIds] = useState<Array<number | string>>([]);
   const [saving, setSaving] = useState(false);
+  const [tagIds, setTagIds] = useState<Array<number | string>>([]);
+  const [tagOptions, setTagOptions] = useState<WritingTag[]>([]);
   const [title, setTitle] = useState('');
 
   const fieldClass = darkMode
@@ -38,18 +45,26 @@ const WritingNewArticlePage = () => {
 
   useEffect(() => {
     const controller = new AbortController();
+    setResourceTypesLoading(true);
+    setResourceTypesError('');
+
     fetchResourceTypes(auth.accessToken, controller.signal)
       .then((page) => setResourceTypes(page.results))
-      .catch(() => setResourceTypes([]));
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setResourceTypes([]);
+          setResourceTypesError(RESOURCE_TYPES_ERROR);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setResourceTypesLoading(false);
+      });
+    fetchWritingTags(auth.accessToken, controller.signal)
+      .then((page) => setTagOptions(page.results))
+      .catch(() => setTagOptions([]));
+
     return () => controller.abort();
   }, [auth.accessToken]);
-
-  const typeOptions = useMemo(
-    () => resourceTypes.length
-      ? resourceTypes
-      : defaultTypes.map((name) => ({ id: name, name, slug: name.toLowerCase().replaceAll(' ', '-') })),
-    [resourceTypes],
-  );
 
   const refreshCoverImage = async () => {
     if (!coverImage) return null;
@@ -60,6 +75,10 @@ const WritingNewArticlePage = () => {
 
   const createDraft = async () => {
     if (!canCreateWriting(auth.permissions)) return;
+    if (!resourceTypes.length) {
+      setError(RESOURCE_TYPES_ERROR);
+      return;
+    }
     if (!title.trim() || !resourceType) {
       setError('Add a title and resource type before creating the draft.');
       return;
@@ -69,12 +88,16 @@ const WritingNewArticlePage = () => {
     setError('');
     try {
       const writing = await createWriting(auth.accessToken, {
+        ...(authorAttributions.length ? { author_attributions: authorAttributions } : {}),
         category_ids: category ? [category] : undefined,
         content_json: contentJson,
         excerpt,
+        ...(ministryIds.length ? { ministry_ids: ministryIds } : {}),
         og_image: coverImage?.id || null,
         resource_type: resourceType,
+        ...(seriesIds.length ? { series_ids: seriesIds } : {}),
         status: 'DRAFT',
+        ...(tagIds.length ? { tag_ids: tagIds } : {}),
         title: title.trim(),
       });
       navigate('/portal/writing/' + writing.id);
@@ -124,28 +147,40 @@ const WritingNewArticlePage = () => {
               variant: 'secondary',
             },
             {
-              disabled: saving || !canCreateWriting(auth.permissions),
+              disabled: saving || resourceTypesLoading || resourceTypes.length === 0 || !canCreateWriting(auth.permissions),
               label: saving ? 'Creating draft...' : 'Create draft',
               onClick: () => void createDraft(),
               variant: 'primary',
             },
           ]}
+          authorAttributions={authorAttributions}
+          canManageAuthors
           category={category}
           coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onChange={setCoverImage} selectedAsset={coverImage} />}
           darkMode={darkMode}
           excerpt={excerpt}
+          ministryIds={ministryIds}
+          onAuthorAttributionsChange={setAuthorAttributions}
           onCategoryChange={setCategory}
           onExcerptChange={setExcerpt}
+          onMinistryIdsChange={setMinistryIds}
           onResourceTypeChange={setResourceType}
+          onSeriesIdsChange={setSeriesIds}
+          onTagIdsChange={setTagIds}
           resourceType={resourceType}
-          resourceTypes={typeOptions}
+          resourceTypes={resourceTypes}
+          seriesIds={seriesIds}
           status="DRAFT"
+          tagIds={tagIds}
+          tagOptions={tagOptions}
         />
       </div>
 
-      {error ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{error}</p> : null}
+      {resourceTypesError ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{resourceTypesError}</p> : null}
+      {error ? <p className="mt-4 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{error}</p> : null}
     </WritingStudioShell>
   );
 };
 
 export default WritingNewArticlePage;
+

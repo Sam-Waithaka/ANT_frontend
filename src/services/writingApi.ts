@@ -1,4 +1,4 @@
-﻿import { ApiError, createApiUrl } from './apiClient';
+import { ApiError, createApiUrl } from './apiClient';
 import type {
   MediaAssetUsage,
   PaginatedResponse,
@@ -12,6 +12,7 @@ import type {
   WritingResourceType,
   WritingResourceTypeCategoryLink,
   WritingSeries,
+  WritingTag,
   WritingUpdatePayload,
 } from '../types/writing';
 
@@ -142,6 +143,9 @@ export const fetchCategories = async (accessToken: string, signal?: AbortSignal)
 export const fetchSeries = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingSeries>(await portalRequest<unknown>('/v1/writing-series/', { accessToken, signal }));
 
+export const fetchWritingTags = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingTag>(await portalRequest<unknown>('/v1/writing-tags/', { accessToken, signal }));
+
 export const fetchCategorySeriesLinks = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingCategorySeriesLink>(await portalRequest<unknown>('/v1/writing-category-series/', { accessToken, signal }));
 
@@ -181,6 +185,8 @@ export const deleteAssignment = (accessToken: string, id: string | number) =>
 
 export const fetchMediaAssetUsage = (accessToken: string, id: string | number, signal?: AbortSignal) =>
   portalRequest<MediaAssetUsage>(`/v1/media-assets/${id}/usage/`, { accessToken, signal });
+
+
 
 
 

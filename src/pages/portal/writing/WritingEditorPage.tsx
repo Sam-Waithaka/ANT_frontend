@@ -15,8 +15,8 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { archiveWriting, createWritingMediaEmbed, createWritingRevision, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
-import type { Writing, WritingResourceType, WritingUpdatePayload } from '../../../types/writing';
+import { archiveWriting, createWritingMediaEmbed, createWritingRevision, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, fetchWritingTags, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
+import type { Writing, WritingAuthorAttribution, WritingResourceType, WritingTag, WritingUpdatePayload } from '../../../types/writing';
 import type { WritingMediaEmbedLike } from '../../../components/portal/writing/editor/nodes/ChurchBlockMediaContext';
 import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
 import { getWritingPublishingActions, getWritingWorkflowActions } from '../../../utils/writingActions';
@@ -38,6 +38,7 @@ const WritingEditorPage = () => {
   const auth = useAuth();
   const { darkMode } = useTheme();
   const [actionSaving, setActionSaving] = useState(false);
+  const [authorAttributions, setAuthorAttributions] = useState<WritingAuthorAttribution[]>([]);
   const [category, setCategory] = useState('');
   const [contentJson, setContentJson] = useState<LexicalContentJson>(() => createEmptyLexicalContent());
   const [coverImage, setCoverImage] = useState<MediaAsset | null>(null);
@@ -51,8 +52,12 @@ const WritingEditorPage = () => {
   const [pendingMediaEmbed, setPendingMediaEmbed] = useState<WritingMediaEmbedLike | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [publishingPanelOpen, setPublishingPanelOpen] = useState(false);
+  const [ministryIds, setMinistryIds] = useState<Array<number | string>>([]);
   const [resourceType, setResourceType] = useState('');
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
+  const [seriesIds, setSeriesIds] = useState<Array<number | string>>([]);
+  const [tagIds, setTagIds] = useState<Array<number | string>>([]);
+  const [tagOptions, setTagOptions] = useState<WritingTag[]>([]);
   const [title, setTitle] = useState('');
   const [writing, setWriting] = useState<Writing | null>(null);
   const imageBlockSnapshot = useRef('');
@@ -63,6 +68,9 @@ const WritingEditorPage = () => {
     fetchResourceTypes(auth.accessToken, controller.signal)
       .then((page) => setResourceTypes(page.results))
       .catch(() => setResourceTypes([]));
+    fetchWritingTags(auth.accessToken, controller.signal)
+      .then((page) => setTagOptions(page.results))
+      .catch(() => setTagOptions([]));
     return () => controller.abort();
   }, [auth.accessToken]);
 
@@ -79,6 +87,14 @@ const WritingEditorPage = () => {
         setExcerpt(nextWriting.excerpt || '');
         setResourceType(nextWriting.resource_type ? String(nextWriting.resource_type) : '');
         setCategory(nextWriting.categories?.[0] ? String(nextWriting.categories[0].id) : '');
+        setSeriesIds((nextWriting.series || []).map((item) => item.id));
+        setMinistryIds((nextWriting.ministries || []).map((item) => item.id));
+        setTagIds((nextWriting.tags || []).map((item) => item.id));
+        setAuthorAttributions(nextWriting.author_attributions || []);
+        setSeriesIds((nextWriting.series || []).map((item) => item.id));
+        setMinistryIds((nextWriting.ministries || []).map((item) => item.id));
+        setTagIds((nextWriting.tags || []).map((item) => item.id));
+        setAuthorAttributions(nextWriting.author_attributions || []);
         setContentJson(normalizeLexicalContent(nextWriting.content_json));
         setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
         setCoverImageId(nextWriting.og_image ? String(nextWriting.og_image) : '');
@@ -98,13 +114,17 @@ const WritingEditorPage = () => {
 
   const editable = canEdit(auth.permissions, writing);
   const draftPayload = useMemo<WritingUpdatePayload>(() => ({
+    author_attributions: authorAttributions,
     category_ids: category ? [category] : [],
     content_json: contentJson,
     excerpt,
+    ministry_ids: ministryIds,
     og_image: coverImageId || null,
     resource_type: resourceType || null,
+    series_ids: seriesIds,
+    tag_ids: tagIds,
     title,
-  }), [category, contentJson, coverImageId, excerpt, resourceType, title]);
+  }), [authorAttributions, category, contentJson, coverImageId, excerpt, ministryIds, resourceType, seriesIds, tagIds, title]);
 
   const persistDraft = useCallback(async (payload: WritingUpdatePayload) => {
     if (!writing) return;
@@ -301,7 +321,7 @@ const WritingEditorPage = () => {
             <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
           </>}
         </section>
-        <DocumentSettingsPanel actions={settingsActions} category={category} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} onCategoryChange={setCategory} onExcerptChange={setExcerpt} onResourceTypeChange={setResourceType} resourceType={resourceType} resourceTypes={resourceTypes} status={writing.status} workflowControl={<WritingWorkflowControls canReturnToDraft={workflowActions.canReturnToDraft} canSubmitForReview={workflowActions.canSubmitForReview} canUnschedule={workflowActions.canUnschedule} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
+        <DocumentSettingsPanel actions={settingsActions} authorAttributions={authorAttributions} canManageAuthors={canEditAnyWriting(auth.permissions)} category={category} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} ministryIds={ministryIds} onAuthorAttributionsChange={setAuthorAttributions} onCategoryChange={setCategory} onExcerptChange={setExcerpt} onMinistryIdsChange={setMinistryIds} onResourceTypeChange={setResourceType} onSeriesIdsChange={setSeriesIds} onTagIdsChange={setTagIds} resourceType={resourceType} resourceTypes={resourceTypes} seriesIds={seriesIds} status={writing.status} tagIds={tagIds} tagOptions={tagOptions} workflowControl={<WritingWorkflowControls canReturnToDraft={workflowActions.canReturnToDraft} canSubmitForReview={workflowActions.canSubmitForReview} canUnschedule={workflowActions.canUnschedule} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
         {showPublishingPanel ? <div className="hidden lg:block"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing.scheduled_for} /></div> : null}
       </div> : null}
       {showPublishingPanel ? <div className="fixed inset-0 z-50 grid place-items-center p-3 lg:hidden" role="dialog" aria-modal="true" aria-label="Publishing"><button aria-label="Close publishing panel" className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setPublishingPanelOpen(false)} type="button" /><div className="relative z-10 max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-[34rem] overflow-y-auto rounded-[2rem]"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /></div></div> : null}
@@ -312,6 +332,8 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
+
+
 
 
 

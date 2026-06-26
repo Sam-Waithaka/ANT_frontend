@@ -1,8 +1,8 @@
-﻿import type { ReactNode } from 'react';
-import { ChevronDown, FileText, Layers3, Settings2, Sparkles } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { ChevronDown, FileText, Layers3, Plus, Settings2, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchResourcesNavigation } from '../../../services/resourcesApi';
-import type { WritingCategory, WritingResourceType, WritingSeries, WritingStatus } from '../../../types/writing';
+import type { WritingAuthorAttribution, WritingAuthorRole, WritingCategory, WritingMinistry, WritingResourceType, WritingSeries, WritingStatus, WritingTag } from '../../../types/writing';
 
 export type DocumentSettingsAction = {
   disabled?: boolean;
@@ -14,18 +14,28 @@ export type DocumentSettingsAction = {
 
 type DocumentSettingsPanelProps = {
   actions: DocumentSettingsAction[];
+  authorAttributions?: WritingAuthorAttribution[];
+  canManageAuthors?: boolean;
   category: string;
   coverImageControl?: ReactNode;
   darkMode: boolean;
   disabled?: boolean;
   excerpt: string;
   metadata?: Array<{ label: string; value: string }>;
+  ministryIds?: Array<number | string>;
+  onAuthorAttributionsChange?: (value: WritingAuthorAttribution[]) => void;
   onCategoryChange: (value: string) => void;
   onExcerptChange: (value: string) => void;
+  onMinistryIdsChange?: (value: Array<number | string>) => void;
   onResourceTypeChange: (value: string) => void;
+  onSeriesIdsChange?: (value: Array<number | string>) => void;
+  onTagIdsChange?: (value: Array<number | string>) => void;
   resourceType: string;
   resourceTypes: WritingResourceType[];
+  seriesIds?: Array<number | string>;
   status: WritingStatus;
+  tagIds?: Array<number | string>;
+  tagOptions?: WritingTag[];
   workflowControl?: ReactNode;
 };
 
@@ -42,12 +52,27 @@ type CollapsibleSectionProps = {
   title: string;
 };
 
+const AUTHOR_ROLES: WritingAuthorRole[] = ['AUTHOR', 'CONTRIBUTOR', 'EDITOR', 'REVIEWER', 'COMPILER', 'TRANSLATOR'];
 const seriesName = (series: WritingSeries) => series.title || series.name || series.slug;
+const tagName = (tag: WritingTag) => tag.name || tag.slug || String(tag.id);
 
 const statusLabel = (status: WritingStatus) => status
   .replace(/_/g, ' ')
   .toLowerCase()
   .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const roleLabel = (role: string) => role.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const normalizeAuthors = (items: WritingAuthorAttribution[]) => items
+  .map((item, index) => ({ ...item, order: index, is_primary: Boolean(item.is_primary) }))
+  .filter((item) => item.user !== undefined && item.user !== null || Boolean(item.display_name?.trim()));
+
+const toggleId = (current: Array<number | string>, id: number | string) => {
+  const key = String(id);
+  return current.some((item) => String(item) === key)
+    ? current.filter((item) => String(item) !== key)
+    : [...current, id];
+};
 
 const CollapsibleSection = ({
   children,
@@ -89,23 +114,144 @@ const CollapsibleSection = ({
   );
 };
 
+const CheckboxGroup = ({
+  darkMode,
+  disabled,
+  emptyLabel,
+  label,
+  mutedTextClass,
+  onChange,
+  options,
+  selectedIds,
+}: {
+  darkMode: boolean;
+  disabled: boolean;
+  emptyLabel: string;
+  label: string;
+  mutedTextClass: string;
+  onChange?: (value: Array<number | string>) => void;
+  options: Array<{ id: number | string; label: string }>;
+  selectedIds: Array<number | string>;
+}) => {
+  const selected = new Set(selectedIds.map((id) => String(id)));
+  return (
+    <div>
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">{label}</p>
+      {options.length ? (
+        <div className="mt-3 grid gap-2">
+          {options.map((option) => {
+            const checked = selected.has(String(option.id));
+            return (
+              <label key={option.id} className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm font-bold transition ${checked ? 'border-red-800 bg-red-950/[0.05] text-red-800' : darkMode ? 'border-white/10 bg-white/5 text-stone-200' : 'border-black/10 bg-[#fffaf0] text-zinc-800'}`}>
+                <input
+                  checked={checked}
+                  className="size-4 accent-red-800"
+                  disabled={disabled || !onChange}
+                  onChange={() => onChange?.(toggleId(selectedIds, option.id))}
+                  type="checkbox"
+                />
+                <span>{option.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      ) : <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>{emptyLabel}</p>}
+    </div>
+  );
+};
+
+const AuthorAttributionEditor = ({
+  authors,
+  canManageAuthors,
+  darkMode,
+  disabled,
+  fieldClass,
+  mutedTextClass,
+  onChange,
+}: {
+  authors: WritingAuthorAttribution[];
+  canManageAuthors: boolean;
+  darkMode: boolean;
+  disabled: boolean;
+  fieldClass: string;
+  mutedTextClass: string;
+  onChange?: (value: WritingAuthorAttribution[]) => void;
+}) => {
+  const editable = canManageAuthors && !disabled && Boolean(onChange);
+  const updateAuthor = (index: number, patch: Partial<WritingAuthorAttribution>) => {
+    const next = authors.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item);
+    onChange?.(normalizeAuthors(next));
+  };
+  const setPrimary = (index: number) => onChange?.(normalizeAuthors(authors.map((item, itemIndex) => ({ ...item, is_primary: itemIndex === index }))));
+  const removeAuthor = (index: number) => onChange?.(normalizeAuthors(authors.filter((_, itemIndex) => itemIndex !== index)));
+  const addAuthor = () => onChange?.([...authors, { display_name: '', role: 'AUTHOR', is_primary: authors.length === 0, order: authors.length }]);
+
+  return (
+    <div className="border-t border-black/10 pt-4 dark:border-white/10">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Author attributions</p>
+          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{editable ? 'Manage the public byline for this article.' : 'Byline management requires editor permission.'}</p>
+        </div>
+        {editable ? <button className="inline-flex items-center gap-2 rounded-full bg-red-800 px-3 py-2 text-xs font-black text-white" onClick={addAuthor} type="button"><Plus size={14} /> Add</button> : null}
+      </div>
+
+      {authors.length ? (
+        <div className="mt-3 grid gap-3">
+          {authors.map((author, index) => (
+            <div key={`${author.user || 'manual'}-${index}`} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/5 p-3' : 'rounded-2xl border border-black/10 bg-[#fffaf0] p-3'}>
+              <label className="grid gap-2 text-sm font-bold">
+                Display name
+                <input className={`w-full rounded-2xl border px-3 py-2 text-sm outline-none ${fieldClass}`} disabled={!editable} onChange={(event) => updateAuthor(index, { display_name: event.target.value })} placeholder="AIC Njoro Town Editorial Team" value={author.display_name || author.name || ''} />
+              </label>
+              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+                <label className="grid gap-2 text-sm font-bold">
+                  Role
+                  <select className={`w-full rounded-2xl border px-3 py-2 text-sm outline-none ${fieldClass}`} disabled={!editable} onChange={(event) => updateAuthor(index, { role: event.target.value as WritingAuthorRole })} value={author.role || 'AUTHOR'}>
+                    {AUTHOR_ROLES.map((role) => <option key={role} value={role}>{roleLabel(role)}</option>)}
+                  </select>
+                </label>
+                <label className="flex items-end gap-2 pb-2 text-sm font-bold">
+                  <input checked={Boolean(author.is_primary)} className="size-4 accent-red-800" disabled={!editable} onChange={() => setPrimary(index)} type="radio" /> Primary
+                </label>
+              </div>
+              {editable ? <button className="mt-3 inline-flex items-center gap-2 rounded-full border border-red-900/20 px-3 py-2 text-xs font-black text-red-800" onClick={() => removeAuthor(index)} type="button"><Trash2 size={14} /> Remove</button> : null}
+            </div>
+          ))}
+        </div>
+      ) : <p className={`mt-3 text-xs leading-5 ${mutedTextClass}`}>No author attributions added yet.</p>}
+    </div>
+  );
+};
+
 const DocumentSettingsPanel = ({
   actions,
+  authorAttributions = [],
+  canManageAuthors = false,
   category,
   coverImageControl,
   darkMode,
   disabled = false,
   excerpt,
   metadata = [],
+  ministryIds = [],
+  onAuthorAttributionsChange,
   onCategoryChange,
   onExcerptChange,
+  onMinistryIdsChange,
   onResourceTypeChange,
+  onSeriesIdsChange,
+  onTagIdsChange,
   resourceType,
   resourceTypes,
+  seriesIds = [],
   status,
+  tagIds = [],
+  tagOptions = [],
   workflowControl,
 }: DocumentSettingsPanelProps) => {
   const [categories, setCategories] = useState<WritingCategory[]>([]);
+  const [ministries, setMinistries] = useState<WritingMinistry[]>([]);
   const [series, setSeries] = useState<WritingSeries[]>([]);
   const [taxonomyLoading, setTaxonomyLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -130,34 +276,28 @@ const DocumentSettingsPanel = ({
   useEffect(() => {
     const resourceTypeSlug = selectedResourceType?.slug;
 
-    if (!resourceTypeSlug) {
-      setCategories([]);
-      setSeries([]);
-      previousTypeSlug.current = undefined;
-      return;
-    }
-
     if (previousTypeSlug.current && previousTypeSlug.current !== resourceTypeSlug) {
       onCategoryChange('');
     }
-
     previousTypeSlug.current = resourceTypeSlug;
 
     const controller = new AbortController();
     setTaxonomyLoading(true);
 
-    fetchResourcesNavigation({ category_slug: selectedCategory?.slug, resource_type_slug: resourceTypeSlug }, controller.signal)
+    fetchResourcesNavigation(resourceTypeSlug ? { category_slug: selectedCategory?.slug, resource_type_slug: resourceTypeSlug } : {}, controller.signal)
       .then((navigation) => {
-        setCategories(navigation.categories);
+        setMinistries(navigation.ministries);
+        setCategories(resourceTypeSlug ? navigation.categories : []);
         setSeries(navigation.series);
 
-        if (category && !navigation.categories.some((item) => String(item.id) === category)) {
+        if (resourceTypeSlug && category && !navigation.categories.some((item) => String(item.id) === category)) {
           onCategoryChange('');
         }
       })
       .catch(() => {
         if (!controller.signal.aborted) {
           setCategories([]);
+          setMinistries([]);
           setSeries([]);
         }
       })
@@ -179,7 +319,6 @@ const DocumentSettingsPanel = ({
     ? 'border-white/10 bg-[#141414] text-stone-100 placeholder:text-stone-600'
     : 'border-black/10 bg-[#fffaf0] text-zinc-950 placeholder:text-zinc-400';
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
-  const strongTextClass = darkMode ? 'text-stone-100' : 'text-zinc-950';
   const chipClass = darkMode
     ? 'border-white/10 bg-white/5 text-stone-200'
     : 'border-red-900/10 bg-red-950/[0.03] text-zinc-700';
@@ -188,6 +327,7 @@ const DocumentSettingsPanel = ({
       {statusLabel(status)}
     </span>
   );
+  const showDetails = Boolean(series.length || ministries.length || tagOptions.length || authorAttributions.length || metadata.length);
 
   return (
     <aside
@@ -207,7 +347,7 @@ const DocumentSettingsPanel = ({
           <span className="min-w-0">
             <span className="block text-xs font-black uppercase tracking-[0.18em] text-red-800">Document Settings</span>
             <span className={`mt-1 block truncate text-xs font-medium ${mutedTextClass}`}>
-              {statusLabel(status)} · {selectedResourceType?.name || 'Choose resource type'}
+              {statusLabel(status)} � {selectedResourceType?.name || 'Choose resource type'}
             </span>
           </span>
         </span>
@@ -311,7 +451,7 @@ const DocumentSettingsPanel = ({
           </CollapsibleSection>
         ) : null}
 
-        {(series.length || metadata.length) ? (
+        {showDetails ? (
           <CollapsibleSection
             darkMode={darkMode}
             icon={<Layers3 size={14} />}
@@ -319,30 +459,23 @@ const DocumentSettingsPanel = ({
             onToggle={() => toggleSection('details')}
             title="Article details"
           >
-            {series.length ? (
-              <div>
-                <p className={`text-xs font-bold ${strongTextClass}`}>Available collections</p>
-                <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Collections currently available for this resource type.</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {series.map((item) => (
-                    <span key={item.id || item.slug || seriesName(item)} className={`rounded-full border px-3 py-1 text-xs font-bold ${chipClass}`}>
-                      {seriesName(item)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+            <div className="grid gap-5">
+              <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No collections available yet." label="Series / collections" mutedTextClass={mutedTextClass} onChange={onSeriesIdsChange} options={series.map((item) => ({ id: item.id, label: seriesName(item) }))} selectedIds={seriesIds} />
+              <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No ministries available yet." label="Ministries" mutedTextClass={mutedTextClass} onChange={onMinistryIdsChange} options={ministries.map((item) => ({ id: item.id, label: item.name }))} selectedIds={ministryIds} />
+              <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No tags available yet." label="Tags" mutedTextClass={mutedTextClass} onChange={onTagIdsChange} options={tagOptions.map((item) => ({ id: item.id, label: tagName(item) }))} selectedIds={tagIds} />
+              <AuthorAttributionEditor authors={authorAttributions} canManageAuthors={canManageAuthors} darkMode={darkMode} disabled={disabled} fieldClass={fieldClass} mutedTextClass={mutedTextClass} onChange={onAuthorAttributionsChange} />
 
-            {metadata.length ? (
-              <dl className={`mt-4 grid gap-3 text-sm ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
-                {metadata.map((item) => (
-                  <div key={item.label} className={`rounded-2xl border px-4 py-3 ${chipClass}`}>
-                    <dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800">{item.label}</dt>
-                    <dd className="mt-1 font-semibold">{item.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
+              {metadata.length ? (
+                <dl className={`grid gap-3 text-sm ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
+                  {metadata.map((item) => (
+                    <div key={item.label} className={`rounded-2xl border px-4 py-3 ${chipClass}`}>
+                      <dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800">{item.label}</dt>
+                      <dd className="mt-1 font-semibold">{item.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
+            </div>
           </CollapsibleSection>
         ) : null}
 
@@ -387,3 +520,4 @@ const DocumentSettingsPanel = ({
 };
 
 export default DocumentSettingsPanel;
+

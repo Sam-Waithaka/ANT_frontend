@@ -80,11 +80,22 @@ export type ScriptureBookNavigationItem = {
   writing_count?: number;
 };
 
+export type WritingAuthorRole = 'AUTHOR' | 'CONTRIBUTOR' | 'EDITOR' | 'REVIEWER' | 'COMPILER' | 'TRANSLATOR';
+
 export type WritingAuthorAttribution = {
   display_name?: string;
+  is_primary?: boolean;
   name?: string;
-  role?: string;
+  order?: number;
+  role?: WritingAuthorRole;
   user?: number | string | null;
+};
+
+export type WritingTag = {
+  id: number | string;
+  name: string;
+  slug?: string;
+  writing_count?: number;
 };
 
 export type WritingMinistry = {
@@ -136,6 +147,8 @@ export type Writing = {
   categories?: WritingCategory[];
   ministries?: WritingMinistry[];
   series?: WritingSeries[];
+  tags?: WritingTag[];
+  scripture_references?: unknown[];
   og_image?: number | string | null;
   og_image_detail?: WritingMediaAsset | null;
   media_embeds?: WritingMediaEmbed[];
@@ -172,12 +185,16 @@ export type ResourcesNavigation = {
 };
 
 export type WritingCreatePayload = {
+  author_attributions?: WritingAuthorAttribution[];
   category_ids?: Array<number | string>;
   content_json: unknown;
   excerpt?: string;
-    og_image?: number | string | null;
+  ministry_ids?: Array<number | string>;
+  og_image?: number | string | null;
   resource_type?: number | string;
+  series_ids?: Array<number | string>;
   status?: WritingStatus;
+  tag_ids?: Array<number | string>;
   title: string;
   writing_type?: string;
 };
@@ -188,9 +205,12 @@ export type WritingUpdatePayload = Partial<{
   content_json: unknown;
   excerpt: string;
   featured_at: string | null;
+  ministry_ids: Array<number | string>;
   og_image: number | string | null;
   resource_type: number | string | null;
+  series_ids: Array<number | string>;
   status: WritingStatus;
+  tag_ids: Array<number | string>;
   title: string;
 }>;
 export type WritingAssignment = {
@@ -209,6 +229,8 @@ export type MediaAssetUsage = {
   references?: Array<{ id?: number | string; title?: string; type?: string }>;
   usage_count?: number;
 };
+
+
 
 
 

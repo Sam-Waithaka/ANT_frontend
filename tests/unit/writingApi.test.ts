@@ -7,6 +7,7 @@ import {
   createWriting,
   fetchMediaAssetUsage,
   fetchResourceTypeCategoryLinks,
+  fetchWritingTags,
   fetchWritings,
   normalizePage,
   publishWriting,
@@ -70,6 +71,17 @@ describe('writingApi', () => {
       }),
       method: 'GET',
     });
+  });
+
+  it('fetches existing writing tags for rich metadata selection', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ results: [{ id: 4, name: 'Prayer', slug: 'prayer' }] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchWritingTags('access-token')).resolves.toMatchObject({
+      results: [{ id: 4, name: 'Prayer' }],
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('/v1/writing-tags/', expect.objectContaining({ method: 'GET' }));
   });
 
   it('creates a draft with documented Lexical JSON content', async () => {
@@ -143,3 +155,5 @@ describe('writingApi', () => {
     });
   });
 });
+
+
