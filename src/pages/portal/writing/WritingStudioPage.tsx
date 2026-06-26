@@ -1,11 +1,10 @@
-import { BookOpen, ClipboardList, FileText, FolderOpen, PenLine, Send } from 'lucide-react';
+import { BookOpen, FileText, FolderOpen, PenLine, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import {
   canCreateWriting,
-  canManageAssignments,
   canManageTaxonomy,
   canPublishWriting,
   canViewAnyDrafts,
@@ -47,13 +46,6 @@ const allCards = [
     label: 'Editorial',
     show: (permissions: string[]) => canViewAnyDrafts(permissions) || canPublishWriting(permissions),
   },
-  {
-    description: 'Create and track writing requests for homepage, ministries, media, and events.',
-    href: '/portal/writing/assignments',
-    icon: ClipboardList,
-    label: 'Assignments',
-    show: canManageAssignments,
-  },
 ];
 
 const WritingStudioPage = () => {
@@ -87,3 +79,4 @@ const WritingStudioPage = () => {
 };
 
 export default WritingStudioPage;
+

@@ -13,7 +13,6 @@ import PortalPage from './pages/PortalPage';
 import ResourcesPage from './pages/ResourcesPage';
 import ScripturePage from './pages/ScripturePage';
 import WritingArticlesPage from './pages/portal/writing/WritingArticlesPage';
-import WritingAssignmentsPage from './pages/portal/writing/WritingAssignmentsPage';
 import WritingEditorPage from './pages/portal/writing/WritingEditorPage';
 import WritingEditorialPage from './pages/portal/writing/WritingEditorialPage';
 import WritingLibraryPage from './pages/portal/writing/WritingLibraryPage';
@@ -45,7 +44,6 @@ function App() {
               <Route path="/portal/writing/new" element={<RequireAuth><WritingNewArticlePage /></RequireAuth>} />
               <Route path="/portal/writing/library" element={<RequireAuth><WritingLibraryPage /></RequireAuth>} />
               <Route path="/portal/writing/editorial" element={<RequireAuth><WritingEditorialPage /></RequireAuth>} />
-              <Route path="/portal/writing/assignments" element={<RequireAuth><WritingAssignmentsPage /></RequireAuth>} />
               <Route path="/portal/writing/:id" element={<RequireAuth><WritingEditorPage /></RequireAuth>} />
               <Route path="/project52" element={<Project52Page />} />
               <Route path="/resources" element={<ResourcesPage />} />
@@ -61,4 +59,5 @@ function App() {
 }
 
 export default App;
+
 
