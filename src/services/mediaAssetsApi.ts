@@ -122,12 +122,13 @@ export const readyMediaVariants = (asset: MediaAsset | null | undefined, format:
 
 export const mediaAssetImageUrl = (asset?: MediaAsset | null) => {
   if (!asset || asset.status !== 'ready') return '';
-  const preferredVariant = readyMediaVariants(asset, 'webp').find((variant) => variant.size_name === 'medium')
+  const preferredVariant = readyMediaVariants(asset, 'avif').find((variant) => variant.size_name === 'medium')
+    || readyMediaVariants(asset, 'avif')[0]
+    || readyMediaVariants(asset, 'webp').find((variant) => variant.size_name === 'medium')
     || readyMediaVariants(asset, 'webp')[0]
     || readyMediaVariants(asset, 'jpeg').find((variant) => variant.size_name === 'medium')
-    || readyMediaVariants(asset, 'jpeg')[0]
-    || readyMediaVariants(asset, 'avif').find((variant) => variant.size_name === 'medium')
-    || readyMediaVariants(asset, 'avif')[0];
+    || readyMediaVariants(asset, 'jpeg')[0];
   return preferredVariant?.url || asset.original_url || '';
 };
+
 

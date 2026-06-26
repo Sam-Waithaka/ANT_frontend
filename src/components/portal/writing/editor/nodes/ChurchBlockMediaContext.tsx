@@ -4,6 +4,7 @@ import type { MediaAsset } from '../../../../../services/mediaAssetsApi';
 export type WritingMediaEmbedLike = {
   alt_text_override?: string;
   caption_override?: string;
+  embed_id?: string;
   id: number | string;
   media_asset: number | string;
   media_asset_detail?: MediaAsset | null;
@@ -19,3 +20,5 @@ export const useChurchBlockMedia = (assetId?: number | string) => {
 export const mediaEmbedMap = (embeds: WritingMediaEmbedLike[] = []) => new Map(
   embeds.flatMap((embed) => embed.media_asset_detail ? [[String(embed.media_asset), embed.media_asset_detail] as const] : []),
 );
+
+

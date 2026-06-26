@@ -187,49 +187,67 @@ const PublishingCalendar = ({ darkMode, onSelect, selectedDate }: { darkMode: bo
     setDisplayMonth({ month: next.getUTCMonth() + 1, year: next.getUTCFullYear() });
   };
 
-  const surfaceClass = darkMode ? 'border-white/10 bg-[#111111] shadow-black/30' : 'border-black/10 bg-white shadow-zinc-900/10';
-  const mutedClass = darkMode ? 'text-stone-500' : 'text-zinc-400';
-  const quietButtonClass = darkMode ? 'border-white/10 bg-white/5 text-stone-200 hover:bg-white/10' : 'border-black/10 bg-[#fffaf0] text-zinc-700 hover:bg-red-950/[0.04]';
+  const menuSurfaceClass = darkMode
+    ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/40'
+    : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/15';
+  const neutralPillClass = darkMode
+    ? 'border-white/15 bg-white/10 text-stone-100 backdrop-blur-xl hover:bg-white/15'
+    : 'border-black/10 bg-[#fffaf0]/70 text-zinc-700 backdrop-blur-xl hover:bg-white/80';
+  const inactiveOptionClass = darkMode
+    ? 'bg-white/10 text-stone-100 hover:bg-white/15'
+    : 'bg-[#f8f5ef] text-zinc-950 hover:bg-[#ece7de]';
+  const disabledOptionClass = darkMode
+    ? 'bg-white/[0.04] text-stone-500 opacity-60'
+    : 'bg-[#f8f5ef] text-zinc-400 opacity-75';
 
   return (
-    <div className={`rounded-2xl border p-4 shadow-xl motion-safe:animate-[fadeIn_180ms_ease-out] ${surfaceClass}`}>
-      <div className="flex items-center justify-between gap-3">
-        <button aria-label="Previous month" className={`grid size-9 place-items-center rounded-full border ${quietButtonClass}`} onClick={() => moveMonth(-1)} type="button"><ChevronLeft size={16} /></button>
-        <p className="text-sm font-black">{monthLabel(displayMonth.year, displayMonth.month)}</p>
-        <button aria-label="Next month" className={`grid size-9 place-items-center rounded-full border ${quietButtonClass}`} onClick={() => moveMonth(1)} type="button"><ChevronRight size={16} /></button>
-      </div>
+    <div className={`rounded-3xl border p-4 shadow-2xl motion-safe:animate-[fadeIn_180ms_ease-out] ${menuSurfaceClass}`}>
+      <div className="mx-auto max-w-[22rem]">
+        <p className="mb-3 text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">Publication Date</p>
+        <div className="flex items-center justify-between gap-3">
+          <button aria-label="Previous month" className={`grid size-10 place-items-center rounded-full border shadow-sm transition focus:outline-none focus:ring-2 focus:ring-red-700 ${neutralPillClass}`} onClick={() => moveMonth(-1)} type="button"><ChevronLeft size={16} /></button>
+          <p className={darkMode ? 'text-sm font-black text-stone-100' : 'text-sm font-black text-zinc-950'}>{monthLabel(displayMonth.year, displayMonth.month)}</p>
+          <button aria-label="Next month" className={`grid size-10 place-items-center rounded-full border shadow-sm transition focus:outline-none focus:ring-2 focus:ring-red-700 ${neutralPillClass}`} onClick={() => moveMonth(1)} type="button"><ChevronRight size={16} /></button>
+        </div>
 
-      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[0.68rem] font-black uppercase tracking-[0.14em] text-red-800">
-        {WEEKDAYS.map((day) => <span key={day}>{day}</span>)}
-      </div>
-      <div className="mt-2 grid grid-cols-7 gap-1">
-        {calendarDays.map((item, index) => {
-          if (!item) return <span key={`blank-${index}`} />;
-          const disabled = isDateBeforeTodayInNairobi(item);
-          const selected = sameDate(item, selectedDate);
-          const current = sameDate(item, today);
-          return (
-            <button
-              aria-label={formatFullDate(item)}
-              className={`grid aspect-square place-items-center rounded-full text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-red-800/30 ${disabled ? `${mutedClass} cursor-not-allowed opacity-45` : selected ? 'bg-red-800 text-white shadow-lg shadow-red-950/20' : current ? 'border border-red-800 text-red-800 hover:bg-red-950/[0.04]' : darkMode ? 'text-stone-200 hover:bg-white/10' : 'text-zinc-800 hover:bg-[#fffaf0]'}`}
-              disabled={disabled}
-              onClick={() => onSelect(item)}
-              type="button"
-            >
-              {item.day}
-            </button>
-          );
-        })}
-      </div>
+        <div className="mt-4 grid grid-cols-7 justify-items-center gap-2 text-center text-[10px] font-black uppercase tracking-[0.16em] text-red-900 dark:text-red-200">
+          {WEEKDAYS.map((day) => <span key={day} className="grid size-8 place-items-center">{day}</span>)}
+        </div>
+        <div className="mt-2 grid grid-cols-7 justify-items-center gap-2">
+          {calendarDays.map((item, index) => {
+            if (!item) return <span key={`blank-${index}`} className="size-10" />;
+            const disabled = isDateBeforeTodayInNairobi(item);
+            const selected = sameDate(item, selectedDate);
+            const current = sameDate(item, today);
+            const stateClass = disabled
+              ? `${disabledOptionClass} cursor-not-allowed`
+              : selected
+                ? 'bg-red-800 text-white shadow-md shadow-red-950/20'
+                : current
+                  ? 'border border-red-800 bg-[#f8f5ef] text-red-800 dark:bg-white/10 dark:text-red-200'
+                  : inactiveOptionClass;
+            return (
+              <button
+                aria-label={formatFullDate(item)}
+                className={`grid size-10 place-items-center rounded-full text-sm font-black transition focus:outline-none focus:ring-2 focus:ring-red-700 ${stateClass}`}
+                disabled={disabled}
+                onClick={() => onSelect(item)}
+                type="button"
+              >
+                {item.day}
+              </button>
+            );
+          })}
+        </div>
 
-      <div className="mt-4 flex items-center justify-between gap-2 border-t border-black/10 pt-3 dark:border-white/10">
-        <button className={`rounded-full border px-3 py-2 text-xs font-black ${quietButtonClass}`} onClick={() => { onSelect(today); setDisplayMonth({ month: today.month, year: today.year }); }} type="button">Today</button>
-        <button className={`rounded-full border px-3 py-2 text-xs font-black ${quietButtonClass}`} onClick={() => onSelect(null)} type="button">Clear</button>
+        <div className="mt-4 flex items-center justify-between gap-2 border-t border-black/10 pt-4 dark:border-white/10">
+          <button className={`min-h-10 rounded-full border px-4 text-xs font-black shadow-sm transition focus:outline-none focus:ring-2 focus:ring-red-700 ${neutralPillClass}`} onClick={() => { onSelect(today); setDisplayMonth({ month: today.month, year: today.year }); }} type="button">Today</button>
+          <button className={`min-h-10 rounded-full border px-4 text-xs font-black shadow-sm transition focus:outline-none focus:ring-2 focus:ring-red-700 ${neutralPillClass}`} onClick={() => onSelect(null)} type="button">Clear</button>
+        </div>
       </div>
     </div>
   );
 };
-
 const PublishingClock = ({ darkMode, onChange, selectedDate, time }: { darkMode: boolean; onChange: (time: ScheduleTime) => void; selectedDate: ScheduleDate | null; time: ScheduleTime | null }) => {
   const [step, setStep] = useState<ClockStep>('hour');
   const [typedTime, setTypedTime] = useState(() => formatTime(time));
@@ -611,6 +629,8 @@ const WritingWorkflowControls = ({
 };
 
 export default WritingWorkflowControls;
+
+
 
 
 

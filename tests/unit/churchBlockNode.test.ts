@@ -39,3 +39,4 @@ describe('ChurchBlockNode', () => {
     expect(map.get('8')?.title).toBe('Church');
   });
 });
+

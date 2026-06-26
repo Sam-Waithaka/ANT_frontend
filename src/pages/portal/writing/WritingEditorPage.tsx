@@ -8,7 +8,7 @@ import WritingMediaEmbedPicker from '../../../components/portal/writing/media/Wr
 import CoverImagePicker from '../../../components/portal/writing/media/CoverImagePicker';
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, normalizeLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
-import { extractImageBlocks, type ImageBlockMetadata } from '../../../components/portal/writing/editor/imageBlocks';
+import { extractImageBlocks, imageBlockRecordId, type ImageBlockMetadata } from '../../../components/portal/writing/editor/imageBlocks';
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
@@ -83,7 +83,7 @@ const WritingEditorPage = () => {
         setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
         setCoverImageId(nextWriting.og_image ? String(nextWriting.og_image) : '');
         setMediaEmbeds((nextWriting.media_embeds || []) as WritingMediaEmbedLike[]);
-        knownImageEmbedIds.current = new Set(extractImageBlocks(nextWriting.content_json).flatMap((block) => block.embedId === undefined ? [] : [String(block.embedId)]));
+        knownImageEmbedIds.current = new Set(extractImageBlocks(nextWriting.content_json).flatMap((block) => { const recordId = imageBlockRecordId(block); return recordId === undefined ? [] : [String(recordId)]; }));
         imageBlockSnapshot.current = JSON.stringify(extractImageBlocks(nextWriting.content_json));
       })
       .catch((err) => {
@@ -263,12 +263,12 @@ const WritingEditorPage = () => {
     const snapshot = JSON.stringify(blocks);
     if (snapshot === imageBlockSnapshot.current) return;
     imageBlockSnapshot.current = snapshot;
-    const currentIds = new Set(blocks.flatMap((block) => block.embedId === undefined ? [] : [String(block.embedId)]));
+    const currentIds = new Set(blocks.flatMap((block) => { const recordId = imageBlockRecordId(block); return recordId === undefined ? [] : [String(recordId)]; }));
     const removedIds = [...knownImageEmbedIds.current].filter((embedId) => !currentIds.has(embedId));
     knownImageEmbedIds.current = currentIds;
 
     void Promise.all([
-      ...blocks.filter((block) => block.embedId !== undefined).map((block) => updateWritingMediaEmbed(auth.accessToken, block.embedId as number | string, {
+      ...blocks.map((block) => ({ block, recordId: imageBlockRecordId(block) })).filter((item): item is { block: ImageBlockMetadata; recordId: number | string } => item.recordId !== undefined).map(({ block, recordId }) => updateWritingMediaEmbed(auth.accessToken, recordId, {
         alt_text_override: block.altText,
         caption_override: block.caption,
         position_hint: block.positionHint,
@@ -304,7 +304,7 @@ const WritingEditorPage = () => {
         <DocumentSettingsPanel actions={settingsActions} category={category} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} onCategoryChange={setCategory} onExcerptChange={setExcerpt} onResourceTypeChange={setResourceType} resourceType={resourceType} resourceTypes={resourceTypes} status={writing.status} workflowControl={<WritingWorkflowControls canReturnToDraft={workflowActions.canReturnToDraft} canSubmitForReview={workflowActions.canSubmitForReview} canUnschedule={workflowActions.canUnschedule} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
         {showPublishingPanel ? <div className="hidden lg:block"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing.scheduled_for} /></div> : null}
       </div> : null}
-      {showPublishingPanel ? <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Publishing"><button aria-label="Close publishing panel" className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setPublishingPanelOpen(false)} type="button" /><div className="absolute inset-x-3 bottom-3 top-3 overflow-y-auto rounded-[2rem]"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /></div></div> : null}
+      {showPublishingPanel ? <div className="fixed inset-0 z-50 grid place-items-center p-3 lg:hidden" role="dialog" aria-modal="true" aria-label="Publishing"><button aria-label="Close publishing panel" className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setPublishingPanelOpen(false)} type="button" /><div className="relative z-10 max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-[34rem] overflow-y-auto rounded-[2rem]"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /></div></div> : null}
       {writing ? <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 px-4 lg:hidden"><div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-black/10 bg-white/80 shadow-zinc-900/15')}><button aria-label="Save draft" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-black/10 bg-[#fffaf0]/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save size={16} />{saveState === 'saving' ? 'Saving...' : 'Save'}</button><button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>{workflowActions.canSubmitForReview ? <button aria-label="Submit for review" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send size={16} />Submit</button> : <button aria-label="Open document settings" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-black/10 bg-[#fffaf0]/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80'} onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button"><MoreHorizontal size={16} />Settings</button>}</div></div> : null}
       {message ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{message}</p> : null}
     </WritingStudioShell>
@@ -312,6 +312,8 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
+
+
 
 
 

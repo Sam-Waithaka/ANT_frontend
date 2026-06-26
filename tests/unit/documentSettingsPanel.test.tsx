@@ -61,11 +61,17 @@ describe('DocumentSettingsPanel', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith('/v1/resources/navigation/?resource_type_slug=bible-study', expect.anything());
+    const articleDetailsToggle = [...container.querySelectorAll('button')].find((button) => button.textContent?.includes('Article details')) as HTMLButtonElement;
+    await act(async () => articleDetailsToggle.click());
     expect(container.textContent).toContain('Proverbs Lessons');
+    const presentationToggle = [...container.querySelectorAll('button')].find((button) => button.textContent?.includes('Public presentation')) as HTMLButtonElement;
+    await act(async () => presentationToggle.click());
     expect(container.textContent).toContain('0 / 200');
 
-    const categorySelect = container.querySelectorAll('select')[2] as HTMLSelectElement;
+    const categorySelect = [...container.querySelectorAll('select')].at(-1) as HTMLSelectElement;
     await act(async () => setSelectValue(categorySelect, '2'));
     expect(onCategoryChange).toHaveBeenCalledWith('2');
   });
 });
+
+

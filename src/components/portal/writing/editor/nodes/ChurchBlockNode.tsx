@@ -14,6 +14,8 @@ export type ChurchBlockData = {
   body?: string;
   caption?: string;
   embedId?: number | string;
+  embedRecordId?: number | string;
+  embed_id?: string;
   kind: ChurchBlockKind;
   mediaAssetId?: number | string;
   reference?: string;
@@ -91,4 +93,6 @@ export class ChurchBlockNode extends DecoratorNode<ReactNode> {
 export const $createChurchBlockNode = (data: ChurchBlockData) => $applyNodeReplacement(new ChurchBlockNode(data));
 export const $createDefaultChurchBlock = (kind: Exclude<ChurchBlockKind, 'image'>) => $createChurchBlockNode(defaults[kind]);
 export const $isChurchBlockNode = (node: LexicalNode | null | undefined): node is ChurchBlockNode => node instanceof ChurchBlockNode;
+
+
 

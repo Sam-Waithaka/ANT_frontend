@@ -106,6 +106,7 @@ export type WritingMediaAsset = {
 export type WritingMediaEmbed = {
   alt_text_override?: string;
   caption_override?: string;
+  embed_id?: string;
   id: number | string;
   media_asset: number | string;
   media_asset_detail?: WritingMediaAsset | null;
@@ -208,6 +209,8 @@ export type MediaAssetUsage = {
   references?: Array<{ id?: number | string; title?: string; type?: string }>;
   usage_count?: number;
 };
+
+
 
 
 

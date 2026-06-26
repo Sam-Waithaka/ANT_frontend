@@ -44,6 +44,7 @@ describe('writing workflow actions', () => {
 
   it('never offers workflow mutations for published writings', () => {
     expect(getWritingWorkflowActions(Object.values(WRITING_PERMISSIONS), 'PUBLISHED')).toEqual({
+      canPublish: false,
       canReturnToDraft: false,
       canSchedule: false,
       canSubmitForReview: false,
@@ -51,3 +52,4 @@ describe('writing workflow actions', () => {
     });
   });
 });
+

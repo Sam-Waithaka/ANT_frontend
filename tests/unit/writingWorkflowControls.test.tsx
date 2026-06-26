@@ -4,9 +4,10 @@ import React from 'react';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import WritingWorkflowControls from '../../src/components/portal/writing/WritingWorkflowControls';
+import WritingWorkflowControls, { WritingPublishingPanel } from '../../src/components/portal/writing/WritingWorkflowControls';
 
 const callbacks = {
+  onPublish: vi.fn().mockResolvedValue(true),
   onReturnToDraft: vi.fn().mockResolvedValue(true),
   onSchedule: vi.fn().mockResolvedValue(true),
   onSubmitForReview: vi.fn().mockResolvedValue(true),
@@ -15,7 +16,7 @@ const callbacks = {
 
 const renderControls = async (root: Root, props: Partial<React.ComponentProps<typeof WritingWorkflowControls>>) => {
   await act(async () => {
-    root.render(<WritingWorkflowControls canReturnToDraft={false} canSchedule={false} canSubmitForReview={false} canUnschedule={false} darkMode={false} saving={false} status="DRAFT" {...callbacks} {...props} />);
+    root.render(<WritingWorkflowControls canReturnToDraft={false} canSubmitForReview={false} canUnschedule={false} darkMode={false} saving={false} status="DRAFT" {...callbacks} {...props} />);
   });
 };
 
@@ -39,13 +40,21 @@ describe('WritingWorkflowControls', () => {
   it('shows submit only for an eligible draft', async () => {
     await renderControls(root, { canSubmitForReview: true });
     expect(container.textContent).toContain('Submit for review');
-    expect(container.textContent).not.toContain('Schedule publication');
+    expect(container.textContent).not.toContain('Schedule Publication');
   });
 
-  it('shows review and scheduling controls independently', async () => {
-    await renderControls(root, { canReturnToDraft: true, canSchedule: true, status: 'IN_REVIEW' });
+  it('keeps publishing controls out of the editorial workflow', async () => {
+    await renderControls(root, { canReturnToDraft: true, status: 'IN_REVIEW' });
     expect(container.textContent).toContain('Return to draft');
-    expect(container.querySelector('input[type="datetime-local"]')).not.toBeNull();
+    expect(container.textContent).not.toContain('Schedule Publication');
+  });
+
+  it('houses scheduling in the publishing panel', async () => {
+    await act(async () => {
+      root.render(<WritingPublishingPanel canPublish={false} canSchedule darkMode={false} onPublish={callbacks.onPublish} onSchedule={callbacks.onSchedule} saving={false} />);
+    });
+    expect(container.textContent).toContain('Schedule Publication');
+    expect(container.textContent).toContain('Date and Time');
   });
 
   it('shows cancellation for an eligible scheduled writing', async () => {

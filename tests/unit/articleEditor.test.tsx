@@ -3,7 +3,7 @@
 import React from 'react';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ArticleEditor from '../../src/components/portal/writing/editor/ArticleEditor';
 
 describe('ArticleEditor', () => {
@@ -26,9 +26,15 @@ describe('ArticleEditor', () => {
     ['Bold', 'Italic', 'Underline', 'Strikethrough', 'Superscript', 'Subscript', 'Editorial emphasis', 'Bulleted list'].forEach((label) => {
       expect(container.querySelector(`[aria-label="${label}"]`)).not.toBeNull();
     });
-    const blockType = container.querySelector('[aria-label="Block type"]') as HTMLSelectElement;
-    expect(Array.from(blockType.options).map((option) => option.text)).toEqual(expect.arrayContaining(['Heading 2', 'Heading 3', 'Heading 4', 'Heading 5', 'Heading 6']));
+    const textStyle = container.querySelector('[aria-label="Text style"]') as HTMLButtonElement;
+    expect(textStyle).not.toBeNull();
+    await act(async () => textStyle.click());
+    const options = Array.from(document.body.querySelectorAll('[role="option"]')).map((option) => option.textContent);
+    expect(options).toEqual(expect.arrayContaining(['Heading 2', 'Heading 3', 'Heading 4', 'Heading 5', 'Heading 6']));
+    expect(options).not.toContain('Blockquote');
     expect(container.textContent).toContain('Words: 0');
     expect(container.textContent).toContain('Not saved yet');
   });
 });
+
+
