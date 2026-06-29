@@ -734,3 +734,4 @@ export const normalizeComparisonResponse = (
     versions: requestedVersions,
   };
 };
+

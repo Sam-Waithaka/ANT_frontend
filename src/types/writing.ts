@@ -114,6 +114,36 @@ export type WritingMediaAsset = {
   url?: string;
 };
 
+export type WritingScriptureReferencePayload = {
+  book_osis: string;
+  chapter_start: number;
+  verse_start: number;
+  chapter_end?: number | null;
+  verse_end?: number | null;
+  version?: string;
+  display_text: string;
+};
+
+export type WritingScriptureReferenceCreatePayload = WritingScriptureReferencePayload & {
+  writing: number | string;
+};
+
+export type WritingScriptureReference = WritingScriptureReferencePayload & {
+  id: number | string;
+  writing: number | string;
+  book: string;
+  book_ref?: number | string | null;
+  book_detail?: {
+    id: number;
+    name: string;
+    abbreviation: string;
+    osis_id: string;
+    number: number;
+    testament: 'OT' | 'NT';
+  } | null;
+  version: string;
+  created_at?: string;
+};
 export type WritingMediaEmbed = {
   alt_text_override?: string;
   caption_override?: string;
@@ -148,7 +178,7 @@ export type Writing = {
   ministries?: WritingMinistry[];
   series?: WritingSeries[];
   tags?: WritingTag[];
-  scripture_references?: unknown[];
+  scripture_references?: WritingScriptureReference[];
   og_image?: number | string | null;
   og_image_detail?: WritingMediaAsset | null;
   media_embeds?: WritingMediaEmbed[];
@@ -193,6 +223,7 @@ export type WritingCreatePayload = {
   og_image?: number | string | null;
   resource_type?: number | string;
   series_ids?: Array<number | string>;
+  scripture_references?: WritingScriptureReferencePayload[];
   status?: WritingStatus;
   tag_ids?: Array<number | string>;
   title: string;
@@ -209,6 +240,7 @@ export type WritingUpdatePayload = Partial<{
   og_image: number | string | null;
   resource_type: number | string | null;
   series_ids: Array<number | string>;
+  scripture_references: WritingScriptureReferencePayload[];
   status: WritingStatus;
   tag_ids: Array<number | string>;
   title: string;
@@ -229,10 +261,4 @@ export type MediaAssetUsage = {
   references?: Array<{ id?: number | string; title?: string; type?: string }>;
   usage_count?: number;
 };
-
-
-
-
-
-
 

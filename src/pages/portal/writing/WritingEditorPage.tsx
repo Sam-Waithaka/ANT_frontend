@@ -9,15 +9,17 @@ import CoverImagePicker from '../../../components/portal/writing/media/CoverImag
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, normalizeLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
 import { extractImageBlocks, imageBlockRecordId, type ImageBlockMetadata } from '../../../components/portal/writing/editor/imageBlocks';
+import { hydrateScriptureReferenceIds, scriptureDataToReferencePayload, scriptureReferenceToNodeData } from '../../../components/portal/writing/editor/scriptureReferences';
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { archiveWriting, createWritingMediaEmbed, createWritingRevision, deleteWritingMediaEmbed, fetchResourceTypes, fetchWriting, fetchWritingTags, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed } from '../../../services/writingApi';
+import { archiveWriting, createWritingMediaEmbed, createWritingRevision, createWritingScriptureReference, deleteWritingMediaEmbed, deleteWritingScriptureReference, fetchResourceTypes, fetchWriting, fetchWritingScriptureReferences, fetchWritingTags, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed, updateWritingScriptureReference } from '../../../services/writingApi';
 import type { Writing, WritingAuthorAttribution, WritingResourceType, WritingTag, WritingUpdatePayload } from '../../../types/writing';
 import type { WritingMediaEmbedLike } from '../../../components/portal/writing/editor/nodes/ChurchBlockMediaContext';
+import type { ScriptureData } from '../../../components/portal/writing/editor/nodes/scriptureTypes';
 import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
 import { getWritingPublishingActions, getWritingWorkflowActions } from '../../../utils/writingActions';
 
@@ -95,12 +97,17 @@ const WritingEditorPage = () => {
         setMinistryIds((nextWriting.ministries || []).map((item) => item.id));
         setTagIds((nextWriting.tags || []).map((item) => item.id));
         setAuthorAttributions(nextWriting.author_attributions || []);
-        setContentJson(normalizeLexicalContent(nextWriting.content_json));
+        const normalizedContent = normalizeLexicalContent(nextWriting.content_json);
+        setContentJson(normalizedContent);
+        void fetchWritingScriptureReferences(auth.accessToken, nextWriting.id, controller.signal).then((page) => {
+          setWriting((current) => current ? { ...current, scripture_references: page.results } : current);
+          setContentJson((current) => normalizeLexicalContent(hydrateScriptureReferenceIds(current, page.results)));
+        }).catch(() => undefined);
         setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
         setCoverImageId(nextWriting.og_image ? String(nextWriting.og_image) : '');
         setMediaEmbeds((nextWriting.media_embeds || []) as WritingMediaEmbedLike[]);
-        knownImageEmbedIds.current = new Set(extractImageBlocks(nextWriting.content_json).flatMap((block) => { const recordId = imageBlockRecordId(block); return recordId === undefined ? [] : [String(recordId)]; }));
-        imageBlockSnapshot.current = JSON.stringify(extractImageBlocks(nextWriting.content_json));
+        knownImageEmbedIds.current = new Set(extractImageBlocks(normalizedContent).flatMap((block) => { const recordId = imageBlockRecordId(block); return recordId === undefined ? [] : [String(recordId)]; }));
+        imageBlockSnapshot.current = JSON.stringify(extractImageBlocks(normalizedContent));
       })
       .catch((err) => {
         if (!controller.signal.aborted) setMessage(err instanceof Error ? err.message : 'Unable to load writing.');
@@ -266,6 +273,30 @@ const WritingEditorPage = () => {
     }
   }, [auth.accessToken]);
 
+  const createScriptureReferenceForNode = useCallback(async (data: ScriptureData) => {
+    if (!writing) return data;
+    const payload = scriptureDataToReferencePayload(data);
+    if (!payload) throw new Error('Choose a canonical Scripture reference before inserting it.');
+    const created = await createWritingScriptureReference(auth.accessToken, { ...payload, writing: writing.id });
+    return scriptureReferenceToNodeData(created, data);
+  }, [auth.accessToken, writing]);
+
+  const updateScriptureReferenceForNode = useCallback(async (data: ScriptureData) => {
+    if (!writing) return data;
+    const payload = scriptureDataToReferencePayload(data);
+    if (!payload) throw new Error('Choose a canonical Scripture reference before saving it.');
+    if (!data.scriptureReferenceId) {
+      const created = await createWritingScriptureReference(auth.accessToken, { ...payload, writing: writing.id });
+      return scriptureReferenceToNodeData(created, data);
+    }
+    const updated = await updateWritingScriptureReference(auth.accessToken, data.scriptureReferenceId, payload);
+    return scriptureReferenceToNodeData(updated, data);
+  }, [auth.accessToken, writing]);
+
+  const deleteScriptureReferenceForNode = useCallback(async (data: ScriptureData) => {
+    if (!data.scriptureReferenceId) return;
+    await deleteWritingScriptureReference(auth.accessToken, data.scriptureReferenceId);
+  }, [auth.accessToken]);
   const insertMediaEmbed = async (asset: MediaAsset) => {
     if (!writing) return;
     const created = await createWritingMediaEmbed(auth.accessToken, {
@@ -318,7 +349,7 @@ const WritingEditorPage = () => {
           {previewMode ? <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} mediaEmbeds={mediaEmbeds} onCoverImageRefresh={refreshCoverImage} title={title} /> : <>
             <label className="mb-4 grid gap-2 text-sm font-bold"><span className="flex items-center justify-between gap-3">Working title <span className={'text-xs font-normal ' + mutedTextClass}>{title.length} / 120</span></span><input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} /></label>
             {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
-            <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
+            <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onCreateScriptureReference={createScriptureReferenceForNode} onDeleteScriptureReference={deleteScriptureReferenceForNode} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} onUpdateScriptureReference={updateScriptureReferenceForNode} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
           </>}
         </section>
         <DocumentSettingsPanel actions={settingsActions} authorAttributions={authorAttributions} canManageAuthors={canEditAnyWriting(auth.permissions)} category={category} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} ministryIds={ministryIds} onAuthorAttributionsChange={setAuthorAttributions} onCategoryChange={setCategory} onExcerptChange={setExcerpt} onMinistryIdsChange={setMinistryIds} onResourceTypeChange={setResourceType} onSeriesIdsChange={setSeriesIds} onTagIdsChange={setTagIds} resourceType={resourceType} resourceTypes={resourceTypes} seriesIds={seriesIds} status={writing.status} tagIds={tagIds} tagOptions={tagOptions} workflowControl={<WritingWorkflowControls canReturnToDraft={workflowActions.canReturnToDraft} canSubmitForReview={workflowActions.canSubmitForReview} canUnschedule={workflowActions.canUnschedule} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
@@ -332,23 +363,4 @@ const WritingEditorPage = () => {
 };
 
 export default WritingEditorPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

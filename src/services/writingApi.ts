@@ -11,6 +11,9 @@ import type {
   WritingMediaEmbed,
   WritingResourceType,
   WritingResourceTypeCategoryLink,
+  WritingScriptureReference,
+  WritingScriptureReferenceCreatePayload,
+  WritingScriptureReferencePayload,
   WritingSeries,
   WritingTag,
   WritingUpdatePayload,
@@ -171,6 +174,17 @@ export const updateWritingMediaEmbed = (accessToken: string, id: number | string
 
 export const deleteWritingMediaEmbed = (accessToken: string, id: number | string) =>
   portalRequest<null>(`/v1/writing-media-embeds/${id}/`, { accessToken, method: 'DELETE' });
+export const fetchWritingScriptureReferences = async (accessToken: string, writingId: string | number, signal?: AbortSignal) =>
+  normalizePage<WritingScriptureReference>(await portalRequest<unknown>(`/v1/writing-scripture-references/?writing=${encodeURIComponent(String(writingId))}`, { accessToken, signal }));
+
+export const createWritingScriptureReference = (accessToken: string, body: WritingScriptureReferenceCreatePayload) =>
+  portalRequest<WritingScriptureReference>('/v1/writing-scripture-references/', { accessToken, body, method: 'POST' });
+
+export const updateWritingScriptureReference = (accessToken: string, id: string | number, body: Partial<WritingScriptureReferencePayload>) =>
+  portalRequest<WritingScriptureReference>(`/v1/writing-scripture-references/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteWritingScriptureReference = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-scripture-references/${id}/`, { accessToken, method: 'DELETE' });
 export const fetchAssignments = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingAssignment>(await portalRequest<unknown>('/v1/writing-assignments/', { accessToken, signal }));
 
@@ -185,13 +199,4 @@ export const deleteAssignment = (accessToken: string, id: string | number) =>
 
 export const fetchMediaAssetUsage = (accessToken: string, id: string | number, signal?: AbortSignal) =>
   portalRequest<MediaAssetUsage>(`/v1/media-assets/${id}/usage/`, { accessToken, signal });
-
-
-
-
-
-
-
-
-
 

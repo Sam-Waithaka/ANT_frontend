@@ -3,15 +3,19 @@ import { ApiError } from '../../src/services/apiClient';
 import {
   createCategorySeriesLink,
   createResourceTypeCategoryLink,
+  createWritingScriptureReference,
+  deleteWritingScriptureReference,
   fetchCategorySeriesLinks,
   createWriting,
   fetchMediaAssetUsage,
   fetchResourceTypeCategoryLinks,
+  fetchWritingScriptureReferences,
   fetchWritingTags,
   fetchWritings,
   normalizePage,
   publishWriting,
   updateWriting,
+  updateWritingScriptureReference,
 } from '../../src/services/writingApi';
 
 const jsonResponse = (payload: unknown, init: ResponseInit = {}) =>
@@ -145,6 +149,30 @@ describe('writingApi', () => {
     }));
   });
 
+  it('manages writing Scripture references with dedicated CRUD endpoints', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ results: [{ id: 11, writing: 4, book: 'John', chapter_start: 3, verse_start: 16, display_text: 'John 3:16', version: 'BSB' }] }))
+      .mockResolvedValueOnce(jsonResponse({ id: 12, writing: 4, book: 'Ps', chapter_start: 95, verse_start: 6, display_text: 'Psalm 95:6', version: 'BSB' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 12, writing: 4, book: 'Ps', chapter_start: 95, verse_start: 7, display_text: 'Psalm 95:7', version: 'BSB' }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchWritingScriptureReferences('access-token', 4);
+    await createWritingScriptureReference('access-token', { writing: 4, book_osis: 'Ps', chapter_start: 95, verse_start: 6, display_text: 'Psalm 95:6' });
+    await updateWritingScriptureReference('access-token', 12, { book_osis: 'Ps', chapter_start: 95, verse_start: 7, display_text: 'Psalm 95:7' });
+    await deleteWritingScriptureReference('access-token', 12);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writing-scripture-references/?writing=4', expect.objectContaining({ method: 'GET' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writing-scripture-references/', expect.objectContaining({
+      body: JSON.stringify({ writing: 4, book_osis: 'Ps', chapter_start: 95, verse_start: 6, display_text: 'Psalm 95:6' }),
+      method: 'POST',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/writing-scripture-references/12/', expect.objectContaining({
+      body: JSON.stringify({ book_osis: 'Ps', chapter_start: 95, verse_start: 7, display_text: 'Psalm 95:7' }),
+      method: 'PATCH',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/v1/writing-scripture-references/12/', expect.objectContaining({ method: 'DELETE' }));
+  });
   it('preserves backend error detail and status', async () => {
     vi.stubGlobal('fetch', vi.fn().mockImplementation(() => Promise.resolve(jsonResponse({ detail: 'Not allowed.' }, { status: 403 }))));
 
@@ -155,5 +183,4 @@ describe('writingApi', () => {
     });
   });
 });
-
 

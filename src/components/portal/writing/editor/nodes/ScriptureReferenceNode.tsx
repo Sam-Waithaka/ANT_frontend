@@ -20,9 +20,11 @@ export class ScriptureReferenceNode extends DecoratorNode<ReactNode> {
   updateDOM(): false { return false; }
   isInline(): boolean { return true; }
   getData(): ScriptureData { return this.__data; }
+  setData(data: ScriptureData): void { this.getWritable().__data = data; }
   exportJSON(): SerializedScriptureReferenceNode { return { ...super.exportJSON(), data: this.__data, type: 'scripture-reference', version: 1 }; }
   decorate(): ReactNode { return <ScriptureReferenceView data={this.__data} />; }
 }
 
 export const $createScriptureReferenceNode = (data: ScriptureData) => $applyNodeReplacement(new ScriptureReferenceNode({ ...data, display: 'inline' }));
 export const $isScriptureReferenceNode = (node: LexicalNode | null | undefined): node is ScriptureReferenceNode => node instanceof ScriptureReferenceNode;
+

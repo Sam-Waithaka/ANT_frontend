@@ -8,7 +8,9 @@ type SpecialBlockEditorValue = {
   onEditPastoral?: (request: { data: PastoralBlockData; kind: PastoralBlockKind; nodeKey: NodeKey }) => void;
   onEditQuotation?: (request: { data: BlockQuoteData; nodeKey: NodeKey }) => void;
   onEditScripture?: (request: { data: ScriptureData; nodeKey: NodeKey }) => void;
+  onRemoveScripture?: (data: ScriptureData) => Promise<void> | void;
 };
 
 export const SpecialBlockEditorContext = createContext<SpecialBlockEditorValue>({});
 export const useSpecialBlockEditor = () => useContext(SpecialBlockEditorContext);
+

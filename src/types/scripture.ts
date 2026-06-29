@@ -19,6 +19,7 @@ export type BibleBook = {
   canonicalAbbreviation?: string;
   canonicalName?: string;
   id: string;
+  osis_id?: string;
   longName?: string;
   name: string;
   number?: number;
@@ -208,3 +209,4 @@ export type PaginatedResponse<T> = {
   previous: string | null;
   results: T[];
 };
+

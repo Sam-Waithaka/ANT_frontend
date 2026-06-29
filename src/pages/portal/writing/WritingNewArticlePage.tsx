@@ -6,6 +6,7 @@ import WritingPreview from '../../../components/portal/writing/WritingPreview';
 import CoverImagePicker from '../../../components/portal/writing/media/CoverImagePicker';
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
+import { extractScriptureReferencesFromContent } from '../../../components/portal/writing/editor/scriptureReferences';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -95,6 +96,7 @@ const WritingNewArticlePage = () => {
         ...(ministryIds.length ? { ministry_ids: ministryIds } : {}),
         og_image: coverImage?.id || null,
         resource_type: resourceType,
+        scripture_references: extractScriptureReferencesFromContent(contentJson),
         ...(seriesIds.length ? { series_ids: seriesIds } : {}),
         status: 'DRAFT',
         ...(tagIds.length ? { tag_ids: tagIds } : {}),
