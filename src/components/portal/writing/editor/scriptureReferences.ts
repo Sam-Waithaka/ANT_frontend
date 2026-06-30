@@ -1,4 +1,4 @@
-import type { ScriptureData } from './nodes/scriptureTypes';
+import { stripScriptureReferenceId, type ScriptureData } from './nodes/scriptureTypes';
 import type { WritingScriptureReference, WritingScriptureReferencePayload } from '../../../../types/writing';
 
 type LexicalLikeNode = {
@@ -36,7 +36,7 @@ export const scriptureDataToReferencePayload = (data: ScriptureData): WritingScr
   };
 };
 
-export const scriptureReferenceToNodeData = (reference: WritingScriptureReference, current?: ScriptureData): ScriptureData => ({
+export const scriptureReferenceToNodeData = (reference: WritingScriptureReference, current?: ScriptureData): ScriptureData => stripScriptureReferenceId({
   ...current,
   book_osis: reference.book_detail?.osis_id || reference.book,
   bookLabel: reference.book_detail?.name || current?.bookLabel || reference.book,
@@ -47,13 +47,34 @@ export const scriptureReferenceToNodeData = (reference: WritingScriptureReferenc
   display: current?.display || 'block',
   display_text: reference.display_text,
   reference: reference.display_text,
-  scriptureReferenceId: reference.id,
   source: current?.source || 'api',
   sourceId: current?.sourceId,
   text: current?.text || '',
   version: reference.version || current?.version || 'BSB',
   verses: current?.verses,
 });
+
+export const scriptureReferenceKey = (reference: WritingScriptureReferencePayload) => [
+  reference.book_osis,
+  reference.chapter_start,
+  reference.verse_start,
+  reference.chapter_end ?? '',
+  reference.verse_end ?? '',
+  reference.version || 'BSB',
+].join('|');
+
+export const findWritingScriptureReference = (
+  references: WritingScriptureReference[] | undefined,
+  data: ScriptureData,
+): WritingScriptureReference | undefined => {
+  const payload = scriptureDataToReferencePayload(data);
+  if (!payload) return undefined;
+  const key = scriptureReferenceKey(payload);
+  return references?.find((reference) => {
+    const referencePayload = scriptureDataToReferencePayload(scriptureReferenceToNodeData(reference));
+    return referencePayload ? scriptureReferenceKey(referencePayload) === key : false;
+  });
+};
 
 const walk = (node: unknown, references: WritingScriptureReferencePayload[]) => {
   if (!isRecord(node)) return;
@@ -69,15 +90,6 @@ const walk = (node: unknown, references: WritingScriptureReferencePayload[]) => 
   }
 };
 
-const referenceKey = (reference: WritingScriptureReferencePayload) => [
-  reference.book_osis,
-  reference.chapter_start,
-  reference.verse_start,
-  reference.chapter_end ?? '',
-  reference.verse_end ?? '',
-  reference.version || 'BSB',
-].join('|');
-
 export const extractScriptureReferencesFromContent = (content: unknown): WritingScriptureReferencePayload[] => {
   const references: WritingScriptureReferencePayload[] = [];
   const startNode = isRecord(content) && isRecord(content.root) ? content.root : content;
@@ -85,38 +97,9 @@ export const extractScriptureReferencesFromContent = (content: unknown): Writing
 
   const seen = new Set<string>();
   return references.filter((reference) => {
-    const key = referenceKey(reference);
+    const key = scriptureReferenceKey(reference);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
-};
-
-const cloneAndHydrate = (node: unknown, referencesByKey: Map<string, WritingScriptureReference>): unknown => {
-  if (!isRecord(node)) return node;
-
-  const lexicalNode = node as LexicalLikeNode;
-  const next: Record<string, unknown> = { ...node };
-
-  if ((lexicalNode.type === 'scripture-block' || lexicalNode.type === 'scripture-reference') && lexicalNode.data && !lexicalNode.data.scriptureReferenceId) {
-    const payload = scriptureDataToReferencePayload(lexicalNode.data);
-    const reference = payload ? referencesByKey.get(referenceKey(payload)) : undefined;
-    if (reference) next.data = scriptureReferenceToNodeData(reference, lexicalNode.data);
-  }
-
-  if (Array.isArray(lexicalNode.children)) {
-    next.children = lexicalNode.children.map((child) => cloneAndHydrate(child, referencesByKey));
-  }
-
-  return next;
-};
-
-export const hydrateScriptureReferenceIds = (content: unknown, references: WritingScriptureReference[]) => {
-  if (!references.length) return content;
-  const referencesByKey = new Map<string, WritingScriptureReference>();
-  references.forEach((reference) => {
-    const payload = scriptureDataToReferencePayload(scriptureReferenceToNodeData(reference));
-    if (payload) referencesByKey.set(referenceKey(payload), reference);
-  });
-  return cloneAndHydrate(content, referencesByKey);
 };

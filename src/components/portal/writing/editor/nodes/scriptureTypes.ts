@@ -14,7 +14,6 @@ export type ScriptureData = {
   chapter_end?: number | null;
   verse_end?: number | null;
   display_text?: string;
-  scriptureReferenceId?: number | string;
   display: ScriptureDisplay;
   reference: string;
   source: ScriptureSource;
@@ -22,5 +21,11 @@ export type ScriptureData = {
   text: string;
   version: string;
   verses?: ScriptureVerse[];
+};
+type ScriptureDataWithRuntimeFields = ScriptureData & { scriptureReferenceId?: number | string };
+
+export const stripScriptureReferenceId = (data: ScriptureDataWithRuntimeFields): ScriptureData => {
+  const { scriptureReferenceId: _scriptureReferenceId, ...contentData } = data;
+  return contentData;
 };
 

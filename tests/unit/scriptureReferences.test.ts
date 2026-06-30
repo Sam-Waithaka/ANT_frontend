@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractScriptureReferencesFromContent } from '../../src/components/portal/writing/editor/scriptureReferences';
+import { extractScriptureReferencesFromContent, scriptureReferenceToNodeData } from '../../src/components/portal/writing/editor/scriptureReferences';
 
 describe('extractScriptureReferencesFromContent', () => {
   it('derives backend scripture references from canonical Scripture nodes only', () => {
@@ -68,6 +68,25 @@ describe('extractScriptureReferencesFromContent', () => {
 
     expect(extractScriptureReferencesFromContent({ root: { children: [scriptureBlock, scriptureBlock] } })).toHaveLength(1);
   });
+
+  it('does not copy backend record ids into Scripture node data', () => {
+    const data = scriptureReferenceToNodeData({
+      id: 12,
+      writing: 4,
+      book: 'John',
+      book_osis: 'John',
+      chapter_start: 3,
+      display_text: 'John 3:16',
+      verse_start: 16,
+      version: 'BSB',
+    });
+
+    expect(data).toMatchObject({
+      book_osis: 'John',
+      chapter_start: 3,
+      reference: 'John 3:16',
+      verse_start: 16,
+    });
+    expect(data).not.toHaveProperty('scriptureReferenceId');
+  });
 });
-
-

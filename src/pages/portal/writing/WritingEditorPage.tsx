@@ -9,7 +9,7 @@ import CoverImagePicker from '../../../components/portal/writing/media/CoverImag
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, normalizeLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
 import { extractImageBlocks, imageBlockRecordId, type ImageBlockMetadata } from '../../../components/portal/writing/editor/imageBlocks';
-import { scriptureDataToReferencePayload, scriptureReferenceToNodeData } from '../../../components/portal/writing/editor/scriptureReferences';
+import { findWritingScriptureReference, scriptureDataToReferencePayload, scriptureReferenceToNodeData } from '../../../components/portal/writing/editor/scriptureReferences';
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
@@ -281,25 +281,31 @@ const WritingEditorPage = () => {
     const payload = scriptureDataToReferencePayload(data);
     if (!payload) throw new Error('Choose a canonical Scripture reference before inserting it.');
     const created = await createWritingScriptureReference(auth.accessToken, { ...payload, writing: writing.id });
+    setWriting((current) => current ? { ...current, scripture_references: [...(current.scripture_references || []), created] } : current);
     return scriptureReferenceToNodeData(created, data);
   }, [auth.accessToken, writing]);
 
-  const updateScriptureReferenceForNode = useCallback(async (data: ScriptureData) => {
+  const updateScriptureReferenceForNode = useCallback(async (data: ScriptureData, previousData?: ScriptureData) => {
     if (!writing) return data;
     const payload = scriptureDataToReferencePayload(data);
     if (!payload) throw new Error('Choose a canonical Scripture reference before saving it.');
-    if (!data.scriptureReferenceId) {
+    const existingReference = findWritingScriptureReference(writing.scripture_references, previousData || data);
+    if (!existingReference) {
       const created = await createWritingScriptureReference(auth.accessToken, { ...payload, writing: writing.id });
+      setWriting((current) => current ? { ...current, scripture_references: [...(current.scripture_references || []), created] } : current);
       return scriptureReferenceToNodeData(created, data);
     }
-    const updated = await updateWritingScriptureReference(auth.accessToken, data.scriptureReferenceId, payload);
+    const updated = await updateWritingScriptureReference(auth.accessToken, existingReference.id, payload);
+    setWriting((current) => current ? { ...current, scripture_references: (current.scripture_references || []).map((reference) => String(reference.id) === String(updated.id) ? updated : reference) } : current);
     return scriptureReferenceToNodeData(updated, data);
   }, [auth.accessToken, writing]);
 
   const deleteScriptureReferenceForNode = useCallback(async (data: ScriptureData) => {
-    if (!data.scriptureReferenceId) return;
-    await deleteWritingScriptureReference(auth.accessToken, data.scriptureReferenceId);
-  }, [auth.accessToken]);
+    const existingReference = findWritingScriptureReference(writing?.scripture_references, data);
+    if (!existingReference) return;
+    await deleteWritingScriptureReference(auth.accessToken, existingReference.id);
+    setWriting((current) => current ? { ...current, scripture_references: (current.scripture_references || []).filter((reference) => String(reference.id) !== String(existingReference.id)) } : current);
+  }, [auth.accessToken, writing?.scripture_references]);
   const insertMediaEmbed = async (asset: MediaAsset) => {
     if (!writing) return;
     const created = await createWritingMediaEmbed(auth.accessToken, {
