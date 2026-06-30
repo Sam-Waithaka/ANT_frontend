@@ -22,6 +22,7 @@ import type { WritingMediaEmbedLike } from '../../../components/portal/writing/e
 import type { ScriptureData } from '../../../components/portal/writing/editor/nodes/scriptureTypes';
 import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
 import { getWritingPublishingActions, getWritingWorkflowActions } from '../../../utils/writingActions';
+import { buildWritingDraftPayload, type CoverImageChange } from '../../../utils/writingDraftPayload';
 
 const canEdit = (permissions: string[], writing?: Writing | null) => {
   if (!writing) return false;
@@ -44,6 +45,7 @@ const WritingEditorPage = () => {
   const [category, setCategory] = useState('');
   const [contentJson, setContentJson] = useState<LexicalContentJson>(() => createEmptyLexicalContent());
   const [coverImage, setCoverImage] = useState<MediaAsset | null>(null);
+  const [coverImageChange, setCoverImageChange] = useState<CoverImageChange>(undefined);
   const [coverImageId, setCoverImageId] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [loading, setLoading] = useState(true);
@@ -104,6 +106,7 @@ const WritingEditorPage = () => {
           setContentJson((current) => normalizeLexicalContent(hydrateScriptureReferenceIds(current, page.results)));
         }).catch(() => undefined);
         setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
+        setCoverImageChange(undefined);
         setCoverImageId(nextWriting.og_image ? String(nextWriting.og_image) : '');
         setMediaEmbeds((nextWriting.media_embeds || []) as WritingMediaEmbedLike[]);
         knownImageEmbedIds.current = new Set(extractImageBlocks(normalizedContent).flatMap((block) => { const recordId = imageBlockRecordId(block); return recordId === undefined ? [] : [String(recordId)]; }));
@@ -120,23 +123,23 @@ const WritingEditorPage = () => {
   }, [auth.accessToken, id]);
 
   const editable = canEdit(auth.permissions, writing);
-  const draftPayload = useMemo<WritingUpdatePayload>(() => ({
+  const draftPayload = useMemo<WritingUpdatePayload>(() => buildWritingDraftPayload({
     author_attributions: authorAttributions,
     category_ids: category ? [category] : [],
     content_json: contentJson,
     excerpt,
     ministry_ids: ministryIds,
-    og_image: coverImageId || null,
     resource_type: resourceType || null,
     series_ids: seriesIds,
     tag_ids: tagIds,
     title,
-  }), [authorAttributions, category, contentJson, coverImageId, excerpt, ministryIds, resourceType, seriesIds, tagIds, title]);
+  }, coverImageChange), [authorAttributions, category, contentJson, coverImageChange, excerpt, ministryIds, resourceType, seriesIds, tagIds, title]);
 
   const persistDraft = useCallback(async (payload: WritingUpdatePayload) => {
     if (!writing) return;
     const nextWriting = await updateWriting(auth.accessToken, writing.id, payload);
     setWriting(nextWriting);
+    if (Object.prototype.hasOwnProperty.call(payload, 'og_image')) setCoverImageChange(undefined);
   }, [auth.accessToken, writing]);
 
   const { saveNow, saveState } = useDebouncedWritingSave({
@@ -248,6 +251,7 @@ const WritingEditorPage = () => {
 
   const handleCoverImageChange = (asset: MediaAsset | null) => {
     setCoverImage(asset);
+    setCoverImageChange(asset ? asset.id : null);
     setCoverImageId(asset ? String(asset.id) : '');
   };
 
