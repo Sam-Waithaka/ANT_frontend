@@ -245,17 +245,6 @@ export type WritingUpdatePayload = Partial<{
   tag_ids: Array<number | string>;
   title: string;
 }>;
-export type WritingAssignment = {
-  id: number | string;
-  title: string;
-  assignment_type?: string;
-  due_at?: string | null;
-  status?: string;
-  writing?: number | string | null;
-  assignee?: number | string | null;
-  notes?: string;
-};
-
 export type MediaAssetUsage = {
   can_delete?: boolean;
   references?: Array<{ id?: number | string; title?: string; type?: string }>;

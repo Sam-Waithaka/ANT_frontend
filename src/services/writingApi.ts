@@ -3,7 +3,6 @@ import type {
   MediaAssetUsage,
   PaginatedResponse,
   Writing,
-  WritingAssignment,
   WritingCategory,
   WritingCategorySeriesLink,
   WritingCreatePayload,
@@ -185,18 +184,6 @@ export const updateWritingScriptureReference = (accessToken: string, id: string 
 
 export const deleteWritingScriptureReference = (accessToken: string, id: string | number) =>
   portalRequest<null>(`/v1/writing-scripture-references/${id}/`, { accessToken, method: 'DELETE' });
-export const fetchAssignments = async (accessToken: string, signal?: AbortSignal) =>
-  normalizePage<WritingAssignment>(await portalRequest<unknown>('/v1/writing-assignments/', { accessToken, signal }));
-
-export const createAssignment = (accessToken: string, body: Partial<WritingAssignment>) =>
-  portalRequest<WritingAssignment>('/v1/writing-assignments/', { accessToken, body, method: 'POST' });
-
-export const updateAssignment = (accessToken: string, id: string | number, body: Partial<WritingAssignment>) =>
-  portalRequest<WritingAssignment>(`/v1/writing-assignments/${id}/`, { accessToken, body, method: 'PATCH' });
-
-export const deleteAssignment = (accessToken: string, id: string | number) =>
-  portalRequest<null>(`/v1/writing-assignments/${id}/`, { accessToken, method: 'DELETE' });
-
 export const fetchMediaAssetUsage = (accessToken: string, id: string | number, signal?: AbortSignal) =>
   portalRequest<MediaAssetUsage>(`/v1/media-assets/${id}/usage/`, { accessToken, signal });
 
