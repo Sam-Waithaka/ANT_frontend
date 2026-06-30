@@ -9,7 +9,7 @@ import CoverImagePicker from '../../../components/portal/writing/media/CoverImag
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
 import { createEmptyLexicalContent, normalizeLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
 import { extractImageBlocks, imageBlockRecordId, type ImageBlockMetadata } from '../../../components/portal/writing/editor/imageBlocks';
-import { hydrateScriptureReferenceIds, scriptureDataToReferencePayload, scriptureReferenceToNodeData } from '../../../components/portal/writing/editor/scriptureReferences';
+import { scriptureDataToReferencePayload, scriptureReferenceToNodeData } from '../../../components/portal/writing/editor/scriptureReferences';
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
@@ -103,7 +103,6 @@ const WritingEditorPage = () => {
         setContentJson(normalizedContent);
         void fetchWritingScriptureReferences(auth.accessToken, nextWriting.id, controller.signal).then((page) => {
           setWriting((current) => current ? { ...current, scripture_references: page.results } : current);
-          setContentJson((current) => normalizeLexicalContent(hydrateScriptureReferenceIds(current, page.results)));
         }).catch(() => undefined);
         setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
         setCoverImageChange(undefined);
