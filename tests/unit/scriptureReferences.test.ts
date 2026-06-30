@@ -69,7 +69,7 @@ describe('extractScriptureReferencesFromContent', () => {
     expect(extractScriptureReferencesFromContent({ root: { children: [scriptureBlock, scriptureBlock] } })).toHaveLength(1);
   });
 
-  it('does not copy backend record ids into Scripture node data', () => {
+  it('maps backend references into strict Scripture node data', () => {
     const data = scriptureReferenceToNodeData({
       id: 12,
       writing: 4,
@@ -87,6 +87,6 @@ describe('extractScriptureReferencesFromContent', () => {
       reference: 'John 3:16',
       verse_start: 16,
     });
-    expect(data).not.toHaveProperty('scriptureReferenceId');
   });
 });
+

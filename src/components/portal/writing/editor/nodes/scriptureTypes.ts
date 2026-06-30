@@ -22,10 +22,4 @@ export type ScriptureData = {
   version: string;
   verses?: ScriptureVerse[];
 };
-type ScriptureDataWithRuntimeFields = ScriptureData & { scriptureReferenceId?: number | string };
-
-export const stripScriptureReferenceId = (data: ScriptureDataWithRuntimeFields): ScriptureData => {
-  const { scriptureReferenceId: _scriptureReferenceId, ...contentData } = data;
-  return contentData;
-};
 

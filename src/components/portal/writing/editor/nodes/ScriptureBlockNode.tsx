@@ -3,7 +3,7 @@ import { BookOpenText, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $applyNodeReplacement, $getNodeByKey, DecoratorNode, type NodeKey, type SerializedLexicalNode } from 'lexical';
 import { useSpecialBlockEditor } from './SpecialBlockEditorContext';
-import { stripScriptureReferenceId, type ScriptureData } from './scriptureTypes';
+import type { ScriptureData } from './scriptureTypes';
 
 export type SerializedScriptureBlockNode = SerializedLexicalNode & { data: ScriptureData; type: 'scripture-block'; version: 1; };
 
@@ -29,8 +29,8 @@ export class ScriptureBlockNode extends DecoratorNode<ReactNode> {
   updateDOM(): false { return false; }
   getData(): ScriptureData { return this.__data; }
   setData(data: ScriptureData): void { this.getWritable().__data = data; }
-  exportJSON(): SerializedScriptureBlockNode { return { ...super.exportJSON(), data: stripScriptureReferenceId(this.__data), type: 'scripture-block', version: 1 }; }
+  exportJSON(): SerializedScriptureBlockNode { return { ...super.exportJSON(), data: this.__data, type: 'scripture-block', version: 1 }; }
   decorate(): ReactNode { return <ScriptureBlockView data={this.__data} nodeKey={this.getKey()} />; }
 }
-export const $createScriptureBlockNode = (data: ScriptureData) => $applyNodeReplacement(new ScriptureBlockNode(stripScriptureReferenceId({ ...data, display: data.display === 'passage' ? 'passage' : 'block' })));
+export const $createScriptureBlockNode = (data: ScriptureData) => $applyNodeReplacement(new ScriptureBlockNode({ ...data, display: data.display === 'passage' ? 'passage' : 'block' }));
 

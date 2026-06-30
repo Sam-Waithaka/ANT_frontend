@@ -1,4 +1,4 @@
-import { stripScriptureReferenceId, type ScriptureData } from './nodes/scriptureTypes';
+import type { ScriptureData } from './nodes/scriptureTypes';
 import type { WritingScriptureReference, WritingScriptureReferencePayload } from '../../../../types/writing';
 
 type LexicalLikeNode = {
@@ -36,7 +36,7 @@ export const scriptureDataToReferencePayload = (data: ScriptureData): WritingScr
   };
 };
 
-export const scriptureReferenceToNodeData = (reference: WritingScriptureReference, current?: ScriptureData): ScriptureData => stripScriptureReferenceId({
+export const scriptureReferenceToNodeData = (reference: WritingScriptureReference, current?: ScriptureData): ScriptureData => ({
   ...current,
   book_osis: reference.book_detail?.osis_id || reference.book,
   bookLabel: reference.book_detail?.name || current?.bookLabel || reference.book,
@@ -103,3 +103,4 @@ export const extractScriptureReferencesFromContent = (content: unknown): Writing
     return true;
   });
 };
+
