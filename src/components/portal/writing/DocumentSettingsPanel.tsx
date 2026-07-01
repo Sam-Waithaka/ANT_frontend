@@ -86,7 +86,7 @@ const CollapsibleSection = ({
 }: CollapsibleSectionProps) => {
   const sectionClass = darkMode
     ? 'border-white/10 bg-[#080808]/70'
-    : 'border-black/10 bg-white/75';
+    : 'border-[#eaded0] bg-[#fffaf0]/80';
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
 
   return (
@@ -520,4 +520,5 @@ const DocumentSettingsPanel = ({
 };
 
 export default DocumentSettingsPanel;
+
 

@@ -2,6 +2,7 @@ import { BookOpen, FileText, PenLine, PlayCircle, UserCircle } from 'lucide-reac
 import { Link } from 'react-router-dom';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
+import { portalSurface } from '../components/portal/portalSurface';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { canAccessWritingStudio } from '../utils/permissions';
@@ -59,7 +60,7 @@ const PortalPage = () => {
     : portalCards;
 
   return (
-    <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
+    <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${portalSurface.page(darkMode)}`}>
       <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
 
       <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
@@ -69,7 +70,7 @@ const PortalPage = () => {
               Portal Dashboard
             </p>
             <h1 className="mt-5 font-serif text-5xl leading-tight sm:text-6xl">Welcome, {name}</h1>
-            <p className={`mt-5 max-w-2xl text-lg leading-8 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>
+            <p className={`mt-5 max-w-2xl text-lg leading-8 ${portalSurface.mutedText(darkMode)}`}>
               Your church account brings together profile, reading, Scripture, and media touchpoints in one calm place.
             </p>
           </div>
@@ -79,18 +80,14 @@ const PortalPage = () => {
               <Link
                 key={title}
                 to={href}
-                className={`group rounded-3xl border p-5 shadow-lg transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${
-                  darkMode
-                    ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/25 hover:bg-white/[0.04]'
-                    : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/5 hover:bg-[#fffaf0]'
-                }`}
+                className={`group rounded-3xl border p-5 shadow-lg transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${portalSurface.card(darkMode)}`}
               >
-                <span className={`grid size-12 place-items-center rounded-2xl ${darkMode ? 'bg-white/10 text-red-100' : 'bg-red-950/5 text-red-800'}`}>
+                <span className={`grid size-12 place-items-center rounded-2xl ${portalSurface.iconBadge(darkMode)}`}>
                   <Icon size={22} />
                 </span>
                 {label ? <p className="mt-5 text-[11px] font-black uppercase tracking-[0.16em] text-red-800">{label}</p> : null}
                 <h2 className="mt-5 text-xl font-black">{title}</h2>
-                <p className={`mt-3 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>{description}</p>
+                <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{description}</p>
                 {title === 'Writing Studio' ? <span className="mt-5 inline-flex text-sm font-black text-red-800">Open Studio</span> : null}
               </Link>
             ))}

@@ -2,6 +2,7 @@ import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import WritingArticleCard from '../../../components/portal/writing/WritingArticleCard';
+import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -86,9 +87,9 @@ const WritingArticlesPage = () => {
 
   return (
     <WritingStudioShell>
-      <section className={`rounded-3xl border p-4 shadow-lg ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`}>
+      <section className={`rounded-3xl border p-4 shadow-lg ${portalSurface.panel(darkMode)}`}>
         <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-          <label className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-white/5' : 'border-black/10 bg-[#f8f5ef]'}`}>
+          <label className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-white/5' : 'border-[#eaded0] bg-white'}`}>
             <Search size={18} />
             <input
               className="w-full bg-transparent text-sm outline-none"
@@ -98,7 +99,7 @@ const WritingArticlesPage = () => {
             />
           </label>
           <select
-            className={`rounded-2xl border px-4 py-3 text-sm font-bold outline-none ${darkMode ? 'border-white/10 bg-zinc-950 text-stone-100' : 'border-black/10 bg-white text-zinc-900'}`}
+            className={`rounded-2xl border px-4 py-3 text-sm font-bold outline-none ${darkMode ? 'border-white/10 bg-zinc-950 text-stone-100' : 'border-[#eaded0] bg-white text-zinc-900'}`}
             onChange={(event) => handleStatusChange(event.target.value as WritingStatus | 'ALL')}
             value={status}
           >
@@ -113,7 +114,7 @@ const WritingArticlesPage = () => {
       {loading && page === 1 ? <p className={`mt-8 text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>Loading writings...</p> : null}
 
       {!loading && articles.length === 0 ? (
-        <div className={`mt-8 rounded-3xl border p-8 text-center ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`}>
+        <div className={`mt-8 rounded-3xl border p-8 text-center ${portalSurface.panel(darkMode)}`}>
           <p className="font-serif text-3xl">No writings found.</p>
           <p className={`mt-3 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>New resources will appear here as drafts are created.</p>
         </div>
@@ -140,3 +141,7 @@ const WritingArticlesPage = () => {
 };
 
 export default WritingArticlesPage;
+
+
+
+

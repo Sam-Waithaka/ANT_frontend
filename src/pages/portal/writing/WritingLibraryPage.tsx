@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -151,41 +152,41 @@ const WritingLibraryPage = () => {
     <WritingStudioShell>
       <div className="grid gap-6 xl:grid-cols-[24rem_1fr]">
         <div className="grid gap-6">
-          <form onSubmit={handleCreate} className={`rounded-3xl border p-6 shadow-lg ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`}>
+          <form onSubmit={handleCreate} className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Library</p>
             <h2 className="mt-3 font-serif text-4xl">Create taxonomy</h2>
             <p className={`mt-3 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
               Resource types, categories, and collections are reusable. Curation links decide where they appear.
             </p>
-            <select className={`mt-6 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`} onChange={(event) => setKind(event.target.value as TaxonomyKind)} value={kind}>
+            <select className={`mt-6 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setKind(event.target.value as TaxonomyKind)} value={kind}>
               <option value="category">Category</option>
               <option value="resourceType">Resource Type</option>
               <option value="series">Collection</option>
             </select>
-            <input className={`mt-4 w-full rounded-2xl border px-4 py-3 outline-none ${darkMode ? 'border-white/10 bg-white/5' : 'border-black/10 bg-[#f8f5ef]'}`} onChange={(event) => setName(event.target.value)} placeholder="Name" value={name} />
+            <input className={`mt-4 w-full rounded-2xl border px-4 py-3 outline-none ${darkMode ? 'border-white/10 bg-white/5' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setName(event.target.value)} placeholder="Name" value={name} />
             <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create</button>
             {message ? <p className="mt-5 text-sm font-bold text-red-800">{message}</p> : null}
           </form>
 
-          <form onSubmit={handleCurate} className={`rounded-3xl border p-6 shadow-lg ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`}>
+          <form onSubmit={handleCurate} className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Curation Links</p>
             <h2 className="mt-3 font-serif text-4xl">Guide browsing</h2>
-            <select className={`mt-6 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`} onChange={(event) => setCurationKind(event.target.value as CurationKind)} value={curationKind}>
+            <select className={`mt-6 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationKind(event.target.value as CurationKind)} value={curationKind}>
               <option value="resourceCategory">Resource Type {'->'} Category</option>
               <option value="categorySeries">Category {'->'} Collection</option>
             </select>
             {curationKind === 'resourceCategory' ? (
-              <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`} onChange={(event) => setCurationResourceType(event.target.value)} value={curationResourceType}>
+              <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationResourceType(event.target.value)} value={curationResourceType}>
                 <option value="">Choose resource type</option>
                 {resourceTypes.map((resourceType) => <option key={resourceType.id} value={resourceType.id}>{resourceType.name}</option>)}
               </select>
             ) : null}
-            <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`} onChange={(event) => setCurationCategory(event.target.value)} value={curationCategory}>
+            <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationCategory(event.target.value)} value={curationCategory}>
               <option value="">Choose category</option>
               {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
             </select>
             {curationKind === 'categorySeries' ? (
-              <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`} onChange={(event) => setCurationSeries(event.target.value)} value={curationSeries}>
+              <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationSeries(event.target.value)} value={curationSeries}>
                 <option value="">Choose collection</option>
                 {series.map((item) => <option key={item.id} value={item.id}>{seriesName(item)}</option>)}
               </select>
@@ -195,23 +196,23 @@ const WritingLibraryPage = () => {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {panels.map((panel) => (
-            <section key={panel.title} className={`rounded-3xl border p-5 shadow-lg ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`}>
+            <section key={panel.title} className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
               <h3 className="text-lg font-black">{panel.title}</h3>
               <div className="mt-4 grid gap-2">
-                {panel.items.length ? panel.items.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-[#f8f5ef] text-zinc-700'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No items yet.</span>}
+                {panel.items.length ? panel.items.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No items yet.</span>}
               </div>
             </section>
           ))}
-          <section className={`rounded-3xl border p-5 shadow-lg ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`}>
+          <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <h3 className="text-lg font-black">Resource Type {'->'} Category</h3>
             <div className="mt-4 grid gap-2">
-              {curatedResourceCategories.length ? curatedResourceCategories.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-[#f8f5ef] text-zinc-700'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No curation links yet.</span>}
+              {curatedResourceCategories.length ? curatedResourceCategories.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No curation links yet.</span>}
             </div>
           </section>
-          <section className={`rounded-3xl border p-5 shadow-lg ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-black/10 bg-white'}`}>
+          <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <h3 className="text-lg font-black">Category {'->'} Collection</h3>
             <div className="mt-4 grid gap-2">
-              {curatedCategorySeries.length ? curatedCategorySeries.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-[#f8f5ef] text-zinc-700'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No curation links yet.</span>}
+              {curatedCategorySeries.length ? curatedCategorySeries.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No curation links yet.</span>}
             </div>
           </section>
         </div>
@@ -221,3 +222,11 @@ const WritingLibraryPage = () => {
 };
 
 export default WritingLibraryPage;
+
+
+
+
+
+
+
+
