@@ -11,7 +11,7 @@ import WritingStudioShell from '../../../components/portal/writing/WritingStudio
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { createWriting, fetchResourceTypes, fetchWritingTags } from '../../../services/writingApi';
+import { createWriting, createWritingScriptureReference, fetchResourceTypes, fetchWritingTags } from '../../../services/writingApi';
 import type { WritingAuthorAttribution, WritingResourceType, WritingTag } from '../../../types/writing';
 import { canCreateWriting, canUploadMedia } from '../../../utils/permissions';
 
@@ -96,12 +96,15 @@ const WritingNewArticlePage = () => {
         ...(ministryIds.length ? { ministry_ids: ministryIds } : {}),
         og_image: coverImage?.id || null,
         resource_type: resourceType,
-        scripture_references: extractScriptureReferencesFromContent(contentJson),
         ...(seriesIds.length ? { series_ids: seriesIds } : {}),
         status: 'DRAFT',
         ...(tagIds.length ? { tag_ids: tagIds } : {}),
         title: title.trim(),
       });
+      const scriptureReferences = extractScriptureReferencesFromContent(contentJson);
+      if (scriptureReferences.length) {
+        await Promise.all(scriptureReferences.map((reference) => createWritingScriptureReference(auth.accessToken, { ...reference, writing: writing.id })));
+      }
       navigate('/portal/writing/' + writing.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create draft.');

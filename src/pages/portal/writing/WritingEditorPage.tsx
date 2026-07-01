@@ -279,7 +279,7 @@ const WritingEditorPage = () => {
   const createScriptureReferenceForNode = useCallback(async (data: ScriptureData) => {
     if (!writing) return data;
     const payload = scriptureDataToReferencePayload(data);
-    if (!payload) throw new Error('Choose a canonical Scripture reference before inserting it.');
+    if (!payload) return data;
     const created = await createWritingScriptureReference(auth.accessToken, { ...payload, writing: writing.id });
     setWriting((current) => current ? { ...current, scripture_references: [...(current.scripture_references || []), created] } : current);
     return scriptureReferenceToNodeData(created, data);
@@ -288,8 +288,14 @@ const WritingEditorPage = () => {
   const updateScriptureReferenceForNode = useCallback(async (data: ScriptureData, previousData?: ScriptureData) => {
     if (!writing) return data;
     const payload = scriptureDataToReferencePayload(data);
-    if (!payload) throw new Error('Choose a canonical Scripture reference before saving it.');
     const existingReference = findWritingScriptureReference(writing.scripture_references, previousData || data);
+    if (!payload) {
+      if (existingReference) {
+        await deleteWritingScriptureReference(auth.accessToken, existingReference.id);
+        setWriting((current) => current ? { ...current, scripture_references: (current.scripture_references || []).filter((reference) => String(reference.id) !== String(existingReference.id)) } : current);
+      }
+      return data;
+    }
     if (!existingReference) {
       const created = await createWritingScriptureReference(auth.accessToken, { ...payload, writing: writing.id });
       setWriting((current) => current ? { ...current, scripture_references: [...(current.scripture_references || []), created] } : current);

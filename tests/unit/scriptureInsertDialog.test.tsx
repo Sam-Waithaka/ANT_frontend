@@ -34,7 +34,7 @@ describe('ScriptureInsertDialog', () => {
       root.render(<ScriptureInsertDialog darkMode={false} onClose={() => undefined} onInsert={onInsert} />);
       await Promise.resolve();
     });
-    const manualTab = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Manual Entry') as HTMLButtonElement;
+    const manualTab = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Manual Scripture Text') as HTMLButtonElement;
     await act(async () => manualTab.click());
     const [reference, version] = Array.from(container.querySelectorAll('input')).filter((input) => (input as HTMLInputElement).type === 'text') as HTMLInputElement[];
     const text = container.querySelector('textarea') as HTMLTextAreaElement;
@@ -50,3 +50,4 @@ describe('ScriptureInsertDialog', () => {
     expect(onInsert).toHaveBeenCalledWith({ display: 'inline', reference: 'Psalm 119:105', source: 'manual', text: 'Your word is a lamp to my feet.', version: 'AMP' });
   });
 });
+

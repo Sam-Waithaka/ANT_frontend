@@ -9,6 +9,7 @@ import WritingNewArticlePage from '../../src/pages/portal/writing/WritingNewArti
 
 const mocks = vi.hoisted(() => ({
   createWriting: vi.fn(),
+  createWritingScriptureReference: vi.fn(),
   fetchResourceTypes: vi.fn(),
   fetchWritingTags: vi.fn(),
 }));
@@ -23,6 +24,7 @@ vi.mock('../../src/hooks/useTheme', () => ({
 
 vi.mock('../../src/services/writingApi', () => ({
   createWriting: mocks.createWriting,
+  createWritingScriptureReference: mocks.createWritingScriptureReference,
   fetchResourceTypes: mocks.fetchResourceTypes,
   fetchWritingTags: mocks.fetchWritingTags,
 }));
@@ -36,7 +38,32 @@ vi.mock('../../src/components/portal/writing/WritingStudioShell', () => ({
 }));
 
 vi.mock('../../src/components/portal/writing/editor/ArticleEditor', () => ({
-  default: () => <div aria-label="Mock editor" />,
+  default: ({ onChange }: { onChange?: (content: unknown) => void }) => (
+    <button
+      aria-label="Mock editor"
+      onClick={() => onChange?.({
+        root: {
+          children: [{
+            data: {
+              book_osis: 'John',
+              chapter_start: 3,
+              display: 'block',
+              display_text: 'John 3:16',
+              reference: 'John 3:16',
+              source: 'api',
+              text: 'For God so loved the world.',
+              verse_start: 16,
+              version: 'BSB',
+            },
+            type: 'scripture-block',
+          }],
+          type: 'root',
+          version: 1,
+        },
+      })}
+      type="button"
+    />
+  ),
 }));
 
 vi.mock('../../src/components/portal/writing/WritingPreview', () => ({
@@ -90,6 +117,9 @@ const changeSelect = async (select: HTMLSelectElement, value: string) => {
   });
 };
 
+const getCreateDraftButton = (container: HTMLElement) => (
+  Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Create draft' || button.textContent === 'Creating draft...') as HTMLButtonElement
+);
 describe('WritingNewArticlePage resource types', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -97,6 +127,8 @@ describe('WritingNewArticlePage resource types', () => {
   beforeEach(() => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     mocks.createWriting.mockReset();
+    mocks.createWritingScriptureReference.mockReset();
+    mocks.createWritingScriptureReference.mockResolvedValue({ id: 21 });
     mocks.fetchResourceTypes.mockReset();
     mocks.fetchWritingTags.mockReset();
     mocks.fetchWritingTags.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
@@ -119,7 +151,7 @@ describe('WritingNewArticlePage resource types', () => {
     const resourceTypeSelect = container.querySelector('[aria-label="Resource type"]') as HTMLSelectElement;
     expect([...resourceTypeSelect.options].map((option) => option.text)).toEqual(['Choose type']);
     expect(container.textContent).not.toContain('Devotional');
-    expect((container.querySelector('button:last-of-type') as HTMLButtonElement).disabled).toBe(true);
+    expect(getCreateDraftButton(container).disabled).toBe(true);
     expect(mocks.createWriting).not.toHaveBeenCalled();
   });
 
@@ -137,7 +169,7 @@ describe('WritingNewArticlePage resource types', () => {
 
     await changeInput(container.querySelector('input') as HTMLInputElement, 'Known By God');
     await changeSelect(container.querySelector('[aria-label="Resource type"]') as HTMLSelectElement, '7');
-    await act(async () => (container.querySelector('button:last-of-type') as HTMLButtonElement).click());
+    await act(async () => getCreateDraftButton(container).click());
 
     await vi.waitFor(() => expect(mocks.createWriting).toHaveBeenCalled());
     expect(mocks.createWriting).toHaveBeenCalledWith('access-token', expect.objectContaining({
@@ -145,6 +177,39 @@ describe('WritingNewArticlePage resource types', () => {
       status: 'DRAFT',
       title: 'Known By God',
     }));
+    expect(mocks.createWriting.mock.calls[0][1]).not.toHaveProperty('scripture_references');
+    expect(mocks.createWritingScriptureReference).not.toHaveBeenCalled();
+  });
+
+  it('creates Scripture references after creating the draft', async () => {
+    mocks.fetchResourceTypes.mockResolvedValueOnce({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [{ id: 7, name: 'Devotional', slug: 'devotional' }],
+    });
+    mocks.createWriting.mockResolvedValueOnce({ id: 12, status: 'DRAFT', title: 'Known By God' });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Devotional'));
+
+    await act(async () => (container.querySelector('[aria-label="Mock editor"]') as HTMLButtonElement).click());
+    await changeInput(container.querySelector('input') as HTMLInputElement, 'Known By God');
+    await changeSelect(container.querySelector('[aria-label="Resource type"]') as HTMLSelectElement, '7');
+    await act(async () => getCreateDraftButton(container).click());
+
+    await vi.waitFor(() => expect(mocks.createWritingScriptureReference).toHaveBeenCalled());
+    expect(mocks.createWriting.mock.calls[0][1]).not.toHaveProperty('scripture_references');
+    expect(mocks.createWritingScriptureReference).toHaveBeenCalledWith('access-token', {
+      book_osis: 'John',
+      chapter_end: null,
+      chapter_start: 3,
+      display_text: 'John 3:16',
+      verse_end: null,
+      verse_start: 16,
+      version: 'BSB',
+      writing: 12,
+    });
   });
 });
 
