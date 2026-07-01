@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AlignLeft, Bold, ChevronDown, Image, Italic, Link2, List, ListOrdered, ListX, MessageSquareQuote, Minus, Redo2, ScrollText, Strikethrough, Subscript, Superscript, Type, Underline, Undo2, X } from 'lucide-react';
+import { AlignLeft, ArrowRight, Bold, CheckCircle2, ChevronDown, FileText, Globe2, Headphones, Image, Italic, Link2, List, ListOrdered, ListX, Loader2, MessageSquareQuote, Minus, PlayCircle, Redo2, ScrollText, Search, Strikethrough, Subscript, Superscript, Type, Underline, Undo2, X } from 'lucide-react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { mergeRegister } from '@lexical/utils';
 import { $createRangeSelection, $createTextNode, $getRoot, $getSelection, $isRangeSelection, $setSelection, CAN_REDO_COMMAND, CAN_UNDO_COMMAND, COMMAND_PRIORITY_LOW, FORMAT_TEXT_COMMAND, REDO_COMMAND, UNDO_COMMAND } from 'lexical';
@@ -9,11 +9,55 @@ import { $createLinkNode, $toggleLink, formatUrl } from '@lexical/link';
 import { $createDefaultChurchBlock } from './nodes/ChurchBlockNode';
 import { applyBlockFormat, toggleEditorialEmphasis, type BlockFormat } from './blockFormatting';
 import type { LexicalSelectionBookmark } from './selectionBookmark';
+import type { AudioVisualItem } from '../../../../types/audioVisual';
+import type { Writing } from '../../../../types/writing';
+import { searchPublicAudioVisual, searchPublicWritings } from '../../../../services/publicSearchApi';
 
 type EditorToolbarProps = { darkMode: boolean; onRequestMedia?: (bookmark: LexicalSelectionBookmark | null) => void; onRequestScripture?: (bookmark: LexicalSelectionBookmark | null) => void; onRequestPastoral?: (bookmark: LexicalSelectionBookmark | null) => void; mediaDisabledLabel?: string; };
 type ToolbarButtonProps = { active?: boolean; children: React.ReactNode; darkMode: boolean; disabled?: boolean; label: string; onClick: () => void; };
-type LinkDialogState = { bookmark: LexicalSelectionBookmark | null; error: string; newTab: boolean; selectedText: string; text: string; url: string };
-const emptyLinkDialog = (bookmark: LexicalSelectionBookmark | null, selectedText = ''): LinkDialogState => ({ bookmark, error: '', newTab: true, selectedText, text: selectedText, url: '' });
+type LinkDialogState = { bookmark: LexicalSelectionBookmark | null; error: string; newTab: boolean; selectedDestination: LinkDestination | null; selectedText: string; text: string; url: string };
+const emptyLinkDialog = (bookmark: LexicalSelectionBookmark | null, selectedText = ''): LinkDialogState => ({ bookmark, error: '', newTab: true, selectedDestination: null, selectedText, text: selectedText, url: '' });
+type LinkDestination = {
+  kind: 'external' | 'media' | 'writing';
+  meta: string;
+  subtitle: string;
+  title: string;
+  url: string;
+};
+type LinkSearchState = { media: AudioVisualItem[]; status: 'done' | 'error' | 'idle' | 'loading'; writings: Writing[] };
+const emptyLinkSearch: LinkSearchState = { media: [], status: 'idle', writings: [] };
+const getWritingLinkPath = (writing: Writing) => writing.slug ? `/resources?writing=${encodeURIComponent(writing.slug)}` : `/resources?writing=${encodeURIComponent(String(writing.id))}`;
+const getMediaLinkPath = (item: AudioVisualItem) => item.slug ? `/media/watch/${encodeURIComponent(item.slug)}` : '/media';
+const stripWww = (host: string) => host.replace(/^www\./i, '');
+const getExternalPreview = (value: string): LinkDestination | null => {
+  const trimmed = value.trim();
+  if (!trimmed || /\s/.test(trimmed)) return null;
+  const mightBeUrl = /^https?:\/\//i.test(trimmed) || /^www\./i.test(trimmed) || /^[\w.-]+\.[a-z]{2,}(\/.*)?$/i.test(trimmed);
+  if (!mightBeUrl) return null;
+
+  try {
+    const url = formatUrl(trimmed);
+    const parsed = new URL(url);
+    const host = stripWww(parsed.hostname);
+    return { kind: 'external', meta: 'External Website', subtitle: host, title: host, url };
+  } catch {
+    return { kind: 'external', meta: 'Invalid URL', subtitle: 'Check the destination and try again.', title: 'Invalid URL', url: '' };
+  }
+};
+const writingResultToDestination = (writing: Writing): LinkDestination => ({
+  kind: 'writing',
+  meta: writing.resource_type_detail?.name || 'Article',
+  subtitle: writing.excerpt || writing.resource_type_detail?.name || 'Published writing',
+  title: writing.title || 'Untitled writing',
+  url: getWritingLinkPath(writing),
+});
+const mediaResultToDestination = (item: AudioVisualItem): LinkDestination => ({
+  kind: 'media',
+  meta: item.mediaTypeLabel || item.mediaType || 'Media',
+  subtitle: item.speaker || item.scriptureReference || item.descriptionExcerpt || item.mediaTypeLabel || 'Media resource',
+  title: item.title || 'Untitled media',
+  url: getMediaLinkPath(item),
+});
 
 const ToolbarButton = ({ active = false, children, darkMode, disabled = false, label, onClick }: ToolbarButtonProps) => {
   const stateClass = active ? darkMode ? 'border-red-900/50 bg-red-950/40 text-red-200' : 'border-red-200 bg-red-50 text-red-800' : darkMode ? 'border-transparent text-stone-200 hover:bg-white/10' : 'border-transparent text-zinc-700 hover:bg-black/5';
@@ -30,6 +74,7 @@ const EditorToolbar = ({ darkMode, mediaDisabledLabel, onRequestMedia, onRequest
   const [activeBlock, setActiveBlock] = useState<BlockFormat>('paragraph');
   const [blockMenuOpen, setBlockMenuOpen] = useState(false);
   const [linkDialog, setLinkDialog] = useState<LinkDialogState | null>(null);
+  const [linkSearch, setLinkSearch] = useState<LinkSearchState>(emptyLinkSearch);
   const [blockMenuPosition, setBlockMenuPosition] = useState({ left: 0, top: 0 });
   const blockTriggerRef = useRef<HTMLButtonElement>(null);
   const blockMenuRef = useRef<HTMLDivElement>(null);
@@ -71,15 +116,43 @@ const EditorToolbar = ({ darkMode, mediaDisabledLabel, onRequestMedia, onRequest
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [linkDialog]);
+  useEffect(() => {
+    if (!linkDialog) { setLinkSearch(emptyLinkSearch); return; }
+    const query = linkDialog.url.trim();
+    if (linkDialog.selectedDestination || query.length < 2 || getExternalPreview(query)) { setLinkSearch(emptyLinkSearch); return; }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setLinkSearch({ ...emptyLinkSearch, status: 'loading' });
+      Promise.all([
+        searchPublicWritings({ page: 1, page_size: 4, q: query }, controller.signal),
+        searchPublicAudioVisual({ page: 1, page_size: 4, q: query }, controller.signal),
+      ]).then(([writingsPage, mediaPage]) => {
+        setLinkSearch({ media: mediaPage.results, status: 'done', writings: writingsPage.results });
+      }).catch((error) => {
+        if (controller.signal.aborted) return;
+        console.error('Unable to search link destinations.', error);
+        setLinkSearch({ ...emptyLinkSearch, status: 'error' });
+      });
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [linkDialog?.selectedDestination, linkDialog?.url]);
   const insertChurchBlock = (kind: 'divider') => editor.update(() => { const selection = $getSelection(); if ($isRangeSelection(selection)) selection.insertNodes([$createDefaultChurchBlock(kind)]); });
-  const openLinkDialog = () => setLinkDialog(emptyLinkDialog(captureBookmark(), selectedTextForLink()));
+  const openLinkDialog = () => { setLinkSearch(emptyLinkSearch); setLinkDialog(emptyLinkDialog(captureBookmark(), selectedTextForLink())); };
+  const chooseLinkDestination = (destination: LinkDestination) => setLinkDialog((current) => current ? { ...current, error: '', selectedDestination: destination, url: destination.title } : current);
   const applyLink = () => {
     if (!linkDialog) return;
-    const rawUrl = linkDialog.url.trim();
+    const rawDestination = linkDialog.url.trim();
+    const externalPreview = getExternalPreview(rawDestination);
+    const destination = linkDialog.selectedDestination || (externalPreview?.url ? externalPreview : null);
     const textLabel = linkDialog.text.trim();
-    if (!rawUrl) { setLinkDialog({ ...linkDialog, error: 'Add a URL before inserting the link.' }); return; }
+    if (!destination?.url) { setLinkDialog({ ...linkDialog, error: externalPreview?.meta === 'Invalid URL' ? 'That URL does not look valid yet.' : 'Choose an internal resource or paste a valid URL.' }); return; }
     if (!linkDialog.selectedText && !textLabel) { setLinkDialog({ ...linkDialog, error: 'Add text to display for this link.' }); return; }
-    const url = formatUrl(rawUrl);
+    const url = destination.url;
     const attributes = { rel: linkDialog.newTab ? 'noopener noreferrer' : null, target: linkDialog.newTab ? '_blank' : null, url };
     editor.update(() => {
       restoreBookmark(linkDialog.bookmark);
@@ -95,27 +168,59 @@ const EditorToolbar = ({ darkMode, mediaDisabledLabel, onRequestMedia, onRequest
     });
     setLinkDialog(null);
   };
+  const externalPreview = linkDialog ? getExternalPreview(linkDialog.url) : null;
+  const selectedLinkDestination = linkDialog?.selectedDestination || null;
+  const hasLinkSearchResults = linkSearch.writings.length > 0 || linkSearch.media.length > 0;
   const linkDialogModal = linkDialog && typeof document !== 'undefined' ? createPortal(
-    <div aria-label="Insert link" aria-modal="true" className="fixed inset-0 z-50 grid place-items-center p-4" role="dialog">
+    <div aria-label="Insert link" aria-modal="true" className="fixed inset-0 z-50 grid place-items-center p-3 sm:p-6" role="dialog">
       <button aria-label="Close link dialog" className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setLinkDialog(null)} type="button" />
-      <form className={'relative z-10 w-full max-w-lg rounded-[2rem] border p-5 shadow-2xl sm:p-6 ' + (darkMode ? 'border-white/10 bg-[#171717] text-stone-100 shadow-black/40' : 'border-black/10 bg-white text-zinc-950 shadow-zinc-900/15')} onSubmit={(event) => { event.preventDefault(); applyLink(); }}>
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-200">Insert link</p>
-            <h2 className="mt-2 font-serif text-2xl">Add a thoughtful reference</h2>
-            <p className={darkMode ? 'mt-2 text-sm leading-6 text-stone-300' : 'mt-2 text-sm leading-6 text-zinc-600'}>Links open in a new tab by default so readers do not lose their place.</p>
+      <form className={'relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] border shadow-2xl ' + (darkMode ? 'border-white/10 bg-[#151515] text-stone-100 shadow-black/50' : 'border-[#eaded0] bg-[#fffdf9] text-zinc-950 shadow-zinc-950/20')} onSubmit={(event) => { event.preventDefault(); applyLink(); }}>
+        <header className="flex items-start justify-between gap-4 border-b border-black/10 px-6 py-5 dark:border-white/10 sm:px-7">
+          <div className="flex items-start gap-4">
+            <span className={darkMode ? 'grid size-10 shrink-0 place-items-center rounded-full bg-red-950/50 text-red-200' : 'grid size-10 shrink-0 place-items-center rounded-full bg-red-50 text-red-800'}><Link2 size={17} /></span>
+            <div>
+              <h2 className="font-serif text-2xl leading-tight sm:text-[1.7rem]">Link to a webpage, article or resource</h2>
+              <p className={darkMode ? 'mt-1 text-sm leading-6 text-stone-400' : 'mt-1 text-sm leading-6 text-zinc-500'}>Connect your readers to another resource without interrupting the flow.</p>
+            </div>
           </div>
-          <button aria-label="Close" className="grid size-10 place-items-center rounded-full border border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10" onClick={() => setLinkDialog(null)} type="button"><X size={18} /></button>
+          <button aria-label="Close" className={darkMode ? 'grid size-10 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-stone-200 transition hover:bg-white/10' : 'grid size-10 shrink-0 place-items-center rounded-full border border-black/10 bg-white text-zinc-700 transition hover:bg-red-50 hover:text-red-800'} onClick={() => setLinkDialog(null)} type="button"><X size={18} /></button>
         </header>
-        <div className="mt-5 grid gap-4">
-          <label className="grid gap-1 text-xs font-black uppercase tracking-[0.12em] text-red-800 dark:text-red-200">URL<input autoFocus className={darkMode ? 'w-full rounded-2xl border border-white/10 bg-[#080808] px-4 py-3 text-sm text-stone-100 outline-none focus:ring-2 focus:ring-red-800/30' : 'w-full rounded-2xl border border-black/10 bg-[#fffaf0] px-4 py-3 text-sm text-zinc-950 outline-none focus:ring-2 focus:ring-red-800/30'} onChange={(event) => setLinkDialog({ ...linkDialog, error: '', url: event.target.value })} placeholder="https://example.com" value={linkDialog.url} /></label>
-          {!linkDialog.selectedText ? <label className="grid gap-1 text-xs font-black uppercase tracking-[0.12em] text-red-800 dark:text-red-200">Text to display<input className={darkMode ? 'w-full rounded-2xl border border-white/10 bg-[#080808] px-4 py-3 text-sm text-stone-100 outline-none focus:ring-2 focus:ring-red-800/30' : 'w-full rounded-2xl border border-black/10 bg-[#fffaf0] px-4 py-3 text-sm text-zinc-950 outline-none focus:ring-2 focus:ring-red-800/30'} onChange={(event) => setLinkDialog({ ...linkDialog, error: '', text: event.target.value })} placeholder="Read more" value={linkDialog.text} /></label> : <p className={darkMode ? 'rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-stone-300' : 'rounded-2xl border border-black/10 bg-[#fffaf0] px-4 py-3 text-sm text-zinc-600'}>Selected text: <span className="font-bold">{linkDialog.selectedText}</span></p>}
-          <label className={darkMode ? 'flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold' : 'flex items-center justify-between gap-4 rounded-2xl border border-black/10 bg-[#fffaf0] px-4 py-3 text-sm font-bold'}><span>Open in new tab</span><input checked={linkDialog.newTab} className="size-5 accent-red-800" onChange={(event) => setLinkDialog({ ...linkDialog, newTab: event.target.checked })} type="checkbox" /></label>
-          {linkDialog.error ? <p className="text-sm font-bold text-red-800 dark:text-red-200">{linkDialog.error}</p> : null}
+        <div className="min-h-0 overflow-y-auto px-6 py-5 sm:px-7">
+          <div className="grid gap-5">
+            <section className="grid gap-2">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-red-800 dark:text-red-200">Destination</p>
+              <label className="relative block">
+                <Search className={darkMode ? 'pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-stone-500' : 'pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-zinc-500'} />
+                <input autoFocus className={darkMode ? 'w-full rounded-2xl border border-red-900/50 bg-[#0d0d0d] py-3 pl-11 pr-4 text-sm text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-red-700 focus:ring-4 focus:ring-red-900/20' : 'w-full rounded-2xl border border-red-200 bg-white py-3 pl-11 pr-4 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-700 focus:ring-4 focus:ring-red-100'} onChange={(event) => setLinkDialog({ ...linkDialog, error: '', selectedDestination: null, url: event.target.value })} placeholder="Search resources or paste a URL..." value={linkDialog.url} />
+              </label>
+              {selectedLinkDestination ? <div className={darkMode ? 'flex items-center gap-3 rounded-2xl border border-red-900/40 bg-red-950/20 px-4 py-3' : 'flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50/70 px-4 py-3'}><CheckCircle2 className="size-5 shrink-0 text-red-800 dark:text-red-200" /><span><span className="block text-sm font-black">{selectedLinkDestination.title}</span><span className={darkMode ? 'block text-xs text-stone-400' : 'block text-xs text-zinc-500'}>{selectedLinkDestination.meta} · {selectedLinkDestination.url}</span></span></div> : externalPreview ? <div className={darkMode ? 'flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3' : 'flex items-center gap-3 rounded-2xl border border-[#eaded0] bg-white px-4 py-3'}>{externalPreview.url ? <CheckCircle2 className="size-5 shrink-0 text-green-700 dark:text-green-300" /> : <Globe2 className="size-5 shrink-0 text-red-800 dark:text-red-200" />}<span><span className="block text-sm font-black">{externalPreview.url ? 'Valid website' : 'Invalid URL'}</span><span className={darkMode ? 'block text-xs text-stone-400' : 'block text-xs text-zinc-500'}>{externalPreview.subtitle}</span></span></div> : null}
+              {!externalPreview && !selectedLinkDestination && linkDialog.url.trim().length >= 2 ? <div className={darkMode ? 'overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]' : 'overflow-hidden rounded-2xl border border-[#eaded0] bg-white shadow-sm shadow-zinc-950/5'}>
+                {linkSearch.status === 'loading' ? <div className="flex items-center gap-3 px-4 py-5 text-sm font-bold"><Loader2 className="size-4 animate-spin text-red-800 dark:text-red-200" /> Searching church resources...</div> : null}
+                {linkSearch.status === 'error' ? <div className="px-4 py-5 text-sm font-bold text-red-800 dark:text-red-200">Search is unavailable right now. Paste a URL instead.</div> : null}
+                {linkSearch.status === 'done' && !hasLinkSearchResults ? <div className="px-4 py-5 text-sm font-bold text-zinc-500 dark:text-stone-400">No internal matches. Paste an external URL to link outside the site.</div> : null}
+                {linkSearch.writings.length > 0 ? <div className="flex items-center justify-between gap-3 border-b border-black/10 px-4 py-3 dark:border-white/10"><span className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.2em] text-red-800 dark:text-red-200"><FileText size={13} /> Resources</span><a className="inline-flex items-center gap-1 text-xs font-bold text-red-800 transition hover:text-red-700 dark:text-red-200" href="/resources" target="_blank" rel="noreferrer">View all resources <ArrowRight size={13} /></a></div> : null}
+                {linkSearch.writings.map((writing, index) => { const destination = writingResultToDestination(writing); return <button className={(index === 0 ? darkMode ? 'flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/10' : 'flex w-full items-center justify-between gap-3 bg-red-50/70 px-4 py-3 text-left transition hover:bg-red-50' : 'flex w-full items-center justify-between gap-3 border-t border-black/5 px-4 py-3 text-left transition hover:bg-black/[0.03] dark:border-white/5 dark:hover:bg-white/10')} key={`writing-${writing.id}`} onClick={() => chooseLinkDestination(destination)} type="button"><span className="flex min-w-0 items-center gap-3"><span className={darkMode ? 'grid size-9 shrink-0 place-items-center rounded-xl bg-white/5 text-stone-300' : 'grid size-9 shrink-0 place-items-center rounded-xl bg-[#f8f4ec] text-red-800'}><FileText size={16} /></span><span className="min-w-0"><span className="block truncate text-sm font-black">{destination.title}</span><span className={darkMode ? 'block truncate text-xs text-stone-400' : 'block truncate text-xs text-zinc-500'}>{destination.meta}</span></span></span><ChevronDown className="-rotate-90 shrink-0" size={15} /></button>; })}
+                {linkSearch.media.length > 0 ? <div className="border-t border-black/10 px-4 py-3 dark:border-white/10"><span className="inline-flex items-center gap-2 text-[0.68rem] font-black uppercase tracking-[0.2em] text-red-800 dark:text-red-200"><PlayCircle size={13} /> Media</span></div> : null}
+                {linkSearch.media.map((item) => { const destination = mediaResultToDestination(item); const isAudio = /audio|podcast|music/i.test(item.mediaType || item.mediaTypeLabel || ''); return <button className="flex w-full items-center justify-between gap-3 border-t border-black/5 px-4 py-3 text-left transition hover:bg-black/[0.03] dark:border-white/5 dark:hover:bg-white/10" key={`media-${item.id || item.slug}`} onClick={() => chooseLinkDestination(destination)} type="button"><span className="flex min-w-0 items-center gap-3"><span className={darkMode ? 'grid size-9 shrink-0 place-items-center rounded-xl bg-white/5 text-stone-300' : 'grid size-9 shrink-0 place-items-center rounded-xl bg-[#f8f4ec] text-zinc-500'}>{isAudio ? <Headphones size={16} /> : <PlayCircle size={16} />}</span><span className="min-w-0"><span className="block truncate text-sm font-black">{destination.title}</span><span className={darkMode ? 'block truncate text-xs text-stone-400' : 'block truncate text-xs text-zinc-500'}>{destination.meta}{destination.subtitle ? ` · ${destination.subtitle}` : ''}</span></span></span><ChevronDown className="-rotate-90 shrink-0" size={15} /></button>; })}
+              </div> : null}
+            </section>
+            <section className="grid gap-2">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-red-800 dark:text-red-200">Selected text</p>
+              {linkDialog.selectedText ? <div className={darkMode ? 'flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4' : 'flex items-start gap-4 rounded-2xl border border-[#eaded0] bg-[#fffaf0] px-4 py-4'}><span className={darkMode ? 'grid size-10 shrink-0 place-items-center rounded-full bg-white/5 text-stone-300' : 'grid size-10 shrink-0 place-items-center rounded-full bg-white text-zinc-500'}>“</span><p><span className="block text-sm font-black">“{linkDialog.selectedText}”</span><span className={darkMode ? 'mt-1 block text-xs text-stone-400' : 'mt-1 block text-xs text-zinc-500'}>This is the text that will be linked.</span></p></div> : <label className="grid gap-2"><input className={darkMode ? 'w-full rounded-2xl border border-white/10 bg-[#0d0d0d] px-4 py-3 text-sm text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-red-700 focus:ring-4 focus:ring-red-900/20' : 'w-full rounded-2xl border border-[#eaded0] bg-[#fffaf0] px-4 py-3 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-red-700 focus:ring-4 focus:ring-red-100'} onChange={(event) => setLinkDialog({ ...linkDialog, error: '', text: event.target.value })} placeholder="Text to display" value={linkDialog.text} /></label>}
+            </section>
+            <section className="grid gap-3">
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-red-800 dark:text-red-200">Link target</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button className={(linkDialog.newTab ? darkMode ? 'rounded-2xl border border-white/10 px-4 py-3 text-sm font-bold text-stone-300 transition hover:bg-white/10' : 'rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold text-zinc-600 transition hover:bg-zinc-50' : 'rounded-2xl border border-red-800 bg-red-800 px-4 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20')} onClick={() => setLinkDialog({ ...linkDialog, newTab: false })} type="button">Current tab</button>
+                <button className={(linkDialog.newTab ? 'rounded-2xl border border-red-800 bg-red-800 px-4 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20' : darkMode ? 'rounded-2xl border border-white/10 px-4 py-3 text-sm font-bold text-stone-300 transition hover:bg-white/10' : 'rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm font-bold text-zinc-600 transition hover:bg-zinc-50')} onClick={() => setLinkDialog({ ...linkDialog, newTab: true })} type="button">New tab</button>
+              </div>
+            </section>
+            {linkDialog.error ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-800 dark:bg-red-950/30 dark:text-red-200">{linkDialog.error}</p> : null}
+          </div>
         </div>
-        <footer className="mt-6 flex flex-wrap justify-end gap-3 border-t border-black/10 pt-4 dark:border-white/10">
-          <button className="rounded-full px-4 py-2 text-sm font-bold" onClick={() => setLinkDialog(null)} type="button">Cancel</button>
-          <button className="inline-flex items-center gap-2 rounded-full bg-red-800 px-5 py-2 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700" type="submit"><Link2 size={16} /> Insert link</button>
+        <footer className="flex items-center justify-between gap-4 border-t border-black/10 px-6 py-5 dark:border-white/10 sm:px-7">
+          <button className={darkMode ? 'rounded-full border border-white/10 px-6 py-3 text-sm font-bold text-stone-200 transition hover:bg-white/10' : 'rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-bold text-zinc-700 transition hover:bg-zinc-50'} onClick={() => setLinkDialog(null)} type="button">Cancel</button>
+          <button className="inline-flex items-center gap-2 rounded-full bg-red-800 px-7 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60" type="submit"><Link2 size={16} /> Insert Link <ArrowRight size={16} /></button>
         </footer>
       </form>
     </div>,
@@ -132,4 +237,8 @@ const EditorToolbar = ({ darkMode, mediaDisabledLabel, onRequestMedia, onRequest
   return <>{blockMenu}{linkDialogModal}<div className="sticky top-[4.75rem] z-20 overflow-x-auto border-b border-black/10 shadow-sm dark:border-white/10"><div aria-label="Writing tools" className={'flex min-w-max items-center gap-2 px-3 py-2 ' + surfaceClass} role="toolbar"><div className="relative shrink-0"><button aria-expanded={blockMenuOpen} aria-haspopup="listbox" aria-label="Text style" ref={blockTriggerRef} className={darkMode ? 'inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-zinc-950 px-3 text-xs font-bold text-stone-100 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-red-800/30' : 'inline-flex h-10 items-center gap-2 rounded-xl border border-black/10 bg-[#fffaf0] px-3 text-xs font-bold text-zinc-950 transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-800/30'} onClick={toggleBlockMenu} type="button"><AlignLeft aria-hidden="true" className="size-4 text-red-800" /><span>{blockOptions.find((option) => option.value === activeBlock)?.label}</span><ChevronDown aria-hidden="true" className={'size-4 transition ' + (blockMenuOpen ? 'rotate-180' : '')} /></button></div><ToolbarGroup darkMode={darkMode} separated={false}><ToolbarButton active={activeFormats.bold} darkMode={darkMode} label="Bold" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold')}><Bold size={16} /></ToolbarButton><ToolbarButton active={activeFormats.italic} darkMode={darkMode} label="Italic" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic')}><Italic size={16} /></ToolbarButton><ToolbarButton active={activeFormats.underline} darkMode={darkMode} label="Underline" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline')}><Underline size={16} /></ToolbarButton><ToolbarButton active={activeFormats.strikethrough} darkMode={darkMode} label="Strikethrough" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough')}><Strikethrough size={16} /></ToolbarButton><ToolbarButton active={activeFormats.superscript} darkMode={darkMode} label="Superscript" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript')}><Superscript size={16} /></ToolbarButton><ToolbarButton active={activeFormats.subscript} darkMode={darkMode} label="Subscript" onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript')}><Subscript size={16} /></ToolbarButton><ToolbarButton darkMode={darkMode} label="Editorial emphasis" onClick={() => editor.update(toggleEditorialEmphasis)}><Type size={16} /></ToolbarButton><ToolbarButton darkMode={darkMode} label="Add link" onClick={openLinkDialog}><Link2 size={16} /></ToolbarButton></ToolbarGroup><ToolbarGroup darkMode={darkMode}><ToolbarButton darkMode={darkMode} label="Bulleted list" onClick={() => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)}><List size={16} /></ToolbarButton><ToolbarButton darkMode={darkMode} label="Numbered list" onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)}><ListOrdered size={16} /></ToolbarButton><ToolbarButton darkMode={darkMode} label="Clear list formatting" onClick={() => editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined)}><ListX size={16} /></ToolbarButton></ToolbarGroup><ToolbarGroup darkMode={darkMode}>{onRequestScripture ? <ToolbarButton darkMode={darkMode} label="Insert Scripture" onClick={() => onRequestScripture(captureBookmark())}><ScrollText size={16} /></ToolbarButton> : null}<ToolbarButton darkMode={darkMode} label="Insert reflection, prayer, application, or quotation" onClick={() => onRequestPastoral?.(captureBookmark())}><MessageSquareQuote size={16} /></ToolbarButton></ToolbarGroup><ToolbarGroup darkMode={darkMode}><ToolbarButton darkMode={darkMode} label="Insert divider" onClick={() => insertChurchBlock('divider')}><Minus size={16} /></ToolbarButton>{onRequestMedia ? <ToolbarButton darkMode={darkMode} label="Insert image" onClick={() => onRequestMedia(captureBookmark())}><Image size={16} /></ToolbarButton> : mediaDisabledLabel ? <ToolbarButton darkMode={darkMode} disabled label={mediaDisabledLabel} onClick={() => undefined}><Image size={16} /></ToolbarButton> : null}</ToolbarGroup><ToolbarGroup darkMode={darkMode}><ToolbarButton darkMode={darkMode} disabled={!canUndo} label="Undo" onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)}><Undo2 size={16} /></ToolbarButton><ToolbarButton darkMode={darkMode} disabled={!canRedo} label="Redo" onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)}><Redo2 size={16} /></ToolbarButton></ToolbarGroup></div></div></>;
 };
 export default EditorToolbar;
+
+
+
+
 
