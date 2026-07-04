@@ -155,7 +155,7 @@ const WritingLibraryPage = () => {
           <form onSubmit={handleCreate} className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Library</p>
             <h2 className="mt-3 font-serif text-4xl">Create taxonomy</h2>
-            <p className={`mt-3 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+            <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
               Resource types, categories, and collections are reusable. Curation links decide where they appear.
             </p>
             <select className={`mt-6 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setKind(event.target.value as TaxonomyKind)} value={kind}>
@@ -199,20 +199,20 @@ const WritingLibraryPage = () => {
             <section key={panel.title} className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
               <h3 className="text-lg font-black">{panel.title}</h3>
               <div className="mt-4 grid gap-2">
-                {panel.items.length ? panel.items.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No items yet.</span>}
+                {panel.items.length ? panel.items.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>No items yet.</span>}
               </div>
             </section>
           ))}
           <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <h3 className="text-lg font-black">Resource Type {'->'} Category</h3>
             <div className="mt-4 grid gap-2">
-              {curatedResourceCategories.length ? curatedResourceCategories.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No curation links yet.</span>}
+              {curatedResourceCategories.length ? curatedResourceCategories.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>No curation links yet.</span>}
             </div>
           </section>
           <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <h3 className="text-lg font-black">Category {'->'} Collection</h3>
             <div className="mt-4 grid gap-2">
-              {curatedCategorySeries.length ? curatedCategorySeries.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className="text-sm text-zinc-500">No curation links yet.</span>}
+              {curatedCategorySeries.length ? curatedCategorySeries.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>No curation links yet.</span>}
             </div>
           </section>
         </div>

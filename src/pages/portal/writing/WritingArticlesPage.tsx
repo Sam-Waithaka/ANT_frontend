@@ -111,12 +111,12 @@ const WritingArticlesPage = () => {
       </section>
 
       {error ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{error}</p> : null}
-      {loading && page === 1 ? <p className={`mt-8 text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>Loading writings...</p> : null}
+      {loading && page === 1 ? <p className={`mt-8 text-sm ${portalSurface.softMutedText(darkMode)}`}>Loading writings...</p> : null}
 
       {!loading && articles.length === 0 ? (
         <div className={`mt-8 rounded-3xl border p-8 text-center ${portalSurface.panel(darkMode)}`}>
           <p className="font-serif text-3xl">No writings found.</p>
-          <p className={`mt-3 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>New resources will appear here as drafts are created.</p>
+          <p className={`mt-3 ${portalSurface.softMutedText(darkMode)}`}>New resources will appear here as drafts are created.</p>
         </div>
       ) : null}
 

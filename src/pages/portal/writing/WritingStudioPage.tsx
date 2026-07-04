@@ -1,5 +1,6 @@
 import { BookOpen, FileText, FolderOpen, PenLine, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -60,17 +61,13 @@ const WritingStudioPage = () => {
           <Link
             key={label}
             to={href}
-            className={`group rounded-3xl border p-6 shadow-lg transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${
-              darkMode
-                ? 'border-white/10 bg-zinc-950 shadow-black/25 hover:bg-white/[0.04]'
-                : 'border-black/10 bg-white shadow-zinc-900/5 hover:bg-[#fffaf0]'
-            }`}
+            className={`group rounded-3xl border p-6 shadow-lg transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${portalSurface.card(darkMode)}`}
           >
-            <span className={`grid size-12 place-items-center rounded-2xl ${darkMode ? 'bg-white/10 text-red-100' : 'bg-red-950/5 text-red-800'}`}>
+            <span className={`grid size-12 place-items-center rounded-2xl ${portalSurface.iconBadge(darkMode)}`}>
               <Icon size={22} />
             </span>
             <h2 className="mt-5 text-xl font-black">{label}</h2>
-            <p className={`mt-3 text-sm leading-6 ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>{description}</p>
+            <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{description}</p>
           </Link>
         ))}
       </div>
@@ -79,4 +76,3 @@ const WritingStudioPage = () => {
 };
 
 export default WritingStudioPage;
-

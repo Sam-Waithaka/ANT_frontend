@@ -86,8 +86,8 @@ const CollapsibleSection = ({
 }: CollapsibleSectionProps) => {
   const sectionClass = darkMode
     ? 'border-white/10 bg-[#080808]/70'
-    : 'border-[#eaded0] bg-[#fffaf0]/80';
-  const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
+    : 'border-[#eaded0]/80 bg-[#fffaf0]/60';
+  const mutedTextClass = darkMode ? 'text-stone-400' : 'text-[#786f66]';
 
   return (
     <section className={`overflow-hidden rounded-[1.6rem] border ${sectionClass}`}>
@@ -142,7 +142,7 @@ const CheckboxGroup = ({
           {options.map((option) => {
             const checked = selected.has(String(option.id));
             return (
-              <label key={option.id} className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm font-bold transition ${checked ? 'border-red-800 bg-red-950/[0.05] text-red-800' : darkMode ? 'border-white/10 bg-white/5 text-stone-200' : 'border-black/10 bg-[#fffaf0] text-zinc-800'}`}>
+              <label key={option.id} className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm font-bold transition ${checked ? 'border-red-800 bg-red-950/[0.05] text-red-800' : darkMode ? 'border-white/10 bg-white/5 text-stone-200' : 'border-[#eaded0] bg-[#fffaf0] text-zinc-800'}`}>
                 <input
                   checked={checked}
                   className="size-4 accent-red-800"
@@ -187,7 +187,7 @@ const AuthorAttributionEditor = ({
   const addAuthor = () => onChange?.([...authors, { display_name: '', role: 'AUTHOR', is_primary: authors.length === 0, order: authors.length }]);
 
   return (
-    <div className="border-t border-black/10 pt-4 dark:border-white/10">
+    <div className="border-t border-[#eaded0] pt-4 dark:border-white/10">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Author attributions</p>
@@ -199,7 +199,7 @@ const AuthorAttributionEditor = ({
       {authors.length ? (
         <div className="mt-3 grid gap-3">
           {authors.map((author, index) => (
-            <div key={`${author.user || 'manual'}-${index}`} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/5 p-3' : 'rounded-2xl border border-black/10 bg-[#fffaf0] p-3'}>
+            <div key={`${author.user || 'manual'}-${index}`} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/5 p-3' : 'rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-3'}>
               <label className="grid gap-2 text-sm font-bold">
                 Display name
                 <input className={`w-full rounded-2xl border px-3 py-2 text-sm outline-none ${fieldClass}`} disabled={!editable} onChange={(event) => updateAuthor(index, { display_name: event.target.value })} placeholder="AIC Njoro Town Editorial Team" value={author.display_name || author.name || ''} />
@@ -314,14 +314,14 @@ const DocumentSettingsPanel = ({
 
   const shellClass = darkMode
     ? 'border-white/10 bg-[#111111] shadow-black/30'
-    : 'border-black/10 bg-[#fffaf0] shadow-zinc-900/8';
+    : 'border-[#eaded0] bg-[#fffaf0] shadow-zinc-900/8';
   const fieldClass = darkMode
     ? 'border-white/10 bg-[#141414] text-stone-100 placeholder:text-stone-600'
-    : 'border-black/10 bg-[#fffaf0] text-zinc-950 placeholder:text-zinc-400';
-  const mutedTextClass = darkMode ? 'text-stone-400' : 'text-zinc-600';
+    : 'border-[#eaded0] bg-white text-zinc-950 placeholder:text-[#8a7d70]';
+  const mutedTextClass = darkMode ? 'text-stone-400' : 'text-[#786f66]';
   const chipClass = darkMode
     ? 'border-white/10 bg-white/5 text-stone-200'
-    : 'border-red-900/10 bg-red-950/[0.03] text-zinc-700';
+    : 'border-[#eaded0] bg-white/60 text-[#5f574f]';
   const statusPill = (
     <span className="rounded-full border border-red-900/15 bg-red-950/[0.04] px-3 py-1 text-[0.65rem] font-black uppercase tracking-[0.16em] text-red-800">
       {statusLabel(status)}
@@ -496,7 +496,7 @@ const DocumentSettingsPanel = ({
                       : 'border border-red-900/20 bg-white text-red-800 hover:bg-red-950/5'
                     : darkMode
                       ? 'border border-white/15 bg-white/5 text-stone-100 hover:bg-white/10'
-                      : 'border border-black/10 bg-white text-zinc-800 hover:border-red-900/25 hover:bg-red-950/[0.03]';
+                      : 'border border-[#eaded0] bg-white text-zinc-800 hover:border-red-900/25 hover:bg-red-950/[0.03]';
 
                 return (
                   <button
@@ -520,5 +520,6 @@ const DocumentSettingsPanel = ({
 };
 
 export default DocumentSettingsPanel;
+
 
 

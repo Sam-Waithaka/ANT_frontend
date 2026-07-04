@@ -55,7 +55,7 @@ const WritingEditorialPage = () => {
               {(data[section.title] || []).map((writing) => <WritingArticleCard key={writing.id} darkMode={darkMode} writing={writing} />)}
             </div>
             {allowed && (data[section.title] || []).length === 0 ? (
-              <p className={`rounded-3xl border p-6 text-sm ${portalSurface.panel(darkMode)} ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
+              <p className={`rounded-3xl border p-6 text-sm ${portalSurface.panel(darkMode)} ${portalSurface.softMutedText(darkMode)}`}>
                 Nothing in this queue yet.
               </p>
             ) : null}
