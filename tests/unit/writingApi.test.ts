@@ -2,19 +2,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../src/services/apiClient';
 import {
   createCategorySeriesLink,
+  createWritingSeriesItem,
   createResourceTypeCategoryLink,
+  createWritingTag,
+  deleteWritingSeriesItem,
   createWritingScriptureReference,
   deleteWritingScriptureReference,
   fetchCategorySeriesLinks,
   createWriting,
   fetchMediaAssetUsage,
   fetchResourceTypeCategoryLinks,
+  fetchWritingSeriesItems,
   fetchWritingScriptureReferences,
   fetchWritingTags,
   fetchWritings,
   normalizePage,
   publishWriting,
+  reorderWritingSeriesItems,
   updateWriting,
+  updateWritingSeriesItem,
+  updateWritingTag,
   updateWritingScriptureReference,
 } from '../../src/services/writingApi';
 
@@ -88,6 +95,24 @@ describe('writingApi', () => {
     expect(fetchMock).toHaveBeenCalledWith('/v1/writing-tags/', expect.objectContaining({ method: 'GET' }));
   });
 
+  it('creates and updates writing tags through the taxonomy API', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ id: 4, name: 'Prayer', slug: 'prayer' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 4, name: 'Deep Prayer', slug: 'deep-prayer' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await createWritingTag('access-token', { name: 'Prayer', slug: 'prayer' });
+    await updateWritingTag('access-token', 4, { name: 'Deep Prayer', slug: 'deep-prayer' });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writing-tags/', expect.objectContaining({
+      body: JSON.stringify({ name: 'Prayer', slug: 'prayer' }),
+      method: 'POST',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writing-tags/4/', expect.objectContaining({
+      body: JSON.stringify({ name: 'Deep Prayer', slug: 'deep-prayer' }),
+      method: 'PATCH',
+    }));
+  });
   it('creates a draft with documented Lexical JSON content', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ id: 7, status: 'DRAFT', title: 'Grace' }));
     vi.stubGlobal('fetch', fetchMock);
@@ -124,7 +149,7 @@ describe('writingApi', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/media-assets/22/usage/', expect.objectContaining({ method: 'GET' }));
   });
 
-  it('reads and creates reusable taxonomy curation links', async () => {
+  it('reads and creates reusable taxonomy curation links with curation fields', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(jsonResponse({ results: [{ id: 1, resource_type: 2, category: 3 }] }))
       .mockResolvedValueOnce(jsonResponse({ results: [{ id: 4, category: 3, series: 8 }] }))
@@ -134,21 +159,51 @@ describe('writingApi', () => {
 
     await fetchResourceTypeCategoryLinks('access-token');
     await fetchCategorySeriesLinks('access-token');
-    await createResourceTypeCategoryLink('access-token', { resource_type: 2, category: 9, sort_order: 1, is_active: true });
-    await createCategorySeriesLink('access-token', { category: 9, series: 10, sort_order: 1, is_active: true });
+    await createResourceTypeCategoryLink('access-token', { resource_type: 2, category: 9, sort_order: 1, is_active: true, is_featured: true });
+    await createCategorySeriesLink('access-token', { category: 9, series: 10, sort_order: 2, is_active: true, is_featured: false });
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writing-resource-type-categories/', expect.objectContaining({ method: 'GET' }));
     expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writing-category-series/', expect.objectContaining({ method: 'GET' }));
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/writing-resource-type-categories/', expect.objectContaining({
-      body: JSON.stringify({ resource_type: 2, category: 9, sort_order: 1, is_active: true }),
+      body: JSON.stringify({ resource_type: 2, category: 9, sort_order: 1, is_active: true, is_featured: true }),
       method: 'POST',
     }));
     expect(fetchMock).toHaveBeenNthCalledWith(4, '/v1/writing-category-series/', expect.objectContaining({
-      body: JSON.stringify({ category: 9, series: 10, sort_order: 1, is_active: true }),
+      body: JSON.stringify({ category: 9, series: 10, sort_order: 2, is_active: true, is_featured: false }),
       method: 'POST',
     }));
   });
 
+  it('manages writing series items through dedicated series curation endpoints', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ results: [{ id: 10, series: 4, writing: 21, writing_title: 'First', order: 0 }] }))
+      .mockResolvedValueOnce(jsonResponse({ id: 11, series: 4, writing: 22, writing_title: 'Second', order: 1 }))
+      .mockResolvedValueOnce(jsonResponse({ id: 11, series: 4, writing: 22, writing_title: 'Second', order: 0 }))
+      .mockResolvedValueOnce(jsonResponse([{ id: 11, order: 0 }, { id: 10, order: 1 }]))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchWritingSeriesItems('access-token', 4);
+    await createWritingSeriesItem('access-token', { series: 4, writing: 22, order: 1 });
+    await updateWritingSeriesItem('access-token', 11, { order: 0 });
+    await reorderWritingSeriesItems('access-token', 4, [{ id: 11, order: 0 }, { id: 10, order: 1 }]);
+    await deleteWritingSeriesItem('access-token', 10);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writing-series-items/?series=4', expect.objectContaining({ method: 'GET' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writing-series-items/', expect.objectContaining({
+      body: JSON.stringify({ series: 4, writing: 22, order: 1 }),
+      method: 'POST',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/writing-series-items/11/', expect.objectContaining({
+      body: JSON.stringify({ order: 0 }),
+      method: 'PATCH',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/v1/writing-series/4/reorder-items/', expect.objectContaining({
+      body: JSON.stringify({ items: [{ id: 11, order: 0 }, { id: 10, order: 1 }] }),
+      method: 'POST',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(5, '/v1/writing-series-items/10/', expect.objectContaining({ method: 'DELETE' }));
+  });
   it('manages writing Scripture references with dedicated CRUD endpoints', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(jsonResponse({ results: [{ id: 11, writing: 4, book: 'John', chapter_start: 3, verse_start: 16, display_text: 'John 3:16', version: 'BSB' }] }))

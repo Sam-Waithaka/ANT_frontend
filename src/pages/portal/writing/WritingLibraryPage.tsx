@@ -768,7 +768,8 @@ const WritingLibraryPage = () => {
             </div>
             {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>{record.depth ? 'Nested under' : 'Parent'}: {record.parent}</p> : null}
             <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
-            {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}`r`n            {record.kind === 'series' && (record.imageUrl || record.publicHref) ? (
+            {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
+            {record.kind === 'series' && (record.imageUrl || record.publicHref) ? (
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {record.imageUrl ? <img alt="" className="h-14 w-20 rounded-2xl border border-[#eaded0] object-cover dark:border-white/10" src={record.imageUrl} /> : null}
                 <div className="flex flex-wrap gap-2">
