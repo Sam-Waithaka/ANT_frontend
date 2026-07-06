@@ -117,9 +117,13 @@ const ArticleEditor = ({ contentJson, darkMode, editable = true, mediaDisabledLa
   const [pendingPastoralEdit, setPendingPastoralEdit] = useState<PendingPastoralEdit>(null);
   const [pendingPastoral, setPendingPastoral] = useState<PendingPastoralBlock>(null);
   const media = useMemo(() => mediaEmbedMap(mediaEmbeds), [mediaEmbeds]);
-  const surfaceClass = darkMode ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/30' : 'border-[#eaded0] bg-[#fbf6ee] text-zinc-950 shadow-zinc-900/10';
-  const paperClass = darkMode ? 'border-white/10 bg-[#0d0d0d] shadow-black/30' : 'border-[#eaded0] bg-white shadow-[0_18px_45px_rgba(70,45,20,0.10)]';
-  const contentClass = darkMode ? 'text-stone-100 placeholder:text-stone-500' : 'text-zinc-950 placeholder:text-zinc-400';
+  const surfaceClass = darkMode
+    ? 'border-white/10 bg-[#111111] text-stone-100 shadow-[0_28px_80px_rgba(0,0,0,0.55)]'
+    : 'border-[#eaded0] bg-[#fffaf0] text-zinc-950 shadow-[0_24px_70px_rgba(17,17,17,0.08)]';
+  const paperClass = darkMode
+    ? 'border-white/10 bg-[#181716] bg-[radial-gradient(rgba(255,255,255,0.045)_0.55px,transparent_0.55px),linear-gradient(135deg,rgba(153,27,27,0.035),transparent_42%)] bg-[length:5px_5px,100%_100%] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_1px_0_rgba(0,0,0,0.5)]'
+    : 'border-[#eaded0]/80 bg-[#fffdf8] bg-[radial-gradient(rgba(0,0,0,0.028)_0.6px,transparent_0.6px),linear-gradient(135deg,rgba(153,27,27,0.018),transparent_38%)] bg-[length:5px_5px,100%_100%] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_0_rgba(0,0,0,0.03)]';
+  const contentClass = darkMode ? 'text-stone-200 placeholder:text-stone-500' : 'text-zinc-950 placeholder:text-[#8a7d70]';
   const initialConfig = useMemo(() => ({ editorState: JSON.stringify(initialContent), namespace: 'aic-njoro-writing-studio', nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode, AutoLinkNode, ChurchBlockNode, EditableBlockQuoteNode, ScriptureBlockNode, ScriptureReferenceNode, ReflectionBlockNode, PrayerBlockNode, ApplicationBlockNode], onError: (error: Error) => { throw error; }, theme: writingEditorTheme }), [initialContent]);
   const persistScriptureInsertion = async (data: ScriptureData) => onCreateScriptureReference ? onCreateScriptureReference(data) : data;
   const persistScriptureEdit = async (data: ScriptureData, previousData?: ScriptureData) => onUpdateScriptureReference ? onUpdateScriptureReference(data, previousData) : data;
