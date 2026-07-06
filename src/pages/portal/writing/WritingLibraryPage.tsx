@@ -10,6 +10,7 @@ import {
   createResourceType,
   createResourceTypeCategoryLink,
   createSeries,
+  createWritingTag,
   fetchCategories,
   fetchCategorySeriesLinks,
   fetchResourceTypeCategoryLinks,
@@ -27,15 +28,58 @@ import type {
 } from '../../../types/writing';
 import { canManageTaxonomy } from '../../../utils/permissions';
 
-type TaxonomyKind = 'category' | 'resourceType' | 'series';
+type TaxonomyKind = 'category' | 'resourceType' | 'series' | 'tag';
 type CurationKind = 'categorySeries' | 'resourceCategory';
 
-const toSlug = (value: string) => value.toLowerCase().trim().replace(/\s+/g, '-');
+type LibraryItemForm = {
+  active: boolean;
+  description: string;
+  featured: boolean;
+  name: string;
+  parent: string;
+  slug: string;
+  sortOrder: string;
+};
+
+type PathwayForm = {
+  active: boolean;
+  category: string;
+  featured: boolean;
+  resourceType: string;
+  series: string;
+  sortOrder: string;
+};
+
+const emptyLibraryItemForm = (): LibraryItemForm => ({
+  active: true,
+  description: '',
+  featured: false,
+  name: '',
+  parent: '',
+  slug: '',
+  sortOrder: '0',
+});
+
+const emptyPathwayForm = (): PathwayForm => ({
+  active: true,
+  category: '',
+  featured: false,
+  resourceType: '',
+  series: '',
+  sortOrder: '0',
+});
+
+const toSlug = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+
+const toSortOrder = (value: string, fallback: number) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 const byId = <T extends { id: number | string }>(items: T[], id: number | string) =>
   items.find((item) => String(item.id) === String(id));
 
-const seriesName = (item?: WritingSeries | null) => item?.title || item?.name || item?.slug || 'Collection';
+const seriesName = (item?: WritingSeries | null) => item?.title || item?.name || item?.slug || 'Series';
 
 const WritingLibraryPage = () => {
   const auth = useAuth();
@@ -43,15 +87,13 @@ const WritingLibraryPage = () => {
   const [categories, setCategories] = useState<WritingCategory[]>([]);
   const [categorySeriesLinks, setCategorySeriesLinks] = useState<WritingCategorySeriesLink[]>([]);
   const [curationKind, setCurationKind] = useState<CurationKind>('resourceCategory');
-  const [curationCategory, setCurationCategory] = useState('');
-  const [curationResourceType, setCurationResourceType] = useState('');
-  const [curationSeries, setCurationSeries] = useState('');
+  const [itemForm, setItemForm] = useState<LibraryItemForm>(() => emptyLibraryItemForm());
+  const [pathwayForm, setPathwayForm] = useState<PathwayForm>(() => emptyPathwayForm());
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [resourceTypeCategoryLinks, setResourceTypeCategoryLinks] = useState<WritingResourceTypeCategoryLink[]>([]);
   const [series, setSeries] = useState<WritingSeries[]>([]);
   const [tags, setTags] = useState<WritingTag[]>([]);
   const [message, setMessage] = useState('');
-  const [name, setName] = useState('');
   const [kind, setKind] = useState<TaxonomyKind>('category');
 
   const load = () => {
@@ -81,15 +123,63 @@ const WritingLibraryPage = () => {
     return () => controller.abort();
   }, [auth.accessToken]);
 
+  const updateItemForm = <Key extends keyof LibraryItemForm>(key: Key, value: LibraryItemForm[Key]) => {
+    setItemForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const updatePathwayForm = <Key extends keyof PathwayForm>(key: Key, value: PathwayForm[Key]) => {
+    setPathwayForm((current) => ({ ...current, [key]: value }));
+  };
+
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault();
-    if (!name.trim() || !canManageTaxonomy(auth.permissions)) return;
-    const slug = toSlug(name);
+    if (!itemForm.name.trim() || !canManageTaxonomy(auth.permissions)) return;
+    const slug = itemForm.slug.trim() || toSlug(itemForm.name);
+    const sort_order = toSortOrder(itemForm.sortOrder, 0);
+
     try {
-      if (kind === 'resourceType') await createResourceType(auth.accessToken, { name, slug });
-      if (kind === 'category') await createCategory(auth.accessToken, { name, slug });
-      if (kind === 'series') await createSeries(auth.accessToken, { slug, title: name });
-      setName('');
+      if (kind === 'resourceType') {
+        await createResourceType(auth.accessToken, {
+          description: itemForm.description,
+          is_active: itemForm.active,
+          is_featured: itemForm.featured,
+          name: itemForm.name,
+          slug,
+          sort_order,
+        });
+      }
+
+      if (kind === 'category') {
+        await createCategory(auth.accessToken, {
+          description: itemForm.description,
+          is_active: itemForm.active,
+          is_featured: itemForm.featured,
+          name: itemForm.name,
+          parent: itemForm.parent || null,
+          slug,
+          sort_order,
+        });
+      }
+
+      if (kind === 'series') {
+        await createSeries(auth.accessToken, {
+          description: itemForm.description,
+          is_active: itemForm.active,
+          is_featured: itemForm.featured,
+          slug,
+          sort_order,
+          title: itemForm.name,
+        });
+      }
+
+      if (kind === 'tag') {
+        await createWritingTag(auth.accessToken, {
+          name: itemForm.name,
+          slug,
+        });
+      }
+
+      setItemForm(emptyLibraryItemForm());
       setMessage('Library item created.');
       load();
     } catch (err) {
@@ -100,39 +190,50 @@ const WritingLibraryPage = () => {
   const handleCurate = async (event: FormEvent) => {
     event.preventDefault();
     if (!canManageTaxonomy(auth.permissions)) return;
-    const canCreateResourceCategoryLink = curationKind === 'resourceCategory' && curationResourceType && curationCategory;
-    const canCreateCategorySeriesLink = curationKind === 'categorySeries' && curationCategory && curationSeries;
+    const canCreateResourceCategoryLink = curationKind === 'resourceCategory' && pathwayForm.resourceType && pathwayForm.category;
+    const canCreateCategorySeriesLink = curationKind === 'categorySeries' && pathwayForm.category && pathwayForm.series;
 
     if (!canCreateResourceCategoryLink && !canCreateCategorySeriesLink) {
-      setMessage('Choose both sides of the curation link.');
+      setMessage('Choose both sides of the browse pathway.');
       return;
     }
 
     try {
       if (canCreateResourceCategoryLink) {
         await createResourceTypeCategoryLink(auth.accessToken, {
-          category: curationCategory,
-          is_active: true,
-          resource_type: curationResourceType,
-          sort_order: resourceTypeCategoryLinks.length + 1,
+          category: pathwayForm.category,
+          is_active: pathwayForm.active,
+          is_featured: pathwayForm.featured,
+          resource_type: pathwayForm.resourceType,
+          sort_order: toSortOrder(pathwayForm.sortOrder, resourceTypeCategoryLinks.length + 1),
         });
       }
 
       if (canCreateCategorySeriesLink) {
         await createCategorySeriesLink(auth.accessToken, {
-          category: curationCategory,
-          is_active: true,
-          series: curationSeries,
-          sort_order: categorySeriesLinks.length + 1,
+          category: pathwayForm.category,
+          is_active: pathwayForm.active,
+          is_featured: pathwayForm.featured,
+          series: pathwayForm.series,
+          sort_order: toSortOrder(pathwayForm.sortOrder, categorySeriesLinks.length + 1),
         });
       }
 
-      setMessage('Curation link created.');
+      setPathwayForm(emptyPathwayForm());
+      setMessage('Browse pathway created.');
       load();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to create curation link.');
+      setMessage(err instanceof Error ? err.message : 'Unable to create browse pathway.');
     }
   };
+
+  const inputClass = `w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-red-800/25 ${darkMode ? 'border-white/10 bg-white/5 text-stone-100 placeholder:text-stone-500' : 'border-[#eaded0] bg-white text-zinc-950 placeholder:text-[#8a7d70]'}`;
+  const labelClass = `text-[0.68rem] font-black uppercase tracking-[0.18em] ${darkMode ? 'text-red-200' : 'text-red-800'}`;
+  const helperClass = `text-xs leading-5 ${portalSurface.softMutedText(darkMode)}`;
+  const checkboxClass = `flex items-center justify-between gap-4 rounded-2xl border px-4 py-3 text-sm font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-200' : 'border-[#eaded0] bg-white text-zinc-800'}`;
+  const showRichFields = kind !== 'tag';
+  const itemNameLabel = kind === 'series' ? 'Series title' : 'Name';
+  const itemSlug = itemForm.slug || toSlug(itemForm.name);
 
   const primaryPanels = [
     { description: 'Broad shelves that shape public resource browsing.', items: resourceTypes.map((item) => item.name), title: 'Resource Types' },
@@ -172,20 +273,71 @@ const WritingLibraryPage = () => {
           </p>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[24rem_1fr]">
+        <div className="grid gap-6 xl:grid-cols-[26rem_1fr]">
           <div className="grid gap-6 self-start">
             <form onSubmit={handleCreate} className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Library Item</p>
               <h2 className="mt-3 font-serif text-4xl">Create library item</h2>
               <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
-                Add reusable structure for the public resource library. Rich editing comes next; this keeps the current creation flow intact.
+                Add the resource shelves, topics, series, and labels readers will use to discover writings.
               </p>
-              <select className={`mt-6 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setKind(event.target.value as TaxonomyKind)} value={kind}>
-                <option value="category">Category</option>
-                <option value="resourceType">Resource Type</option>
-                <option value="series">Series</option>
-              </select>
-              <input className={`mt-4 w-full rounded-2xl border px-4 py-3 outline-none ${darkMode ? 'border-white/10 bg-white/5' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setName(event.target.value)} placeholder="Name" value={name} />
+              <div className="mt-6 grid gap-4">
+                <label className="grid gap-2">
+                  <span className={labelClass}>Item type</span>
+                  <select className={inputClass} onChange={(event) => { setKind(event.target.value as TaxonomyKind); setItemForm(emptyLibraryItemForm()); }} value={kind}>
+                    <option value="category">Category</option>
+                    <option value="resourceType">Resource Type</option>
+                    <option value="series">Series</option>
+                    <option value="tag">Tag</option>
+                  </select>
+                </label>
+
+                <label className="grid gap-2">
+                  <span className={labelClass}>{itemNameLabel}</span>
+                  <input className={inputClass} onChange={(event) => updateItemForm('name', event.target.value)} placeholder={kind === 'series' ? 'Project 52' : 'Prayer'} value={itemForm.name} />
+                </label>
+
+                <label className="grid gap-2">
+                  <span className={labelClass}>Slug</span>
+                  <input className={inputClass} onChange={(event) => updateItemForm('slug', event.target.value)} placeholder={itemSlug || 'prayer'} value={itemForm.slug} />
+                  <span className={helperClass}>Leave blank to generate: {itemSlug || 'item-slug'}</span>
+                </label>
+
+                {showRichFields ? (
+                  <>
+                    <label className="grid gap-2">
+                      <span className={labelClass}>Description</span>
+                      <textarea className={`${inputClass} min-h-28 resize-y`} onChange={(event) => updateItemForm('description', event.target.value)} placeholder="Describe how this helps readers browse the library." value={itemForm.description} />
+                    </label>
+
+                    {kind === 'category' ? (
+                      <label className="grid gap-2">
+                        <span className={labelClass}>Parent category optional</span>
+                        <select className={inputClass} onChange={(event) => updateItemForm('parent', event.target.value)} value={itemForm.parent}>
+                          <option value="">No parent category</option>
+                          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                        </select>
+                      </label>
+                    ) : null}
+
+                    <label className="grid gap-2">
+                      <span className={labelClass}>Sort order</span>
+                      <input className={inputClass} inputMode="numeric" onChange={(event) => updateItemForm('sortOrder', event.target.value)} placeholder="0" type="number" value={itemForm.sortOrder} />
+                    </label>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className={checkboxClass}>
+                        <span>Active</span>
+                        <input checked={itemForm.active} onChange={(event) => updateItemForm('active', event.target.checked)} type="checkbox" />
+                      </label>
+                      <label className={checkboxClass}>
+                        <span>Featured</span>
+                        <input checked={itemForm.featured} onChange={(event) => updateItemForm('featured', event.target.checked)} type="checkbox" />
+                      </label>
+                    </div>
+                  </>
+                ) : null}
+              </div>
               <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create</button>
               {message ? <p className="mt-5 text-sm font-bold text-red-800">{message}</p> : null}
             </form>
@@ -196,26 +348,59 @@ const WritingLibraryPage = () => {
               <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
                 Connect broad shelves to relevant topics, and topics to curated series.
               </p>
-              <select className={`mt-6 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationKind(event.target.value as CurationKind)} value={curationKind}>
-                <option value="resourceCategory">Resource Type {'\u2192'} Category</option>
-                <option value="categorySeries">Category {'\u2192'} Series</option>
-              </select>
-              {curationKind === 'resourceCategory' ? (
-                <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationResourceType(event.target.value)} value={curationResourceType}>
-                  <option value="">Choose resource type</option>
-                  {resourceTypes.map((resourceType) => <option key={resourceType.id} value={resourceType.id}>{resourceType.name}</option>)}
-                </select>
-              ) : null}
-              <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationCategory(event.target.value)} value={curationCategory}>
-                <option value="">Choose category</option>
-                {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-              </select>
-              {curationKind === 'categorySeries' ? (
-                <select className={`mt-4 w-full rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-zinc-950' : 'border-[#eaded0] bg-white'}`} onChange={(event) => setCurationSeries(event.target.value)} value={curationSeries}>
-                  <option value="">Choose series</option>
-                  {series.map((item) => <option key={item.id} value={item.id}>{seriesName(item)}</option>)}
-                </select>
-              ) : null}
+              <div className="mt-6 grid gap-4">
+                <label className="grid gap-2">
+                  <span className={labelClass}>Pathway type</span>
+                  <select className={inputClass} onChange={(event) => { setCurationKind(event.target.value as CurationKind); setPathwayForm(emptyPathwayForm()); }} value={curationKind}>
+                    <option value="resourceCategory">Resource Type {'\u2192'} Category</option>
+                    <option value="categorySeries">Category {'\u2192'} Series</option>
+                  </select>
+                </label>
+
+                {curationKind === 'resourceCategory' ? (
+                  <label className="grid gap-2">
+                    <span className={labelClass}>Resource type</span>
+                    <select className={inputClass} onChange={(event) => updatePathwayForm('resourceType', event.target.value)} value={pathwayForm.resourceType}>
+                      <option value="">Choose resource type</option>
+                      {resourceTypes.map((resourceType) => <option key={resourceType.id} value={resourceType.id}>{resourceType.name}</option>)}
+                    </select>
+                  </label>
+                ) : null}
+
+                <label className="grid gap-2">
+                  <span className={labelClass}>Category</span>
+                  <select className={inputClass} onChange={(event) => updatePathwayForm('category', event.target.value)} value={pathwayForm.category}>
+                    <option value="">Choose category</option>
+                    {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
+                </label>
+
+                {curationKind === 'categorySeries' ? (
+                  <label className="grid gap-2">
+                    <span className={labelClass}>Series</span>
+                    <select className={inputClass} onChange={(event) => updatePathwayForm('series', event.target.value)} value={pathwayForm.series}>
+                      <option value="">Choose series</option>
+                      {series.map((item) => <option key={item.id} value={item.id}>{seriesName(item)}</option>)}
+                    </select>
+                  </label>
+                ) : null}
+
+                <label className="grid gap-2">
+                  <span className={labelClass}>Sort order</span>
+                  <input className={inputClass} inputMode="numeric" onChange={(event) => updatePathwayForm('sortOrder', event.target.value)} placeholder="0" type="number" value={pathwayForm.sortOrder} />
+                </label>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className={checkboxClass}>
+                    <span>Active</span>
+                    <input checked={pathwayForm.active} onChange={(event) => updatePathwayForm('active', event.target.checked)} type="checkbox" />
+                  </label>
+                  <label className={checkboxClass}>
+                    <span>Featured</span>
+                    <input checked={pathwayForm.featured} onChange={(event) => updatePathwayForm('featured', event.target.checked)} type="checkbox" />
+                  </label>
+                </div>
+              </div>
               <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create pathway</button>
             </form>
           </div>
@@ -269,11 +454,3 @@ const WritingLibraryPage = () => {
 };
 
 export default WritingLibraryPage;
-
-
-
-
-
-
-
-
