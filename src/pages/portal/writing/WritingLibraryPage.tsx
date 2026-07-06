@@ -11,12 +11,24 @@ import {
   createResourceTypeCategoryLink,
   createSeries,
   createWritingTag,
+  deleteCategory,
+  deleteCategorySeriesLink,
+  deleteResourceType,
+  deleteResourceTypeCategoryLink,
+  deleteSeries,
+  deleteWritingTag,
   fetchCategories,
   fetchCategorySeriesLinks,
   fetchResourceTypeCategoryLinks,
   fetchResourceTypes,
   fetchSeries,
   fetchWritingTags,
+  updateCategory,
+  updateCategorySeriesLink,
+  updateResourceType,
+  updateResourceTypeCategoryLink,
+  updateSeries,
+  updateWritingTag,
 } from '../../../services/writingApi';
 import type {
   WritingCategory,
@@ -87,7 +99,9 @@ const WritingLibraryPage = () => {
   const [categories, setCategories] = useState<WritingCategory[]>([]);
   const [categorySeriesLinks, setCategorySeriesLinks] = useState<WritingCategorySeriesLink[]>([]);
   const [curationKind, setCurationKind] = useState<CurationKind>('resourceCategory');
+  const [editingPrimary, setEditingPrimary] = useState<{ form: LibraryItemForm; id: number | string; kind: TaxonomyKind } | null>(null);
   const [itemForm, setItemForm] = useState<LibraryItemForm>(() => emptyLibraryItemForm());
+  const [editingPathway, setEditingPathway] = useState<{ form: PathwayForm; id: number | string; kind: CurationKind } | null>(null);
   const [pathwayForm, setPathwayForm] = useState<PathwayForm>(() => emptyPathwayForm());
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [resourceTypeCategoryLinks, setResourceTypeCategoryLinks] = useState<WritingResourceTypeCategoryLink[]>([]);
@@ -227,6 +241,210 @@ const WritingLibraryPage = () => {
     }
   };
 
+  const formFromResourceType = (item: WritingResourceType): LibraryItemForm => ({
+    active: item.is_active,
+    description: item.description || '',
+    featured: item.is_featured,
+    name: item.name,
+    parent: '',
+    slug: item.slug,
+    sortOrder: String(item.sort_order ?? 0),
+  });
+
+  const formFromCategory = (item: WritingCategory): LibraryItemForm => ({
+    active: item.is_active,
+    description: item.description || '',
+    featured: item.is_featured,
+    name: item.name,
+    parent: item.parent ? String(item.parent) : '',
+    slug: item.slug,
+    sortOrder: String(item.sort_order ?? 0),
+  });
+
+  const formFromSeries = (item: WritingSeries): LibraryItemForm => ({
+    active: item.is_active,
+    description: item.description || '',
+    featured: item.is_featured,
+    name: seriesName(item),
+    parent: '',
+    slug: item.slug,
+    sortOrder: String(item.sort_order ?? 0),
+  });
+
+  const formFromTag = (item: WritingTag): LibraryItemForm => ({
+    ...emptyLibraryItemForm(),
+    name: item.name,
+    slug: item.slug,
+  });
+
+  const formFromResourceCategoryLink = (link: WritingResourceTypeCategoryLink): PathwayForm => ({
+    active: link.is_active,
+    category: String(link.category),
+    featured: link.is_featured,
+    resourceType: String(link.resource_type),
+    series: '',
+    sortOrder: String(link.sort_order ?? 0),
+  });
+
+  const formFromCategorySeriesLink = (link: WritingCategorySeriesLink): PathwayForm => ({
+    active: link.is_active,
+    category: String(link.category),
+    featured: link.is_featured,
+    resourceType: '',
+    series: String(link.series),
+    sortOrder: String(link.sort_order ?? 0),
+  });
+
+  const updateEditingPrimaryForm = <Key extends keyof LibraryItemForm>(key: Key, value: LibraryItemForm[Key]) => {
+    setEditingPrimary((current) => current ? { ...current, form: { ...current.form, [key]: value } } : current);
+  };
+
+  const updateEditingPathwayForm = <Key extends keyof PathwayForm>(key: Key, value: PathwayForm[Key]) => {
+    setEditingPathway((current) => current ? { ...current, form: { ...current.form, [key]: value } } : current);
+  };
+
+  const reloadAfterMutation = (nextMessage: string) => {
+    setMessage(nextMessage);
+    load();
+  };
+
+  const savePrimaryEdit = async () => {
+    if (!editingPrimary || !canManageTaxonomy(auth.permissions)) return;
+    const form = editingPrimary.form;
+    const slug = form.slug.trim() || toSlug(form.name);
+    const sort_order = toSortOrder(form.sortOrder, 0);
+
+    try {
+      if (editingPrimary.kind === 'resourceType') {
+        await updateResourceType(auth.accessToken, editingPrimary.id, {
+          description: form.description,
+          is_active: form.active,
+          is_featured: form.featured,
+          name: form.name,
+          slug,
+          sort_order,
+        });
+      }
+
+      if (editingPrimary.kind === 'category') {
+        await updateCategory(auth.accessToken, editingPrimary.id, {
+          description: form.description,
+          is_active: form.active,
+          is_featured: form.featured,
+          name: form.name,
+          parent: form.parent || null,
+          slug,
+          sort_order,
+        });
+      }
+
+      if (editingPrimary.kind === 'series') {
+        await updateSeries(auth.accessToken, editingPrimary.id, {
+          description: form.description,
+          is_active: form.active,
+          is_featured: form.featured,
+          slug,
+          sort_order,
+          title: form.name,
+        });
+      }
+
+      if (editingPrimary.kind === 'tag') {
+        await updateWritingTag(auth.accessToken, editingPrimary.id, {
+          name: form.name,
+          slug,
+        });
+      }
+
+      setEditingPrimary(null);
+      reloadAfterMutation('Library item updated.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to update Library item.');
+    }
+  };
+
+  const savePathwayEdit = async () => {
+    if (!editingPathway || !canManageTaxonomy(auth.permissions)) return;
+    const form = editingPathway.form;
+
+    try {
+      if (editingPathway.kind === 'resourceCategory') {
+        await updateResourceTypeCategoryLink(auth.accessToken, editingPathway.id, {
+          category: form.category,
+          is_active: form.active,
+          is_featured: form.featured,
+          resource_type: form.resourceType,
+          sort_order: toSortOrder(form.sortOrder, 0),
+        });
+      }
+
+      if (editingPathway.kind === 'categorySeries') {
+        await updateCategorySeriesLink(auth.accessToken, editingPathway.id, {
+          category: form.category,
+          is_active: form.active,
+          is_featured: form.featured,
+          series: form.series,
+          sort_order: toSortOrder(form.sortOrder, 0),
+        });
+      }
+
+      setEditingPathway(null);
+      reloadAfterMutation('Browse pathway updated.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to update browse pathway.');
+    }
+  };
+  const confirmDelete = async (label: string, action: () => Promise<null>) => {
+    if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return;
+
+    try {
+      await action();
+      reloadAfterMutation(`${label} deleted.`);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : `Unable to delete ${label}. It may already be used by writings.`);
+    }
+  };
+
+  const deletePrimary = (record: PrimaryRecord) => {
+    if (!canManageTaxonomy(auth.permissions)) return;
+    if (record.kind === 'resourceType') void confirmDelete(record.title, () => deleteResourceType(auth.accessToken, record.id));
+    if (record.kind === 'category') void confirmDelete(record.title, () => deleteCategory(auth.accessToken, record.id));
+    if (record.kind === 'series') void confirmDelete(record.title, () => deleteSeries(auth.accessToken, record.id));
+    if (record.kind === 'tag') void confirmDelete(record.title, () => deleteWritingTag(auth.accessToken, record.id));
+  };
+
+  const deletePathway = (record: PathwayRecord) => {
+    if (!canManageTaxonomy(auth.permissions)) return;
+    if (record.kind === 'resourceCategory') void confirmDelete(record.title, () => deleteResourceTypeCategoryLink(auth.accessToken, record.id));
+    if (record.kind === 'categorySeries') void confirmDelete(record.title, () => deleteCategorySeriesLink(auth.accessToken, record.id));
+  };
+
+  const togglePrimary = async (record: PrimaryRecord, field: 'is_active' | 'is_featured') => {
+    if (!record.state || !canManageTaxonomy(auth.permissions)) return;
+    const nextValue = field === 'is_active' ? !record.state.active : !record.state.featured;
+
+    try {
+      if (record.kind === 'resourceType') await updateResourceType(auth.accessToken, record.id, { [field]: nextValue });
+      if (record.kind === 'category') await updateCategory(auth.accessToken, record.id, { [field]: nextValue });
+      if (record.kind === 'series') await updateSeries(auth.accessToken, record.id, { [field]: nextValue });
+      reloadAfterMutation(field === 'is_active' ? 'Active state updated.' : 'Featured state updated.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to update Library item state.');
+    }
+  };
+
+  const togglePathway = async (record: PathwayRecord, field: 'is_active' | 'is_featured') => {
+    if (!canManageTaxonomy(auth.permissions)) return;
+    const nextValue = field === 'is_active' ? !record.active : !record.featured;
+
+    try {
+      if (record.kind === 'resourceCategory') await updateResourceTypeCategoryLink(auth.accessToken, record.id, { [field]: nextValue });
+      if (record.kind === 'categorySeries') await updateCategorySeriesLink(auth.accessToken, record.id, { [field]: nextValue });
+      reloadAfterMutation(field === 'is_active' ? 'Pathway active state updated.' : 'Pathway featured state updated.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to update browse pathway state.');
+    }
+  };
   const inputClass = `w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-red-800/25 ${darkMode ? 'border-white/10 bg-white/5 text-stone-100 placeholder:text-stone-500' : 'border-[#eaded0] bg-white text-zinc-950 placeholder:text-[#8a7d70]'}`;
   const labelClass = `text-[0.68rem] font-black uppercase tracking-[0.18em] ${darkMode ? 'text-red-200' : 'text-red-800'}`;
   const helperClass = `text-xs leading-5 ${portalSurface.softMutedText(darkMode)}`;
@@ -253,7 +471,10 @@ const WritingLibraryPage = () => {
 
   type PrimaryRecord = {
     description?: string;
+    form: LibraryItemForm;
+    id: number | string;
     key: string;
+    kind: TaxonomyKind;
     meta: string[];
     parent?: string;
     slug?: string;
@@ -264,7 +485,10 @@ const WritingLibraryPage = () => {
   type PathwayRecord = {
     active: boolean;
     featured: boolean;
+    form: PathwayForm;
+    id: number | string;
     key: string;
+    kind: CurationKind;
     order: number;
     title: string;
   };
@@ -277,7 +501,10 @@ const WritingLibraryPage = () => {
       description: 'Broad shelves that shape public resource browsing.',
       records: resourceTypes.map((item) => ({
         description: item.description,
+        form: formFromResourceType(item),
+        id: item.id,
         key: String(item.id),
+        kind: 'resourceType',
         meta: [`Order ${item.sort_order}`],
         slug: item.slug,
         state: { active: item.is_active, featured: item.is_featured },
@@ -289,7 +516,10 @@ const WritingLibraryPage = () => {
       description: 'Topics and themes that help readers find related writings.',
       records: categories.map((item) => ({
         description: item.description,
+        form: formFromCategory(item),
+        id: item.id,
         key: String(item.id),
+        kind: 'category',
         meta: [`Order ${item.sort_order}`],
         parent: parentName(item),
         slug: item.slug,
@@ -302,7 +532,10 @@ const WritingLibraryPage = () => {
       description: 'Curated journeys or ordered collections of writings.',
       records: series.map((item) => ({
         description: item.description,
+        form: formFromSeries(item),
+        id: item.id,
         key: String(item.id),
+        kind: 'series',
         meta: [`Order ${item.sort_order}`, `${item.items?.length || 0} writings`],
         slug: item.slug,
         state: { active: item.is_active, featured: item.is_featured },
@@ -313,7 +546,10 @@ const WritingLibraryPage = () => {
     {
       description: 'Lightweight labels for secondary discovery and search.',
       records: tags.map((item) => ({
+        form: formFromTag(item),
+        id: item.id,
         key: String(item.id),
+        kind: 'tag',
         meta: item.writing_count === undefined ? ['Lightweight label'] : [`${item.writing_count} writings`],
         slug: item.slug,
         title: item.name,
@@ -328,7 +564,10 @@ const WritingLibraryPage = () => {
     return {
       active: link.is_active,
       featured: link.is_featured,
+      form: formFromResourceCategoryLink(link),
+      id: link.id,
       key: String(link.id),
+      kind: 'resourceCategory' as const,
       order: link.sort_order,
       title: `${resourceType?.name || 'Resource Type'} \u2192 ${category?.name || 'Category'}`,
     };
@@ -340,7 +579,10 @@ const WritingLibraryPage = () => {
     return {
       active: link.is_active,
       featured: link.is_featured,
+      form: formFromCategorySeriesLink(link),
+      id: link.id,
       key: String(link.id),
+      kind: 'categorySeries' as const,
       order: link.sort_order,
       title: `${category?.name || 'Category'} \u2192 ${seriesName(linkedSeries)}`,
     };
@@ -353,37 +595,162 @@ const WritingLibraryPage = () => {
     </div>
   ) : null;
 
+  const actionButtonClass = darkMode
+    ? 'rounded-full border border-white/10 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-200 transition hover:bg-white/10 disabled:opacity-40'
+    : 'rounded-full border border-[#eaded0] px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f574f] transition hover:bg-[#fffaf0] disabled:opacity-40';
+  const dangerButtonClass = darkMode
+    ? 'rounded-full border border-red-400/20 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-red-200 transition hover:bg-red-950/30 disabled:opacity-40'
+    : 'rounded-full border border-red-900/15 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-red-800 transition hover:bg-red-50 disabled:opacity-40';
+  const editSurfaceClass = darkMode
+    ? 'mt-4 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4'
+    : 'mt-4 grid gap-3 rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-4';
   const renderPrimaryRecordList = (records: PrimaryRecord[], emptyLabel: string) => (
     <div className="mt-4 grid gap-3">
-      {records.length ? records.map((record) => (
-        <article key={record.key} className={recordCardClass}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h4 className="text-sm font-black">{record.title}</h4>
-              {record.slug ? <p className={`mt-1 break-all text-xs ${portalSurface.softMutedText(darkMode)}`}>/{record.slug}</p> : null}
+      {records.length ? records.map((record) => {
+        const isEditing = editingPrimary?.kind === record.kind && String(editingPrimary.id) === String(record.id);
+        const editForm = editingPrimary?.form;
+        const richEdit = isEditing && record.kind !== 'tag' && editForm;
+
+        return (
+          <article key={record.key} className={recordCardClass}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h4 className="text-sm font-black">{record.title}</h4>
+                {record.slug ? <p className={`mt-1 break-all text-xs ${portalSurface.softMutedText(darkMode)}`}>/{record.slug}</p> : null}
+              </div>
+              {renderStateBadges(record.state)}
             </div>
-            {renderStateBadges(record.state)}
-          </div>
-          {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>Parent: {record.parent}</p> : null}
-          <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
-          {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
-        </article>
-      )) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
+            {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>Parent: {record.parent}</p> : null}
+            <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
+            {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setEditingPrimary({ form: record.form, id: record.id, kind: record.kind })} type="button">Edit</button>
+              {record.state ? <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePrimary(record, 'is_active')} type="button">{record.state.active ? 'Deactivate' : 'Activate'}</button> : null}
+              {record.state ? <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePrimary(record, 'is_featured')} type="button">{record.state.featured ? 'Unfeature' : 'Feature'}</button> : null}
+              <button className={dangerButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => deletePrimary(record)} type="button">Delete</button>
+            </div>
+            {isEditing && editForm ? (
+              <div className={editSurfaceClass}>
+                <label className="grid gap-2">
+                  <span className={labelClass}>{record.kind === 'series' ? 'Series title' : 'Name'}</span>
+                  <input className={inputClass} onChange={(event) => updateEditingPrimaryForm('name', event.target.value)} value={editForm.name} />
+                </label>
+                <label className="grid gap-2">
+                  <span className={labelClass}>Slug</span>
+                  <input className={inputClass} onChange={(event) => updateEditingPrimaryForm('slug', event.target.value)} value={editForm.slug} />
+                </label>
+                {richEdit ? (
+                  <>
+                    <label className="grid gap-2">
+                      <span className={labelClass}>Description</span>
+                      <textarea className={`${inputClass} min-h-24 resize-y`} onChange={(event) => updateEditingPrimaryForm('description', event.target.value)} value={editForm.description} />
+                    </label>
+                    {record.kind === 'category' ? (
+                      <label className="grid gap-2">
+                        <span className={labelClass}>Parent category optional</span>
+                        <select className={inputClass} onChange={(event) => updateEditingPrimaryForm('parent', event.target.value)} value={editForm.parent}>
+                          <option value="">No parent category</option>
+                          {categories.filter((category) => String(category.id) !== String(record.id)).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                        </select>
+                      </label>
+                    ) : null}
+                    <label className="grid gap-2">
+                      <span className={labelClass}>Sort order</span>
+                      <input className={inputClass} inputMode="numeric" onChange={(event) => updateEditingPrimaryForm('sortOrder', event.target.value)} type="number" value={editForm.sortOrder} />
+                    </label>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className={checkboxClass}>
+                        <span>Active</span>
+                        <input checked={editForm.active} onChange={(event) => updateEditingPrimaryForm('active', event.target.checked)} type="checkbox" />
+                      </label>
+                      <label className={checkboxClass}>
+                        <span>Featured</span>
+                        <input checked={editForm.featured} onChange={(event) => updateEditingPrimaryForm('featured', event.target.checked)} type="checkbox" />
+                      </label>
+                    </div>
+                  </>
+                ) : null}
+                <div className="flex flex-wrap gap-2">
+                  <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700" onClick={() => void savePrimaryEdit()} type="button">Save changes</button>
+                  <button className={actionButtonClass} onClick={() => setEditingPrimary(null)} type="button">Cancel</button>
+                </div>
+              </div>
+            ) : null}
+          </article>
+        );
+      }) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
     </div>
   );
-
   const renderPathwayRecordList = (records: PathwayRecord[], emptyLabel: string) => (
     <div className="mt-4 grid gap-3">
-      {records.length ? records.map((record) => (
-        <article key={record.key} className={recordCardClass}>
-          <h4 className="text-sm font-black">{record.title}</h4>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {record.featured ? <span className={featuredBadgeClass}>Featured</span> : null}
-            <span className={record.active ? activeBadgeClass : inactiveBadgeClass}>{record.active ? 'Active' : 'Inactive'}</span>
-            <span className={metaBadgeClass}>Order {record.order}</span>
-          </div>
-        </article>
-      )) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
+      {records.length ? records.map((record) => {
+        const isEditing = editingPathway?.kind === record.kind && String(editingPathway.id) === String(record.id);
+        const editForm = editingPathway?.form;
+
+        return (
+          <article key={record.key} className={recordCardClass}>
+            <h4 className="text-sm font-black">{record.title}</h4>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {record.featured ? <span className={featuredBadgeClass}>Featured</span> : null}
+              <span className={record.active ? activeBadgeClass : inactiveBadgeClass}>{record.active ? 'Active' : 'Inactive'}</span>
+              <span className={metaBadgeClass}>Order {record.order}</span>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setEditingPathway({ form: record.form, id: record.id, kind: record.kind })} type="button">Edit</button>
+              <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePathway(record, 'is_active')} type="button">{record.active ? 'Deactivate' : 'Activate'}</button>
+              <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePathway(record, 'is_featured')} type="button">{record.featured ? 'Unfeature' : 'Feature'}</button>
+              <button className={dangerButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => deletePathway(record)} type="button">Delete link</button>
+            </div>
+            {isEditing && editForm ? (
+              <div className={editSurfaceClass}>
+                {record.kind === 'resourceCategory' ? (
+                  <label className="grid gap-2">
+                    <span className={labelClass}>Resource type</span>
+                    <select className={inputClass} onChange={(event) => updateEditingPathwayForm('resourceType', event.target.value)} value={editForm.resourceType}>
+                      <option value="">Choose resource type</option>
+                      {resourceTypes.map((resourceType) => <option key={resourceType.id} value={resourceType.id}>{resourceType.name}</option>)}
+                    </select>
+                  </label>
+                ) : null}
+                <label className="grid gap-2">
+                  <span className={labelClass}>Category</span>
+                  <select className={inputClass} onChange={(event) => updateEditingPathwayForm('category', event.target.value)} value={editForm.category}>
+                    <option value="">Choose category</option>
+                    {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                  </select>
+                </label>
+                {record.kind === 'categorySeries' ? (
+                  <label className="grid gap-2">
+                    <span className={labelClass}>Series</span>
+                    <select className={inputClass} onChange={(event) => updateEditingPathwayForm('series', event.target.value)} value={editForm.series}>
+                      <option value="">Choose series</option>
+                      {series.map((item) => <option key={item.id} value={item.id}>{seriesName(item)}</option>)}
+                    </select>
+                  </label>
+                ) : null}
+                <label className="grid gap-2">
+                  <span className={labelClass}>Sort order</span>
+                  <input className={inputClass} inputMode="numeric" onChange={(event) => updateEditingPathwayForm('sortOrder', event.target.value)} type="number" value={editForm.sortOrder} />
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className={checkboxClass}>
+                    <span>Active</span>
+                    <input checked={editForm.active} onChange={(event) => updateEditingPathwayForm('active', event.target.checked)} type="checkbox" />
+                  </label>
+                  <label className={checkboxClass}>
+                    <span>Featured</span>
+                    <input checked={editForm.featured} onChange={(event) => updateEditingPathwayForm('featured', event.target.checked)} type="checkbox" />
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700" onClick={() => void savePathwayEdit()} type="button">Save pathway</button>
+                  <button className={actionButtonClass} onClick={() => setEditingPathway(null)} type="button">Cancel</button>
+                </div>
+              </div>
+            ) : null}
+          </article>
+        );
+      }) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
     </div>
   );
   return (
@@ -578,3 +945,4 @@ const WritingLibraryPage = () => {
 };
 
 export default WritingLibraryPage;
+
