@@ -16,6 +16,7 @@ import {
   deleteResourceType,
   deleteResourceTypeCategoryLink,
   deleteSeries,
+  deleteWritingSeriesItem,
   deleteWritingTag,
   fetchCategories,
   fetchCategorySeriesLinks,
@@ -23,6 +24,7 @@ import {
   fetchResourceTypes,
   fetchSeries,
   fetchWritingTags,
+  reorderWritingSeriesItems,
   updateCategory,
   updateCategorySeriesLink,
   updateResourceType,
@@ -36,6 +38,7 @@ import type {
   WritingResourceType,
   WritingResourceTypeCategoryLink,
   WritingSeries,
+  WritingSeriesItem,
   WritingTag,
 } from '../../../types/writing';
 import { canManageTaxonomy } from '../../../utils/permissions';
@@ -102,6 +105,7 @@ const WritingLibraryPage = () => {
   const [editingPrimary, setEditingPrimary] = useState<{ form: LibraryItemForm; id: number | string; kind: TaxonomyKind } | null>(null);
   const [itemForm, setItemForm] = useState<LibraryItemForm>(() => emptyLibraryItemForm());
   const [editingPathway, setEditingPathway] = useState<{ form: PathwayForm; id: number | string; kind: CurationKind } | null>(null);
+  const [expandedSeriesId, setExpandedSeriesId] = useState<number | string | null>(null);
   const [pathwayForm, setPathwayForm] = useState<PathwayForm>(() => emptyPathwayForm());
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [resourceTypeCategoryLinks, setResourceTypeCategoryLinks] = useState<WritingResourceTypeCategoryLink[]>([]);
@@ -433,6 +437,35 @@ const WritingLibraryPage = () => {
     }
   };
 
+  const sortSeriesItems = (items: WritingSeriesItem[] = []) =>
+    [...items].sort((left, right) => left.order === right.order ? left.writing_title.localeCompare(right.writing_title) : left.order - right.order);
+
+  const reorderSeriesItems = async (seriesId: number | string, items: WritingSeriesItem[], fromIndex: number, toIndex: number) => {
+    if (!canManageTaxonomy(auth.permissions) || toIndex < 0 || toIndex >= items.length) return;
+    const nextItems = [...items];
+    const [movedItem] = nextItems.splice(fromIndex, 1);
+    nextItems.splice(toIndex, 0, movedItem);
+
+    try {
+      await reorderWritingSeriesItems(auth.accessToken, seriesId, nextItems.map((item, index) => ({ id: item.id, order: index })));
+      reloadAfterMutation('Series order updated.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to reorder series items. Refetching the series may be needed.');
+      load();
+    }
+  };
+
+  const removeSeriesItem = async (item: WritingSeriesItem) => {
+    if (!canManageTaxonomy(auth.permissions)) return;
+    if (!window.confirm(`Remove ${item.writing_title} from this series?`)) return;
+
+    try {
+      await deleteWritingSeriesItem(auth.accessToken, item.id);
+      reloadAfterMutation('Writing removed from series.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to remove writing from series.');
+    }
+  };
   const togglePathway = async (record: PathwayRecord, field: 'is_active' | 'is_featured') => {
     if (!canManageTaxonomy(auth.permissions)) return;
     const nextValue = field === 'is_active' ? !record.active : !record.featured;
@@ -478,6 +511,7 @@ const WritingLibraryPage = () => {
     kind: TaxonomyKind;
     meta: string[];
     parent?: string;
+    seriesItems?: WritingSeriesItem[];
     slug?: string;
     state?: { active?: boolean; featured?: boolean };
     title: string;
@@ -568,6 +602,7 @@ const WritingLibraryPage = () => {
         key: String(item.id),
         kind: 'series',
         meta: [`Order ${item.sort_order}`, `${item.items?.length || 0} writings`],
+        seriesItems: item.items || [],
         slug: item.slug,
         state: { active: item.is_active, featured: item.is_featured },
         title: seriesName(item),
@@ -658,6 +693,44 @@ const WritingLibraryPage = () => {
             {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>{record.depth ? 'Nested under' : 'Parent'}: {record.parent}</p> : null}
             <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
             {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
+            {record.kind === 'series' ? (
+              <div className="mt-4">
+                <button className={actionButtonClass} onClick={() => setExpandedSeriesId((current) => String(current) === String(record.id) ? null : record.id)} type="button">
+                  {String(expandedSeriesId) === String(record.id) ? 'Hide items' : 'Manage items'}
+                </button>
+                {String(expandedSeriesId) === String(record.id) ? (() => {
+                  const orderedItems = sortSeriesItems(record.seriesItems || []);
+                  return (
+                    <div className={editSurfaceClass}>
+                      <div>
+                        <p className={labelClass}>Current journey</p>
+                        <p className={helperClass}>Ordered from the dedicated series item records. Displayed as order + 1.</p>
+                      </div>
+                      {orderedItems.length ? (
+                        <ol className="grid gap-2">
+                          {orderedItems.map((item, index) => (
+                            <li key={item.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/[0.03] p-3' : 'rounded-2xl border border-[#eaded0] bg-white p-3'}>
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-black">{index + 1}. {item.writing_title}</p>
+                                  {item.writing_detail?.status ? <p className={`mt-1 text-xs ${portalSurface.softMutedText(darkMode)}`}>{item.writing_detail.status}</p> : null}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <button className={actionButtonClass} disabled={index === 0 || !canManageTaxonomy(auth.permissions)} onClick={() => void reorderSeriesItems(record.id, orderedItems, index, index - 1)} type="button">Move up</button>
+                                  <button className={actionButtonClass} disabled={index === orderedItems.length - 1 || !canManageTaxonomy(auth.permissions)} onClick={() => void reorderSeriesItems(record.id, orderedItems, index, index + 1)} type="button">Move down</button>
+                                  <button className={dangerButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void removeSeriesItem(item)} type="button">Remove</button>
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : <p className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>No writings in this series yet.</p>}
+                    </div>
+                  );
+                })() : null}
+              </div>
+            ) : null}
+
             <div className="mt-4 flex flex-wrap gap-2">
               <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setEditingPrimary({ form: record.form, id: record.id, kind: record.kind })} type="button">Edit</button>
               {record.state ? <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePrimary(record, 'is_active')} type="button">{record.state.active ? 'Deactivate' : 'Activate'}</button> : null}

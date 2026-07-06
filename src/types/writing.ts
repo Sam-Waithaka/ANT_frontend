@@ -42,9 +42,21 @@ export type WritingCategory = {
 export type WritingSeriesItem = {
   id: number | string;
   series: number | string;
+  series_detail?: {
+    id: number | string;
+    slug: string;
+    title: string;
+  };
   writing: number | string;
+  writing_detail?: {
+    id: number | string;
+    slug: string;
+    status: string;
+    title: string;
+  };
   writing_title: string;
   order: number;
+  created_at?: string;
 };
 
 export type WritingSeries = {

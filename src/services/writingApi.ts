@@ -14,6 +14,7 @@ import type {
   WritingScriptureReferenceCreatePayload,
   WritingScriptureReferencePayload,
   WritingSeries,
+  WritingSeriesItem,
   WritingTag,
   WritingUpdatePayload,
 } from '../types/writing';
@@ -177,6 +178,21 @@ export const updateSeries = (accessToken: string, id: string | number, body: Par
 
 export const deleteSeries = (accessToken: string, id: string | number) =>
   portalRequest<null>(`/v1/writing-series/${id}/`, { accessToken, method: 'DELETE' });
+
+export const fetchWritingSeriesItems = async (accessToken: string, seriesId: string | number, signal?: AbortSignal) =>
+  normalizePage<WritingSeriesItem>(await portalRequest<unknown>(`/v1/writing-series-items/?series=${encodeURIComponent(String(seriesId))}`, { accessToken, signal }));
+
+export const createWritingSeriesItem = (accessToken: string, body: { order?: number; series: number | string; writing: number | string }) =>
+  portalRequest<WritingSeriesItem>('/v1/writing-series-items/', { accessToken, body, method: 'POST' });
+
+export const updateWritingSeriesItem = (accessToken: string, id: string | number, body: Partial<Pick<WritingSeriesItem, 'order'>>) =>
+  portalRequest<WritingSeriesItem>(`/v1/writing-series-items/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteWritingSeriesItem = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-series-items/${id}/`, { accessToken, method: 'DELETE' });
+
+export const reorderWritingSeriesItems = (accessToken: string, seriesId: string | number, items: Array<{ id: number | string; order: number }>) =>
+  portalRequest<WritingSeriesItem[]>(`/v1/writing-series/${seriesId}/reorder-items/`, { accessToken, body: { items }, method: 'POST' });
 
 export const fetchWritingTags = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingTag>(await portalRequest<unknown>('/v1/writing-tags/', { accessToken, signal }));
