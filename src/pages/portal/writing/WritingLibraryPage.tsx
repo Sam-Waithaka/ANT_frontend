@@ -11,6 +11,7 @@ import {
   createResourceTypeCategoryLink,
   createSeries,
   createWritingTag,
+  createWritingSeriesItem,
   deleteCategory,
   deleteCategorySeriesLink,
   deleteResourceType,
@@ -24,6 +25,7 @@ import {
   fetchResourceTypes,
   fetchSeries,
   fetchWritingTags,
+  fetchWritings,
   reorderWritingSeriesItems,
   updateCategory,
   updateCategorySeriesLink,
@@ -40,6 +42,7 @@ import type {
   WritingSeries,
   WritingSeriesItem,
   WritingTag,
+  Writing,
 } from '../../../types/writing';
 import { canManageTaxonomy } from '../../../utils/permissions';
 
@@ -109,6 +112,9 @@ const WritingLibraryPage = () => {
   const [pathwayForm, setPathwayForm] = useState<PathwayForm>(() => emptyPathwayForm());
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [resourceTypeCategoryLinks, setResourceTypeCategoryLinks] = useState<WritingResourceTypeCategoryLink[]>([]);
+  const [seriesSearchLoading, setSeriesSearchLoading] = useState(false);
+  const [seriesSearchQuery, setSeriesSearchQuery] = useState('');
+  const [seriesSearchResults, setSeriesSearchResults] = useState<Writing[]>([]);
   const [series, setSeries] = useState<WritingSeries[]>([]);
   const [tags, setTags] = useState<WritingTag[]>([]);
   const [message, setMessage] = useState('');
@@ -437,6 +443,38 @@ const WritingLibraryPage = () => {
     }
   };
 
+  const searchSeriesWritings = async () => {
+    if (!canManageTaxonomy(auth.permissions)) return;
+    setSeriesSearchLoading(true);
+    try {
+      const page = await fetchWritings(auth.accessToken, { page: 1, page_size: 24, search: seriesSearchQuery.trim() || undefined });
+      setSeriesSearchResults(page.results);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to search writings right now.');
+    } finally {
+      setSeriesSearchLoading(false);
+    }
+  };
+
+  const addWritingToSeries = async (seriesId: number | string, writingId: number | string, currentItemCount: number) => {
+    if (!canManageTaxonomy(auth.permissions)) return;
+
+    try {
+      await createWritingSeriesItem(auth.accessToken, {
+        order: currentItemCount,
+        series: seriesId,
+        writing: writingId,
+      });
+      setSeriesSearchQuery('');
+      setSeriesSearchResults([]);
+      reloadAfterMutation('Writing added to series.');
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : '';
+      setMessage(detail.toLowerCase().includes('duplicate') || detail.toLowerCase().includes('unique') || detail.includes('400')
+        ? 'This writing is already in this series.'
+        : detail || 'Unable to add writing to series.');
+    }
+  };
   const sortSeriesItems = (items: WritingSeriesItem[] = []) =>
     [...items].sort((left, right) => left.order === right.order ? left.writing_title.localeCompare(right.writing_title) : left.order - right.order);
 
@@ -702,6 +740,35 @@ const WritingLibraryPage = () => {
                   const orderedItems = sortSeriesItems(record.seriesItems || []);
                   return (
                     <div className={editSurfaceClass}>
+                      <div className="grid gap-3 rounded-2xl border border-[#eaded0] bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
+                        <div>
+                          <p className={labelClass}>Add writing</p>
+                          <p className={helperClass}>Search existing writings, then add one to the end of this series.</p>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <input className={inputClass} onChange={(event) => setSeriesSearchQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchSeriesWritings(); } }} placeholder="Search writings by title..." value={seriesSearchQuery} />
+                          <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700 disabled:opacity-50" disabled={seriesSearchLoading || !canManageTaxonomy(auth.permissions)} onClick={() => void searchSeriesWritings()} type="button">{seriesSearchLoading ? 'Searching...' : 'Search'}</button>
+                        </div>
+                        {seriesSearchResults.length ? (
+                          <div className="grid gap-2">
+                            {seriesSearchResults.map((writing) => {
+                              const alreadyAdded = orderedItems.some((item) => String(item.writing) === String(writing.id));
+                              return (
+                                <div key={writing.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-black/20 p-3' : 'rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-3'}>
+                                  <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-black">{writing.title}</p>
+                                      <p className={`mt-1 text-xs ${portalSurface.softMutedText(darkMode)}`}>{writing.status}</p>
+                                    </div>
+                                    <button className={actionButtonClass} disabled={alreadyAdded || !canManageTaxonomy(auth.permissions)} onClick={() => void addWritingToSeries(record.id, writing.id, orderedItems.length)} type="button">{alreadyAdded ? 'Already added' : 'Add'}</button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
+
                       <div>
                         <p className={labelClass}>Current journey</p>
                         <p className={helperClass}>Ordered from the dedicated series item records. Displayed as order + 1.</p>
