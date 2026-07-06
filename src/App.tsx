@@ -17,6 +17,7 @@ import WritingEditorPage from './pages/portal/writing/WritingEditorPage';
 import WritingEditorialPage from './pages/portal/writing/WritingEditorialPage';
 import WritingLibraryPage from './pages/portal/writing/WritingLibraryPage';
 import WritingNewArticlePage from './pages/portal/writing/WritingNewArticlePage';
+import WritingSeriesAdminPage from './pages/portal/writing/WritingSeriesAdminPage';
 import WritingStudioPage from './pages/portal/writing/WritingStudioPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { Project52Provider } from './contexts/Project52Context';
@@ -43,6 +44,7 @@ function App() {
               <Route path="/portal/writing/articles" element={<RequireAuth><WritingArticlesPage /></RequireAuth>} />
               <Route path="/portal/writing/new" element={<RequireAuth><WritingNewArticlePage /></RequireAuth>} />
               <Route path="/portal/writing/library" element={<RequireAuth><WritingLibraryPage /></RequireAuth>} />
+              <Route path="/portal/writing/library/series/:id" element={<RequireAuth><WritingSeriesAdminPage /></RequireAuth>} />
               <Route path="/portal/writing/editorial" element={<RequireAuth><WritingEditorialPage /></RequireAuth>} />
               <Route path="/portal/writing/:id" element={<RequireAuth><WritingEditorPage /></RequireAuth>} />
               <Route path="/project52" element={<Project52Page />} />
@@ -59,5 +61,4 @@ function App() {
 }
 
 export default App;
-
 

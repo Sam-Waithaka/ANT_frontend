@@ -1,5 +1,6 @@
-import type { FormEvent } from 'react';
+import type { DragEvent, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
@@ -41,6 +42,7 @@ import type {
   WritingResourceTypeCategoryLink,
   WritingSeries,
   WritingSeriesItem,
+  WritingStatus,
   WritingTag,
   Writing,
 } from '../../../types/writing';
@@ -97,6 +99,19 @@ const toSortOrder = (value: string, fallback: number) => {
 const byId = <T extends { id: number | string }>(items: T[], id: number | string) =>
   items.find((item) => String(item.id) === String(id));
 
+const writingStatuses: Array<{ label: string; value: WritingStatus | 'ALL' }> = [
+  { label: 'All statuses', value: 'ALL' },
+  { label: 'Draft', value: 'DRAFT' },
+  { label: 'In review', value: 'IN_REVIEW' },
+  { label: 'Scheduled', value: 'SCHEDULED' },
+  { label: 'Published', value: 'PUBLISHED' },
+  { label: 'Archived', value: 'ARCHIVED' },
+];
+
+const assetPreviewUrl = (asset?: Writing['og_image_detail'] | WritingSeries['cover_image']) => {
+  if (!asset) return '';
+  return asset.url || asset.image || asset.file || '';
+};
 const seriesName = (item?: WritingSeries | null) => item?.title || item?.name || item?.slug || 'Series';
 
 const WritingLibraryPage = () => {
@@ -109,11 +124,13 @@ const WritingLibraryPage = () => {
   const [itemForm, setItemForm] = useState<LibraryItemForm>(() => emptyLibraryItemForm());
   const [editingPathway, setEditingPathway] = useState<{ form: PathwayForm; id: number | string; kind: CurationKind } | null>(null);
   const [expandedSeriesId, setExpandedSeriesId] = useState<number | string | null>(null);
+  const [draggedSeriesItemId, setDraggedSeriesItemId] = useState<number | string | null>(null);
   const [pathwayForm, setPathwayForm] = useState<PathwayForm>(() => emptyPathwayForm());
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
   const [resourceTypeCategoryLinks, setResourceTypeCategoryLinks] = useState<WritingResourceTypeCategoryLink[]>([]);
   const [seriesSearchLoading, setSeriesSearchLoading] = useState(false);
   const [seriesSearchQuery, setSeriesSearchQuery] = useState('');
+  const [seriesSearchStatus, setSeriesSearchStatus] = useState<WritingStatus | 'ALL'>('ALL');
   const [seriesSearchResults, setSeriesSearchResults] = useState<Writing[]>([]);
   const [series, setSeries] = useState<WritingSeries[]>([]);
   const [tags, setTags] = useState<WritingTag[]>([]);
@@ -447,7 +464,7 @@ const WritingLibraryPage = () => {
     if (!canManageTaxonomy(auth.permissions)) return;
     setSeriesSearchLoading(true);
     try {
-      const page = await fetchWritings(auth.accessToken, { page: 1, page_size: 24, search: seriesSearchQuery.trim() || undefined });
+      const page = await fetchWritings(auth.accessToken, { page: 1, page_size: 24, search: seriesSearchQuery.trim() || undefined, status: seriesSearchStatus });
       setSeriesSearchResults(page.results);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Unable to search writings right now.');
@@ -493,6 +510,13 @@ const WritingLibraryPage = () => {
     }
   };
 
+  const dropSeriesItem = async (seriesId: number | string, items: WritingSeriesItem[], targetIndex: number) => {
+    if (draggedSeriesItemId === null) return;
+    const fromIndex = items.findIndex((item) => String(item.id) === String(draggedSeriesItemId));
+    setDraggedSeriesItemId(null);
+    if (fromIndex < 0 || fromIndex === targetIndex) return;
+    await reorderSeriesItems(seriesId, items, fromIndex, targetIndex);
+  };
   const removeSeriesItem = async (item: WritingSeriesItem) => {
     if (!canManageTaxonomy(auth.permissions)) return;
     if (!window.confirm(`Remove ${item.writing_title} from this series?`)) return;
@@ -543,12 +567,14 @@ const WritingLibraryPage = () => {
   type PrimaryRecord = {
     depth?: number;
     description?: string;
+    imageUrl?: string;
     form: LibraryItemForm;
     id: number | string;
     key: string;
     kind: TaxonomyKind;
     meta: string[];
     parent?: string;
+    publicHref?: string;
     seriesItems?: WritingSeriesItem[];
     slug?: string;
     state?: { active?: boolean; featured?: boolean };
@@ -638,9 +664,11 @@ const WritingLibraryPage = () => {
         form: formFromSeries(item),
         id: item.id,
         key: String(item.id),
+        imageUrl: assetPreviewUrl(item.cover_image),
         kind: 'series',
         meta: [`Order ${item.sort_order}`, `${item.items?.length || 0} writings`],
         seriesItems: item.items || [],
+        publicHref: `/resources?series_slug=${encodeURIComponent(item.slug)}`,
         slug: item.slug,
         state: { active: item.is_active, featured: item.is_featured },
         title: seriesName(item),
@@ -699,6 +727,16 @@ const WritingLibraryPage = () => {
     </div>
   ) : null;
 
+  const formatStatus = (status?: string) => status ? status.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()) : 'Unknown';
+
+  const statusBadgeClass = (status?: string) => {
+    const base = 'inline-flex rounded-full border px-2.5 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em]';
+    if (status === 'PUBLISHED') return `${base} ${darkMode ? 'border-green-400/20 bg-green-400/10 text-green-200' : 'border-green-700/15 bg-green-50 text-green-800'}`;
+    if (status === 'IN_REVIEW') return `${base} ${darkMode ? 'border-amber-300/20 bg-amber-300/10 text-amber-100' : 'border-amber-700/15 bg-amber-50 text-amber-800'}`;
+    if (status === 'SCHEDULED') return `${base} ${darkMode ? 'border-blue-300/20 bg-blue-300/10 text-blue-100' : 'border-blue-700/15 bg-blue-50 text-blue-800'}`;
+    if (status === 'ARCHIVED') return `${base} ${darkMode ? 'border-white/10 bg-white/5 text-stone-400' : 'border-[#eaded0] bg-[#fffaf0] text-[#786f66]'}`;
+    return `${base} ${darkMode ? 'border-red-400/20 bg-red-950/30 text-red-200' : 'border-red-900/15 bg-red-50 text-red-800'}`;
+  };
   const actionButtonClass = darkMode
     ? 'rounded-full border border-white/10 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-200 transition hover:bg-white/10 disabled:opacity-40'
     : 'rounded-full border border-[#eaded0] px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f574f] transition hover:bg-[#fffaf0] disabled:opacity-40';
@@ -730,7 +768,15 @@ const WritingLibraryPage = () => {
             </div>
             {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>{record.depth ? 'Nested under' : 'Parent'}: {record.parent}</p> : null}
             <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
-            {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
+            {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}`r`n            {record.kind === 'series' && (record.imageUrl || record.publicHref) ? (
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {record.imageUrl ? <img alt="" className="h-14 w-20 rounded-2xl border border-[#eaded0] object-cover dark:border-white/10" src={record.imageUrl} /> : null}
+                <div className="flex flex-wrap gap-2">
+                  <Link className={actionButtonClass} to={`/portal/writing/library/series/${record.id}`}>Series admin</Link>
+                  {record.publicHref ? <Link className={actionButtonClass} target="_blank" to={record.publicHref}>Public preview</Link> : null}
+                </div>
+              </div>
+            ) : null}
             {record.kind === 'series' ? (
               <div className="mt-4">
                 <button className={actionButtonClass} onClick={() => setExpandedSeriesId((current) => String(current) === String(record.id) ? null : record.id)} type="button">
@@ -747,6 +793,9 @@ const WritingLibraryPage = () => {
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row">
                           <input className={inputClass} onChange={(event) => setSeriesSearchQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchSeriesWritings(); } }} placeholder="Search writings by title..." value={seriesSearchQuery} />
+                          <select className={inputClass} onChange={(event) => setSeriesSearchStatus(event.target.value as WritingStatus | 'ALL')} value={seriesSearchStatus}>
+                            {writingStatuses.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
+                          </select>
                           <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700 disabled:opacity-50" disabled={seriesSearchLoading || !canManageTaxonomy(auth.permissions)} onClick={() => void searchSeriesWritings()} type="button">{seriesSearchLoading ? 'Searching...' : 'Search'}</button>
                         </div>
                         {seriesSearchResults.length ? (
@@ -758,7 +807,7 @@ const WritingLibraryPage = () => {
                                   <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div className="min-w-0">
                                       <p className="text-sm font-black">{writing.title}</p>
-                                      <p className={`mt-1 text-xs ${portalSurface.softMutedText(darkMode)}`}>{writing.status}</p>
+                                      <span className={statusBadgeClass(writing.status)}>{formatStatus(writing.status)}</span>
                                     </div>
                                     <button className={actionButtonClass} disabled={alreadyAdded || !canManageTaxonomy(auth.permissions)} onClick={() => void addWritingToSeries(record.id, writing.id, orderedItems.length)} type="button">{alreadyAdded ? 'Already added' : 'Add'}</button>
                                   </div>
@@ -776,11 +825,11 @@ const WritingLibraryPage = () => {
                       {orderedItems.length ? (
                         <ol className="grid gap-2">
                           {orderedItems.map((item, index) => (
-                            <li key={item.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/[0.03] p-3' : 'rounded-2xl border border-[#eaded0] bg-white p-3'}>
+                            <li key={item.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/[0.03] p-3' : 'rounded-2xl border border-[#eaded0] bg-white p-3'} draggable onDragEnd={() => setDraggedSeriesItemId(null)} onDragOver={(event: DragEvent<HTMLLIElement>) => event.preventDefault()} onDragStart={() => setDraggedSeriesItemId(item.id)} onDrop={() => void dropSeriesItem(record.id, orderedItems, index)}>
                               <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <p className="text-sm font-black">{index + 1}. {item.writing_title}</p>
-                                  {item.writing_detail?.status ? <p className={`mt-1 text-xs ${portalSurface.softMutedText(darkMode)}`}>{item.writing_detail.status}</p> : null}
+                                  {item.writing_detail?.status ? <span className={statusBadgeClass(item.writing_detail.status as WritingStatus)}>{formatStatus(item.writing_detail.status)}</span> : null}
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                   <button className={actionButtonClass} disabled={index === 0 || !canManageTaxonomy(auth.permissions)} onClick={() => void reorderSeriesItems(record.id, orderedItems, index, index - 1)} type="button">Move up</button>
