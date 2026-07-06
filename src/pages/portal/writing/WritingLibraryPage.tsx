@@ -470,6 +470,7 @@ const WritingLibraryPage = () => {
     : 'rounded-full border border-red-900/15 bg-red-50 px-2.5 py-1 text-[0.68rem] font-black text-red-800';
 
   type PrimaryRecord = {
+    depth?: number;
     description?: string;
     form: LibraryItemForm;
     id: number | string;
@@ -496,6 +497,36 @@ const WritingLibraryPage = () => {
   const descriptionExcerpt = (value?: string) => value?.trim() || 'No description yet.';
   const parentName = (category: WritingCategory) => category.parent ? byId(categories, category.parent)?.name || 'Parent category' : '';
 
+  const orderCategoryRecords = (records: PrimaryRecord[]) => {
+    const compareRecords = (left: PrimaryRecord, right: PrimaryRecord) => {
+      const leftOrder = toSortOrder(left.form.sortOrder, 0);
+      const rightOrder = toSortOrder(right.form.sortOrder, 0);
+      return leftOrder === rightOrder ? left.title.localeCompare(right.title) : leftOrder - rightOrder;
+    };
+    const byParent = new Map<string, PrimaryRecord[]>();
+    const byRecordId = new Set(records.map((record) => String(record.id)));
+    const roots: PrimaryRecord[] = [];
+
+    records.forEach((record) => {
+      const parentId = record.form.parent;
+      if (parentId && byRecordId.has(String(parentId))) {
+        const key = String(parentId);
+        byParent.set(key, [...(byParent.get(key) || []), record]);
+      } else {
+        roots.push(record);
+      }
+    });
+
+    const ordered: PrimaryRecord[] = [];
+    const appendRecord = (record: PrimaryRecord, depth: number) => {
+      ordered.push({ ...record, depth });
+      (byParent.get(String(record.id)) || []).sort(compareRecords).forEach((child) => appendRecord(child, depth + 1));
+    };
+
+    roots.sort(compareRecords).forEach((record) => appendRecord(record, 0));
+    return ordered;
+  };
+
   const primaryPanels: Array<{ description: string; records: PrimaryRecord[]; title: string }> = [
     {
       description: 'Broad shelves that shape public resource browsing.',
@@ -514,7 +545,7 @@ const WritingLibraryPage = () => {
     },
     {
       description: 'Topics and themes that help readers find related writings.',
-      records: categories.map((item) => ({
+      records: orderCategoryRecords(categories.map((item) => ({
         description: item.description,
         form: formFromCategory(item),
         id: item.id,
@@ -525,7 +556,7 @@ const WritingLibraryPage = () => {
         slug: item.slug,
         state: { active: item.is_active, featured: item.is_featured },
         title: item.name,
-      })),
+      }))),
       title: 'Categories',
     },
     {
@@ -611,8 +642,12 @@ const WritingLibraryPage = () => {
         const editForm = editingPrimary?.form;
         const richEdit = isEditing && record.kind !== 'tag' && editForm;
 
+        const nestedCardClass = record.depth
+          ? `${recordCardClass} ${darkMode ? 'ml-4 border-l-4 border-l-red-300/30' : 'ml-4 border-l-4 border-l-red-800/20'} sm:ml-6`
+          : recordCardClass;
+
         return (
-          <article key={record.key} className={recordCardClass}>
+          <article key={record.key} className={nestedCardClass}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h4 className="text-sm font-black">{record.title}</h4>
@@ -620,7 +655,7 @@ const WritingLibraryPage = () => {
               </div>
               {renderStateBadges(record.state)}
             </div>
-            {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>Parent: {record.parent}</p> : null}
+            {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>{record.depth ? 'Nested under' : 'Parent'}: {record.parent}</p> : null}
             <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
             {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
             <div className="mt-4 flex flex-wrap gap-2">
