@@ -82,3 +82,45 @@ button {
     animation: none;
   }
 }
+.editor-paper-surface {
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+}
+
+.editor-paper-surface::before {
+  border-radius: inherit;
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.editor-paper-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.editor-paper-surface-light::before {
+  background-image:
+    linear-gradient(180deg, rgba(255, 253, 247, 0.72), rgba(255, 248, 238, 0.68)),
+    url('/textures/editor-paper-light.webp');
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 100% 100%, cover;
+  background-blend-mode: normal, multiply;
+  opacity: 0.82;
+}
+
+.editor-paper-surface-dark::before {
+  background-image:
+    linear-gradient(180deg, rgba(24, 21, 18, 0.62), rgba(15, 14, 13, 0.72)),
+    url('/textures/editor-paper-dark.png');
+  background-position: center;
+  background-repeat: repeat;
+  background-size: 100% 100%, cover;
+  background-blend-mode: normal, soft-light;
+  opacity: 0.78;
+}
+
