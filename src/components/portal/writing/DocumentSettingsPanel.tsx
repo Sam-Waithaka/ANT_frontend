@@ -16,7 +16,7 @@ type DocumentSettingsPanelProps = {
   actions: DocumentSettingsAction[];
   authorAttributions?: WritingAuthorAttribution[];
   canManageAuthors?: boolean;
-  category: string;
+  categoryIds?: Array<number | string>;
   coverImageControl?: ReactNode;
   darkMode: boolean;
   disabled?: boolean;
@@ -24,7 +24,7 @@ type DocumentSettingsPanelProps = {
   metadata?: Array<{ label: string; value: string }>;
   ministryIds?: Array<number | string>;
   onAuthorAttributionsChange?: (value: WritingAuthorAttribution[]) => void;
-  onCategoryChange: (value: string) => void;
+  onCategoryIdsChange: (value: Array<number | string>) => void;
   onExcerptChange: (value: string) => void;
   onMinistryIdsChange?: (value: Array<number | string>) => void;
   onResourceTypeChange: (value: string) => void;
@@ -228,7 +228,7 @@ const DocumentSettingsPanel = ({
   actions,
   authorAttributions = [],
   canManageAuthors = false,
-  category,
+  categoryIds = [],
   coverImageControl,
   darkMode,
   disabled = false,
@@ -236,7 +236,7 @@ const DocumentSettingsPanel = ({
   metadata = [],
   ministryIds = [],
   onAuthorAttributionsChange,
-  onCategoryChange,
+  onCategoryIdsChange,
   onExcerptChange,
   onMinistryIdsChange,
   onResourceTypeChange,
@@ -269,15 +269,15 @@ const DocumentSettingsPanel = ({
     [resourceType, resourceTypes],
   );
   const selectedCategory = useMemo(
-    () => categories.find((item) => String(item.id) === category),
-    [categories, category],
+    () => categories.find((item) => categoryIds.some((id) => String(id) === String(item.id))),
+    [categories, categoryIds],
   );
 
   useEffect(() => {
     const resourceTypeSlug = selectedResourceType?.slug;
 
     if (previousTypeSlug.current && previousTypeSlug.current !== resourceTypeSlug) {
-      onCategoryChange('');
+      onCategoryIdsChange([]);
     }
     previousTypeSlug.current = resourceTypeSlug;
 
@@ -290,8 +290,8 @@ const DocumentSettingsPanel = ({
         setCategories(resourceTypeSlug ? navigation.categories : []);
         setSeries(navigation.series);
 
-        if (resourceTypeSlug && category && !navigation.categories.some((item) => String(item.id) === category)) {
-          onCategoryChange('');
+        if (resourceTypeSlug && categoryIds.length && !categoryIds.every((id) => navigation.categories.some((item) => String(item.id) === String(id)))) {
+          onCategoryIdsChange(categoryIds.filter((id) => navigation.categories.some((item) => String(item.id) === String(id))));
         }
       })
       .catch(() => {
@@ -306,8 +306,21 @@ const DocumentSettingsPanel = ({
       });
 
     return () => controller.abort();
-  }, [category, onCategoryChange, selectedCategory?.slug, selectedResourceType?.slug]);
+  }, [categoryIds, onCategoryIdsChange, selectedCategory?.slug, selectedResourceType?.slug]);
 
+  const selectedSeries = seriesIds
+    .map((id) => series.find((item) => String(item.id) === String(id)))
+    .filter((item): item is WritingSeries => Boolean(item));
+
+  const moveSeries = (index: number, direction: -1 | 1) => {
+    if (!onSeriesIdsChange) return;
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= seriesIds.length) return;
+    const next = [...seriesIds];
+    const [item] = next.splice(index, 1);
+    next.splice(nextIndex, 0, item);
+    onSeriesIdsChange(next);
+  };
   const toggleSection = (section: SettingsSectionKey) => {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
   };
@@ -386,25 +399,16 @@ const DocumentSettingsPanel = ({
               <span className={`text-xs font-normal ${mutedTextClass}`}>Where this writing lives in the public resource library.</span>
             </label>
 
-            <label className="grid gap-2 text-sm font-bold">
-              <span>
-                Category <span className={`font-normal ${mutedTextClass}`}>(optional)</span>
-              </span>
-              <select
-                className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-red-800/25 ${fieldClass}`}
-                disabled={disabled || !resourceType || taxonomyLoading || categories.length === 0}
-                onChange={(event) => onCategoryChange(event.target.value)}
-                value={category}
-              >
-                <option value="">
-                  {taxonomyLoading ? 'Loading categories...' : categories.length ? 'Choose category' : 'No curated categories yet'}
-                </option>
-                {categories.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
-              <span className={`text-xs font-normal ${mutedTextClass}`}>Helps readers find the article in a familiar pastoral lane.</span>
-            </label>
+            <CheckboxGroup
+              darkMode={darkMode}
+              disabled={disabled || !resourceType || taxonomyLoading}
+              emptyLabel={taxonomyLoading ? 'Loading categories...' : 'No curated categories yet.'}
+              label="Categories"
+              mutedTextClass={mutedTextClass}
+              onChange={onCategoryIdsChange}
+              options={categories.map((item) => ({ id: item.id, label: item.name }))}
+              selectedIds={categoryIds}
+            />
           </div>
         </CollapsibleSection>
 
@@ -460,7 +464,26 @@ const DocumentSettingsPanel = ({
             title="Article details"
           >
             <div className="grid gap-5">
-              <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No collections available yet." label="Series / collections" mutedTextClass={mutedTextClass} onChange={onSeriesIdsChange} options={series.map((item) => ({ id: item.id, label: seriesName(item) }))} selectedIds={seriesIds} />
+              <div>
+                <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No collections available yet." label="Series / collections" mutedTextClass={mutedTextClass} onChange={onSeriesIdsChange} options={series.map((item) => ({ id: item.id, label: seriesName(item) }))} selectedIds={seriesIds} />
+                {selectedSeries.length ? (
+                  <div className="mt-3 rounded-2xl border border-[#eaded0] bg-white/60 p-3 dark:border-white/10 dark:bg-white/5">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Series order</p>
+                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>This order is sent as series_ids.</p>
+                    <ol className="mt-3 grid gap-2">
+                      {selectedSeries.map((item, index) => (
+                        <li key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-[#eaded0] bg-white px-3 py-2 text-sm font-bold dark:border-white/10 dark:bg-black/20">
+                          <span>{index + 1}. {seriesName(item)}</span>
+                          <span className="flex gap-2">
+                            <button className="rounded-full border border-[#eaded0] px-2 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f574f] disabled:opacity-40 dark:border-white/10 dark:text-stone-200" disabled={disabled || index === 0} onClick={() => moveSeries(index, -1)} type="button">Up</button>
+                            <button className="rounded-full border border-[#eaded0] px-2 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f574f] disabled:opacity-40 dark:border-white/10 dark:text-stone-200" disabled={disabled || index === selectedSeries.length - 1} onClick={() => moveSeries(index, 1)} type="button">Down</button>
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ) : null}
+              </div>
               <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No ministries available yet." label="Ministries" mutedTextClass={mutedTextClass} onChange={onMinistryIdsChange} options={ministries.map((item) => ({ id: item.id, label: item.name }))} selectedIds={ministryIds} />
               <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No tags available yet." label="Tags" mutedTextClass={mutedTextClass} onChange={onTagIdsChange} options={tagOptions.map((item) => ({ id: item.id, label: tagName(item) }))} selectedIds={tagIds} />
               <AuthorAttributionEditor authors={authorAttributions} canManageAuthors={canManageAuthors} darkMode={darkMode} disabled={disabled} fieldClass={fieldClass} mutedTextClass={mutedTextClass} onChange={onAuthorAttributionsChange} />
@@ -520,6 +543,4 @@ const DocumentSettingsPanel = ({
 };
 
 export default DocumentSettingsPanel;
-
-
 

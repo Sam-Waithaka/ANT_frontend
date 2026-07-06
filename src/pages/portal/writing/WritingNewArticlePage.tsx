@@ -22,7 +22,7 @@ const WritingNewArticlePage = () => {
   const navigate = useNavigate();
   const { darkMode } = useTheme();
   const [authorAttributions, setAuthorAttributions] = useState<WritingAuthorAttribution[]>([]);
-  const [category, setCategory] = useState('');
+  const [categoryIds, setCategoryIds] = useState<Array<number | string>>([]);
   const [contentJson, setContentJson] = useState<LexicalContentJson>(() => createEmptyLexicalContent());
   const [coverImage, setCoverImage] = useState<MediaAsset | null>(null);
   const [error, setError] = useState('');
@@ -90,7 +90,7 @@ const WritingNewArticlePage = () => {
     try {
       const writing = await createWriting(auth.accessToken, {
         ...(authorAttributions.length ? { author_attributions: authorAttributions } : {}),
-        category_ids: category ? [category] : undefined,
+        category_ids: categoryIds.length ? categoryIds : undefined,
         content_json: contentJson,
         excerpt,
         ...(ministryIds.length ? { ministry_ids: ministryIds } : {}),
@@ -160,13 +160,13 @@ const WritingNewArticlePage = () => {
           ]}
           authorAttributions={authorAttributions}
           canManageAuthors
-          category={category}
+          categoryIds={categoryIds}
           coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onChange={setCoverImage} selectedAsset={coverImage} />}
           darkMode={darkMode}
           excerpt={excerpt}
           ministryIds={ministryIds}
           onAuthorAttributionsChange={setAuthorAttributions}
-          onCategoryChange={setCategory}
+          onCategoryIdsChange={setCategoryIds}
           onExcerptChange={setExcerpt}
           onMinistryIdsChange={setMinistryIds}
           onResourceTypeChange={setResourceType}
