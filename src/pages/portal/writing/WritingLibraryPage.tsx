@@ -235,33 +235,157 @@ const WritingLibraryPage = () => {
   const itemNameLabel = kind === 'series' ? 'Series title' : 'Name';
   const itemSlug = itemForm.slug || toSlug(itemForm.name);
 
-  const primaryPanels = [
-    { description: 'Broad shelves that shape public resource browsing.', items: resourceTypes.map((item) => item.name), title: 'Resource Types' },
-    { description: 'Topics and themes that help readers find related writings.', items: categories.map((item) => item.name), title: 'Categories' },
-    { description: 'Curated journeys or ordered collections of writings.', items: series.map((item) => seriesName(item)), title: 'Series' },
-    { description: 'Lightweight labels for secondary discovery and search.', items: tags.map((item) => item.name), title: 'Tags' },
+  const recordCardClass = darkMode
+    ? 'rounded-2xl border border-white/10 bg-white/[0.04] p-4'
+    : 'rounded-2xl border border-[#eaded0] bg-white p-4 shadow-sm shadow-zinc-900/5';
+  const metaBadgeClass = darkMode
+    ? 'rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[0.68rem] font-bold text-stone-300'
+    : 'rounded-full border border-[#eaded0] bg-[#fffaf0] px-2.5 py-1 text-[0.68rem] font-bold text-[#786f66]';
+  const activeBadgeClass = darkMode
+    ? 'rounded-full border border-green-400/20 bg-green-400/10 px-2.5 py-1 text-[0.68rem] font-black text-green-200'
+    : 'rounded-full border border-green-700/15 bg-green-50 px-2.5 py-1 text-[0.68rem] font-black text-green-800';
+  const inactiveBadgeClass = darkMode
+    ? 'rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[0.68rem] font-bold text-stone-400'
+    : 'rounded-full border border-[#eaded0] bg-[#fffaf0] px-2.5 py-1 text-[0.68rem] font-bold text-[#786f66]';
+  const featuredBadgeClass = darkMode
+    ? 'rounded-full border border-red-400/20 bg-red-950/30 px-2.5 py-1 text-[0.68rem] font-black text-red-200'
+    : 'rounded-full border border-red-900/15 bg-red-50 px-2.5 py-1 text-[0.68rem] font-black text-red-800';
+
+  type PrimaryRecord = {
+    description?: string;
+    key: string;
+    meta: string[];
+    parent?: string;
+    slug?: string;
+    state?: { active?: boolean; featured?: boolean };
+    title: string;
+  };
+
+  type PathwayRecord = {
+    active: boolean;
+    featured: boolean;
+    key: string;
+    order: number;
+    title: string;
+  };
+
+  const descriptionExcerpt = (value?: string) => value?.trim() || 'No description yet.';
+  const parentName = (category: WritingCategory) => category.parent ? byId(categories, category.parent)?.name || 'Parent category' : '';
+
+  const primaryPanels: Array<{ description: string; records: PrimaryRecord[]; title: string }> = [
+    {
+      description: 'Broad shelves that shape public resource browsing.',
+      records: resourceTypes.map((item) => ({
+        description: item.description,
+        key: String(item.id),
+        meta: [`Order ${item.sort_order}`],
+        slug: item.slug,
+        state: { active: item.is_active, featured: item.is_featured },
+        title: item.name,
+      })),
+      title: 'Resource Types',
+    },
+    {
+      description: 'Topics and themes that help readers find related writings.',
+      records: categories.map((item) => ({
+        description: item.description,
+        key: String(item.id),
+        meta: [`Order ${item.sort_order}`],
+        parent: parentName(item),
+        slug: item.slug,
+        state: { active: item.is_active, featured: item.is_featured },
+        title: item.name,
+      })),
+      title: 'Categories',
+    },
+    {
+      description: 'Curated journeys or ordered collections of writings.',
+      records: series.map((item) => ({
+        description: item.description,
+        key: String(item.id),
+        meta: [`Order ${item.sort_order}`, `${item.items?.length || 0} writings`],
+        slug: item.slug,
+        state: { active: item.is_active, featured: item.is_featured },
+        title: seriesName(item),
+      })),
+      title: 'Series',
+    },
+    {
+      description: 'Lightweight labels for secondary discovery and search.',
+      records: tags.map((item) => ({
+        key: String(item.id),
+        meta: item.writing_count === undefined ? ['Lightweight label'] : [`${item.writing_count} writings`],
+        slug: item.slug,
+        title: item.name,
+      })),
+      title: 'Tags',
+    },
   ];
 
-  const curatedResourceCategories = resourceTypeCategoryLinks.map((link) => {
+  const resourceCategoryRecords: PathwayRecord[] = resourceTypeCategoryLinks.map((link) => {
     const resourceType = link.resource_type_detail || byId(resourceTypes, link.resource_type);
     const category = link.category_detail || byId(categories, link.category);
-    return `${resourceType?.name || 'Resource Type'} \u2192 ${category?.name || 'Category'}`;
+    return {
+      active: link.is_active,
+      featured: link.is_featured,
+      key: String(link.id),
+      order: link.sort_order,
+      title: `${resourceType?.name || 'Resource Type'} \u2192 ${category?.name || 'Category'}`,
+    };
   });
 
-  const curatedCategorySeries = categorySeriesLinks.map((link) => {
+  const categorySeriesRecords: PathwayRecord[] = categorySeriesLinks.map((link) => {
     const category = link.category_detail || byId(categories, link.category);
     const linkedSeries = link.series_detail || byId(series, link.series);
-    return `${category?.name || 'Category'} \u2192 ${seriesName(linkedSeries)}`;
+    return {
+      active: link.is_active,
+      featured: link.is_featured,
+      key: String(link.id),
+      order: link.sort_order,
+      title: `${category?.name || 'Category'} \u2192 ${seriesName(linkedSeries)}`,
+    };
   });
 
-  const renderItemList = (items: string[], emptyLabel: string) => (
-    <div className="mt-4 grid gap-2">
-      {items.length
-        ? items.map((item) => <span key={item} className={`rounded-2xl px-4 py-3 text-sm ${darkMode ? 'bg-white/5 text-stone-300' : 'bg-white text-zinc-700 ring-1 ring-[#eaded0]'}`}>{item}</span>)
-        : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
+  const renderStateBadges = (state?: PrimaryRecord['state']) => state ? (
+    <div className="flex flex-wrap gap-2">
+      <span className={state.active ? activeBadgeClass : inactiveBadgeClass}>{state.active ? 'Active' : 'Inactive'}</span>
+      {state.featured ? <span className={featuredBadgeClass}>Featured</span> : null}
+    </div>
+  ) : null;
+
+  const renderPrimaryRecordList = (records: PrimaryRecord[], emptyLabel: string) => (
+    <div className="mt-4 grid gap-3">
+      {records.length ? records.map((record) => (
+        <article key={record.key} className={recordCardClass}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="text-sm font-black">{record.title}</h4>
+              {record.slug ? <p className={`mt-1 break-all text-xs ${portalSurface.softMutedText(darkMode)}`}>/{record.slug}</p> : null}
+            </div>
+            {renderStateBadges(record.state)}
+          </div>
+          {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>Parent: {record.parent}</p> : null}
+          <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
+          {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
+        </article>
+      )) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
     </div>
   );
 
+  const renderPathwayRecordList = (records: PathwayRecord[], emptyLabel: string) => (
+    <div className="mt-4 grid gap-3">
+      {records.length ? records.map((record) => (
+        <article key={record.key} className={recordCardClass}>
+          <h4 className="text-sm font-black">{record.title}</h4>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {record.featured ? <span className={featuredBadgeClass}>Featured</span> : null}
+            <span className={record.active ? activeBadgeClass : inactiveBadgeClass}>{record.active ? 'Active' : 'Inactive'}</span>
+            <span className={metaBadgeClass}>Order {record.order}</span>
+          </div>
+        </article>
+      )) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
+    </div>
+  );
   return (
     <WritingStudioShell>
       <div className="grid gap-8">
@@ -412,14 +536,14 @@ const WritingLibraryPage = () => {
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Primary Discovery Layers</p>
                   <h2 className="mt-2 font-serif text-3xl">Shelves, topics, series, and tags</h2>
                 </div>
-                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>{resourceTypes.length + categories.length + series.length + tags.length} items</span>
+                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>{primaryPanels.reduce((total, panel) => total + panel.records.length, 0)} items</span>
               </div>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 {primaryPanels.map((panel) => (
                   <section key={panel.title} className={`rounded-3xl border p-5 ${darkMode ? 'border-white/10 bg-white/[0.03]' : 'border-[#eaded0] bg-[#fffaf0]/70'}`}>
                     <h3 className="text-lg font-black">{panel.title}</h3>
                     <p className={`mt-2 text-xs leading-5 ${portalSurface.softMutedText(darkMode)}`}>{panel.description}</p>
-                    {renderItemList(panel.items, `No ${panel.title.toLowerCase()} yet.`)}
+                    {renderPrimaryRecordList(panel.records, `No ${panel.title.toLowerCase()} yet.`)}
                   </section>
                 ))}
               </div>
@@ -431,18 +555,18 @@ const WritingLibraryPage = () => {
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Browse Pathways</p>
                   <h2 className="mt-2 font-serif text-3xl">Editorial connections</h2>
                 </div>
-                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>{curatedResourceCategories.length + curatedCategorySeries.length} pathways</span>
+                <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>{resourceCategoryRecords.length + categorySeriesRecords.length} pathways</span>
               </div>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <section className={`rounded-3xl border p-5 ${darkMode ? 'border-white/10 bg-white/[0.03]' : 'border-[#eaded0] bg-[#fffaf0]/70'}`}>
                   <h3 className="text-lg font-black">Resource Type {'\u2192'} Category</h3>
                   <p className={`mt-2 text-xs leading-5 ${portalSurface.softMutedText(darkMode)}`}>Guide readers from a broad resource shelf into relevant topics.</p>
-                  {renderItemList(curatedResourceCategories, 'No resource-to-category pathways yet.')}
+                  {renderPathwayRecordList(resourceCategoryRecords, 'No resource-to-category pathways yet.')}
                 </section>
                 <section className={`rounded-3xl border p-5 ${darkMode ? 'border-white/10 bg-white/[0.03]' : 'border-[#eaded0] bg-[#fffaf0]/70'}`}>
                   <h3 className="text-lg font-black">Category {'\u2192'} Series</h3>
                   <p className={`mt-2 text-xs leading-5 ${portalSurface.softMutedText(darkMode)}`}>Guide readers from a topic into a curated journey or series.</p>
-                  {renderItemList(curatedCategorySeries, 'No category-to-series pathways yet.')}
+                  {renderPathwayRecordList(categorySeriesRecords, 'No category-to-series pathways yet.')}
                 </section>
               </div>
             </section>
