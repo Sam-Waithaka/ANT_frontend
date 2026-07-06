@@ -21,56 +21,73 @@ export type WritingResourceType = {
   id: number | string;
   name: string;
   slug: string;
-  description?: string;
-  is_active?: boolean;
-  is_featured?: boolean;
-  sort_order?: number;
+  description: string;
+  sort_order: number;
+  is_featured: boolean;
+  is_active: boolean;
 };
 
 export type WritingCategory = {
   id: number | string;
   name: string;
   slug: string;
-  description?: string;
-  is_active?: boolean;
-  is_featured?: boolean;
-  parent?: number | string | null;
-  sort_order?: number;
+  description: string;
+  parent: number | string | null;
+  children: Array<number | string>;
+  sort_order: number;
+  is_featured: boolean;
+  is_active: boolean;
+};
+
+export type WritingSeriesItem = {
+  id: number | string;
+  series: number | string;
+  writing: number | string;
+  writing_title: string;
+  order: number;
 };
 
 export type WritingSeries = {
   id: number | string;
-  title?: string;
+  title: string;
   name?: string;
   slug: string;
-  description?: string;
-  is_active?: boolean;
-  is_featured?: boolean;
-  sort_order?: number;
+  description: string;
+  sort_order: number;
+  is_featured: boolean;
+  is_active: boolean;
+  cover_image?: WritingMediaAsset | null;
+  items: WritingSeriesItem[];
+};
+
+export type WritingTag = {
+  id: number | string;
+  name: string;
+  slug: string;
+  writing_count?: number;
 };
 
 export type WritingResourceTypeCategoryLink = {
   id: number | string;
-  category: number | string;
-  category_detail?: WritingCategory | null;
-  is_active?: boolean;
-  is_featured?: boolean;
   resource_type: number | string;
-  resource_type_detail?: WritingResourceType | null;
-  sort_order?: number;
+  resource_type_detail: WritingResourceType;
+  category: number | string;
+  category_detail: WritingCategory;
+  sort_order: number;
+  is_featured: boolean;
+  is_active: boolean;
 };
 
 export type WritingCategorySeriesLink = {
   id: number | string;
   category: number | string;
-  category_detail?: WritingCategory | null;
-  is_active?: boolean;
-  is_featured?: boolean;
+  category_detail: WritingCategory;
   series: number | string;
-  series_detail?: WritingSeries | null;
-  sort_order?: number;
+  series_detail: WritingSeries;
+  sort_order: number;
+  is_featured: boolean;
+  is_active: boolean;
 };
-
 export type ScriptureBookNavigationItem = {
   id?: number | string;
   name: string;
@@ -89,13 +106,6 @@ export type WritingAuthorAttribution = {
   order?: number;
   role?: WritingAuthorRole;
   user?: number | string | null;
-};
-
-export type WritingTag = {
-  id: number | string;
-  name: string;
-  slug?: string;
-  writing_count?: number;
 };
 
 export type WritingMinistry = {

@@ -136,36 +136,92 @@ export const unfeatureWriting = (accessToken: string, id: string | number) =>
 export const fetchResourceTypes = async (accessToken: string, signal?: AbortSignal) =>
   normalizePage<WritingResourceType>(await portalRequest<unknown>('/v1/writing-resource-types/', { accessToken, signal }));
 
-export const fetchResourceTypeCategoryLinks = async (accessToken: string, signal?: AbortSignal) =>
-  normalizePage<WritingResourceTypeCategoryLink>(await portalRequest<unknown>('/v1/writing-resource-type-categories/', { accessToken, signal }));
-
-export const fetchCategories = async (accessToken: string, signal?: AbortSignal) =>
-  normalizePage<WritingCategory>(await portalRequest<unknown>('/v1/writing-categories/', { accessToken, signal }));
-
-export const fetchSeries = async (accessToken: string, signal?: AbortSignal) =>
-  normalizePage<WritingSeries>(await portalRequest<unknown>('/v1/writing-series/', { accessToken, signal }));
-
-export const fetchWritingTags = async (accessToken: string, signal?: AbortSignal) =>
-  normalizePage<WritingTag>(await portalRequest<unknown>('/v1/writing-tags/', { accessToken, signal }));
-
-export const fetchCategorySeriesLinks = async (accessToken: string, signal?: AbortSignal) =>
-  normalizePage<WritingCategorySeriesLink>(await portalRequest<unknown>('/v1/writing-category-series/', { accessToken, signal }));
+export const fetchResourceType = (accessToken: string, id: string | number, signal?: AbortSignal) =>
+  portalRequest<WritingResourceType>(`/v1/writing-resource-types/${id}/`, { accessToken, signal });
 
 export const createResourceType = (accessToken: string, body: Partial<WritingResourceType>) =>
   portalRequest<WritingResourceType>('/v1/writing-resource-types/', { accessToken, body, method: 'POST' });
 
-export const createResourceTypeCategoryLink = (accessToken: string, body: Partial<WritingResourceTypeCategoryLink>) =>
-  portalRequest<WritingResourceTypeCategoryLink>('/v1/writing-resource-type-categories/', { accessToken, body, method: 'POST' });
+export const updateResourceType = (accessToken: string, id: string | number, body: Partial<WritingResourceType>) =>
+  portalRequest<WritingResourceType>(`/v1/writing-resource-types/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteResourceType = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-resource-types/${id}/`, { accessToken, method: 'DELETE' });
+
+export const fetchCategories = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingCategory>(await portalRequest<unknown>('/v1/writing-categories/', { accessToken, signal }));
+
+export const fetchCategory = (accessToken: string, id: string | number, signal?: AbortSignal) =>
+  portalRequest<WritingCategory>(`/v1/writing-categories/${id}/`, { accessToken, signal });
 
 export const createCategory = (accessToken: string, body: Partial<WritingCategory>) =>
   portalRequest<WritingCategory>('/v1/writing-categories/', { accessToken, body, method: 'POST' });
 
+export const updateCategory = (accessToken: string, id: string | number, body: Partial<WritingCategory>) =>
+  portalRequest<WritingCategory>(`/v1/writing-categories/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteCategory = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-categories/${id}/`, { accessToken, method: 'DELETE' });
+
+export const fetchSeries = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingSeries>(await portalRequest<unknown>('/v1/writing-series/', { accessToken, signal }));
+
+export const fetchSeriesDetail = (accessToken: string, id: string | number, signal?: AbortSignal) =>
+  portalRequest<WritingSeries>(`/v1/writing-series/${id}/`, { accessToken, signal });
+
 export const createSeries = (accessToken: string, body: Partial<WritingSeries>) =>
   portalRequest<WritingSeries>('/v1/writing-series/', { accessToken, body, method: 'POST' });
+
+export const updateSeries = (accessToken: string, id: string | number, body: Partial<WritingSeries>) =>
+  portalRequest<WritingSeries>(`/v1/writing-series/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteSeries = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-series/${id}/`, { accessToken, method: 'DELETE' });
+
+export const fetchWritingTags = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingTag>(await portalRequest<unknown>('/v1/writing-tags/', { accessToken, signal }));
+
+export const fetchWritingTag = (accessToken: string, id: string | number, signal?: AbortSignal) =>
+  portalRequest<WritingTag>(`/v1/writing-tags/${id}/`, { accessToken, signal });
+
+export const createWritingTag = (accessToken: string, body: Partial<WritingTag>) =>
+  portalRequest<WritingTag>('/v1/writing-tags/', { accessToken, body, method: 'POST' });
+
+export const updateWritingTag = (accessToken: string, id: string | number, body: Partial<WritingTag>) =>
+  portalRequest<WritingTag>(`/v1/writing-tags/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteWritingTag = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-tags/${id}/`, { accessToken, method: 'DELETE' });
+
+export const fetchResourceTypeCategoryLinks = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingResourceTypeCategoryLink>(await portalRequest<unknown>('/v1/writing-resource-type-categories/', { accessToken, signal }));
+
+export const fetchResourceTypeCategoryLink = (accessToken: string, id: string | number, signal?: AbortSignal) =>
+  portalRequest<WritingResourceTypeCategoryLink>(`/v1/writing-resource-type-categories/${id}/`, { accessToken, signal });
+
+export const createResourceTypeCategoryLink = (accessToken: string, body: Partial<WritingResourceTypeCategoryLink>) =>
+  portalRequest<WritingResourceTypeCategoryLink>('/v1/writing-resource-type-categories/', { accessToken, body, method: 'POST' });
+
+export const updateResourceTypeCategoryLink = (accessToken: string, id: string | number, body: Partial<WritingResourceTypeCategoryLink>) =>
+  portalRequest<WritingResourceTypeCategoryLink>(`/v1/writing-resource-type-categories/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteResourceTypeCategoryLink = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-resource-type-categories/${id}/`, { accessToken, method: 'DELETE' });
+
+export const fetchCategorySeriesLinks = async (accessToken: string, signal?: AbortSignal) =>
+  normalizePage<WritingCategorySeriesLink>(await portalRequest<unknown>('/v1/writing-category-series/', { accessToken, signal }));
+
+export const fetchCategorySeriesLink = (accessToken: string, id: string | number, signal?: AbortSignal) =>
+  portalRequest<WritingCategorySeriesLink>(`/v1/writing-category-series/${id}/`, { accessToken, signal });
 
 export const createCategorySeriesLink = (accessToken: string, body: Partial<WritingCategorySeriesLink>) =>
   portalRequest<WritingCategorySeriesLink>('/v1/writing-category-series/', { accessToken, body, method: 'POST' });
 
+export const updateCategorySeriesLink = (accessToken: string, id: string | number, body: Partial<WritingCategorySeriesLink>) =>
+  portalRequest<WritingCategorySeriesLink>(`/v1/writing-category-series/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteCategorySeriesLink = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-category-series/${id}/`, { accessToken, method: 'DELETE' });
 export const createWritingMediaEmbed = (accessToken: string, body: Pick<WritingMediaEmbed, 'media_asset' | 'position_hint' | 'writing'> & Partial<Pick<WritingMediaEmbed, 'alt_text_override' | 'caption_override'>>) =>
   portalRequest<WritingMediaEmbed>('/v1/writing-media-embeds/', { accessToken, body, method: 'POST' });
 export const updateWritingMediaEmbed = (accessToken: string, id: number | string, body: Partial<Pick<WritingMediaEmbed, 'alt_text_override' | 'caption_override' | 'position_hint'>>) =>
