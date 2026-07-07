@@ -90,7 +90,7 @@ const seedApi = () => {
     { id: 2, name: 'Prayer', slug: 'prayer', description: 'Prayer writings', parent: null, children: [3], sort_order: 1, is_active: true, is_featured: false },
     { id: 3, name: 'Family Prayer', slug: 'family-prayer', description: 'Household prayer', parent: 2, children: [], sort_order: 2, is_active: false, is_featured: true },
   ]));
-  mocks.fetchSeries.mockResolvedValue(page([{ id: 4, title: 'Project 52', slug: 'project-52', description: 'A year journey', sort_order: 1, is_active: true, is_featured: true, items: [{ id: 9, series: 4, writing: 12, writing_title: 'Week One', order: 0 }] }]));
+  mocks.fetchSeries.mockResolvedValue(page([{ id: 4, title: 'Project 52', slug: 'project-52', description: 'A year journey', sort_order: 1, is_active: true, is_featured: true, items: [{ id: 9, series: 4, writing: 12, writing_title: 'Week One', order: 0 }, { id: 10, series: 4, writing: 13, writing_title: 'Week Two', order: 1 }] }]));
   mocks.fetchWritingTags.mockResolvedValue(page([{ id: 5, name: 'Stewardship', slug: 'stewardship' }]));
   mocks.fetchResourceTypeCategoryLinks.mockResolvedValue(page([{ id: 6, resource_type: 1, resource_type_detail: { id: 1, name: 'Devotional', slug: 'devotional' }, category: 2, category_detail: { id: 2, name: 'Prayer', slug: 'prayer' }, sort_order: 1, is_active: true, is_featured: true }]));
   mocks.fetchCategorySeriesLinks.mockResolvedValue(page([{ id: 7, category: 2, category_detail: { id: 2, name: 'Prayer', slug: 'prayer' }, series: 4, series_detail: { id: 4, title: 'Project 52', slug: 'project-52' }, sort_order: 2, is_active: false, is_featured: false }]));
@@ -99,6 +99,9 @@ const seedApi = () => {
   mocks.createResourceTypeCategoryLink.mockResolvedValue({ id: 31 });
   mocks.createCategorySeriesLink.mockResolvedValue({ id: 32 });
   mocks.createWritingTag.mockResolvedValue({ id: 33 });
+  mocks.createWritingSeriesItem.mockResolvedValue({ id: 34 });
+  mocks.deleteWritingSeriesItem.mockResolvedValue(null);
+  mocks.reorderWritingSeriesItems.mockResolvedValue({ ok: true });
 };
 
 const renderPage = async (root: Root) => {
@@ -260,6 +263,46 @@ describe('WritingLibraryPage', () => {
       resource_type: '1',
       sort_order: 5,
     }));
+  });
+
+
+
+  it('manages series items from a modal', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    mocks.fetchWritings.mockResolvedValueOnce(page([{ id: 21, title: 'A New Journey', slug: 'a-new-journey', status: 'DRAFT' }]));
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Project 52'));
+
+    const seriesCard = ([...container.querySelectorAll('h4')].find((heading) => heading.textContent === 'Project 52') as HTMLElement).closest('article') as HTMLElement;
+    await act(async () => ([...seriesCard.querySelectorAll('button')].find((button) => button.textContent === 'Manage items') as HTMLButtonElement).click());
+
+    expect(document.body.textContent).toContain('Manage Project 52');
+    expect(document.body.textContent).toContain('1. Week One');
+    expect(document.body.textContent).toContain('2. Week Two');
+
+    const firstMoveDown = [...document.querySelectorAll('button')].find((button) => button.textContent === 'Move down' && !(button as HTMLButtonElement).disabled) as HTMLButtonElement;
+    await act(async () => firstMoveDown.click());
+    expect(mocks.reorderWritingSeriesItems).toHaveBeenCalledWith('access-token', 4, [
+      { id: 10, order: 0 },
+      { id: 9, order: 1 },
+    ]);
+
+    const firstRemove = [...document.querySelectorAll('button')].find((button) => button.textContent === 'Remove') as HTMLButtonElement;
+    await act(async () => firstRemove.click());
+    expect(confirmSpy).toHaveBeenCalledWith('Remove Week One from this series?');
+    expect(mocks.deleteWritingSeriesItem).toHaveBeenCalledWith('access-token', 9);
+
+    const searchInput = ([...document.querySelectorAll('input')] as HTMLInputElement[]).find((input) => input.placeholder === 'Search writings by title...') as HTMLInputElement;
+    await changeInput(searchInput, 'journey');
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Search') as HTMLButtonElement).click());
+    await vi.waitFor(() => expect(document.body.textContent).toContain('A New Journey'));
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Add') as HTMLButtonElement).click());
+
+    expect(mocks.fetchWritings).toHaveBeenCalledWith('access-token', expect.objectContaining({ page: 1, page_size: 24, search: 'journey', status: 'ALL' }));
+    expect(mocks.createWritingSeriesItem).toHaveBeenCalledWith('access-token', { series: 4, writing: 21, order: 2 });
+
+    confirmSpy.mockRestore();
   });
 
   it('creates resource/category and category/series browse pathways with curation fields', async () => {

@@ -127,7 +127,7 @@ const WritingLibraryPage = () => {
   const [itemForm, setItemForm] = useState<LibraryItemForm>(() => emptyLibraryItemForm());
   const [libraryModal, setLibraryModal] = useState<LibraryModalState>(null);
   const [editingPathway, setEditingPathway] = useState<{ form: PathwayForm; id: number | string; kind: CurationKind } | null>(null);
-  const [expandedSeriesId, setExpandedSeriesId] = useState<number | string | null>(null);
+  const [managingSeriesId, setManagingSeriesId] = useState<number | string | null>(null);
   const [draggedSeriesItemId, setDraggedSeriesItemId] = useState<number | string | null>(null);
   const [pathwayForm, setPathwayForm] = useState<PathwayForm>(() => emptyPathwayForm());
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
@@ -540,6 +540,13 @@ const WritingLibraryPage = () => {
     }
   };
 
+  const closeSeriesManager = () => {
+    setManagingSeriesId(null);
+    setSeriesSearchQuery('');
+    setSeriesSearchResults([]);
+    setDraggedSeriesItemId(null);
+  };
+
   const dropSeriesItem = async (seriesId: number | string, items: WritingSeriesItem[], targetIndex: number) => {
     if (draggedSeriesItemId === null) return;
     const fromIndex = items.findIndex((item) => String(item.id) === String(draggedSeriesItemId));
@@ -720,6 +727,9 @@ const WritingLibraryPage = () => {
     },
   ];
 
+  const managingSeries = managingSeriesId === null ? null : series.find((item) => String(item.id) === String(managingSeriesId)) || null;
+  const managingSeriesItems = sortSeriesItems(managingSeries?.items || []);
+
   const resourceCategoryRecords: PathwayRecord[] = resourceTypeCategoryLinks.map((link) => {
     const resourceType = link.resource_type_detail || byId(resourceTypes, link.resource_type);
     const category = link.category_detail || byId(categories, link.category);
@@ -773,9 +783,6 @@ const WritingLibraryPage = () => {
   const dangerButtonClass = darkMode
     ? 'rounded-full border border-red-400/20 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-red-200 transition hover:bg-red-950/30 disabled:opacity-40'
     : 'rounded-full border border-red-900/15 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-red-800 transition hover:bg-red-50 disabled:opacity-40';
-  const editSurfaceClass = darkMode
-    ? 'mt-4 grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-4'
-    : 'mt-4 grid gap-3 rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-4';
   const renderPrimaryRecordList = (records: PrimaryRecord[], emptyLabel: string) => (
     <div className="mt-4 grid gap-3">
       {records.length ? records.map((record) => {
@@ -806,69 +813,7 @@ const WritingLibraryPage = () => {
             ) : null}
             {record.kind === 'series' ? (
               <div className="mt-4">
-                <button className={actionButtonClass} onClick={() => setExpandedSeriesId((current) => String(current) === String(record.id) ? null : record.id)} type="button">
-                  {String(expandedSeriesId) === String(record.id) ? 'Hide items' : 'Manage items'}
-                </button>
-                {String(expandedSeriesId) === String(record.id) ? (() => {
-                  const orderedItems = sortSeriesItems(record.seriesItems || []);
-                  return (
-                    <div className={editSurfaceClass}>
-                      <div className="grid gap-3 rounded-2xl border border-[#eaded0] bg-white p-3 dark:border-white/10 dark:bg-white/[0.03]">
-                        <div>
-                          <p className={labelClass}>Add writing</p>
-                          <p className={helperClass}>Search existing writings, then add one to the end of this series.</p>
-                        </div>
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <input className={inputClass} onChange={(event) => setSeriesSearchQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchSeriesWritings(); } }} placeholder="Search writings by title..." value={seriesSearchQuery} />
-                          <PortalSelect ariaLabel="Writing status" darkMode={darkMode} onChange={(value) => setSeriesSearchStatus(value as WritingStatus | 'ALL')} options={writingStatuses.map((status) => ({ label: status.label, value: status.value }))} value={seriesSearchStatus} />
-                          <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700 disabled:opacity-50" disabled={seriesSearchLoading || !canManageTaxonomy(auth.permissions)} onClick={() => void searchSeriesWritings()} type="button">{seriesSearchLoading ? 'Searching...' : 'Search'}</button>
-                        </div>
-                        {seriesSearchResults.length ? (
-                          <div className="grid gap-2">
-                            {seriesSearchResults.map((writing) => {
-                              const alreadyAdded = orderedItems.some((item) => String(item.writing) === String(writing.id));
-                              return (
-                                <div key={writing.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-black/20 p-3' : 'rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-3'}>
-                                  <div className="flex flex-wrap items-center justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-black">{writing.title}</p>
-                                      <span className={statusBadgeClass(writing.status)}>{formatStatus(writing.status)}</span>
-                                    </div>
-                                    <button className={actionButtonClass} disabled={alreadyAdded || !canManageTaxonomy(auth.permissions)} onClick={() => void addWritingToSeries(record.id, writing.id, orderedItems.length)} type="button">{alreadyAdded ? 'Already added' : 'Add'}</button>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div>
-                        <p className={labelClass}>Current journey</p>
-                        <p className={helperClass}>Ordered from the dedicated series item records. Displayed as order + 1.</p>
-                      </div>
-                      {orderedItems.length ? (
-                        <ol className="grid gap-2">
-                          {orderedItems.map((item, index) => (
-                            <li key={item.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/[0.03] p-3' : 'rounded-2xl border border-[#eaded0] bg-white p-3'} draggable onDragEnd={() => setDraggedSeriesItemId(null)} onDragOver={(event: DragEvent<HTMLLIElement>) => event.preventDefault()} onDragStart={() => setDraggedSeriesItemId(item.id)} onDrop={() => void dropSeriesItem(record.id, orderedItems, index)}>
-                              <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="text-sm font-black">{index + 1}. {item.writing_title}</p>
-                                  {item.writing_detail?.status ? <span className={statusBadgeClass(item.writing_detail.status as WritingStatus)}>{formatStatus(item.writing_detail.status)}</span> : null}
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  <button className={actionButtonClass} disabled={index === 0 || !canManageTaxonomy(auth.permissions)} onClick={() => void reorderSeriesItems(record.id, orderedItems, index, index - 1)} type="button">Move up</button>
-                                  <button className={actionButtonClass} disabled={index === orderedItems.length - 1 || !canManageTaxonomy(auth.permissions)} onClick={() => void reorderSeriesItems(record.id, orderedItems, index, index + 1)} type="button">Move down</button>
-                                  <button className={dangerButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void removeSeriesItem(item)} type="button">Remove</button>
-                                </div>
-                              </div>
-                            </li>
-                          ))}
-                        </ol>
-                      ) : <p className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>No writings in this series yet.</p>}
-                    </div>
-                  );
-                })() : null}
+                <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setManagingSeriesId(record.id)} type="button">Manage items</button>
               </div>
             ) : null}
 
@@ -970,6 +915,87 @@ const WritingLibraryPage = () => {
           </PortalModal>
         );
       })() : null}
+      {managingSeries ? (
+        <PortalModal
+          darkMode={darkMode}
+          description="Curate which writings belong to this series, and the order readers encounter them."
+          eyebrow="Series Admin"
+          onClose={closeSeriesManager}
+          title={`Manage ${seriesName(managingSeries)}`}
+        >
+          <div className="grid gap-5">
+            <section className={darkMode ? 'rounded-2xl border border-white/10 bg-white/[0.03] p-4' : 'rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-4'}>
+              <h3 className="text-sm font-black">{seriesName(managingSeries)}</h3>
+              <p className={`mt-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(managingSeries.description)}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className={metaBadgeClass}>{managingSeriesItems.length} writings</span>
+                <span className={managingSeries.is_active ? activeBadgeClass : inactiveBadgeClass}>{managingSeries.is_active ? 'Active' : 'Inactive'}</span>
+                {managingSeries.is_featured ? <span className={featuredBadgeClass}>Featured</span> : null}
+              </div>
+            </section>
+
+            <section className="grid gap-3 rounded-2xl border border-[#eaded0] bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+              <div>
+                <p className={labelClass}>Add writing</p>
+                <p className={helperClass}>Search existing writings, then add one to the end of this series.</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input className={inputClass} onChange={(event) => setSeriesSearchQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchSeriesWritings(); } }} placeholder="Search writings by title..." value={seriesSearchQuery} />
+                <PortalSelect ariaLabel="Writing status" darkMode={darkMode} onChange={(value) => setSeriesSearchStatus(value as WritingStatus | 'ALL')} options={writingStatuses.map((status) => ({ label: status.label, value: status.value }))} value={seriesSearchStatus} />
+                <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700 disabled:opacity-50" disabled={seriesSearchLoading || !canManageTaxonomy(auth.permissions)} onClick={() => void searchSeriesWritings()} type="button">{seriesSearchLoading ? 'Searching...' : 'Search'}</button>
+              </div>
+              {seriesSearchResults.length ? (
+                <div className="grid gap-2">
+                  {seriesSearchResults.map((writing) => {
+                    const alreadyAdded = managingSeriesItems.some((item) => String(item.writing) === String(writing.id));
+                    return (
+                      <div key={writing.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-black/20 p-3' : 'rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-3'}>
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-black">{writing.title}</p>
+                            <span className={statusBadgeClass(writing.status)}>{formatStatus(writing.status)}</span>
+                          </div>
+                          <button className={actionButtonClass} disabled={alreadyAdded || !canManageTaxonomy(auth.permissions)} onClick={() => void addWritingToSeries(managingSeries.id, writing.id, managingSeriesItems.length)} type="button">{alreadyAdded ? 'Already added' : 'Add'}</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </section>
+
+            <section className="grid gap-3">
+              <div>
+                <p className={labelClass}>Current journey</p>
+                <p className={helperClass}>Ordered from dedicated series item records. Displayed as order + 1.</p>
+              </div>
+              {managingSeriesItems.length ? (
+                <ol className="grid gap-2">
+                  {managingSeriesItems.map((item, index) => (
+                    <li key={item.id} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/[0.03] p-3' : 'rounded-2xl border border-[#eaded0] bg-white p-3'} draggable onDragEnd={() => setDraggedSeriesItemId(null)} onDragOver={(event: DragEvent<HTMLLIElement>) => event.preventDefault()} onDragStart={() => setDraggedSeriesItemId(item.id)} onDrop={() => void dropSeriesItem(managingSeries.id, managingSeriesItems, index)}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-black">{index + 1}. {item.writing_title}</p>
+                          {item.writing_detail?.status ? <span className={statusBadgeClass(item.writing_detail.status as WritingStatus)}>{formatStatus(item.writing_detail.status)}</span> : null}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button className={actionButtonClass} disabled={index === 0 || !canManageTaxonomy(auth.permissions)} onClick={() => void reorderSeriesItems(managingSeries.id, managingSeriesItems, index, index - 1)} type="button">Move up</button>
+                          <button className={actionButtonClass} disabled={index === managingSeriesItems.length - 1 || !canManageTaxonomy(auth.permissions)} onClick={() => void reorderSeriesItems(managingSeries.id, managingSeriesItems, index, index + 1)} type="button">Move down</button>
+                          <button className={dangerButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void removeSeriesItem(item)} type="button">Remove</button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              ) : <p className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>No writings in this series yet.</p>}
+            </section>
+
+            <div className="flex justify-end border-t border-[#eaded0] pt-4 dark:border-white/10">
+              <button className={actionButtonClass} onClick={closeSeriesManager} type="button">Close</button>
+            </div>
+          </div>
+        </PortalModal>
+      ) : null}
       {editingPathway ? (() => {
         const editForm = editingPathway.form;
         const editTitle = editingPathway.kind === 'resourceCategory' ? 'Edit resource pathway' : 'Edit series pathway';
