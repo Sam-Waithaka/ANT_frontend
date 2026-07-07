@@ -222,6 +222,46 @@ describe('WritingLibraryPage', () => {
     }));
   });
 
+
+
+  it('edits a primary library record from a modal', async () => {
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Devotional'));
+
+    const devotionalCard = ([...container.querySelectorAll('h4')].find((heading) => heading.textContent === 'Devotional') as HTMLElement).closest('article') as HTMLElement;
+    await act(async () => ([...devotionalCard.querySelectorAll('button')].find((button) => button.textContent === 'Edit') as HTMLButtonElement).click());
+    expect(document.body.textContent).toContain('Edit resource type');
+
+    const nameInput = ([...document.querySelectorAll('input')] as HTMLInputElement[]).find((input) => input.value === 'Devotional') as HTMLInputElement;
+    await changeInput(nameInput, 'Teaching');
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Save changes') as HTMLButtonElement).click());
+
+    expect(mocks.updateResourceType).toHaveBeenCalledWith('access-token', 1, expect.objectContaining({
+      name: 'Teaching',
+      slug: 'devotional',
+      sort_order: 1,
+    }));
+  });
+
+  it('edits a browse pathway from a modal', async () => {
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Devotional ' + String.fromCharCode(8594) + ' Prayer'));
+
+    const pathwayCard = ([...container.querySelectorAll('h4')].find((heading) => heading.textContent?.includes('Devotional') && heading.textContent?.includes('Prayer')) as HTMLElement).closest('article') as HTMLElement;
+    await act(async () => ([...pathwayCard.querySelectorAll('button')].find((button) => button.textContent === 'Edit') as HTMLButtonElement).click());
+    expect(document.body.textContent).toContain('Edit resource pathway');
+
+    const sortOrderInput = ([...document.querySelectorAll('input')] as HTMLInputElement[]).find((input) => input.type === 'number' && input.value === '1') as HTMLInputElement;
+    await changeInput(sortOrderInput, '5');
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Save pathway') as HTMLButtonElement).click());
+
+    expect(mocks.updateResourceTypeCategoryLink).toHaveBeenCalledWith('access-token', 6, expect.objectContaining({
+      category: '2',
+      resource_type: '1',
+      sort_order: 5,
+    }));
+  });
+
   it('creates resource/category and category/series browse pathways with curation fields', async () => {
     await renderPage(root);
     await vi.waitFor(() => expect(container.textContent).toContain('Guide browsing'));

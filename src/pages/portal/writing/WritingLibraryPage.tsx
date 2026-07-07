@@ -779,10 +779,6 @@ const WritingLibraryPage = () => {
   const renderPrimaryRecordList = (records: PrimaryRecord[], emptyLabel: string) => (
     <div className="mt-4 grid gap-3">
       {records.length ? records.map((record) => {
-        const isEditing = editingPrimary?.kind === record.kind && String(editingPrimary.id) === String(record.id);
-        const editForm = editingPrimary?.form;
-        const richEdit = isEditing && record.kind !== 'tag' && editForm;
-
         const nestedCardClass = record.depth
           ? `${recordCardClass} ${darkMode ? 'ml-4 border-l-4 border-l-red-300/30' : 'ml-4 border-l-4 border-l-red-800/20'} sm:ml-6`
           : recordCardClass;
@@ -882,50 +878,6 @@ const WritingLibraryPage = () => {
               {record.state ? <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePrimary(record, 'is_featured')} type="button">{record.state.featured ? 'Unfeature' : 'Feature'}</button> : null}
               <button className={dangerButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => deletePrimary(record)} type="button">Delete</button>
             </div>
-            {isEditing && editForm ? (
-              <div className={editSurfaceClass}>
-                <label className="grid gap-2">
-                  <span className={labelClass}>{record.kind === 'series' ? 'Series title' : 'Name'}</span>
-                  <input className={inputClass} onChange={(event) => updateEditingPrimaryForm('name', event.target.value)} value={editForm.name} />
-                </label>
-                <label className="grid gap-2">
-                  <span className={labelClass}>Slug</span>
-                  <input className={inputClass} onChange={(event) => updateEditingPrimaryForm('slug', event.target.value)} value={editForm.slug} />
-                </label>
-                {richEdit ? (
-                  <>
-                    <label className="grid gap-2">
-                      <span className={labelClass}>Description</span>
-                      <textarea className={`${inputClass} min-h-24 resize-y`} onChange={(event) => updateEditingPrimaryForm('description', event.target.value)} value={editForm.description} />
-                    </label>
-                    {record.kind === 'category' ? (
-                      <label className="grid gap-2">
-                        <span className={labelClass}>Parent category optional</span>
-                        <PortalSelect ariaLabel="Parent category" darkMode={darkMode} onChange={(value) => updateEditingPrimaryForm('parent', value)} options={[{ label: 'No parent category', value: '' }, ...categories.filter((category) => String(category.id) !== String(record.id)).map((category) => ({ label: category.name, value: String(category.id) }))]} value={editForm.parent} />
-                      </label>
-                    ) : null}
-                    <label className="grid gap-2">
-                      <span className={labelClass}>Sort order</span>
-                      <input className={inputClass} inputMode="numeric" onChange={(event) => updateEditingPrimaryForm('sortOrder', event.target.value)} type="number" value={editForm.sortOrder} />
-                    </label>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <label className={checkboxClass}>
-                        <span>Active</span>
-                        <input checked={editForm.active} onChange={(event) => updateEditingPrimaryForm('active', event.target.checked)} type="checkbox" />
-                      </label>
-                      <label className={checkboxClass}>
-                        <span>Featured</span>
-                        <input checked={editForm.featured} onChange={(event) => updateEditingPrimaryForm('featured', event.target.checked)} type="checkbox" />
-                      </label>
-                    </div>
-                  </>
-                ) : null}
-                <div className="flex flex-wrap gap-2">
-                  <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700" onClick={() => void savePrimaryEdit()} type="button">Save changes</button>
-                  <button className={actionButtonClass} onClick={() => setEditingPrimary(null)} type="button">Cancel</button>
-                </div>
-              </div>
-            ) : null}
           </article>
         );
       }) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
@@ -934,9 +886,6 @@ const WritingLibraryPage = () => {
   const renderPathwayRecordList = (records: PathwayRecord[], emptyLabel: string) => (
     <div className="mt-4 grid gap-3">
       {records.length ? records.map((record) => {
-        const isEditing = editingPathway?.kind === record.kind && String(editingPathway.id) === String(record.id);
-        const editForm = editingPathway?.form;
-
         return (
           <article key={record.key} className={recordCardClass}>
             <h4 className="text-sm font-black">{record.title}</h4>
@@ -951,44 +900,6 @@ const WritingLibraryPage = () => {
               <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePathway(record, 'is_featured')} type="button">{record.featured ? 'Unfeature' : 'Feature'}</button>
               <button className={dangerButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => deletePathway(record)} type="button">Delete link</button>
             </div>
-            {isEditing && editForm ? (
-              <div className={editSurfaceClass}>
-                {record.kind === 'resourceCategory' ? (
-                  <label className="grid gap-2">
-                    <span className={labelClass}>Resource type</span>
-                    <PortalSelect ariaLabel="Resource type" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('resourceType', value)} options={[{ label: 'Choose resource type', value: '' }, ...resourceTypes.map((resourceType) => ({ label: resourceType.name, value: String(resourceType.id) }))]} value={editForm.resourceType} />
-                  </label>
-                ) : null}
-                <label className="grid gap-2">
-                  <span className={labelClass}>Category</span>
-                  <PortalSelect ariaLabel="Category" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('category', value)} options={[{ label: 'Choose category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={editForm.category} />
-                </label>
-                {record.kind === 'categorySeries' ? (
-                  <label className="grid gap-2">
-                    <span className={labelClass}>Series</span>
-                    <PortalSelect ariaLabel="Series" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('series', value)} options={[{ label: 'Choose series', value: '' }, ...series.map((item) => ({ label: seriesName(item), value: String(item.id) }))]} value={editForm.series} />
-                  </label>
-                ) : null}
-                <label className="grid gap-2">
-                  <span className={labelClass}>Sort order</span>
-                  <input className={inputClass} inputMode="numeric" onChange={(event) => updateEditingPathwayForm('sortOrder', event.target.value)} type="number" value={editForm.sortOrder} />
-                </label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className={checkboxClass}>
-                    <span>Active</span>
-                    <input checked={editForm.active} onChange={(event) => updateEditingPathwayForm('active', event.target.checked)} type="checkbox" />
-                  </label>
-                  <label className={checkboxClass}>
-                    <span>Featured</span>
-                    <input checked={editForm.featured} onChange={(event) => updateEditingPathwayForm('featured', event.target.checked)} type="checkbox" />
-                  </label>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700" onClick={() => void savePathwayEdit()} type="button">Save pathway</button>
-                  <button className={actionButtonClass} onClick={() => setEditingPathway(null)} type="button">Cancel</button>
-                </div>
-              </div>
-            ) : null}
           </article>
         );
       }) : <span className={`text-sm ${portalSurface.softMutedText(darkMode)}`}>{emptyLabel}</span>}
@@ -1001,6 +912,115 @@ const WritingLibraryPage = () => {
           {toastMessage}
         </div>
       ) : null}
+      {editingPrimary ? (() => {
+        const editForm = editingPrimary.form;
+        const richEdit = editingPrimary.kind !== 'tag';
+        const editTitle = editingPrimary.kind === 'series' ? 'Edit series' : editingPrimary.kind === 'resourceType' ? 'Edit resource type' : editingPrimary.kind === 'category' ? 'Edit category' : 'Edit tag';
+        return (
+          <PortalModal
+            darkMode={darkMode}
+            description="Refine how this library record appears and behaves across the writing library."
+            eyebrow="Library Item"
+            onClose={() => setEditingPrimary(null)}
+            title={editTitle}
+          >
+            <form className="grid gap-4" onSubmit={(event) => { event.preventDefault(); void savePrimaryEdit(); }}>
+              <label className="grid gap-2">
+                <span className={labelClass}>{editingPrimary.kind === 'series' ? 'Series title' : 'Name'}</span>
+                <input className={inputClass} onChange={(event) => updateEditingPrimaryForm('name', event.target.value)} value={editForm.name} />
+              </label>
+              <label className="grid gap-2">
+                <span className={labelClass}>Slug</span>
+                <input className={inputClass} onChange={(event) => updateEditingPrimaryForm('slug', event.target.value)} value={editForm.slug} />
+              </label>
+              {richEdit ? (
+                <>
+                  <label className="grid gap-2">
+                    <span className={labelClass}>Description</span>
+                    <textarea className={`${inputClass} min-h-24 resize-y`} onChange={(event) => updateEditingPrimaryForm('description', event.target.value)} value={editForm.description} />
+                  </label>
+                  {editingPrimary.kind === 'category' ? (
+                    <label className="grid gap-2">
+                      <span className={labelClass}>Parent category optional</span>
+                      <PortalSelect ariaLabel="Parent category" darkMode={darkMode} onChange={(value) => updateEditingPrimaryForm('parent', value)} options={[{ label: 'No parent category', value: '' }, ...categories.filter((category) => String(category.id) !== String(editingPrimary.id)).map((category) => ({ label: category.name, value: String(category.id) }))]} value={editForm.parent} />
+                    </label>
+                  ) : null}
+                  <label className="grid gap-2">
+                    <span className={labelClass}>Sort order</span>
+                    <input className={inputClass} inputMode="numeric" onChange={(event) => updateEditingPrimaryForm('sortOrder', event.target.value)} type="number" value={editForm.sortOrder} />
+                  </label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className={checkboxClass}>
+                      <span>Active</span>
+                      <input checked={editForm.active} onChange={(event) => updateEditingPrimaryForm('active', event.target.checked)} type="checkbox" />
+                    </label>
+                    <label className={checkboxClass}>
+                      <span>Featured</span>
+                      <input checked={editForm.featured} onChange={(event) => updateEditingPrimaryForm('featured', event.target.checked)} type="checkbox" />
+                    </label>
+                  </div>
+                </>
+              ) : null}
+              {itemMessage ? <p className="text-sm font-bold text-red-800">{itemMessage}</p> : null}
+              <div className="flex flex-wrap justify-end gap-3 border-t border-[#eaded0] pt-4 dark:border-white/10">
+                <button className={actionButtonClass} onClick={() => setEditingPrimary(null)} type="button">Cancel</button>
+                <button className="rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Save changes</button>
+              </div>
+            </form>
+          </PortalModal>
+        );
+      })() : null}
+      {editingPathway ? (() => {
+        const editForm = editingPathway.form;
+        const editTitle = editingPathway.kind === 'resourceCategory' ? 'Edit resource pathway' : 'Edit series pathway';
+        return (
+          <PortalModal
+            darkMode={darkMode}
+            description="Adjust the browsing relationship without crowding the library architecture view."
+            eyebrow="Browse Pathways"
+            onClose={() => setEditingPathway(null)}
+            title={editTitle}
+          >
+            <form className="grid gap-4" onSubmit={(event) => { event.preventDefault(); void savePathwayEdit(); }}>
+              {editingPathway.kind === 'resourceCategory' ? (
+                <label className="grid gap-2">
+                  <span className={labelClass}>Resource type</span>
+                  <PortalSelect ariaLabel="Resource type" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('resourceType', value)} options={[{ label: 'Choose resource type', value: '' }, ...resourceTypes.map((resourceType) => ({ label: resourceType.name, value: String(resourceType.id) }))]} value={editForm.resourceType} />
+                </label>
+              ) : null}
+              <label className="grid gap-2">
+                <span className={labelClass}>Category</span>
+                <PortalSelect ariaLabel="Category" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('category', value)} options={[{ label: 'Choose category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={editForm.category} />
+              </label>
+              {editingPathway.kind === 'categorySeries' ? (
+                <label className="grid gap-2">
+                  <span className={labelClass}>Series</span>
+                  <PortalSelect ariaLabel="Series" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('series', value)} options={[{ label: 'Choose series', value: '' }, ...series.map((item) => ({ label: seriesName(item), value: String(item.id) }))]} value={editForm.series} />
+                </label>
+              ) : null}
+              <label className="grid gap-2">
+                <span className={labelClass}>Sort order</span>
+                <input className={inputClass} inputMode="numeric" onChange={(event) => updateEditingPathwayForm('sortOrder', event.target.value)} type="number" value={editForm.sortOrder} />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className={checkboxClass}>
+                  <span>Active</span>
+                  <input checked={editForm.active} onChange={(event) => updateEditingPathwayForm('active', event.target.checked)} type="checkbox" />
+                </label>
+                <label className={checkboxClass}>
+                  <span>Featured</span>
+                  <input checked={editForm.featured} onChange={(event) => updateEditingPathwayForm('featured', event.target.checked)} type="checkbox" />
+                </label>
+              </div>
+              {pathwayMessage ? <p className="text-sm font-bold text-red-800">{pathwayMessage}</p> : null}
+              <div className="flex flex-wrap justify-end gap-3 border-t border-[#eaded0] pt-4 dark:border-white/10">
+                <button className={actionButtonClass} onClick={() => setEditingPathway(null)} type="button">Cancel</button>
+                <button className="rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Save pathway</button>
+              </div>
+            </form>
+          </PortalModal>
+        );
+      })() : null}
       {libraryModal?.type === 'createItem' ? (
         <PortalModal
           darkMode={darkMode}
