@@ -784,37 +784,31 @@ const WritingLibraryPage = () => {
     ? 'rounded-full border border-red-400/20 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-red-200 transition hover:bg-red-950/30 disabled:opacity-40'
     : 'rounded-full border border-red-900/15 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-red-800 transition hover:bg-red-50 disabled:opacity-40';
   const renderPrimaryRecordList = (records: PrimaryRecord[], emptyLabel: string) => (
-    <div className="mt-4 grid gap-3">
+    <div className="mt-4 grid gap-2">
       {records.length ? records.map((record) => {
         const nestedCardClass = record.depth
           ? `${recordCardClass} ${darkMode ? 'ml-4 border-l-4 border-l-red-300/30' : 'ml-4 border-l-4 border-l-red-800/20'} sm:ml-6`
           : recordCardClass;
 
         return (
-          <article key={record.key} className={nestedCardClass}>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
+          <article key={record.key} className={`${nestedCardClass} flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between`}>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
                 <h4 className="text-sm font-black">{record.title}</h4>
-                {record.slug ? <p className={`mt-1 break-all text-xs ${portalSurface.softMutedText(darkMode)}`}>/{record.slug}</p> : null}
+                {record.slug ? <span className={`break-all text-xs ${portalSurface.softMutedText(darkMode)}`}>/{record.slug}</span> : null}
               </div>
-              {renderStateBadges(record.state)}
+              {record.parent ? <p className={`mt-2 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>{record.depth ? 'Nested under' : 'Parent'}: {record.parent}</p> : null}
+              <p className={`mt-2 line-clamp-1 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {renderStateBadges(record.state)}
+                {record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}
+              </div>
+              {record.kind === 'series' && record.imageUrl ? <img alt="" className="mt-3 h-14 w-20 rounded-2xl border border-[#eaded0] object-cover dark:border-white/10" src={record.imageUrl} /> : null}
             </div>
-            {record.parent ? <p className={`mt-3 text-xs font-bold ${darkMode ? 'text-stone-300' : 'text-[#5f574f]'}`}>{record.depth ? 'Nested under' : 'Parent'}: {record.parent}</p> : null}
-            <p className={`mt-3 line-clamp-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>{descriptionExcerpt(record.description)}</p>
-            {record.meta.length ? <div className="mt-3 flex flex-wrap gap-2">{record.meta.map((item) => <span key={item} className={metaBadgeClass}>{item}</span>)}</div> : null}
-            {record.kind === 'series' && (record.imageUrl || record.publicHref) ? (
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                {record.imageUrl ? <img alt="" className="h-14 w-20 rounded-2xl border border-[#eaded0] object-cover dark:border-white/10" src={record.imageUrl} /> : null}
-                {record.publicHref ? <Link className={actionButtonClass} target="_blank" to={record.publicHref}>Public preview</Link> : null}
-              </div>
-            ) : null}
-            {record.kind === 'series' ? (
-              <div className="mt-4">
-                <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setManagingSeriesId(record.id)} type="button">Manage items</button>
-              </div>
-            ) : null}
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2 sm:max-w-56 sm:justify-end">
+              {record.kind === 'series' ? <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setManagingSeriesId(record.id)} type="button">Manage items</button> : null}
+              {record.kind === 'series' && record.publicHref ? <Link className={actionButtonClass} target="_blank" to={record.publicHref}>Public preview</Link> : null}
               <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setEditingPrimary({ form: record.form, id: record.id, kind: record.kind })} type="button">Edit</button>
               {record.state ? <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePrimary(record, 'is_active')} type="button">{record.state.active ? 'Deactivate' : 'Activate'}</button> : null}
               {record.state ? <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePrimary(record, 'is_featured')} type="button">{record.state.featured ? 'Unfeature' : 'Feature'}</button> : null}
@@ -826,17 +820,19 @@ const WritingLibraryPage = () => {
     </div>
   );
   const renderPathwayRecordList = (records: PathwayRecord[], emptyLabel: string) => (
-    <div className="mt-4 grid gap-3">
+    <div className="mt-4 grid gap-2">
       {records.length ? records.map((record) => {
         return (
-          <article key={record.key} className={recordCardClass}>
-            <h4 className="text-sm font-black">{record.title}</h4>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {record.featured ? <span className={featuredBadgeClass}>Featured</span> : null}
-              <span className={record.active ? activeBadgeClass : inactiveBadgeClass}>{record.active ? 'Active' : 'Inactive'}</span>
-              <span className={metaBadgeClass}>Order {record.order}</span>
+          <article key={record.key} className={`${recordCardClass} flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between`}>
+            <div className="min-w-0 flex-1">
+              <h4 className="text-sm font-black">{record.title}</h4>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {record.featured ? <span className={featuredBadgeClass}>Featured</span> : null}
+                <span className={record.active ? activeBadgeClass : inactiveBadgeClass}>{record.active ? 'Active' : 'Inactive'}</span>
+                <span className={metaBadgeClass}>Order {record.order}</span>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2 sm:max-w-56 sm:justify-end">
               <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setEditingPathway({ form: record.form, id: record.id, kind: record.kind })} type="button">Edit</button>
               <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePathway(record, 'is_active')} type="button">{record.active ? 'Deactivate' : 'Activate'}</button>
               <button className={actionButtonClass} disabled={!canManageTaxonomy(auth.permissions)} onClick={() => void togglePathway(record, 'is_featured')} type="button">{record.featured ? 'Unfeature' : 'Feature'}</button>
@@ -1177,30 +1173,33 @@ const WritingLibraryPage = () => {
           </p>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[26rem_1fr]">
-          <div className="grid gap-6 self-start">
-            <section className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Library Item</p>
-              <h2 className="mt-3 font-serif text-4xl">Create library item</h2>
-              <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
-                Add the resource shelves, topics, series, and labels readers will use to discover writings.
-              </p>
-              <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setLibraryModal({ type: 'createItem' })} type="button">Create library item</button>
-              {loadError ? <p className="mt-5 text-sm font-bold text-red-800">{loadError}</p> : null}
-              {itemMessage ? <p className="mt-3 text-sm font-bold text-red-800">{itemMessage}</p> : null}
-            </section>
-            <section className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Browse Pathways</p>
-              <h2 className="mt-3 font-serif text-4xl">Guide browsing</h2>
-              <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
-                Connect broad shelves to relevant topics, and topics to curated series.
-              </p>
-              <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setLibraryModal({ type: 'createPathway' })} type="button">Create browse pathway</button>
-              {pathwayMessage ? <p className="mt-3 text-sm font-bold text-red-800">{pathwayMessage}</p> : null}
-            </section>
-          </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Library Item</p>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-3xl">Create library item</h2>
+                <p className={`mt-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>Add shelves, topics, series, and labels readers use to discover writings.</p>
+              </div>
+              <button className="rounded-full bg-red-800 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setLibraryModal({ type: 'createItem' })} type="button">Create library item</button>
+            </div>
+            {loadError ? <p className="mt-4 text-sm font-bold text-red-800">{loadError}</p> : null}
+            {itemMessage ? <p className="mt-3 text-sm font-bold text-red-800">{itemMessage}</p> : null}
+          </section>
+          <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Browse Pathways</p>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-3xl">Guide browsing</h2>
+                <p className={`mt-2 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>Connect broad shelves to relevant topics, and topics to curated series.</p>
+              </div>
+              <button className="rounded-full bg-red-800 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setLibraryModal({ type: 'createPathway' })} type="button">Create browse pathway</button>
+            </div>
+            {pathwayMessage ? <p className="mt-3 text-sm font-bold text-red-800">{pathwayMessage}</p> : null}
+          </section>
+        </div>
 
-          <div className="grid gap-6">
+        <div className="grid gap-6">
             <section className={`rounded-[2rem] border p-5 shadow-lg sm:p-6 ${portalSurface.panel(darkMode)}`}>
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
@@ -1241,7 +1240,6 @@ const WritingLibraryPage = () => {
                 </section>
               </div>
             </section>
-          </div>
         </div>
       </div>
     </WritingStudioShell>
