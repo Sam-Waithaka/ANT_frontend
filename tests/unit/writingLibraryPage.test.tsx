@@ -122,6 +122,11 @@ const choosePortalSelect = async (ariaLabel: string, optionText: string, index =
   await act(async () => option.click());
 };
 
+const openCreateLibraryItemModal = async () => {
+  const button = [...document.querySelectorAll('button')].find((item) => item.textContent === 'Create library item') as HTMLButtonElement | undefined;
+  if (!button) throw new Error('Missing Create library item button');
+  await act(async () => button.click());
+};
 const changeInput = async (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
   await act(async () => {
     const proto = input instanceof HTMLTextAreaElement ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
@@ -173,7 +178,7 @@ describe('WritingLibraryPage', () => {
     await renderPage(root);
 
     await vi.waitFor(() => expect(container.textContent).toContain('Create library item'));
-    const createButton = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Create') as HTMLButtonElement;
+    const createButton = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Create library item') as HTMLButtonElement;
     const createPathwayButton = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement;
     expect(createButton.disabled).toBe(true);
     expect(createPathwayButton.disabled).toBe(true);
@@ -182,22 +187,25 @@ describe('WritingLibraryPage', () => {
   it('creates a tag from the library item form', async () => {
     await renderPage(root);
     await vi.waitFor(() => expect(container.textContent).toContain('Create library item'));
+    await openCreateLibraryItemModal();
 
     await choosePortalSelect('Item type', 'Tag');
-    await changeInput(container.querySelector('input') as HTMLInputElement, 'Mercy');
-    await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create') as HTMLButtonElement).click());
+    await changeInput(([...document.querySelectorAll('input')] as HTMLInputElement[]).find((input) => input.placeholder === 'Prayer') as HTMLInputElement, 'Mercy');
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Create') as HTMLButtonElement).click());
 
     expect(mocks.createWritingTag).toHaveBeenCalledWith('access-token', { name: 'Mercy', slug: 'mercy' });
   });
 
   it('creates a category with a parent category', async () => {
     await renderPage(root);
-    await vi.waitFor(() => expect(container.textContent).toContain('Parent category optional'));
+    await vi.waitFor(() => expect(container.textContent).toContain('Create library item'));
+    await openCreateLibraryItemModal();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Parent category optional'));
 
-    const inputs = container.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
-    await changeInput(inputs[0], 'Family Discipleship');
+    const nameInput = ([...document.querySelectorAll('input')] as HTMLInputElement[]).find((input) => input.placeholder === 'Prayer') as HTMLInputElement;
+    await changeInput(nameInput, 'Family Discipleship');
     await choosePortalSelect('Parent category', 'Prayer');
-    await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create') as HTMLButtonElement).click());
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Create') as HTMLButtonElement).click());
 
     expect(mocks.createCategory).toHaveBeenCalledWith('access-token', expect.objectContaining({
       is_active: true,

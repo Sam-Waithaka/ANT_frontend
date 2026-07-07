@@ -1,6 +1,7 @@
 import type { DragEvent, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import PortalModal from '../../../components/portal/PortalModal';
 import PortalSelect from '../../../components/portal/PortalSelect';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
@@ -51,6 +52,7 @@ import { canManageTaxonomy } from '../../../utils/permissions';
 
 type TaxonomyKind = 'category' | 'resourceType' | 'series' | 'tag';
 type CurationKind = 'categorySeries' | 'resourceCategory';
+type LibraryModalState = { type: 'createItem' } | null;
 
 type LibraryItemForm = {
   active: boolean;
@@ -123,6 +125,7 @@ const WritingLibraryPage = () => {
   const [curationKind, setCurationKind] = useState<CurationKind>('resourceCategory');
   const [editingPrimary, setEditingPrimary] = useState<{ form: LibraryItemForm; id: number | string; kind: TaxonomyKind } | null>(null);
   const [itemForm, setItemForm] = useState<LibraryItemForm>(() => emptyLibraryItemForm());
+  const [libraryModal, setLibraryModal] = useState<LibraryModalState>(null);
   const [editingPathway, setEditingPathway] = useState<{ form: PathwayForm; id: number | string; kind: CurationKind } | null>(null);
   const [expandedSeriesId, setExpandedSeriesId] = useState<number | string | null>(null);
   const [draggedSeriesItemId, setDraggedSeriesItemId] = useState<number | string | null>(null);
@@ -136,6 +139,7 @@ const WritingLibraryPage = () => {
   const [series, setSeries] = useState<WritingSeries[]>([]);
   const [tags, setTags] = useState<WritingTag[]>([]);
   const [message, setMessage] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [kind, setKind] = useState<TaxonomyKind>('category');
 
   const load = () => {
@@ -155,8 +159,12 @@ const WritingLibraryPage = () => {
         setSeries(nextSeries.results);
         setTags(nextTags.results);
         setCategorySeriesLinks(nextCategorySeriesLinks.results);
+        setLoadError('');
       })
-      .catch(() => setMessage('Unable to load Library taxonomy right now.'));
+      .catch((err) => {
+        if (controller.signal.aborted || err instanceof DOMException && err.name === 'AbortError') return;
+        setLoadError('Unable to load Library taxonomy right now.');
+      });
     return controller;
   };
 
@@ -222,6 +230,7 @@ const WritingLibraryPage = () => {
       }
 
       setItemForm(emptyLibraryItemForm());
+      setLibraryModal(null);
       setMessage('Library item created.');
       load();
     } catch (err) {
@@ -967,6 +976,72 @@ const WritingLibraryPage = () => {
   );
   return (
     <WritingStudioShell>
+      {libraryModal?.type === 'createItem' ? (
+        <PortalModal
+          darkMode={darkMode}
+          description="Add the resource shelves, topics, series, and labels readers will use to discover writings."
+          eyebrow="Library Item"
+          onClose={() => setLibraryModal(null)}
+          title="Create library item"
+        >
+          <form className="grid gap-4" onSubmit={handleCreate}>
+            <label className="grid gap-2">
+              <span className={labelClass}>Item type</span>
+              <PortalSelect ariaLabel="Item type" darkMode={darkMode} onChange={(value) => { setKind(value as TaxonomyKind); setItemForm(emptyLibraryItemForm()); }} options={[{ label: 'Category', value: 'category' }, { label: 'Resource Type', value: 'resourceType' }, { label: 'Series', value: 'series' }, { label: 'Tag', value: 'tag' }]} value={kind} />
+            </label>
+
+            <label className="grid gap-2">
+              <span className={labelClass}>{itemNameLabel}</span>
+              <input className={inputClass} onChange={(event) => updateItemForm('name', event.target.value)} placeholder={kind === 'series' ? 'Project 52' : 'Prayer'} value={itemForm.name} />
+            </label>
+
+            <label className="grid gap-2">
+              <span className={labelClass}>Slug</span>
+              <input className={inputClass} onChange={(event) => updateItemForm('slug', event.target.value)} placeholder={itemSlug || 'prayer'} value={itemForm.slug} />
+              <span className={helperClass}>Leave blank to generate: {itemSlug || 'item-slug'}</span>
+            </label>
+
+            {showRichFields ? (
+              <>
+                <label className="grid gap-2">
+                  <span className={labelClass}>Description</span>
+                  <textarea className={`${inputClass} min-h-28 resize-y`} onChange={(event) => updateItemForm('description', event.target.value)} placeholder="Describe how this helps readers browse the library." value={itemForm.description} />
+                </label>
+
+                {kind === 'category' ? (
+                  <label className="grid gap-2">
+                    <span className={labelClass}>Parent category optional</span>
+                    <PortalSelect ariaLabel="Parent category" darkMode={darkMode} onChange={(value) => updateItemForm('parent', value)} options={[{ label: 'No parent category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={itemForm.parent} />
+                  </label>
+                ) : null}
+
+                <label className="grid gap-2">
+                  <span className={labelClass}>Sort order</span>
+                  <input className={inputClass} inputMode="numeric" onChange={(event) => updateItemForm('sortOrder', event.target.value)} placeholder="0" type="number" value={itemForm.sortOrder} />
+                </label>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className={checkboxClass}>
+                    <span>Active</span>
+                    <input checked={itemForm.active} onChange={(event) => updateItemForm('active', event.target.checked)} type="checkbox" />
+                  </label>
+                  <label className={checkboxClass}>
+                    <span>Featured</span>
+                    <input checked={itemForm.featured} onChange={(event) => updateItemForm('featured', event.target.checked)} type="checkbox" />
+                  </label>
+                </div>
+              </>
+            ) : null}
+
+            {message ? <p className="text-sm font-bold text-red-800">{message}</p> : null}
+
+            <div className="flex flex-wrap justify-end gap-3 border-t border-[#eaded0] pt-4 dark:border-white/10">
+              <button className={actionButtonClass} onClick={() => setLibraryModal(null)} type="button">Cancel</button>
+              <button className="rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create</button>
+            </div>
+          </form>
+        </PortalModal>
+      ) : null}
       <div className="grid gap-8">
         <section className={`rounded-[2rem] border p-6 shadow-lg sm:p-8 ${portalSurface.panel(darkMode)}`}>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Library Architecture</p>
@@ -978,65 +1053,16 @@ const WritingLibraryPage = () => {
 
         <div className="grid gap-6 xl:grid-cols-[26rem_1fr]">
           <div className="grid gap-6 self-start">
-            <form onSubmit={handleCreate} className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
+            <section className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Library Item</p>
               <h2 className="mt-3 font-serif text-4xl">Create library item</h2>
               <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
                 Add the resource shelves, topics, series, and labels readers will use to discover writings.
               </p>
-              <div className="mt-6 grid gap-4">
-                <label className="grid gap-2">
-                  <span className={labelClass}>Item type</span>
-                  <PortalSelect ariaLabel="Item type" darkMode={darkMode} onChange={(value) => { setKind(value as TaxonomyKind); setItemForm(emptyLibraryItemForm()); }} options={[{ label: 'Category', value: 'category' }, { label: 'Resource Type', value: 'resourceType' }, { label: 'Series', value: 'series' }, { label: 'Tag', value: 'tag' }]} value={kind} />
-                </label>
-
-                <label className="grid gap-2">
-                  <span className={labelClass}>{itemNameLabel}</span>
-                  <input className={inputClass} onChange={(event) => updateItemForm('name', event.target.value)} placeholder={kind === 'series' ? 'Project 52' : 'Prayer'} value={itemForm.name} />
-                </label>
-
-                <label className="grid gap-2">
-                  <span className={labelClass}>Slug</span>
-                  <input className={inputClass} onChange={(event) => updateItemForm('slug', event.target.value)} placeholder={itemSlug || 'prayer'} value={itemForm.slug} />
-                  <span className={helperClass}>Leave blank to generate: {itemSlug || 'item-slug'}</span>
-                </label>
-
-                {showRichFields ? (
-                  <>
-                    <label className="grid gap-2">
-                      <span className={labelClass}>Description</span>
-                      <textarea className={`${inputClass} min-h-28 resize-y`} onChange={(event) => updateItemForm('description', event.target.value)} placeholder="Describe how this helps readers browse the library." value={itemForm.description} />
-                    </label>
-
-                    {kind === 'category' ? (
-                      <label className="grid gap-2">
-                        <span className={labelClass}>Parent category optional</span>
-                        <PortalSelect ariaLabel="Parent category" darkMode={darkMode} onChange={(value) => updateItemForm('parent', value)} options={[{ label: 'No parent category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={itemForm.parent} />
-                      </label>
-                    ) : null}
-
-                    <label className="grid gap-2">
-                      <span className={labelClass}>Sort order</span>
-                      <input className={inputClass} inputMode="numeric" onChange={(event) => updateItemForm('sortOrder', event.target.value)} placeholder="0" type="number" value={itemForm.sortOrder} />
-                    </label>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <label className={checkboxClass}>
-                        <span>Active</span>
-                        <input checked={itemForm.active} onChange={(event) => updateItemForm('active', event.target.checked)} type="checkbox" />
-                      </label>
-                      <label className={checkboxClass}>
-                        <span>Featured</span>
-                        <input checked={itemForm.featured} onChange={(event) => updateItemForm('featured', event.target.checked)} type="checkbox" />
-                      </label>
-                    </div>
-                  </>
-                ) : null}
-              </div>
-              <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create</button>
-              {message ? <p className="mt-5 text-sm font-bold text-red-800">{message}</p> : null}
-            </form>
-
+              <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setLibraryModal({ type: 'createItem' })} type="button">Create library item</button>
+              {loadError ? <p className="mt-5 text-sm font-bold text-red-800">{loadError}</p> : null}
+              {message ? <p className="mt-3 text-sm font-bold text-red-800">{message}</p> : null}
+            </section>
             <form onSubmit={handleCurate} className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Browse Pathways</p>
               <h2 className="mt-3 font-serif text-4xl">Guide browsing</h2>
