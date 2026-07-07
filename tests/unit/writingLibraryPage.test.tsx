@@ -112,12 +112,14 @@ const renderPage = async (root: Root) => {
   });
 };
 
-const changeSelect = async (select: HTMLSelectElement, value: string) => {
-  await act(async () => {
-    const setter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')?.set;
-    setter?.call(select, value);
-    select.dispatchEvent(new Event('change', { bubbles: true }));
-  });
+const choosePortalSelect = async (ariaLabel: string, optionText: string, index = 0) => {
+  const triggers = [...document.querySelectorAll(`button[aria-label="${ariaLabel}"]`)] as HTMLButtonElement[];
+  const trigger = triggers[index];
+  if (!trigger) throw new Error(`Missing PortalSelect trigger: ${ariaLabel}`);
+  await act(async () => trigger.click());
+  const option = [...document.querySelectorAll('[role="option"]')].find((item) => item.textContent === optionText) as HTMLButtonElement | undefined;
+  if (!option) throw new Error(`Missing PortalSelect option: ${optionText}`);
+  await act(async () => option.click());
 };
 
 const changeInput = async (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
@@ -181,8 +183,7 @@ describe('WritingLibraryPage', () => {
     await renderPage(root);
     await vi.waitFor(() => expect(container.textContent).toContain('Create library item'));
 
-    const selects = container.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
-    await changeSelect(selects[0], 'tag');
+    await choosePortalSelect('Item type', 'Tag');
     await changeInput(container.querySelector('input') as HTMLInputElement, 'Mercy');
     await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create') as HTMLButtonElement).click());
 
@@ -194,9 +195,8 @@ describe('WritingLibraryPage', () => {
     await vi.waitFor(() => expect(container.textContent).toContain('Parent category optional'));
 
     const inputs = container.querySelectorAll('input') as NodeListOf<HTMLInputElement>;
-    const selects = container.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
     await changeInput(inputs[0], 'Family Discipleship');
-    await changeSelect(selects[1], '2');
+    await choosePortalSelect('Parent category', 'Prayer');
     await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create') as HTMLButtonElement).click());
 
     expect(mocks.createCategory).toHaveBeenCalledWith('access-token', expect.objectContaining({
@@ -213,9 +213,8 @@ describe('WritingLibraryPage', () => {
     await renderPage(root);
     await vi.waitFor(() => expect(container.textContent).toContain('Guide browsing'));
 
-    let selects = container.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
-    await changeSelect(selects[3], '1');
-    await changeSelect(selects[4], '2');
+    await choosePortalSelect('Resource type', 'Devotional');
+    await choosePortalSelect('Category', 'Prayer');
     await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement).click());
     expect(mocks.createResourceTypeCategoryLink).toHaveBeenCalledWith('access-token', expect.objectContaining({
       category: '2',
@@ -225,11 +224,9 @@ describe('WritingLibraryPage', () => {
       sort_order: 0,
     }));
 
-    selects = container.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
-    await changeSelect(selects[2], 'categorySeries');
-    selects = container.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
-    await changeSelect(selects[3], '2');
-    await changeSelect(selects[4], '4');
+    await choosePortalSelect('Pathway type', 'Category ' + String.fromCharCode(8594) + ' Series');
+    await choosePortalSelect('Category', 'Prayer');
+    await choosePortalSelect('Series', 'Project 52');
     await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement).click());
     expect(mocks.createCategorySeriesLink).toHaveBeenCalledWith('access-token', expect.objectContaining({
       category: '2',

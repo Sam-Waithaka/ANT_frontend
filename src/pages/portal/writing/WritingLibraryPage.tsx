@@ -1,6 +1,7 @@
 import type { DragEvent, FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import PortalSelect from '../../../components/portal/PortalSelect';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
@@ -794,9 +795,7 @@ const WritingLibraryPage = () => {
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row">
                           <input className={inputClass} onChange={(event) => setSeriesSearchQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchSeriesWritings(); } }} placeholder="Search writings by title..." value={seriesSearchQuery} />
-                          <select className={inputClass} onChange={(event) => setSeriesSearchStatus(event.target.value as WritingStatus | 'ALL')} value={seriesSearchStatus}>
-                            {writingStatuses.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
-                          </select>
+                          <PortalSelect ariaLabel="Writing status" darkMode={darkMode} onChange={(value) => setSeriesSearchStatus(value as WritingStatus | 'ALL')} options={writingStatuses.map((status) => ({ label: status.label, value: status.value }))} value={seriesSearchStatus} />
                           <button className="rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white transition hover:bg-red-700 disabled:opacity-50" disabled={seriesSearchLoading || !canManageTaxonomy(auth.permissions)} onClick={() => void searchSeriesWritings()} type="button">{seriesSearchLoading ? 'Searching...' : 'Search'}</button>
                         </div>
                         {seriesSearchResults.length ? (
@@ -873,10 +872,7 @@ const WritingLibraryPage = () => {
                     {record.kind === 'category' ? (
                       <label className="grid gap-2">
                         <span className={labelClass}>Parent category optional</span>
-                        <select className={inputClass} onChange={(event) => updateEditingPrimaryForm('parent', event.target.value)} value={editForm.parent}>
-                          <option value="">No parent category</option>
-                          {categories.filter((category) => String(category.id) !== String(record.id)).map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-                        </select>
+                        <PortalSelect ariaLabel="Parent category" darkMode={darkMode} onChange={(value) => updateEditingPrimaryForm('parent', value)} options={[{ label: 'No parent category', value: '' }, ...categories.filter((category) => String(category.id) !== String(record.id)).map((category) => ({ label: category.name, value: String(category.id) }))]} value={editForm.parent} />
                       </label>
                     ) : null}
                     <label className="grid gap-2">
@@ -931,26 +927,17 @@ const WritingLibraryPage = () => {
                 {record.kind === 'resourceCategory' ? (
                   <label className="grid gap-2">
                     <span className={labelClass}>Resource type</span>
-                    <select className={inputClass} onChange={(event) => updateEditingPathwayForm('resourceType', event.target.value)} value={editForm.resourceType}>
-                      <option value="">Choose resource type</option>
-                      {resourceTypes.map((resourceType) => <option key={resourceType.id} value={resourceType.id}>{resourceType.name}</option>)}
-                    </select>
+                    <PortalSelect ariaLabel="Resource type" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('resourceType', value)} options={[{ label: 'Choose resource type', value: '' }, ...resourceTypes.map((resourceType) => ({ label: resourceType.name, value: String(resourceType.id) }))]} value={editForm.resourceType} />
                   </label>
                 ) : null}
                 <label className="grid gap-2">
                   <span className={labelClass}>Category</span>
-                  <select className={inputClass} onChange={(event) => updateEditingPathwayForm('category', event.target.value)} value={editForm.category}>
-                    <option value="">Choose category</option>
-                    {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-                  </select>
+                  <PortalSelect ariaLabel="Category" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('category', value)} options={[{ label: 'Choose category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={editForm.category} />
                 </label>
                 {record.kind === 'categorySeries' ? (
                   <label className="grid gap-2">
                     <span className={labelClass}>Series</span>
-                    <select className={inputClass} onChange={(event) => updateEditingPathwayForm('series', event.target.value)} value={editForm.series}>
-                      <option value="">Choose series</option>
-                      {series.map((item) => <option key={item.id} value={item.id}>{seriesName(item)}</option>)}
-                    </select>
+                    <PortalSelect ariaLabel="Series" darkMode={darkMode} onChange={(value) => updateEditingPathwayForm('series', value)} options={[{ label: 'Choose series', value: '' }, ...series.map((item) => ({ label: seriesName(item), value: String(item.id) }))]} value={editForm.series} />
                   </label>
                 ) : null}
                 <label className="grid gap-2">
@@ -1000,12 +987,7 @@ const WritingLibraryPage = () => {
               <div className="mt-6 grid gap-4">
                 <label className="grid gap-2">
                   <span className={labelClass}>Item type</span>
-                  <select className={inputClass} onChange={(event) => { setKind(event.target.value as TaxonomyKind); setItemForm(emptyLibraryItemForm()); }} value={kind}>
-                    <option value="category">Category</option>
-                    <option value="resourceType">Resource Type</option>
-                    <option value="series">Series</option>
-                    <option value="tag">Tag</option>
-                  </select>
+                  <PortalSelect ariaLabel="Item type" darkMode={darkMode} onChange={(value) => { setKind(value as TaxonomyKind); setItemForm(emptyLibraryItemForm()); }} options={[{ label: 'Category', value: 'category' }, { label: 'Resource Type', value: 'resourceType' }, { label: 'Series', value: 'series' }, { label: 'Tag', value: 'tag' }]} value={kind} />
                 </label>
 
                 <label className="grid gap-2">
@@ -1029,10 +1011,7 @@ const WritingLibraryPage = () => {
                     {kind === 'category' ? (
                       <label className="grid gap-2">
                         <span className={labelClass}>Parent category optional</span>
-                        <select className={inputClass} onChange={(event) => updateItemForm('parent', event.target.value)} value={itemForm.parent}>
-                          <option value="">No parent category</option>
-                          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-                        </select>
+                        <PortalSelect ariaLabel="Parent category" darkMode={darkMode} onChange={(value) => updateItemForm('parent', value)} options={[{ label: 'No parent category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={itemForm.parent} />
                       </label>
                     ) : null}
 
@@ -1067,37 +1046,25 @@ const WritingLibraryPage = () => {
               <div className="mt-6 grid gap-4">
                 <label className="grid gap-2">
                   <span className={labelClass}>Pathway type</span>
-                  <select className={inputClass} onChange={(event) => { setCurationKind(event.target.value as CurationKind); setPathwayForm(emptyPathwayForm()); }} value={curationKind}>
-                    <option value="resourceCategory">Resource Type {'\u2192'} Category</option>
-                    <option value="categorySeries">Category {'\u2192'} Series</option>
-                  </select>
+                  <PortalSelect ariaLabel="Pathway type" darkMode={darkMode} onChange={(value) => { setCurationKind(value as CurationKind); setPathwayForm(emptyPathwayForm()); }} options={[{ label: 'Resource Type ' + String.fromCharCode(8594) + ' Category', value: 'resourceCategory' }, { label: 'Category ' + String.fromCharCode(8594) + ' Series', value: 'categorySeries' }]} value={curationKind} />
                 </label>
 
                 {curationKind === 'resourceCategory' ? (
                   <label className="grid gap-2">
                     <span className={labelClass}>Resource type</span>
-                    <select className={inputClass} onChange={(event) => updatePathwayForm('resourceType', event.target.value)} value={pathwayForm.resourceType}>
-                      <option value="">Choose resource type</option>
-                      {resourceTypes.map((resourceType) => <option key={resourceType.id} value={resourceType.id}>{resourceType.name}</option>)}
-                    </select>
+                    <PortalSelect ariaLabel="Resource type" darkMode={darkMode} onChange={(value) => updatePathwayForm('resourceType', value)} options={[{ label: 'Choose resource type', value: '' }, ...resourceTypes.map((resourceType) => ({ label: resourceType.name, value: String(resourceType.id) }))]} value={pathwayForm.resourceType} />
                   </label>
                 ) : null}
 
                 <label className="grid gap-2">
                   <span className={labelClass}>Category</span>
-                  <select className={inputClass} onChange={(event) => updatePathwayForm('category', event.target.value)} value={pathwayForm.category}>
-                    <option value="">Choose category</option>
-                    {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-                  </select>
+                  <PortalSelect ariaLabel="Category" darkMode={darkMode} onChange={(value) => updatePathwayForm('category', value)} options={[{ label: 'Choose category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={pathwayForm.category} />
                 </label>
 
                 {curationKind === 'categorySeries' ? (
                   <label className="grid gap-2">
                     <span className={labelClass}>Series</span>
-                    <select className={inputClass} onChange={(event) => updatePathwayForm('series', event.target.value)} value={pathwayForm.series}>
-                      <option value="">Choose series</option>
-                      {series.map((item) => <option key={item.id} value={item.id}>{seriesName(item)}</option>)}
-                    </select>
+                    <PortalSelect ariaLabel="Series" darkMode={darkMode} onChange={(value) => updatePathwayForm('series', value)} options={[{ label: 'Choose series', value: '' }, ...series.map((item) => ({ label: seriesName(item), value: String(item.id) }))]} value={pathwayForm.series} />
                   </label>
                 ) : null}
 
