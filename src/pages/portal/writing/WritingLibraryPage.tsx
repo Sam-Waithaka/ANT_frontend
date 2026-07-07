@@ -805,10 +805,7 @@ const WritingLibraryPage = () => {
             {record.kind === 'series' && (record.imageUrl || record.publicHref) ? (
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 {record.imageUrl ? <img alt="" className="h-14 w-20 rounded-2xl border border-[#eaded0] object-cover dark:border-white/10" src={record.imageUrl} /> : null}
-                <div className="flex flex-wrap gap-2">
-                  <Link className={actionButtonClass} to={`/portal/writing/library/series/${record.id}`}>Series admin</Link>
-                  {record.publicHref ? <Link className={actionButtonClass} target="_blank" to={record.publicHref}>Public preview</Link> : null}
-                </div>
+                {record.publicHref ? <Link className={actionButtonClass} target="_blank" to={record.publicHref}>Public preview</Link> : null}
               </div>
             ) : null}
             {record.kind === 'series' ? (
