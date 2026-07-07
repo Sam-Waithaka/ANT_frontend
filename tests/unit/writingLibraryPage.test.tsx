@@ -122,6 +122,11 @@ const choosePortalSelect = async (ariaLabel: string, optionText: string, index =
   await act(async () => option.click());
 };
 
+const openCreateBrowsePathwayModal = async () => {
+  const button = [...document.querySelectorAll('button')].find((item) => item.textContent === 'Create browse pathway') as HTMLButtonElement | undefined;
+  if (!button) throw new Error('Missing Create browse pathway button');
+  await act(async () => button.click());
+};
 const openCreateLibraryItemModal = async () => {
   const button = [...document.querySelectorAll('button')].find((item) => item.textContent === 'Create library item') as HTMLButtonElement | undefined;
   if (!button) throw new Error('Missing Create library item button');
@@ -179,7 +184,7 @@ describe('WritingLibraryPage', () => {
 
     await vi.waitFor(() => expect(container.textContent).toContain('Create library item'));
     const createButton = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Create library item') as HTMLButtonElement;
-    const createPathwayButton = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement;
+    const createPathwayButton = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Create browse pathway') as HTMLButtonElement;
     expect(createButton.disabled).toBe(true);
     expect(createPathwayButton.disabled).toBe(true);
   });
@@ -220,10 +225,11 @@ describe('WritingLibraryPage', () => {
   it('creates resource/category and category/series browse pathways with curation fields', async () => {
     await renderPage(root);
     await vi.waitFor(() => expect(container.textContent).toContain('Guide browsing'));
+    await openCreateBrowsePathwayModal();
 
     await choosePortalSelect('Resource type', 'Devotional');
     await choosePortalSelect('Category', 'Prayer');
-    await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement).click());
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement).click());
     expect(mocks.createResourceTypeCategoryLink).toHaveBeenCalledWith('access-token', expect.objectContaining({
       category: '2',
       is_active: true,
@@ -231,11 +237,17 @@ describe('WritingLibraryPage', () => {
       resource_type: '1',
       sort_order: 0,
     }));
+    expect(document.querySelector('[role="status"]')?.textContent).toContain('Browse pathway created.');
+    const libraryItemTile = ([...container.querySelectorAll('h2')].find((heading) => heading.textContent === 'Create library item') as HTMLElement).closest('section');
+    const pathwayTile = ([...container.querySelectorAll('h2')].find((heading) => heading.textContent === 'Guide browsing') as HTMLElement).closest('section');
+    expect(libraryItemTile?.textContent).not.toContain('Browse pathway created.');
+    expect(pathwayTile?.textContent).toContain('Browse pathway created.');
 
+    await openCreateBrowsePathwayModal();
     await choosePortalSelect('Pathway type', 'Category ' + String.fromCharCode(8594) + ' Series');
     await choosePortalSelect('Category', 'Prayer');
     await choosePortalSelect('Series', 'Project 52');
-    await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement).click());
+    await act(async () => ([...document.querySelectorAll('button')].find((button) => button.textContent === 'Create pathway') as HTMLButtonElement).click());
     expect(mocks.createCategorySeriesLink).toHaveBeenCalledWith('access-token', expect.objectContaining({
       category: '2',
       is_active: true,

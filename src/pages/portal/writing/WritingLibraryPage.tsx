@@ -52,7 +52,7 @@ import { canManageTaxonomy } from '../../../utils/permissions';
 
 type TaxonomyKind = 'category' | 'resourceType' | 'series' | 'tag';
 type CurationKind = 'categorySeries' | 'resourceCategory';
-type LibraryModalState = { type: 'createItem' } | null;
+type LibraryModalState = { type: 'createItem' } | { type: 'createPathway' } | null;
 
 type LibraryItemForm = {
   active: boolean;
@@ -138,9 +138,17 @@ const WritingLibraryPage = () => {
   const [seriesSearchResults, setSeriesSearchResults] = useState<Writing[]>([]);
   const [series, setSeries] = useState<WritingSeries[]>([]);
   const [tags, setTags] = useState<WritingTag[]>([]);
-  const [message, setMessage] = useState('');
+  const [itemMessage, setItemMessage] = useState('');
+  const [pathwayMessage, setPathwayMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
   const [loadError, setLoadError] = useState('');
   const [kind, setKind] = useState<TaxonomyKind>('category');
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timeoutId = window.setTimeout(() => setToastMessage(''), 3600);
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
 
   const load = () => {
     const controller = new AbortController();
@@ -231,10 +239,12 @@ const WritingLibraryPage = () => {
 
       setItemForm(emptyLibraryItemForm());
       setLibraryModal(null);
-      setMessage('Library item created.');
+      setItemMessage('Library item created.');
+      setPathwayMessage('');
+      setToastMessage('Library item created.');
       load();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to create Library item.');
+      setItemMessage(err instanceof Error ? err.message : 'Unable to create Library item.');
     }
   };
 
@@ -245,7 +255,7 @@ const WritingLibraryPage = () => {
     const canCreateCategorySeriesLink = curationKind === 'categorySeries' && pathwayForm.category && pathwayForm.series;
 
     if (!canCreateResourceCategoryLink && !canCreateCategorySeriesLink) {
-      setMessage('Choose both sides of the browse pathway.');
+      setPathwayMessage('Choose both sides of the browse pathway.');
       return;
     }
 
@@ -271,10 +281,13 @@ const WritingLibraryPage = () => {
       }
 
       setPathwayForm(emptyPathwayForm());
-      setMessage('Browse pathway created.');
+      setLibraryModal(null);
+      setPathwayMessage('Browse pathway created.');
+      setItemMessage('');
+      setToastMessage('Browse pathway created.');
       load();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to create browse pathway.');
+      setPathwayMessage(err instanceof Error ? err.message : 'Unable to create browse pathway.');
     }
   };
 
@@ -340,8 +353,15 @@ const WritingLibraryPage = () => {
     setEditingPathway((current) => current ? { ...current, form: { ...current.form, [key]: value } } : current);
   };
 
-  const reloadAfterMutation = (nextMessage: string) => {
-    setMessage(nextMessage);
+  const reloadAfterMutation = (nextMessage: string, channel: 'item' | 'pathway' = 'item') => {
+    if (channel === 'pathway') {
+      setPathwayMessage(nextMessage);
+      setItemMessage('');
+    } else {
+      setItemMessage(nextMessage);
+      setPathwayMessage('');
+    }
+    setToastMessage(nextMessage);
     load();
   };
 
@@ -396,7 +416,7 @@ const WritingLibraryPage = () => {
       setEditingPrimary(null);
       reloadAfterMutation('Library item updated.');
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to update Library item.');
+      setItemMessage(err instanceof Error ? err.message : 'Unable to update Library item.');
     }
   };
 
@@ -426,9 +446,9 @@ const WritingLibraryPage = () => {
       }
 
       setEditingPathway(null);
-      reloadAfterMutation('Browse pathway updated.');
+      reloadAfterMutation('Browse pathway updated.', 'pathway');
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to update browse pathway.');
+      setPathwayMessage(err instanceof Error ? err.message : 'Unable to update browse pathway.');
     }
   };
   const confirmDelete = async (label: string, action: () => Promise<null>) => {
@@ -438,7 +458,7 @@ const WritingLibraryPage = () => {
       await action();
       reloadAfterMutation(`${label} deleted.`);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : `Unable to delete ${label}. It may already be used by writings.`);
+      setItemMessage(err instanceof Error ? err.message : `Unable to delete ${label}. It may already be used by writings.`);
     }
   };
 
@@ -466,7 +486,7 @@ const WritingLibraryPage = () => {
       if (record.kind === 'series') await updateSeries(auth.accessToken, record.id, { [field]: nextValue });
       reloadAfterMutation(field === 'is_active' ? 'Active state updated.' : 'Featured state updated.');
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to update Library item state.');
+      setItemMessage(err instanceof Error ? err.message : 'Unable to update Library item state.');
     }
   };
 
@@ -477,7 +497,7 @@ const WritingLibraryPage = () => {
       const page = await fetchWritings(auth.accessToken, { page: 1, page_size: 24, search: seriesSearchQuery.trim() || undefined, status: seriesSearchStatus });
       setSeriesSearchResults(page.results);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to search writings right now.');
+      setItemMessage(err instanceof Error ? err.message : 'Unable to search writings right now.');
     } finally {
       setSeriesSearchLoading(false);
     }
@@ -497,7 +517,7 @@ const WritingLibraryPage = () => {
       reloadAfterMutation('Writing added to series.');
     } catch (err) {
       const detail = err instanceof Error ? err.message : '';
-      setMessage(detail.toLowerCase().includes('duplicate') || detail.toLowerCase().includes('unique') || detail.includes('400')
+      setItemMessage(detail.toLowerCase().includes('duplicate') || detail.toLowerCase().includes('unique') || detail.includes('400')
         ? 'This writing is already in this series.'
         : detail || 'Unable to add writing to series.');
     }
@@ -515,7 +535,7 @@ const WritingLibraryPage = () => {
       await reorderWritingSeriesItems(auth.accessToken, seriesId, nextItems.map((item, index) => ({ id: item.id, order: index })));
       reloadAfterMutation('Series order updated.');
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to reorder series items. Refetching the series may be needed.');
+      setItemMessage(err instanceof Error ? err.message : 'Unable to reorder series items. Refetching the series may be needed.');
       load();
     }
   };
@@ -535,7 +555,7 @@ const WritingLibraryPage = () => {
       await deleteWritingSeriesItem(auth.accessToken, item.id);
       reloadAfterMutation('Writing removed from series.');
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to remove writing from series.');
+      setItemMessage(err instanceof Error ? err.message : 'Unable to remove writing from series.');
     }
   };
   const togglePathway = async (record: PathwayRecord, field: 'is_active' | 'is_featured') => {
@@ -545,9 +565,9 @@ const WritingLibraryPage = () => {
     try {
       if (record.kind === 'resourceCategory') await updateResourceTypeCategoryLink(auth.accessToken, record.id, { [field]: nextValue });
       if (record.kind === 'categorySeries') await updateCategorySeriesLink(auth.accessToken, record.id, { [field]: nextValue });
-      reloadAfterMutation(field === 'is_active' ? 'Pathway active state updated.' : 'Pathway featured state updated.');
+      reloadAfterMutation(field === 'is_active' ? 'Pathway active state updated.' : 'Pathway featured state updated.', 'pathway');
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Unable to update browse pathway state.');
+      setPathwayMessage(err instanceof Error ? err.message : 'Unable to update browse pathway state.');
     }
   };
   const inputClass = `w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-red-800/25 ${darkMode ? 'border-white/10 bg-white/5 text-stone-100 placeholder:text-stone-500' : 'border-[#eaded0] bg-white text-zinc-950 placeholder:text-[#8a7d70]'}`;
@@ -976,6 +996,11 @@ const WritingLibraryPage = () => {
   );
   return (
     <WritingStudioShell>
+      {toastMessage ? (
+        <div className={`fixed right-5 top-5 z-[80] max-w-sm rounded-2xl border px-4 py-3 text-sm font-bold shadow-2xl ${darkMode ? 'border-white/10 bg-zinc-950 text-stone-100 shadow-black/40' : 'border-[#eaded0] bg-white text-red-800 shadow-red-950/10'}`} role="status">
+          {toastMessage}
+        </div>
+      ) : null}
       {libraryModal?.type === 'createItem' ? (
         <PortalModal
           darkMode={darkMode}
@@ -1033,11 +1058,69 @@ const WritingLibraryPage = () => {
               </>
             ) : null}
 
-            {message ? <p className="text-sm font-bold text-red-800">{message}</p> : null}
+            {itemMessage ? <p className="text-sm font-bold text-red-800">{itemMessage}</p> : null}
 
             <div className="flex flex-wrap justify-end gap-3 border-t border-[#eaded0] pt-4 dark:border-white/10">
               <button className={actionButtonClass} onClick={() => setLibraryModal(null)} type="button">Cancel</button>
               <button className="rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create</button>
+            </div>
+          </form>
+        </PortalModal>
+      ) : null}
+      {libraryModal?.type === 'createPathway' ? (
+        <PortalModal
+          darkMode={darkMode}
+          description="Connect broad shelves to relevant topics, and topics to curated series."
+          eyebrow="Browse Pathways"
+          onClose={() => setLibraryModal(null)}
+          title="Create browse pathway"
+        >
+          <form className="grid gap-4" onSubmit={handleCurate}>
+            <label className="grid gap-2">
+              <span className={labelClass}>Pathway type</span>
+              <PortalSelect ariaLabel="Pathway type" darkMode={darkMode} onChange={(value) => { setCurationKind(value as CurationKind); setPathwayForm(emptyPathwayForm()); }} options={[{ label: 'Resource Type ' + String.fromCharCode(8594) + ' Category', value: 'resourceCategory' }, { label: 'Category ' + String.fromCharCode(8594) + ' Series', value: 'categorySeries' }]} value={curationKind} />
+            </label>
+
+            {curationKind === 'resourceCategory' ? (
+              <label className="grid gap-2">
+                <span className={labelClass}>Resource type</span>
+                <PortalSelect ariaLabel="Resource type" darkMode={darkMode} onChange={(value) => updatePathwayForm('resourceType', value)} options={[{ label: 'Choose resource type', value: '' }, ...resourceTypes.map((resourceType) => ({ label: resourceType.name, value: String(resourceType.id) }))]} value={pathwayForm.resourceType} />
+              </label>
+            ) : null}
+
+            <label className="grid gap-2">
+              <span className={labelClass}>Category</span>
+              <PortalSelect ariaLabel="Category" darkMode={darkMode} onChange={(value) => updatePathwayForm('category', value)} options={[{ label: 'Choose category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={pathwayForm.category} />
+            </label>
+
+            {curationKind === 'categorySeries' ? (
+              <label className="grid gap-2">
+                <span className={labelClass}>Series</span>
+                <PortalSelect ariaLabel="Series" darkMode={darkMode} onChange={(value) => updatePathwayForm('series', value)} options={[{ label: 'Choose series', value: '' }, ...series.map((item) => ({ label: seriesName(item), value: String(item.id) }))]} value={pathwayForm.series} />
+              </label>
+            ) : null}
+
+            <label className="grid gap-2">
+              <span className={labelClass}>Sort order</span>
+              <input className={inputClass} inputMode="numeric" onChange={(event) => updatePathwayForm('sortOrder', event.target.value)} placeholder="0" type="number" value={pathwayForm.sortOrder} />
+            </label>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className={checkboxClass}>
+                <span>Active</span>
+                <input checked={pathwayForm.active} onChange={(event) => updatePathwayForm('active', event.target.checked)} type="checkbox" />
+              </label>
+              <label className={checkboxClass}>
+                <span>Featured</span>
+                <input checked={pathwayForm.featured} onChange={(event) => updatePathwayForm('featured', event.target.checked)} type="checkbox" />
+              </label>
+            </div>
+
+            {pathwayMessage ? <p className="text-sm font-bold text-red-800">{pathwayMessage}</p> : null}
+
+            <div className="flex flex-wrap justify-end gap-3 border-t border-[#eaded0] pt-4 dark:border-white/10">
+              <button className={actionButtonClass} onClick={() => setLibraryModal(null)} type="button">Cancel</button>
+              <button className="rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create pathway</button>
             </div>
           </form>
         </PortalModal>
@@ -1061,57 +1144,17 @@ const WritingLibraryPage = () => {
               </p>
               <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setLibraryModal({ type: 'createItem' })} type="button">Create library item</button>
               {loadError ? <p className="mt-5 text-sm font-bold text-red-800">{loadError}</p> : null}
-              {message ? <p className="mt-3 text-sm font-bold text-red-800">{message}</p> : null}
+              {itemMessage ? <p className="mt-3 text-sm font-bold text-red-800">{itemMessage}</p> : null}
             </section>
-            <form onSubmit={handleCurate} className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
+            <section className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Browse Pathways</p>
               <h2 className="mt-3 font-serif text-4xl">Guide browsing</h2>
               <p className={`mt-3 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
                 Connect broad shelves to relevant topics, and topics to curated series.
               </p>
-              <div className="mt-6 grid gap-4">
-                <label className="grid gap-2">
-                  <span className={labelClass}>Pathway type</span>
-                  <PortalSelect ariaLabel="Pathway type" darkMode={darkMode} onChange={(value) => { setCurationKind(value as CurationKind); setPathwayForm(emptyPathwayForm()); }} options={[{ label: 'Resource Type ' + String.fromCharCode(8594) + ' Category', value: 'resourceCategory' }, { label: 'Category ' + String.fromCharCode(8594) + ' Series', value: 'categorySeries' }]} value={curationKind} />
-                </label>
-
-                {curationKind === 'resourceCategory' ? (
-                  <label className="grid gap-2">
-                    <span className={labelClass}>Resource type</span>
-                    <PortalSelect ariaLabel="Resource type" darkMode={darkMode} onChange={(value) => updatePathwayForm('resourceType', value)} options={[{ label: 'Choose resource type', value: '' }, ...resourceTypes.map((resourceType) => ({ label: resourceType.name, value: String(resourceType.id) }))]} value={pathwayForm.resourceType} />
-                  </label>
-                ) : null}
-
-                <label className="grid gap-2">
-                  <span className={labelClass}>Category</span>
-                  <PortalSelect ariaLabel="Category" darkMode={darkMode} onChange={(value) => updatePathwayForm('category', value)} options={[{ label: 'Choose category', value: '' }, ...categories.map((category) => ({ label: category.name, value: String(category.id) }))]} value={pathwayForm.category} />
-                </label>
-
-                {curationKind === 'categorySeries' ? (
-                  <label className="grid gap-2">
-                    <span className={labelClass}>Series</span>
-                    <PortalSelect ariaLabel="Series" darkMode={darkMode} onChange={(value) => updatePathwayForm('series', value)} options={[{ label: 'Choose series', value: '' }, ...series.map((item) => ({ label: seriesName(item), value: String(item.id) }))]} value={pathwayForm.series} />
-                  </label>
-                ) : null}
-
-                <label className="grid gap-2">
-                  <span className={labelClass}>Sort order</span>
-                  <input className={inputClass} inputMode="numeric" onChange={(event) => updatePathwayForm('sortOrder', event.target.value)} placeholder="0" type="number" value={pathwayForm.sortOrder} />
-                </label>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className={checkboxClass}>
-                    <span>Active</span>
-                    <input checked={pathwayForm.active} onChange={(event) => updatePathwayForm('active', event.target.checked)} type="checkbox" />
-                  </label>
-                  <label className={checkboxClass}>
-                    <span>Featured</span>
-                    <input checked={pathwayForm.featured} onChange={(event) => updatePathwayForm('featured', event.target.checked)} type="checkbox" />
-                  </label>
-                </div>
-              </div>
-              <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} type="submit">Create pathway</button>
-            </form>
+              <button className="mt-5 rounded-full bg-red-800 px-6 py-3 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:opacity-50" disabled={!canManageTaxonomy(auth.permissions)} onClick={() => setLibraryModal({ type: 'createPathway' })} type="button">Create browse pathway</button>
+              {pathwayMessage ? <p className="mt-3 text-sm font-bold text-red-800">{pathwayMessage}</p> : null}
+            </section>
           </div>
 
           <div className="grid gap-6">
