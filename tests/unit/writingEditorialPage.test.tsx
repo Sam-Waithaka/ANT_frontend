@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
     'writings.publish_writing',
   ],
   fetchEditorialQueue: vi.fn(),
+  fetchWorkflowNotes: vi.fn(),
   fetchWritings: vi.fn(),
 }));
 
@@ -38,6 +39,7 @@ vi.mock('../../src/components/portal/writing/WritingStudioShell', () => ({
 vi.mock('../../src/services/writingApi', () => ({
   approveWriting: mocks.approveWriting,
   fetchEditorialQueue: mocks.fetchEditorialQueue,
+  fetchWorkflowNotes: mocks.fetchWorkflowNotes,
   fetchWritings: mocks.fetchWritings,
 }));
 
@@ -87,9 +89,11 @@ describe('WritingEditorialPage', () => {
     ];
     mocks.approveWriting.mockReset();
     mocks.fetchEditorialQueue.mockReset();
+    mocks.fetchWorkflowNotes.mockReset();
     mocks.fetchWritings.mockReset();
     mocks.approveWriting.mockResolvedValue({ id: 4 });
     mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+    mocks.fetchWorkflowNotes.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -175,6 +179,47 @@ describe('WritingEditorialPage', () => {
     expect(container.textContent).toContain('Unable to approve this writing.');
     await vi.waitFor(() => expect(container.textContent).toContain('Still Waiting'));
     expect(container.textContent).not.toContain('APPROVED');
+  });
+
+
+
+  it('opens editorial notes, loads them by writing id, and renders them chronologically', async () => {
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+    mocks.fetchWorkflowNotes.mockResolvedValueOnce({
+      count: 2,
+      next: null,
+      previous: null,
+      results: [
+        { id: 2, writing: 4, note: 'Second note.', action: 'REVIEW', created_by_detail: { id: 2, name: 'Editor Jane' }, created_at: '2026-07-09T08:00:00Z' },
+        { id: 1, writing: 4, note: 'First note.', action: 'SUBMIT', created_by_detail: { id: 1, name: 'Author One' }, created_at: '2026-07-09T07:00:00Z' },
+      ],
+    });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+
+    await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'View notes') as HTMLButtonElement).click());
+
+    expect(mocks.fetchWorkflowNotes).toHaveBeenCalledWith('access-token', 4);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Notes for Mercy in the Morning'));
+    const bodyText = document.body.textContent || '';
+    expect(bodyText.indexOf('First note.')).toBeLessThan(bodyText.indexOf('Second note.'));
+    expect(bodyText).toContain('Author One');
+    expect(bodyText).toContain('Editor Jane');
+    expect(bodyText).toContain('SUBMIT');
+    expect(bodyText).toContain('REVIEW');
+  });
+
+  it('shows an empty notes state in the editorial notes modal', async () => {
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem({ latest_workflow_note: null, workflow_notes_count: 0 })] });
+    mocks.fetchWorkflowNotes.mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+
+    await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'View notes') as HTMLButtonElement).click());
+
+    await vi.waitFor(() => expect(document.body.textContent).toContain('No editorial notes yet.'));
   });
 
   it('shows a loading state while the queue request is pending', async () => {

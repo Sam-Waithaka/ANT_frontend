@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import PortalModal from '../../../components/portal/PortalModal';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
-import { approveWriting, fetchEditorialQueue } from '../../../services/writingApi';
-import type { EditorialQueueItem, WritingStatus } from '../../../types/writing';
+import { approveWriting, fetchEditorialQueue, fetchWorkflowNotes } from '../../../services/writingApi';
+import type { EditorialQueueItem, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
 import { getEditorialWritingCapabilities } from '../../../utils/permissions';
 
 const statusLabels: Record<WritingStatus, string> = {
@@ -28,7 +29,7 @@ const authorLabel = (writing: EditorialQueueItem) => {
   return primary?.display_name || primary?.name || (writing.is_author ? 'You' : 'Unknown author');
 };
 
-const noteAuthorLabel = (note: NonNullable<EditorialQueueItem['latest_workflow_note']>) =>
+const noteAuthorLabel = (note: WritingWorkflowNote) =>
   note.created_by_detail?.name || note.created_by_name || 'Editorial note';
 
 const WritingEditorialPage = () => {
@@ -38,6 +39,10 @@ const WritingEditorialPage = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [approvingId, setApprovingId] = useState<number | string | null>(null);
+  const [notesWriting, setNotesWriting] = useState<EditorialQueueItem | null>(null);
+  const [notes, setNotes] = useState<WritingWorkflowNote[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesMessage, setNotesMessage] = useState('');
 
   const canAccessEditorialQueue = useMemo(
     () => auth.permissions.some((permission) => [
@@ -95,6 +100,29 @@ const WritingEditorialPage = () => {
     }
   };
 
+  const openNotes = async (writing: EditorialQueueItem) => {
+    setNotesWriting(writing);
+    setNotes([]);
+    setNotesMessage('');
+    setNotesLoading(true);
+
+    try {
+      const page = await fetchWorkflowNotes(auth.accessToken, writing.id);
+      setNotes([...page.results].sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime()));
+    } catch {
+      setNotesMessage('Unable to load editorial notes right now.');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const closeNotes = () => {
+    setNotesWriting(null);
+    setNotes([]);
+    setNotesMessage('');
+    setNotesLoading(false);
+  };
+
   const statusBadgeClass = (status: WritingStatus) => {
     const base = 'rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em]';
     if (status === 'IN_REVIEW') return `${base} ${darkMode ? 'border-amber-300/20 bg-amber-300/10 text-amber-100' : 'border-amber-700/15 bg-amber-50 text-amber-800'}`;
@@ -110,6 +138,42 @@ const WritingEditorialPage = () => {
 
   return (
     <WritingStudioShell>
+      {notesWriting ? (
+        <PortalModal
+          darkMode={darkMode}
+          description="Read the editorial history and review context for this writing."
+          eyebrow="Editorial Notes"
+          onClose={closeNotes}
+          title={`Notes for ${notesWriting.title}`}
+        >
+          <div className="grid gap-4">
+            {notesLoading ? <div className={`h-28 animate-pulse rounded-3xl border ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-white/70'}`} /> : null}
+            {notesMessage ? <p className="rounded-2xl border border-red-900/15 bg-red-50 p-4 text-sm font-bold text-red-800 dark:border-red-400/20 dark:bg-red-950/30 dark:text-red-100">{notesMessage}</p> : null}
+            {!notesLoading && !notesMessage && notes.length === 0 ? (
+              <div className={`rounded-3xl border p-6 text-center ${darkMode ? 'border-white/10 bg-white/[0.03]' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
+                <h3 className="font-serif text-2xl">No editorial notes yet.</h3>
+                <p className={`mt-2 text-sm ${portalSurface.softMutedText(darkMode)}`}>Notes added during review, approval, publishing, or archive actions will appear here.</p>
+              </div>
+            ) : null}
+            {!notesLoading && notes.length ? (
+              <ol className="grid gap-3">
+                {notes.map((note) => (
+                  <li key={note.id} className={`rounded-3xl border p-4 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {note.action ? <span className={statusBadgeClass(notesWriting.status)}>{note.action}</span> : null}
+                      <span className={`text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(note)} ? {formatDate(note.created_at)}</span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6">{note.note}</p>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
+            <div className="flex justify-end border-t border-[#eaded0] pt-4 dark:border-white/10">
+              <button className={actionButtonClass} onClick={closeNotes} type="button">Close</button>
+            </div>
+          </div>
+        </PortalModal>
+      ) : null}
       <div className="grid gap-8">
         <section className={`rounded-[2rem] border p-6 shadow-lg sm:p-8 ${portalSurface.panel(darkMode)}`}>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Editorial Workflow</p>
@@ -198,6 +262,7 @@ const WritingEditorialPage = () => {
                         <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-56 lg:justify-end">
                           <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Open</Link>
                           {capabilities.canEdit ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Edit</Link> : null}
+                          <button className={actionButtonClass} onClick={() => void openNotes(writing)} type="button">View notes</button>
                           {capabilities.canReview ? <button className={actionButtonClass} disabled={String(approvingId) === String(writing.id)} onClick={() => void handleApprove(writing)} type="button">{String(approvingId) === String(writing.id) ? 'Approving...' : 'Approve'}</button> : null}
                           {capabilities.canPublish ? <button className={actionButtonClass} type="button">Publish</button> : null}
                           {capabilities.canArchive ? <button className={actionButtonClass} type="button">Archive</button> : null}
