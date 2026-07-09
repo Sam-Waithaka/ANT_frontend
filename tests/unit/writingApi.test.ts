@@ -1,24 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../src/services/apiClient';
 import {
+  approveWriting,
   createCategorySeriesLink,
   createWritingSeriesItem,
   createResourceTypeCategoryLink,
+  createWorkflowNote,
   createWritingTag,
+  deleteWorkflowNote,
   deleteWritingSeriesItem,
   createWritingScriptureReference,
   deleteWritingScriptureReference,
   fetchCategorySeriesLinks,
+  fetchEditorialQueue,
   createWriting,
   fetchMediaAssetUsage,
   fetchResourceTypeCategoryLinks,
   fetchWritingSeriesItems,
   fetchWritingScriptureReferences,
+  fetchWorkflowNotes,
   fetchWritingTags,
   fetchWritings,
   normalizePage,
   publishWriting,
   reorderWritingSeriesItems,
+  updateWorkflowNote,
   updateWriting,
   updateWritingSeriesItem,
   updateWritingTag,
@@ -82,6 +88,46 @@ describe('writingApi', () => {
       }),
       method: 'GET',
     });
+  });
+
+
+
+  it('uses dedicated editorial queue and approval workflow endpoints', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ count: 1, results: [{ id: 4, is_author: true, status: 'IN_REVIEW', title: 'Review Me' }] }))
+      .mockResolvedValueOnce(jsonResponse({ id: 4, reviewed_at: '2026-07-09T09:00:00Z', status: 'IN_REVIEW' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchEditorialQueue('access-token', { page: 1, page_size: 24, search: 'review', status: 'IN_REVIEW' });
+    await approveWriting('access-token', 4);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writings/editorial-queue/?page=1&page_size=24&search=review&status=IN_REVIEW', expect.objectContaining({ method: 'GET' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writings/4/approve/', expect.objectContaining({ method: 'POST' }));
+  });
+
+  it('manages workflow notes through dedicated editorial endpoints', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({ results: [{ id: 1, writing: 4, note: 'Please review.', created_at: '2026-07-09T09:00:00Z' }] }))
+      .mockResolvedValueOnce(jsonResponse({ id: 2, writing: 4, note: 'Looks ready.', action: 'APPROVE' }))
+      .mockResolvedValueOnce(jsonResponse({ id: 2, writing: 4, note: 'Looks ready now.', action: 'APPROVE' }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchWorkflowNotes('access-token', 4);
+    await createWorkflowNote('access-token', { writing: 4, note: 'Looks ready.', action: 'APPROVE' });
+    await updateWorkflowNote('access-token', 2, { note: 'Looks ready now.' });
+    await deleteWorkflowNote('access-token', 2);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/writing-workflow-notes/?writing=4', expect.objectContaining({ method: 'GET' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/writing-workflow-notes/', expect.objectContaining({
+      body: JSON.stringify({ writing: 4, note: 'Looks ready.', action: 'APPROVE' }),
+      method: 'POST',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/writing-workflow-notes/2/', expect.objectContaining({
+      body: JSON.stringify({ note: 'Looks ready now.' }),
+      method: 'PATCH',
+    }));
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/v1/writing-workflow-notes/2/', expect.objectContaining({ method: 'DELETE' }));
   });
 
   it('fetches existing writing tags for rich metadata selection', async () => {

@@ -1,14 +1,29 @@
 export type WritingStatus = 'DRAFT' | 'IN_REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED';
 
 export type WritingWorkflowNote = {
-  action: string;
-  action_display: string;
+  action?: string;
+  action_display?: string;
   created_at: string;
-  created_by: number | string;
-  created_by_name: string;
+  created_by?: number | string;
+  created_by_detail?: {
+    email?: string;
+    id: number | string;
+    name?: string;
+  } | null;
+  created_by_name?: string;
   id: number | string;
   note: string;
+  updated_at?: string;
+  writing?: number | string;
 };
+
+export type WritingWorkflowNoteCreatePayload = {
+  action?: string;
+  note: string;
+  writing: number | string;
+};
+
+export type WritingWorkflowNoteUpdatePayload = Partial<Pick<WritingWorkflowNoteCreatePayload, 'action' | 'note'>>;
 
 export type PaginatedResponse<T> = {
   count?: number;
@@ -185,6 +200,12 @@ export type Writing = {
   content_html?: string;
   content_text?: string;
   status: WritingStatus;
+  author_ids?: Array<number | string>;
+  is_author?: boolean;
+  submitted_at?: string | null;
+  reviewed_at?: string | null;
+  workflow_notes_count?: number;
+  latest_workflow_note?: WritingWorkflowNote | null;
   reading_time_minutes?: number;
   readingTimeMinutes?: number;
   featured_at?: string | null;
@@ -204,6 +225,23 @@ export type Writing = {
   og_image?: number | string | null;
   og_image_detail?: WritingMediaAsset | null;
   media_embeds?: WritingMediaEmbed[];
+};
+
+export type EditorialQueueItem = Writing & {
+  author_ids?: Array<number | string>;
+  is_author?: boolean;
+  submitted_at?: string | null;
+  reviewed_at?: string | null;
+  workflow_notes_count?: number;
+  latest_workflow_note?: WritingWorkflowNote | null;
+};
+
+export type EditorialQueueFilters = {
+  author?: number | string;
+  page?: number;
+  page_size?: number;
+  search?: string;
+  status?: WritingStatus | 'ALL';
 };
 
 export type WritingFilters = {

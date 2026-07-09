@@ -9,10 +9,13 @@ import {
   canEditOwnWriting,
   canManageAssignments,
   canManageTaxonomy,
+  canManageWorkflowNotes,
   canPublishWriting,
+  canReviewWriting,
   canUploadMedia,
   canViewAnyDrafts,
   canViewOwnDrafts,
+  getEditorialWritingCapabilities,
   hasAnyPermission,
   hasPermission,
   MEDIA_PERMISSIONS,
@@ -52,6 +55,34 @@ describe('writing permissions', () => {
     expect(canArchiveWriting(permissions)).toBe(true);
     expect(canManageTaxonomy(permissions)).toBe(true);
     expect(canManageAssignments(permissions)).toBe(true);
+    expect(canReviewWriting(permissions)).toBe(true);
+    expect(canManageWorkflowNotes(permissions)).toBe(true);
+  });
+
+
+
+  it('derives editorial capabilities from permissions and per-writing ownership', () => {
+    const ownWriting = { author_ids: [7], is_author: undefined };
+    const user = {
+      id: 7,
+      permissions: [
+        WRITING_PERMISSIONS.editOwnWriting,
+        WRITING_PERMISSIONS.reviewWriting,
+        WRITING_PERMISSIONS.manageWorkflowNotes,
+      ],
+    };
+
+    expect(getEditorialWritingCapabilities(user, ownWriting)).toMatchObject({
+      canEdit: true,
+      canManageNotes: true,
+      canReview: true,
+      isAuthor: true,
+    });
+    expect(getEditorialWritingCapabilities({ id: 8, permissions: [WRITING_PERMISSIONS.editOwnWriting] }, ownWriting)).toMatchObject({
+      canEdit: false,
+      isAuthor: false,
+    });
+    expect(getEditorialWritingCapabilities({ id: 8, permissions: [WRITING_PERMISSIONS.editAnyWriting] }, ownWriting).canEdit).toBe(true);
   });
 
   it('exposes named media capability helpers for editor media controls', () => {

@@ -1,5 +1,7 @@
 import { ApiError, createApiUrl } from './apiClient';
 import type {
+  EditorialQueueFilters,
+  EditorialQueueItem,
   MediaAssetUsage,
   PaginatedResponse,
   Writing,
@@ -17,6 +19,9 @@ import type {
   WritingSeriesItem,
   WritingTag,
   WritingUpdatePayload,
+  WritingWorkflowNote,
+  WritingWorkflowNoteCreatePayload,
+  WritingWorkflowNoteUpdatePayload,
 } from '../types/writing';
 
 type PortalRequestOptions = {
@@ -74,7 +79,7 @@ const portalRequest = async <T>(path: string, options: PortalRequestOptions): Pr
   return payload as T;
 };
 
-const toQueryString = (filters: WritingFilters = {}) => {
+const toQueryString = (filters: WritingFilters | EditorialQueueFilters = {}) => {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value === undefined || value === '' || value === 'ALL') return;
@@ -100,6 +105,9 @@ export const normalizePage = <T>(payload: unknown): PaginatedResponse<T> => {
 export const fetchWritings = async (accessToken: string, filters?: WritingFilters, signal?: AbortSignal) =>
   normalizePage<Writing>(await portalRequest<unknown>(`/v1/writings/${toQueryString(filters)}`, { accessToken, signal }));
 
+export const fetchEditorialQueue = async (accessToken: string, filters?: EditorialQueueFilters, signal?: AbortSignal) =>
+  normalizePage<EditorialQueueItem>(await portalRequest<unknown>(`/v1/writings/editorial-queue/${toQueryString(filters)}`, { accessToken, signal }));
+
 export const fetchWriting = (accessToken: string, id: string | number, signal?: AbortSignal) =>
   portalRequest<Writing>(`/v1/writings/${id}/`, { accessToken, signal });
 
@@ -111,6 +119,9 @@ export const updateWriting = (accessToken: string, id: string | number, body: Wr
 
 export const publishWriting = (accessToken: string, id: string | number) =>
   portalRequest<Writing>(`/v1/writings/${id}/publish/`, { accessToken, method: 'POST' });
+
+export const approveWriting = (accessToken: string, id: string | number) =>
+  portalRequest<Writing>(`/v1/writings/${id}/approve/`, { accessToken, method: 'POST' });
 
 export const archiveWriting = (accessToken: string, id: string | number) =>
   portalRequest<Writing>(`/v1/writings/${id}/archive/`, { accessToken, method: 'POST' });
@@ -259,3 +270,14 @@ export const deleteWritingScriptureReference = (accessToken: string, id: string 
 export const fetchMediaAssetUsage = (accessToken: string, id: string | number, signal?: AbortSignal) =>
   portalRequest<MediaAssetUsage>(`/v1/media-assets/${id}/usage/`, { accessToken, signal });
 
+export const fetchWorkflowNotes = async (accessToken: string, writingId: string | number, signal?: AbortSignal) =>
+  normalizePage<WritingWorkflowNote>(await portalRequest<unknown>(`/v1/writing-workflow-notes/?writing=${encodeURIComponent(String(writingId))}`, { accessToken, signal }));
+
+export const createWorkflowNote = (accessToken: string, body: WritingWorkflowNoteCreatePayload) =>
+  portalRequest<WritingWorkflowNote>('/v1/writing-workflow-notes/', { accessToken, body, method: 'POST' });
+
+export const updateWorkflowNote = (accessToken: string, id: string | number, body: WritingWorkflowNoteUpdatePayload) =>
+  portalRequest<WritingWorkflowNote>(`/v1/writing-workflow-notes/${id}/`, { accessToken, body, method: 'PATCH' });
+
+export const deleteWorkflowNote = (accessToken: string, id: string | number) =>
+  portalRequest<null>(`/v1/writing-workflow-notes/${id}/`, { accessToken, method: 'DELETE' });
