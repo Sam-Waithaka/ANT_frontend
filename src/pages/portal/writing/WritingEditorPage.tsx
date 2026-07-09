@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, ArrowLeft, Eye, MoreHorizontal, PenLine, Rocket, Save, Send } from 'lucide-react';
+import { Archive, ArrowLeft, CheckCircle2, Eye, MoreHorizontal, PenLine, Rocket, Save, Send } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import DocumentSettingsPanel, { type DocumentSettingsAction } from '../../../components/portal/writing/DocumentSettingsPanel';
 import WritingPreview from '../../../components/portal/writing/WritingPreview';
@@ -16,11 +16,11 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
-import { archiveWriting, createWritingMediaEmbed, createWritingRevision, createWritingScriptureReference, deleteWritingMediaEmbed, deleteWritingScriptureReference, fetchResourceTypes, fetchWriting, fetchWritingScriptureReferences, fetchWritingTags, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed, updateWritingScriptureReference } from '../../../services/writingApi';
-import type { Writing, WritingAuthorAttribution, WritingResourceType, WritingTag, WritingUpdatePayload } from '../../../types/writing';
+import { approveWriting, archiveWriting, createWritingMediaEmbed, createWritingRevision, createWritingScriptureReference, deleteWritingMediaEmbed, deleteWritingScriptureReference, fetchResourceTypes, fetchWorkflowNotes, fetchWriting, fetchWritingScriptureReferences, fetchWritingTags, publishWriting, returnWritingToDraft, scheduleWriting, submitWritingForReview, unscheduleWriting, updateWriting, updateWritingMediaEmbed, updateWritingScriptureReference } from '../../../services/writingApi';
+import type { Writing, WritingAuthorAttribution, WritingResourceType, WritingTag, WritingUpdatePayload, WritingWorkflowNote } from '../../../types/writing';
 import type { WritingMediaEmbedLike } from '../../../components/portal/writing/editor/nodes/ChurchBlockMediaContext';
 import type { ScriptureData } from '../../../components/portal/writing/editor/nodes/scriptureTypes';
-import { canEditAnyWriting, canEditOwnWriting, canUploadMedia } from '../../../utils/permissions';
+import { canEditAnyWriting, canEditOwnWriting, canUploadMedia, getEditorialWritingCapabilities } from '../../../utils/permissions';
 import { getWritingPublishingActions, getWritingWorkflowActions } from '../../../utils/writingActions';
 import { buildWritingDraftPayload, type CoverImageChange } from '../../../utils/writingDraftPayload';
 
@@ -63,6 +63,7 @@ const WritingEditorPage = () => {
   const [tagIds, setTagIds] = useState<Array<number | string>>([]);
   const [tagOptions, setTagOptions] = useState<WritingTag[]>([]);
   const [title, setTitle] = useState('');
+  const [workflowNotes, setWorkflowNotes] = useState<WritingWorkflowNote[]>([]);
   const [writing, setWriting] = useState<Writing | null>(null);
   const imageBlockSnapshot = useRef('');
   const knownImageEmbedIds = useRef(new Set<string>());
@@ -83,6 +84,7 @@ const WritingEditorPage = () => {
     setLoading(true);
     setMessage('');
     setWriting(null);
+    setWorkflowNotes([]);
 
     fetchWriting(auth.accessToken, id, controller.signal)
       .then((nextWriting) => {
@@ -103,6 +105,9 @@ const WritingEditorPage = () => {
         setContentJson(normalizedContent);
         void fetchWritingScriptureReferences(auth.accessToken, nextWriting.id, controller.signal).then((page) => {
           setWriting((current) => current ? { ...current, scripture_references: page.results } : current);
+        }).catch(() => undefined);
+        void fetchWorkflowNotes(auth.accessToken, nextWriting.id, controller.signal).then((page) => {
+          setWorkflowNotes([...page.results].sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime()));
         }).catch(() => undefined);
         setCoverImage((nextWriting.og_image_detail as MediaAsset | null) || null);
         setCoverImageChange(undefined);
@@ -149,13 +154,23 @@ const WritingEditorPage = () => {
   });
 
 
+  const refreshWorkflowNotes = useCallback(async (writingId: string | number) => {
+    const page = await fetchWorkflowNotes(auth.accessToken, writingId);
+    setWorkflowNotes([...page.results].sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime()));
+  }, [auth.accessToken]);
+
+  const refreshWritingAndNotes = useCallback(async (nextWriting: Writing) => {
+    setWriting(nextWriting);
+    await refreshWorkflowNotes(nextWriting.id);
+  }, [refreshWorkflowNotes]);
+
   const runPublishNow = async (): Promise<boolean> => {
     if (!writing) return false;
     setActionSaving(true);
     setMessage('');
     try {
       await saveNow();
-      setWriting(await publishWriting(auth.accessToken, writing.id));
+      await refreshWritingAndNotes(await publishWriting(auth.accessToken, writing.id));
       setMessage('Article published.');
       return true;
     } catch (err) {
@@ -185,10 +200,27 @@ const WritingEditorPage = () => {
     setActionSaving(true);
     setMessage('');
     try {
-      setWriting(await archiveWriting(auth.accessToken, writing.id));
+      await refreshWritingAndNotes(await archiveWriting(auth.accessToken, writing.id));
       setMessage('Article archived.');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Unable to archive this article.');
+    } finally {
+      setActionSaving(false);
+    }
+  };
+
+  const runApprove = async (): Promise<boolean> => {
+    if (!writing) return false;
+    setActionSaving(true);
+    setMessage('');
+    try {
+      await refreshWritingAndNotes(await approveWriting(auth.accessToken, writing.id));
+      setMessage('Article approved.');
+      return true;
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Unable to approve this article.');
+      if (writing) await refreshWorkflowNotes(writing.id).catch(() => undefined);
+      return false;
     } finally {
       setActionSaving(false);
     }
@@ -206,7 +238,7 @@ const WritingEditorPage = () => {
           : action === 'schedule'
             ? await scheduleWriting(auth.accessToken, writing.id, value)
             : await unscheduleWriting(auth.accessToken, writing.id);
-      setWriting(nextWriting);
+      await refreshWritingAndNotes(nextWriting);
       setMessage(action === 'submitForReview' ? 'Article submitted for review.' : action === 'returnToDraft' ? 'Article returned to draft.' : action === 'schedule' ? 'Publication scheduled.' : 'Scheduling cancelled.');
       return true;
     } catch (err) {
@@ -221,8 +253,20 @@ const WritingEditorPage = () => {
     ? 'w-full rounded-2xl border border-white/10 bg-[#171717] px-4 py-3 text-sm text-stone-100 outline-none focus:ring-2 focus:ring-red-800/30'
     : 'w-full rounded-2xl border border-[#eaded0] bg-white px-4 py-3 text-sm text-zinc-950 outline-none focus:ring-2 focus:ring-red-800/30';
   const mutedTextClass = darkMode ? 'text-stone-400' : 'text-[#786f66]';
-  const publishingActions = writing ? getWritingPublishingActions(auth.permissions, writing.status) : { canArchive: false, canPublish: false };
-  const workflowActions = writing ? getWritingWorkflowActions(auth.permissions, writing.status) : { canPublish: false, canReturnToDraft: false, canSchedule: false, canSubmitForReview: false, canUnschedule: false };
+  const editorialCapabilities = writing ? getEditorialWritingCapabilities({ id: auth.user?.id, permissions: auth.permissions }, writing) : { canArchive: false, canEdit: false, canManageNotes: false, canPublish: false, canReview: false, isAuthor: false };
+  const basePublishingActions = writing ? getWritingPublishingActions(auth.permissions, writing.status) : { canArchive: false, canPublish: false };
+  const baseWorkflowActions = writing ? getWritingWorkflowActions(auth.permissions, writing.status) : { canPublish: false, canReturnToDraft: false, canSchedule: false, canSubmitForReview: false, canUnschedule: false };
+  const publishingActions = {
+    ...basePublishingActions,
+    canArchive: basePublishingActions.canArchive && editorialCapabilities.canArchive,
+    canPublish: basePublishingActions.canPublish && editorialCapabilities.canPublish,
+  };
+  const workflowActions = {
+    ...baseWorkflowActions,
+    canPublish: baseWorkflowActions.canPublish && editorialCapabilities.canPublish,
+    canSchedule: baseWorkflowActions.canSchedule && editorialCapabilities.canPublish,
+  };
+  const canApproveFromEditor = Boolean(writing && writing.status === 'IN_REVIEW' && editorialCapabilities.canReview);
   const canModifyPublished = Boolean(writing && writing.status === 'PUBLISHED' && canEditAnyWriting(auth.permissions));
   const showPublishingPanel = Boolean(writing && publishingPanelOpen && (workflowActions.canPublish || workflowActions.canSchedule));
 
@@ -238,6 +282,15 @@ const WritingEditorPage = () => {
     onClick: () => void saveNow(),
     variant: 'secondary',
   }];
+  if (canApproveFromEditor) {
+    settingsActions.push({
+      disabled: actionSaving,
+      icon: <CheckCircle2 size={16} />,
+      label: 'Approve',
+      onClick: () => void runApprove(),
+      variant: 'primary',
+    });
+  }
   if (publishingActions.canArchive) {
     settingsActions.push({
       disabled: actionSaving,
@@ -367,7 +420,7 @@ const WritingEditorPage = () => {
             <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onCreateScriptureReference={createScriptureReferenceForNode} onDeleteScriptureReference={deleteScriptureReferenceForNode} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} onUpdateScriptureReference={updateScriptureReferenceForNode} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
           </>}
         </section>
-        <DocumentSettingsPanel actions={settingsActions} authorAttributions={authorAttributions} canManageAuthors={canEditAnyWriting(auth.permissions)} categoryIds={categoryIds} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} ministryIds={ministryIds} onAuthorAttributionsChange={setAuthorAttributions} onCategoryIdsChange={setCategoryIds} onExcerptChange={setExcerpt} onMinistryIdsChange={setMinistryIds} onResourceTypeChange={setResourceType} onSeriesIdsChange={setSeriesIds} onTagIdsChange={setTagIds} resourceType={resourceType} resourceTypes={resourceTypes} seriesIds={seriesIds} status={writing.status} tagIds={tagIds} tagOptions={tagOptions} workflowControl={<WritingWorkflowControls canReturnToDraft={workflowActions.canReturnToDraft} canSubmitForReview={workflowActions.canSubmitForReview} canUnschedule={workflowActions.canUnschedule} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={writing.workflow_notes} />} />
+        <DocumentSettingsPanel actions={settingsActions} authorAttributions={authorAttributions} canManageAuthors={canEditAnyWriting(auth.permissions)} categoryIds={categoryIds} coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} disabled={!editable} onChange={handleCoverImageChange} selectedAsset={coverImage} selectedAssetId={coverImageId} />} darkMode={darkMode} disabled={!editable} excerpt={excerpt} metadata={[{ label: 'Reading time', value: String(writing.reading_time_minutes || writing.readingTimeMinutes || 0) + ' minutes' }, { label: 'Last updated', value: writing.updated_at ? new Date(writing.updated_at).toLocaleString() : 'Not available' }]} ministryIds={ministryIds} onAuthorAttributionsChange={setAuthorAttributions} onCategoryIdsChange={setCategoryIds} onExcerptChange={setExcerpt} onMinistryIdsChange={setMinistryIds} onResourceTypeChange={setResourceType} onSeriesIdsChange={setSeriesIds} onTagIdsChange={setTagIds} resourceType={resourceType} resourceTypes={resourceTypes} seriesIds={seriesIds} status={writing.status} tagIds={tagIds} tagOptions={tagOptions} workflowControl={<WritingWorkflowControls canReturnToDraft={workflowActions.canReturnToDraft} canSubmitForReview={workflowActions.canSubmitForReview} canUnschedule={workflowActions.canUnschedule} darkMode={darkMode} onReturnToDraft={(note) => runWorkflowAction('returnToDraft', note)} onSubmitForReview={(note) => runWorkflowAction('submitForReview', note)} onUnschedule={() => runWorkflowAction('unschedule')} saving={actionSaving} scheduledFor={writing.scheduled_for} status={writing.status} workflowNotes={workflowNotes} />} />
         {showPublishingPanel ? <div className="hidden lg:block"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing.scheduled_for} /></div> : null}
       </div> : null}
       {showPublishingPanel ? <div className="fixed inset-0 z-50 grid place-items-center p-3 lg:hidden" role="dialog" aria-modal="true" aria-label="Publishing"><button aria-label="Close publishing panel" className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setPublishingPanelOpen(false)} type="button" /><div className="relative z-10 max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-[34rem] overflow-y-auto rounded-[2rem]"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /></div></div> : null}
