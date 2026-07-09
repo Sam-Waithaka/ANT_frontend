@@ -9,6 +9,9 @@ import WritingEditorialPage from '../../src/pages/portal/writing/WritingEditoria
 
 const mocks = vi.hoisted(() => ({
   approveWriting: vi.fn(),
+  createWorkflowNote: vi.fn(),
+  deleteWorkflowNote: vi.fn(),
+  updateWorkflowNote: vi.fn(),
   authPermissions: [
     'writings.view_any_draft_writing',
     'writings.edit_any_writing',
@@ -38,9 +41,12 @@ vi.mock('../../src/components/portal/writing/WritingStudioShell', () => ({
 
 vi.mock('../../src/services/writingApi', () => ({
   approveWriting: mocks.approveWriting,
+  createWorkflowNote: mocks.createWorkflowNote,
+  deleteWorkflowNote: mocks.deleteWorkflowNote,
   fetchEditorialQueue: mocks.fetchEditorialQueue,
   fetchWorkflowNotes: mocks.fetchWorkflowNotes,
   fetchWritings: mocks.fetchWritings,
+  updateWorkflowNote: mocks.updateWorkflowNote,
 }));
 
 const renderPage = async (root: Root) => {
@@ -54,6 +60,21 @@ const renderPage = async (root: Root) => {
   });
 };
 
+const changeField = async (field: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  await act(async () => {
+    const prototype = field instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+    valueSetter?.call(field, value);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+};
+
+const clickButton = async (label: string) => {
+  const button = [...document.body.querySelectorAll('button')].find((item) => item.textContent === label) as HTMLButtonElement | undefined;
+  if (!button) throw new Error(`Button not found: ${label}`);
+  await act(async () => button.click());
+};
 
 const queueItem = (overrides: Record<string, unknown> = {}) => ({
   id: 4,
@@ -88,10 +109,16 @@ describe('WritingEditorialPage', () => {
       'writings.publish_writing',
     ];
     mocks.approveWriting.mockReset();
+    mocks.createWorkflowNote.mockReset();
+    mocks.deleteWorkflowNote.mockReset();
+    mocks.updateWorkflowNote.mockReset();
     mocks.fetchEditorialQueue.mockReset();
     mocks.fetchWorkflowNotes.mockReset();
     mocks.fetchWritings.mockReset();
     mocks.approveWriting.mockResolvedValue({ id: 4 });
+    mocks.createWorkflowNote.mockResolvedValue({ id: 9 });
+    mocks.deleteWorkflowNote.mockResolvedValue(undefined);
+    mocks.updateWorkflowNote.mockResolvedValue({ id: 1 });
     mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
     mocks.fetchWorkflowNotes.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
     container = document.createElement('div');
@@ -220,6 +247,108 @@ describe('WritingEditorialPage', () => {
     await act(async () => ([...container.querySelectorAll('button')].find((button) => button.textContent === 'View notes') as HTMLButtonElement).click());
 
     await vi.waitFor(() => expect(document.body.textContent).toContain('No editorial notes yet.'));
+  });
+
+  it('creates a workflow note and refreshes notes when the user can manage notes', async () => {
+    mocks.authPermissions = [...mocks.authPermissions, 'writings.manage_workflow_notes'];
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+    mocks.fetchWorkflowNotes
+      .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] })
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [{ id: 9, writing: 4, note: 'New pastoral note.', action: 'REVIEW', created_at: '2026-07-09T09:00:00Z' }] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('View notes');
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Add workflow note'));
+
+    await changeField(document.body.querySelector('input[placeholder="Optional action label"]') as HTMLInputElement, 'REVIEW');
+    await changeField(document.body.querySelector('textarea[placeholder="Write an editorial note..."]') as HTMLTextAreaElement, 'New pastoral note.');
+    await clickButton('Add note');
+
+    expect(mocks.createWorkflowNote).toHaveBeenCalledWith('access-token', { writing: 4, note: 'New pastoral note.', action: 'REVIEW' });
+    expect(mocks.fetchWorkflowNotes).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('New pastoral note.'));
+  });
+
+  it('hides workflow note mutation controls without manage_workflow_notes permission', async () => {
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+    mocks.fetchWorkflowNotes.mockResolvedValueOnce({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [{ id: 1, writing: 4, note: 'Read-only note.', action: 'REVIEW', created_at: '2026-07-09T08:00:00Z' }],
+    });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('View notes');
+
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Read-only note.'));
+    expect(document.body.textContent).not.toContain('Add workflow note');
+    expect([...document.body.querySelectorAll('button')].some((button) => button.textContent === 'Edit note')).toBe(false);
+    expect([...document.body.querySelectorAll('button')].some((button) => button.textContent === 'Delete note')).toBe(false);
+  });
+
+  it('blocks empty workflow note submission', async () => {
+    mocks.authPermissions = [...mocks.authPermissions, 'writings.manage_workflow_notes'];
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+    mocks.fetchWorkflowNotes.mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('View notes');
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Add workflow note'));
+
+    const addButton = [...document.body.querySelectorAll('button')].find((button) => button.textContent === 'Add note') as HTMLButtonElement;
+    expect(addButton.disabled).toBe(true);
+    expect(mocks.createWorkflowNote).not.toHaveBeenCalled();
+  });
+
+  it('edits a workflow note and refreshes notes', async () => {
+    mocks.authPermissions = [...mocks.authPermissions, 'writings.manage_workflow_notes'];
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+    mocks.fetchWorkflowNotes
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [{ id: 1, writing: 4, note: 'Needs work.', action: 'REVIEW', created_at: '2026-07-09T08:00:00Z' }] })
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [{ id: 1, writing: 4, note: 'Ready now.', action: 'APPROVE', created_at: '2026-07-09T08:00:00Z' }] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('View notes');
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Needs work.'));
+
+    await clickButton('Edit note');
+    const actionInputs = [...document.body.querySelectorAll('input[placeholder="Optional action label"]')] as HTMLInputElement[];
+    await changeField(actionInputs[actionInputs.length - 1], 'APPROVE');
+    await changeField([...document.body.querySelectorAll('textarea')].find((field) => field.value === 'Needs work.') as HTMLTextAreaElement, 'Ready now.');
+    await clickButton('Save note');
+
+    expect(mocks.updateWorkflowNote).toHaveBeenCalledWith('access-token', 1, { note: 'Ready now.', action: 'APPROVE' });
+    expect(mocks.fetchWorkflowNotes).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Ready now.'));
+  });
+
+  it('requires confirmation before deleting a workflow note and refreshes after delete', async () => {
+    mocks.authPermissions = [...mocks.authPermissions, 'writings.manage_workflow_notes'];
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+    mocks.fetchWorkflowNotes
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [{ id: 1, writing: 4, note: 'Delete me.', action: 'REVIEW', created_at: '2026-07-09T08:00:00Z' }] })
+      .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('View notes');
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Delete me.'));
+
+    await clickButton('Delete note');
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteWorkflowNote).not.toHaveBeenCalled();
+
+    await clickButton('Delete note');
+    expect(mocks.deleteWorkflowNote).toHaveBeenCalledWith('access-token', 1);
+    expect(mocks.fetchWorkflowNotes).toHaveBeenCalledTimes(2);
+    await vi.waitFor(() => expect(document.body.textContent).toContain('No editorial notes yet.'));
+    confirmSpy.mockRestore();
   });
 
   it('shows a loading state while the queue request is pending', async () => {

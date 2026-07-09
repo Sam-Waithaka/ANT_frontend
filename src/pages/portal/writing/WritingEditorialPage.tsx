@@ -5,7 +5,14 @@ import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
-import { approveWriting, fetchEditorialQueue, fetchWorkflowNotes } from '../../../services/writingApi';
+import {
+  approveWriting,
+  createWorkflowNote,
+  deleteWorkflowNote,
+  fetchEditorialQueue,
+  fetchWorkflowNotes,
+  updateWorkflowNote,
+} from '../../../services/writingApi';
 import type { EditorialQueueItem, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
 import { getEditorialWritingCapabilities } from '../../../utils/permissions';
 
@@ -43,6 +50,12 @@ const WritingEditorialPage = () => {
   const [notes, setNotes] = useState<WritingWorkflowNote[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notesMessage, setNotesMessage] = useState('');
+  const [noteDraft, setNoteDraft] = useState('');
+  const [noteActionDraft, setNoteActionDraft] = useState('');
+  const [editingNoteId, setEditingNoteId] = useState<number | string | null>(null);
+  const [editingNoteDraft, setEditingNoteDraft] = useState('');
+  const [editingNoteActionDraft, setEditingNoteActionDraft] = useState('');
+  const [mutatingNote, setMutatingNote] = useState(false);
 
   const canAccessEditorialQueue = useMemo(
     () => auth.permissions.some((permission) => [
@@ -100,20 +113,28 @@ const WritingEditorialPage = () => {
     }
   };
 
-  const openNotes = async (writing: EditorialQueueItem) => {
-    setNotesWriting(writing);
-    setNotes([]);
-    setNotesMessage('');
-    setNotesLoading(true);
-
+  const loadNotes = async (writingId: number | string, showLoading = true) => {
+    if (showLoading) setNotesLoading(true);
     try {
-      const page = await fetchWorkflowNotes(auth.accessToken, writing.id);
+      const page = await fetchWorkflowNotes(auth.accessToken, writingId);
       setNotes([...page.results].sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime()));
     } catch {
       setNotesMessage('Unable to load editorial notes right now.');
     } finally {
-      setNotesLoading(false);
+      if (showLoading) setNotesLoading(false);
     }
+  };
+
+  const openNotes = async (writing: EditorialQueueItem) => {
+    setNotesWriting(writing);
+    setNotes([]);
+    setNotesMessage('');
+    setNoteDraft('');
+    setNoteActionDraft('');
+    setEditingNoteId(null);
+    setEditingNoteDraft('');
+    setEditingNoteActionDraft('');
+    await loadNotes(writing.id);
   };
 
   const closeNotes = () => {
@@ -121,6 +142,82 @@ const WritingEditorialPage = () => {
     setNotes([]);
     setNotesMessage('');
     setNotesLoading(false);
+    setNoteDraft('');
+    setNoteActionDraft('');
+    setEditingNoteId(null);
+    setEditingNoteDraft('');
+    setEditingNoteActionDraft('');
+    setMutatingNote(false);
+  };
+
+  const refreshOpenNotes = async () => {
+    if (!notesWriting) return;
+    await loadNotes(notesWriting.id, false);
+  };
+
+  const handleCreateNote = async () => {
+    if (!notesWriting || !noteDraft.trim()) return;
+    setMutatingNote(true);
+    setNotesMessage('');
+    try {
+      await createWorkflowNote(auth.accessToken, {
+        writing: notesWriting.id,
+        note: noteDraft.trim(),
+        ...(noteActionDraft.trim() ? { action: noteActionDraft.trim() } : {}),
+      });
+      setNoteDraft('');
+      setNoteActionDraft('');
+      await refreshOpenNotes();
+    } catch {
+      setNotesMessage('Unable to create workflow note right now.');
+    } finally {
+      setMutatingNote(false);
+    }
+  };
+
+  const beginEditNote = (note: WritingWorkflowNote) => {
+    setEditingNoteId(note.id);
+    setEditingNoteDraft(note.note);
+    setEditingNoteActionDraft(note.action || '');
+    setNotesMessage('');
+  };
+
+  const cancelEditNote = () => {
+    setEditingNoteId(null);
+    setEditingNoteDraft('');
+    setEditingNoteActionDraft('');
+  };
+
+  const handleUpdateNote = async (noteId: number | string) => {
+    if (!editingNoteDraft.trim()) return;
+    setMutatingNote(true);
+    setNotesMessage('');
+    try {
+      await updateWorkflowNote(auth.accessToken, noteId, {
+        note: editingNoteDraft.trim(),
+        action: editingNoteActionDraft.trim(),
+      });
+      cancelEditNote();
+      await refreshOpenNotes();
+    } catch {
+      setNotesMessage('Unable to update workflow note right now.');
+    } finally {
+      setMutatingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (note: WritingWorkflowNote) => {
+    if (!window.confirm('Delete this workflow note? This cannot be undone.')) return;
+    setMutatingNote(true);
+    setNotesMessage('');
+    try {
+      await deleteWorkflowNote(auth.accessToken, note.id);
+      await refreshOpenNotes();
+    } catch {
+      setNotesMessage('Unable to delete workflow note right now.');
+    } finally {
+      setMutatingNote(false);
+    }
   };
 
   const statusBadgeClass = (status: WritingStatus) => {
@@ -135,6 +232,12 @@ const WritingEditorialPage = () => {
   const actionButtonClass = darkMode
     ? 'rounded-full border border-white/10 px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-200 transition hover:bg-white/10 disabled:opacity-40'
     : 'rounded-full border border-[#eaded0] px-3 py-1.5 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f574f] transition hover:bg-[#fffaf0] disabled:opacity-40';
+  const fieldClass = darkMode
+    ? 'w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-red-300/50 focus:bg-white/[0.07]'
+    : 'w-full rounded-2xl border border-[#eaded0] bg-white px-4 py-3 text-sm text-zinc-950 outline-none transition placeholder:text-[#9b9186] focus:border-red-800/30 focus:bg-[#fffaf0]';
+  const canManageOpenNotes = notesWriting
+    ? getEditorialWritingCapabilities({ id: auth.user?.id, permissions: auth.permissions }, notesWriting).canManageNotes
+    : false;
 
   return (
     <WritingStudioShell>
@@ -147,6 +250,35 @@ const WritingEditorialPage = () => {
           title={`Notes for ${notesWriting.title}`}
         >
           <div className="grid gap-4">
+            {canManageOpenNotes ? (
+              <section className={`rounded-3xl border p-4 ${darkMode ? 'border-white/10 bg-white/[0.03]' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
+                <h3 className="text-xs font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Add workflow note</h3>
+                <div className="mt-3 grid gap-3">
+                  <input
+                    className={fieldClass}
+                    onChange={(event) => setNoteActionDraft(event.target.value)}
+                    placeholder="Optional action label"
+                    value={noteActionDraft}
+                  />
+                  <textarea
+                    className={`${fieldClass} min-h-28 resize-y`}
+                    onChange={(event) => setNoteDraft(event.target.value)}
+                    placeholder="Write an editorial note..."
+                    value={noteDraft}
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      className={actionButtonClass}
+                      disabled={mutatingNote || !noteDraft.trim()}
+                      onClick={() => void handleCreateNote()}
+                      type="button"
+                    >
+                      {mutatingNote ? 'Saving...' : 'Add note'}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            ) : null}
             {notesLoading ? <div className={`h-28 animate-pulse rounded-3xl border ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-white/70'}`} /> : null}
             {notesMessage ? <p className="rounded-2xl border border-red-900/15 bg-red-50 p-4 text-sm font-bold text-red-800 dark:border-red-400/20 dark:bg-red-950/30 dark:text-red-100">{notesMessage}</p> : null}
             {!notesLoading && !notesMessage && notes.length === 0 ? (
@@ -161,9 +293,37 @@ const WritingEditorialPage = () => {
                   <li key={note.id} className={`rounded-3xl border p-4 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
                     <div className="flex flex-wrap items-center gap-2">
                       {note.action ? <span className={statusBadgeClass(notesWriting.status)}>{note.action}</span> : null}
-                      <span className={`text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(note)} ? {formatDate(note.created_at)}</span>
+                      <span className={`text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(note)}{' ? '}{formatDate(note.created_at)}</span>
                     </div>
-                    <p className="mt-3 text-sm leading-6">{note.note}</p>
+                    {editingNoteId === note.id ? (
+                      <div className="mt-3 grid gap-3">
+                        <input
+                          className={fieldClass}
+                          onChange={(event) => setEditingNoteActionDraft(event.target.value)}
+                          placeholder="Optional action label"
+                          value={editingNoteActionDraft}
+                        />
+                        <textarea
+                          className={`${fieldClass} min-h-28 resize-y`}
+                          onChange={(event) => setEditingNoteDraft(event.target.value)}
+                          value={editingNoteDraft}
+                        />
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <button className={actionButtonClass} disabled={mutatingNote} onClick={cancelEditNote} type="button">Cancel edit</button>
+                          <button className={actionButtonClass} disabled={mutatingNote || !editingNoteDraft.trim()} onClick={() => void handleUpdateNote(note.id)} type="button">Save note</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="mt-3 text-sm leading-6">{note.note}</p>
+                        {canManageOpenNotes ? (
+                          <div className="mt-3 flex flex-wrap justify-end gap-2">
+                            <button className={actionButtonClass} disabled={mutatingNote} onClick={() => beginEditNote(note)} type="button">Edit note</button>
+                            <button className={actionButtonClass} disabled={mutatingNote} onClick={() => void handleDeleteNote(note)} type="button">Delete note</button>
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -254,7 +414,7 @@ const WritingEditorialPage = () => {
                             <div className={`mt-4 rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-black/20' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
                               <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Latest note</p>
                               <p className="mt-2 text-sm leading-6">{writing.latest_workflow_note.note}</p>
-                              <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(writing.latest_workflow_note)} ? {formatDate(writing.latest_workflow_note.created_at)}</p>
+                              <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(writing.latest_workflow_note)}{' ? '}{formatDate(writing.latest_workflow_note.created_at)}</p>
                             </div>
                           ) : null}
                         </div>
