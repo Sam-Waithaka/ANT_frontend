@@ -13,7 +13,7 @@ import {
   fetchWorkflowNotes,
   updateWorkflowNote,
 } from '../../../services/writingApi';
-import type { EditorialQueueItem, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
+import type { EditorialQueueFilters, EditorialQueueItem, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
 import { getEditorialWritingCapabilities } from '../../../utils/permissions';
 
 const statusLabels: Record<WritingStatus, string> = {
@@ -44,7 +44,13 @@ const WritingEditorialPage = () => {
   const { darkMode } = useTheme();
   const [items, setItems] = useState<EditorialQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [message, setMessage] = useState('');
+  const [queueCount, setQueueCount] = useState(0);
+  const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<WritingStatus | 'ALL'>('ALL');
+  const [searchFilter, setSearchFilter] = useState('');
   const [approvingId, setApprovingId] = useState<number | string | null>(null);
   const [notesWriting, setNotesWriting] = useState<EditorialQueueItem | null>(null);
   const [notes, setNotes] = useState<WritingWorkflowNote[]>([]);
@@ -70,21 +76,36 @@ const WritingEditorialPage = () => {
     [auth.permissions],
   );
 
-  const loadQueue = useCallback(async (signal?: AbortSignal, options: { clearMessage?: boolean; showLoading?: boolean } = {}) => {
-    const { clearMessage = false, showLoading = false } = options;
+  const buildQueueFilters = useCallback((page: number): EditorialQueueFilters => {
+    const filters: EditorialQueueFilters = { page, page_size: 24 };
+    if (statusFilter !== 'ALL') filters.status = statusFilter;
+    if (searchFilter.trim()) filters.search = searchFilter.trim();
+    return filters;
+  }, [searchFilter, statusFilter]);
+
+  const loadQueue = useCallback(async (
+    signal?: AbortSignal,
+    options: { append?: boolean; clearMessage?: boolean; page?: number; showLoading?: boolean; showLoadingMore?: boolean } = {},
+  ) => {
+    const { append = false, clearMessage = false, page: pageNumber = 1, showLoading = false, showLoadingMore = false } = options;
     if (showLoading) setLoading(true);
+    if (showLoadingMore) setLoadingMore(true);
     if (clearMessage) setMessage('');
 
     try {
-      const page = await fetchEditorialQueue(auth.accessToken, { page: 1, page_size: 24 }, signal);
-      setItems(page.results);
+      const page = await fetchEditorialQueue(auth.accessToken, buildQueueFilters(pageNumber), signal);
+      setItems((current) => (append ? [...current, ...page.results] : page.results));
+      setQueueCount(page.count ?? page.results.length);
+      setNextPageUrl(page.next ?? null);
+      setCurrentPage(pageNumber);
     } catch (err) {
       if (signal?.aborted || err instanceof DOMException && err.name === 'AbortError') return;
       setMessage('Unable to load the editorial queue right now.');
     } finally {
       if (!signal?.aborted && showLoading) setLoading(false);
+      if (!signal?.aborted && showLoadingMore) setLoadingMore(false);
     }
-  }, [auth.accessToken]);
+  }, [auth.accessToken, buildQueueFilters]);
 
   useEffect(() => {
     if (!canAccessEditorialQueue) {
@@ -93,7 +114,7 @@ const WritingEditorialPage = () => {
     }
 
     const controller = new AbortController();
-    void loadQueue(controller.signal, { clearMessage: true, showLoading: true });
+    void loadQueue(controller.signal, { clearMessage: true, page: 1, showLoading: true });
 
     return () => controller.abort();
   }, [canAccessEditorialQueue, loadQueue]);
@@ -104,10 +125,10 @@ const WritingEditorialPage = () => {
 
     try {
       await approveWriting(auth.accessToken, writing.id);
-      await loadQueue(undefined, { clearMessage: false, showLoading: false });
+      await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
     } catch {
       setMessage('Unable to approve this writing. Your permissions may have changed, or the writing may no longer be ready for review.');
-      await loadQueue(undefined, { clearMessage: false, showLoading: false });
+      await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
     } finally {
       setApprovingId(null);
     }
@@ -220,6 +241,34 @@ const WritingEditorialPage = () => {
     }
   };
 
+  const handleLoadMore = async () => {
+    if (!nextPageUrl || loadingMore) return;
+    await loadQueue(undefined, { append: true, clearMessage: false, page: currentPage + 1, showLoadingMore: true });
+  };
+
+  const groupedItems = useMemo(() => {
+    const groups: Array<{ key: string; title: string; description: string; items: EditorialQueueItem[] }> = [
+      { key: 'in_review', title: 'In review', description: 'Submitted writings waiting for editorial attention.', items: [] },
+      { key: 'drafts_actionable', title: 'Drafts I can publish/review', description: 'Drafts where your permissions allow the next editorial step.', items: [] },
+      { key: 'scheduled', title: 'Scheduled', description: 'Approved writings already waiting for publication time.', items: [] },
+      { key: 'recent', title: 'Recently reviewed or published', description: 'Recently handled items still visible in the queue.', items: [] },
+      { key: 'other', title: 'Other queue items', description: 'Additional writings returned by the editorial queue.', items: [] },
+    ];
+    const byKey = new Map(groups.map((group) => [group.key, group]));
+
+    items.forEach((writing) => {
+      const capabilities = getEditorialWritingCapabilities({ id: auth.user?.id, permissions: auth.permissions }, writing);
+      if (writing.status === 'IN_REVIEW') byKey.get('in_review')?.items.push(writing);
+      else if (writing.status === 'DRAFT' && (capabilities.canPublish || capabilities.canReview)) byKey.get('drafts_actionable')?.items.push(writing);
+      else if (writing.status === 'SCHEDULED') byKey.get('scheduled')?.items.push(writing);
+      else if (writing.status === 'PUBLISHED' || writing.status === 'ARCHIVED' || writing.reviewed_at) byKey.get('recent')?.items.push(writing);
+      else byKey.get('other')?.items.push(writing);
+    });
+
+    return groups.filter((group) => group.items.length > 0);
+  }, [auth.permissions, auth.user?.id, items]);
+
+
   const statusBadgeClass = (status: WritingStatus) => {
     const base = 'rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em]';
     if (status === 'IN_REVIEW') return `${base} ${darkMode ? 'border-amber-300/20 bg-amber-300/10 text-amber-100' : 'border-amber-700/15 bg-amber-50 text-amber-800'}`;
@@ -235,6 +284,9 @@ const WritingEditorialPage = () => {
   const fieldClass = darkMode
     ? 'w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-red-300/50 focus:bg-white/[0.07]'
     : 'w-full rounded-2xl border border-[#eaded0] bg-white px-4 py-3 text-sm text-zinc-950 outline-none transition placeholder:text-[#9b9186] focus:border-red-800/30 focus:bg-[#fffaf0]';
+  const compactFieldClass = darkMode
+    ? 'rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-stone-100 outline-none transition placeholder:text-stone-500 focus:border-red-300/50 focus:bg-white/[0.07]'
+    : 'rounded-2xl border border-[#eaded0] bg-white px-4 py-2.5 text-sm text-zinc-950 outline-none transition placeholder:text-[#9b9186] focus:border-red-800/30 focus:bg-[#fffaf0]';
   const canManageOpenNotes = notesWriting
     ? getEditorialWritingCapabilities({ id: auth.user?.id, permissions: auth.permissions }, notesWriting).canManageNotes
     : false;
@@ -362,7 +414,37 @@ const WritingEditorialPage = () => {
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Review Queue</p>
                 <h2 className="mt-2 font-serif text-3xl">Editorial desk</h2>
               </div>
-              <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>{items.length} writings</span>
+              <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>{items.length} of {queueCount} writings</span>
+            </div>
+
+            <div className={`mt-5 grid gap-3 rounded-3xl border p-4 sm:grid-cols-[minmax(0,1fr)_14rem] ${darkMode ? 'border-white/10 bg-white/[0.03]' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
+              <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-red-800" htmlFor="editorial-search-filter">
+                Search
+                <input
+                  className={compactFieldClass}
+                  id="editorial-search-filter"
+                  onChange={(event) => setSearchFilter(event.target.value)}
+                  placeholder="Search title, author, or note..."
+                  type="search"
+                  value={searchFilter}
+                />
+              </label>
+              <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-red-800" htmlFor="editorial-status-filter">
+                Status
+                <select
+                  className={compactFieldClass}
+                  id="editorial-status-filter"
+                  onChange={(event) => setStatusFilter(event.target.value as WritingStatus | 'ALL')}
+                  value={statusFilter}
+                >
+                  <option value="ALL">All statuses</option>
+                  <option value="DRAFT">Draft</option>
+                  <option value="IN_REVIEW">In review</option>
+                  <option value="SCHEDULED">Scheduled</option>
+                  <option value="PUBLISHED">Published</option>
+                  <option value="ARCHIVED">Archived</option>
+                </select>
+              </label>
             </div>
 
             {loading ? (
@@ -380,57 +462,70 @@ const WritingEditorialPage = () => {
               </div>
             ) : null}
 
-            {!loading && items.length ? (
-              <div className="mt-6 grid gap-3">
-                {items.map((writing) => {
-                  const capabilities = getEditorialWritingCapabilities({ id: auth.user?.id, permissions: auth.permissions }, writing);
-                  return (
-                    <article key={writing.id} className={`rounded-3xl border p-5 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-white shadow-sm shadow-zinc-900/5'}`}>
-                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={statusBadgeClass(writing.status)}>{statusLabels[writing.status]}</span>
-                            {capabilities.isAuthor ? <span className={darkMode ? 'rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-stone-300' : 'rounded-full border border-[#eaded0] bg-[#fffaf0] px-3 py-1 text-xs font-bold text-[#786f66]'}>Your writing</span> : null}
+            {!loading && groupedItems.length ? (
+              <div className="mt-6 grid gap-5">
+                {groupedItems.map((group) => (
+                  <section key={group.key} className="grid gap-3">
+                    <div>
+                      <h3 className="font-serif text-2xl">{group.title}</h3>
+                      <p className={`mt-1 text-sm ${portalSurface.softMutedText(darkMode)}`}>{group.description}</p>
+                    </div>
+                    {group.items.map((writing) => {
+                      const capabilities = getEditorialWritingCapabilities({ id: auth.user?.id, permissions: auth.permissions }, writing);
+                      return (
+                        <article key={writing.id} className={`rounded-3xl border p-5 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-white shadow-sm shadow-zinc-900/5'}`}>
+                          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className={statusBadgeClass(writing.status)}>{statusLabels[writing.status]}</span>
+                                {capabilities.isAuthor ? <span className={darkMode ? 'rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-bold text-stone-300' : 'rounded-full border border-[#eaded0] bg-[#fffaf0] px-3 py-1 text-xs font-bold text-[#786f66]'}>Your writing</span> : null}
+                              </div>
+                              <h4 className="mt-3 font-serif text-3xl leading-tight">{writing.title}</h4>
+                              <p className={`mt-2 text-sm ${portalSurface.softMutedText(darkMode)}`}>By {authorLabel(writing)}</p>
+
+                              <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
+                                <div>
+                                  <dt className="font-black uppercase tracking-[0.12em] text-red-800">Submitted</dt>
+                                  <dd className={portalSurface.softMutedText(darkMode)}>{formatDate(writing.submitted_at)}</dd>
+                                </div>
+                                <div>
+                                  <dt className="font-black uppercase tracking-[0.12em] text-red-800">Reviewed</dt>
+                                  <dd className={portalSurface.softMutedText(darkMode)}>{formatDate(writing.reviewed_at)}</dd>
+                                </div>
+                                <div>
+                                  <dt className="font-black uppercase tracking-[0.12em] text-red-800">Notes</dt>
+                                  <dd className={portalSurface.softMutedText(darkMode)}>{writing.workflow_notes_count ?? 0} notes</dd>
+                                </div>
+                              </dl>
+
+                              {writing.latest_workflow_note ? (
+                                <div className={`mt-4 rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-black/20' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
+                                  <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Latest note</p>
+                                  <p className="mt-2 text-sm leading-6">{writing.latest_workflow_note.note}</p>
+                                  <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(writing.latest_workflow_note)}{' ? '}{formatDate(writing.latest_workflow_note.created_at)}</p>
+                                </div>
+                              ) : null}
+                            </div>
+
+                            <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-56 lg:justify-end">
+                              <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Open</Link>
+                              {capabilities.canEdit ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Edit</Link> : null}
+                              <button className={actionButtonClass} onClick={() => void openNotes(writing)} type="button">View notes</button>
+                              {capabilities.canReview ? <button className={actionButtonClass} disabled={String(approvingId) === String(writing.id)} onClick={() => void handleApprove(writing)} type="button">{String(approvingId) === String(writing.id) ? 'Approving...' : 'Approve'}</button> : null}
+                              {capabilities.canPublish ? <button className={actionButtonClass} type="button">Publish</button> : null}
+                              {capabilities.canArchive ? <button className={actionButtonClass} type="button">Archive</button> : null}
+                            </div>
                           </div>
-                          <h3 className="mt-3 font-serif text-3xl leading-tight">{writing.title}</h3>
-                          <p className={`mt-2 text-sm ${portalSurface.softMutedText(darkMode)}`}>By {authorLabel(writing)}</p>
-
-                          <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
-                            <div>
-                              <dt className="font-black uppercase tracking-[0.12em] text-red-800">Submitted</dt>
-                              <dd className={portalSurface.softMutedText(darkMode)}>{formatDate(writing.submitted_at)}</dd>
-                            </div>
-                            <div>
-                              <dt className="font-black uppercase tracking-[0.12em] text-red-800">Reviewed</dt>
-                              <dd className={portalSurface.softMutedText(darkMode)}>{formatDate(writing.reviewed_at)}</dd>
-                            </div>
-                            <div>
-                              <dt className="font-black uppercase tracking-[0.12em] text-red-800">Notes</dt>
-                              <dd className={portalSurface.softMutedText(darkMode)}>{writing.workflow_notes_count ?? 0} notes</dd>
-                            </div>
-                          </dl>
-
-                          {writing.latest_workflow_note ? (
-                            <div className={`mt-4 rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-black/20' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
-                              <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Latest note</p>
-                              <p className="mt-2 text-sm leading-6">{writing.latest_workflow_note.note}</p>
-                              <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(writing.latest_workflow_note)}{' ? '}{formatDate(writing.latest_workflow_note.created_at)}</p>
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-56 lg:justify-end">
-                          <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Open</Link>
-                          {capabilities.canEdit ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Edit</Link> : null}
-                          <button className={actionButtonClass} onClick={() => void openNotes(writing)} type="button">View notes</button>
-                          {capabilities.canReview ? <button className={actionButtonClass} disabled={String(approvingId) === String(writing.id)} onClick={() => void handleApprove(writing)} type="button">{String(approvingId) === String(writing.id) ? 'Approving...' : 'Approve'}</button> : null}
-                          {capabilities.canPublish ? <button className={actionButtonClass} type="button">Publish</button> : null}
-                          {capabilities.canArchive ? <button className={actionButtonClass} type="button">Archive</button> : null}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
+                        </article>
+                      );
+                    })}
+                  </section>
+                ))}
+                {nextPageUrl ? (
+                  <div className="flex justify-center pt-2">
+                    <button className={actionButtonClass} disabled={loadingMore} onClick={() => void handleLoadMore()} type="button">{loadingMore ? 'Loading...' : 'Load more'}</button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </section>

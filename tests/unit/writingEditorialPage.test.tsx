@@ -60,9 +60,13 @@ const renderPage = async (root: Root) => {
   });
 };
 
-const changeField = async (field: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+const changeField = async (field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement, value: string) => {
   await act(async () => {
-    const prototype = field instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const prototype = field instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : field instanceof HTMLSelectElement
+        ? HTMLSelectElement.prototype
+        : HTMLInputElement.prototype;
     const valueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
     valueSetter?.call(field, value);
     field.dispatchEvent(new Event('input', { bubbles: true }));
@@ -349,6 +353,69 @@ describe('WritingEditorialPage', () => {
     expect(mocks.fetchWorkflowNotes).toHaveBeenCalledTimes(2);
     await vi.waitFor(() => expect(document.body.textContent).toContain('No editorial notes yet.'));
     confirmSpy.mockRestore();
+  });
+
+  it('calls the editorial queue endpoint with a status filter', async () => {
+    mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(1));
+
+    await changeField(document.body.querySelector('#editorial-status-filter') as HTMLSelectElement, 'IN_REVIEW');
+
+    await vi.waitFor(() => expect(mocks.fetchEditorialQueue).toHaveBeenCalledWith('access-token', { page: 1, page_size: 24, status: 'IN_REVIEW' }, expect.any(AbortSignal)));
+  });
+
+  it('calls the editorial queue endpoint with search text', async () => {
+    mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(1));
+
+    await changeField(document.body.querySelector('#editorial-search-filter') as HTMLInputElement, 'mercy');
+
+    await vi.waitFor(() => expect(mocks.fetchEditorialQueue).toHaveBeenCalledWith('access-token', { page: 1, page_size: 24, search: 'mercy' }, expect.any(AbortSignal)));
+  });
+
+  it('resets to page 1 when filters change', async () => {
+    mocks.fetchEditorialQueue
+      .mockResolvedValueOnce({ count: 2, next: '/v1/writings/editorial-queue/?page=2', previous: null, results: [queueItem({ id: 1, title: 'First Page' })] })
+      .mockResolvedValueOnce({ count: 2, next: null, previous: '/v1/writings/editorial-queue/?page=1', results: [queueItem({ id: 2, title: 'Second Page' })] })
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem({ id: 3, title: 'Filtered Page', status: 'SCHEDULED' })] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('First Page'));
+    await clickButton('Load more');
+    await vi.waitFor(() => expect(container.textContent).toContain('Second Page'));
+
+    await changeField(document.body.querySelector('#editorial-status-filter') as HTMLSelectElement, 'SCHEDULED');
+
+    await vi.waitFor(() => expect(mocks.fetchEditorialQueue).toHaveBeenLastCalledWith('access-token', { page: 1, page_size: 24, status: 'SCHEDULED' }, expect.any(AbortSignal)));
+    await vi.waitFor(() => expect(container.textContent).toContain('Filtered Page'));
+    expect(container.textContent).not.toContain('First Page');
+  });
+
+  it('appends results when loading more', async () => {
+    mocks.fetchEditorialQueue
+      .mockResolvedValueOnce({ count: 2, next: '/v1/writings/editorial-queue/?page=2', previous: null, results: [queueItem({ id: 1, title: 'First Page' })] })
+      .mockResolvedValueOnce({ count: 2, next: null, previous: '/v1/writings/editorial-queue/?page=1', results: [queueItem({ id: 2, title: 'Second Page', status: 'SCHEDULED' })] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('First Page'));
+    await clickButton('Load more');
+
+    await vi.waitFor(() => expect(container.textContent).toContain('Second Page'));
+    expect(container.textContent).toContain('First Page');
+    expect(mocks.fetchEditorialQueue).toHaveBeenLastCalledWith('access-token', { page: 2, page_size: 24 }, undefined);
+  });
+
+  it('hides load more when the editorial queue has no next page', async () => {
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+
+    expect([...document.body.querySelectorAll('button')].some((button) => button.textContent === 'Load more')).toBe(false);
   });
 
   it('shows a loading state while the queue request is pending', async () => {
