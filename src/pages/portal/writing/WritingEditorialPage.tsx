@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
-import { fetchEditorialQueue } from '../../../services/writingApi';
+import { approveWriting, fetchEditorialQueue } from '../../../services/writingApi';
 import type { EditorialQueueItem, WritingStatus } from '../../../types/writing';
 import { getEditorialWritingCapabilities } from '../../../utils/permissions';
 
@@ -37,6 +37,7 @@ const WritingEditorialPage = () => {
   const [items, setItems] = useState<EditorialQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [approvingId, setApprovingId] = useState<number | string | null>(null);
 
   const canAccessEditorialQueue = useMemo(
     () => auth.permissions.some((permission) => [
@@ -51,6 +52,22 @@ const WritingEditorialPage = () => {
     [auth.permissions],
   );
 
+  const loadQueue = useCallback(async (signal?: AbortSignal, options: { clearMessage?: boolean; showLoading?: boolean } = {}) => {
+    const { clearMessage = false, showLoading = false } = options;
+    if (showLoading) setLoading(true);
+    if (clearMessage) setMessage('');
+
+    try {
+      const page = await fetchEditorialQueue(auth.accessToken, { page: 1, page_size: 24 }, signal);
+      setItems(page.results);
+    } catch (err) {
+      if (signal?.aborted || err instanceof DOMException && err.name === 'AbortError') return;
+      setMessage('Unable to load the editorial queue right now.');
+    } finally {
+      if (!signal?.aborted && showLoading) setLoading(false);
+    }
+  }, [auth.accessToken]);
+
   useEffect(() => {
     if (!canAccessEditorialQueue) {
       setLoading(false);
@@ -58,21 +75,25 @@ const WritingEditorialPage = () => {
     }
 
     const controller = new AbortController();
-    setLoading(true);
-    setMessage('');
-
-    fetchEditorialQueue(auth.accessToken, { page: 1, page_size: 24 }, controller.signal)
-      .then((page) => setItems(page.results))
-      .catch((err) => {
-        if (controller.signal.aborted || err instanceof DOMException && err.name === 'AbortError') return;
-        setMessage('Unable to load the editorial queue right now.');
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
+    void loadQueue(controller.signal, { clearMessage: true, showLoading: true });
 
     return () => controller.abort();
-  }, [auth.accessToken, canAccessEditorialQueue]);
+  }, [canAccessEditorialQueue, loadQueue]);
+
+  const handleApprove = async (writing: EditorialQueueItem) => {
+    setApprovingId(writing.id);
+    setMessage('');
+
+    try {
+      await approveWriting(auth.accessToken, writing.id);
+      await loadQueue(undefined, { clearMessage: false, showLoading: false });
+    } catch {
+      setMessage('Unable to approve this writing. Your permissions may have changed, or the writing may no longer be ready for review.');
+      await loadQueue(undefined, { clearMessage: false, showLoading: false });
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   const statusBadgeClass = (status: WritingStatus) => {
     const base = 'rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.14em]';
@@ -177,7 +198,7 @@ const WritingEditorialPage = () => {
                         <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-56 lg:justify-end">
                           <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Open</Link>
                           {capabilities.canEdit ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Edit</Link> : null}
-                          {capabilities.canReview ? <button className={actionButtonClass} type="button">Review</button> : null}
+                          {capabilities.canReview ? <button className={actionButtonClass} disabled={String(approvingId) === String(writing.id)} onClick={() => void handleApprove(writing)} type="button">{String(approvingId) === String(writing.id) ? 'Approving...' : 'Approve'}</button> : null}
                           {capabilities.canPublish ? <button className={actionButtonClass} type="button">Publish</button> : null}
                           {capabilities.canArchive ? <button className={actionButtonClass} type="button">Archive</button> : null}
                         </div>
