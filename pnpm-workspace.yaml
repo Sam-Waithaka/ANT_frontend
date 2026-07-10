@@ -1,6 +1,10 @@
 packages:
   - .
 
+allowBuilds:
+  esbuild: set this to true or false
+  sharp: set this to true or false
+
 # Seven days in minutes. This delays newly published direct and transitive
 # package versions to reduce exposure to supply-chain compromise windows.
 minimumReleaseAge: 10080
