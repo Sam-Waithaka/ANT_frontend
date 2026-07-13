@@ -7,13 +7,16 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import {
   approveWriting,
+  archiveWriting,
   createWorkflowNote,
   deleteWorkflowNote,
   fetchEditorialQueue,
+  fetchWritings,
   fetchWorkflowNotes,
+  publishWriting,
   updateWorkflowNote,
 } from '../../../services/writingApi';
-import type { EditorialQueueFilters, EditorialQueueItem, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
+import type { EditorialQueueFilters, EditorialQueueItem, Writing, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
 import { getEditorialWritingCapabilities } from '../../../utils/permissions';
 
 const statusLabels: Record<WritingStatus, string> = {
@@ -23,6 +26,16 @@ const statusLabels: Record<WritingStatus, string> = {
   PUBLISHED: 'Published',
   SCHEDULED: 'Scheduled',
 };
+
+const writingStatuses: WritingStatus[] = ['DRAFT', 'IN_REVIEW', 'SCHEDULED', 'PUBLISHED', 'ARCHIVED'];
+
+const emptyStatusCounts = (): Record<WritingStatus, number> => ({
+  ARCHIVED: 0,
+  DRAFT: 0,
+  IN_REVIEW: 0,
+  PUBLISHED: 0,
+  SCHEDULED: 0,
+});
 
 const formatDate = (value?: string | null) => {
   if (!value) return 'Not yet';
@@ -52,6 +65,12 @@ const WritingEditorialPage = () => {
   const [statusFilter, setStatusFilter] = useState<WritingStatus | 'ALL'>('ALL');
   const [searchFilter, setSearchFilter] = useState('');
   const [approvingId, setApprovingId] = useState<number | string | null>(null);
+  const [publishingId, setPublishingId] = useState<number | string | null>(null);
+  const [archivingId, setArchivingId] = useState<number | string | null>(null);
+  const [statusCounts, setStatusCounts] = useState<Record<WritingStatus, number>>(emptyStatusCounts);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryMessage, setSummaryMessage] = useState('');
+  const [recentDrafts, setRecentDrafts] = useState<Writing[]>([]);
   const [notesWriting, setNotesWriting] = useState<EditorialQueueItem | null>(null);
   const [notes, setNotes] = useState<WritingWorkflowNote[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
@@ -83,6 +102,28 @@ const WritingEditorialPage = () => {
     return filters;
   }, [searchFilter, statusFilter]);
 
+  const loadDeskSummary = useCallback(async (signal?: AbortSignal) => {
+    setSummaryLoading(true);
+    setSummaryMessage('');
+
+    try {
+      const pages = await Promise.all(
+        writingStatuses.map((status) => fetchWritings(auth.accessToken, { page: 1, page_size: 3, status }, signal)),
+      );
+      const nextCounts = emptyStatusCounts();
+      writingStatuses.forEach((status, index) => {
+        nextCounts[status] = pages[index].count ?? pages[index].results.length;
+      });
+      setStatusCounts(nextCounts);
+      setRecentDrafts(pages[0].results);
+    } catch (err) {
+      if (signal?.aborted || err instanceof DOMException && err.name === 'AbortError') return;
+      setSummaryMessage('Unable to load writing status summary right now.');
+    } finally {
+      if (!signal?.aborted) setSummaryLoading(false);
+    }
+  }, [auth.accessToken]);
+
   const loadQueue = useCallback(async (
     signal?: AbortSignal,
     options: { append?: boolean; clearMessage?: boolean; page?: number; showLoading?: boolean; showLoadingMore?: boolean } = {},
@@ -110,14 +151,23 @@ const WritingEditorialPage = () => {
   useEffect(() => {
     if (!canAccessEditorialQueue) {
       setLoading(false);
+      setSummaryLoading(false);
       return;
     }
 
     const controller = new AbortController();
+    void loadDeskSummary(controller.signal);
     void loadQueue(controller.signal, { clearMessage: true, page: 1, showLoading: true });
 
     return () => controller.abort();
-  }, [canAccessEditorialQueue, loadQueue]);
+  }, [canAccessEditorialQueue, loadDeskSummary, loadQueue]);
+
+  const refreshDesk = async () => {
+    await Promise.all([
+      loadDeskSummary(),
+      loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false }),
+    ]);
+  };
 
   const handleApprove = async (writing: EditorialQueueItem) => {
     setApprovingId(writing.id);
@@ -125,12 +175,43 @@ const WritingEditorialPage = () => {
 
     try {
       await approveWriting(auth.accessToken, writing.id);
-      await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
+      await refreshDesk();
     } catch {
       setMessage('Unable to approve this writing. Your permissions may have changed, or the writing may no longer be ready for review.');
       await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const handlePublish = async (writing: EditorialQueueItem) => {
+    setPublishingId(writing.id);
+    setMessage('');
+
+    try {
+      await publishWriting(auth.accessToken, writing.id);
+      await refreshDesk();
+    } catch {
+      setMessage('Unable to publish this writing right now. Your permissions may have changed, or the writing may not be ready to publish.');
+      await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
+  const handleArchive = async (writing: EditorialQueueItem) => {
+    if (!window.confirm('Archive this writing?')) return;
+    setArchivingId(writing.id);
+    setMessage('');
+
+    try {
+      await archiveWriting(auth.accessToken, writing.id);
+      await refreshDesk();
+    } catch {
+      setMessage('Unable to archive this writing right now. Your permissions may have changed.');
+      await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
+    } finally {
+      setArchivingId(null);
     }
   };
 
@@ -345,7 +426,7 @@ const WritingEditorialPage = () => {
                   <li key={note.id} className={`rounded-3xl border p-4 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
                     <div className="flex flex-wrap items-center gap-2">
                       {note.action ? <span className={statusBadgeClass(notesWriting.status)}>{note.action}</span> : null}
-                      <span className={`text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(note)}{' ? '}{formatDate(note.created_at)}</span>
+                      <span className={`text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(note)} <span aria-hidden="true">&middot;</span> {formatDate(note.created_at)}</span>
                     </div>
                     {editingNoteId === note.id ? (
                       <div className="mt-3 grid gap-3">
@@ -388,16 +469,58 @@ const WritingEditorialPage = () => {
       ) : null}
       <div className="grid gap-8">
         <section className={`rounded-[2rem] border p-6 shadow-lg sm:p-8 ${portalSurface.panel(darkMode)}`}>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Editorial Workflow</p>
-          <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">Review what needs attention.</h1>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Editorial Desk</p>
+          <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">Track the writing workflow.</h1>
           <p className={`mt-4 max-w-3xl text-sm leading-7 sm:text-base ${portalSurface.mutedText(darkMode)}`}>
-            Track submitted writings, review context, and editorial notes from the dedicated workflow queue.
+            See every writing status at a glance, then focus on submissions, scheduled work, stale drafts, and editorial notes that need action.
           </p>
         </section>
 
         {!canAccessEditorialQueue ? (
           <section className={`rounded-3xl border p-6 shadow-lg ${portalSurface.panel(darkMode)}`}>
             <p className="text-sm font-bold text-red-800">Editorial review requires draft, review, publishing, or archive permissions.</p>
+          </section>
+        ) : null}
+
+        {canAccessEditorialQueue ? (
+          <section className={`rounded-[2rem] border p-5 shadow-lg sm:p-6 ${portalSurface.panel(darkMode)}`} aria-labelledby="editorial-summary-heading">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Desk Summary</p>
+                <h2 id="editorial-summary-heading" className="mt-2 font-serif text-3xl">Writing status landscape</h2>
+              </div>
+              {summaryLoading ? <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>Loading counts...</span> : null}
+            </div>
+            {summaryMessage ? <p className="mt-4 rounded-2xl border border-red-900/15 bg-red-50 p-4 text-sm font-bold text-red-800 dark:border-red-400/20 dark:bg-red-950/30 dark:text-red-100">{summaryMessage}</p> : null}
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {writingStatuses.map((status) => (
+                <div key={status} className={`rounded-3xl border p-4 ${darkMode ? 'border-white/10 bg-white/[0.04]' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
+                  <p className="text-[0.68rem] font-black uppercase tracking-[0.14em] text-red-800">{statusLabels[status]}</p>
+                  <p className="mt-2 font-serif text-4xl leading-none">{statusCounts[status]}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {canAccessEditorialQueue && recentDrafts.length ? (
+          <section className={`rounded-[2rem] border p-5 shadow-lg sm:p-6 ${portalSurface.panel(darkMode)}`} aria-labelledby="recent-drafts-heading">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Recently Updated Drafts</p>
+                <h2 id="recent-drafts-heading" className="mt-2 font-serif text-3xl">Drafts editors may need to watch</h2>
+              </div>
+              <Link className={actionButtonClass} to="/portal/writing/articles?status=DRAFT">View drafts</Link>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {recentDrafts.map((draft) => (
+                <Link key={draft.id} to={`/portal/writing/${draft.id}`} className={`rounded-3xl border p-4 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 ${darkMode ? 'border-white/10 bg-white/[0.04] hover:bg-white/[0.07]' : 'border-[#eaded0] bg-[#fffaf0] hover:bg-white'}`}>
+                  <span className={statusBadgeClass('DRAFT')}>Draft</span>
+                  <h3 className="mt-3 font-serif text-2xl leading-tight">{draft.title || 'Untitled Article'}</h3>
+                  <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>Updated <span aria-hidden="true">&middot;</span> {formatDate(draft.updated_at || draft.created_at)}</p>
+                </Link>
+              ))}
+            </div>
           </section>
         ) : null}
 
@@ -411,8 +534,8 @@ const WritingEditorialPage = () => {
           <section className={`rounded-[2rem] border p-5 shadow-lg sm:p-6 ${portalSurface.panel(darkMode)}`}>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Review Queue</p>
-                <h2 className="mt-2 font-serif text-3xl">Editorial desk</h2>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">Needs Attention</p>
+                <h2 className="mt-2 font-serif text-3xl">Workflow queue</h2>
               </div>
               <span className={`rounded-full border px-3 py-1 text-xs font-bold ${darkMode ? 'border-white/10 bg-white/5 text-stone-300' : 'border-[#eaded0] bg-white text-[#786f66]'}`}>{items.length} of {queueCount} writings</span>
             </div>
@@ -502,7 +625,7 @@ const WritingEditorialPage = () => {
                                 <div className={`mt-4 rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-black/20' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
                                   <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Latest note</p>
                                   <p className="mt-2 text-sm leading-6">{writing.latest_workflow_note.note}</p>
-                                  <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(writing.latest_workflow_note)}{' ? '}{formatDate(writing.latest_workflow_note.created_at)}</p>
+                                  <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(writing.latest_workflow_note)} <span aria-hidden="true">&middot;</span> {formatDate(writing.latest_workflow_note.created_at)}</p>
                                 </div>
                               ) : null}
                             </div>
@@ -512,8 +635,8 @@ const WritingEditorialPage = () => {
                               {capabilities.canEdit ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Edit</Link> : null}
                               <button className={actionButtonClass} onClick={() => void openNotes(writing)} type="button">View notes</button>
                               {capabilities.canReview ? <button className={actionButtonClass} disabled={String(approvingId) === String(writing.id)} onClick={() => void handleApprove(writing)} type="button">{String(approvingId) === String(writing.id) ? 'Approving...' : 'Approve'}</button> : null}
-                              {capabilities.canPublish ? <button className={actionButtonClass} type="button">Publish</button> : null}
-                              {capabilities.canArchive ? <button className={actionButtonClass} type="button">Archive</button> : null}
+                              {capabilities.canPublish ? <button className={actionButtonClass} disabled={String(publishingId) === String(writing.id)} onClick={() => void handlePublish(writing)} type="button">{String(publishingId) === String(writing.id) ? 'Publishing...' : 'Publish'}</button> : null}
+                              {capabilities.canArchive ? <button className={actionButtonClass} disabled={String(archivingId) === String(writing.id)} onClick={() => void handleArchive(writing)} type="button">{String(archivingId) === String(writing.id) ? 'Archiving...' : 'Archive'}</button> : null}
                             </div>
                           </div>
                         </article>

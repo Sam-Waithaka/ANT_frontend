@@ -9,7 +9,9 @@ import WritingEditorialPage from '../../src/pages/portal/writing/WritingEditoria
 
 const mocks = vi.hoisted(() => ({
   approveWriting: vi.fn(),
+  archiveWriting: vi.fn(),
   createWorkflowNote: vi.fn(),
+  publishWriting: vi.fn(),
   deleteWorkflowNote: vi.fn(),
   updateWorkflowNote: vi.fn(),
   authPermissions: [
@@ -41,10 +43,12 @@ vi.mock('../../src/components/portal/writing/WritingStudioShell', () => ({
 
 vi.mock('../../src/services/writingApi', () => ({
   approveWriting: mocks.approveWriting,
+  archiveWriting: mocks.archiveWriting,
   createWorkflowNote: mocks.createWorkflowNote,
   deleteWorkflowNote: mocks.deleteWorkflowNote,
   fetchEditorialQueue: mocks.fetchEditorialQueue,
   fetchWorkflowNotes: mocks.fetchWorkflowNotes,
+  publishWriting: mocks.publishWriting,
   fetchWritings: mocks.fetchWritings,
   updateWorkflowNote: mocks.updateWorkflowNote,
 }));
@@ -113,17 +117,22 @@ describe('WritingEditorialPage', () => {
       'writings.publish_writing',
     ];
     mocks.approveWriting.mockReset();
+    mocks.archiveWriting.mockReset();
     mocks.createWorkflowNote.mockReset();
+    mocks.publishWriting.mockReset();
     mocks.deleteWorkflowNote.mockReset();
     mocks.updateWorkflowNote.mockReset();
     mocks.fetchEditorialQueue.mockReset();
     mocks.fetchWorkflowNotes.mockReset();
     mocks.fetchWritings.mockReset();
     mocks.approveWriting.mockResolvedValue({ id: 4 });
+    mocks.archiveWriting.mockResolvedValue({ id: 4 });
     mocks.createWorkflowNote.mockResolvedValue({ id: 9 });
+    mocks.publishWriting.mockResolvedValue({ id: 4 });
     mocks.deleteWorkflowNote.mockResolvedValue(undefined);
     mocks.updateWorkflowNote.mockResolvedValue({ id: 1 });
     mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+    mocks.fetchWritings.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
     mocks.fetchWorkflowNotes.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -135,7 +144,7 @@ describe('WritingEditorialPage', () => {
     container.remove();
   });
 
-  it('renders queue items from fetchEditorialQueue and does not call fetchWritings', async () => {
+  it('renders status summary and queue items from the editorial APIs', async () => {
     mocks.fetchEditorialQueue.mockResolvedValueOnce({
       count: 1,
       next: null,
@@ -152,8 +161,10 @@ describe('WritingEditorialPage', () => {
     expect(container.textContent).toContain('Please tighten the introduction.');
     expect(container.textContent).toContain('Editor Jane');
     expect(container.textContent).toContain('Your writing');
+    expect(container.textContent).toContain('Writing status landscape');
     expect(mocks.fetchEditorialQueue).toHaveBeenCalledWith('access-token', { page: 1, page_size: 24 }, expect.any(AbortSignal));
-    expect(mocks.fetchWritings).not.toHaveBeenCalled();
+    expect(mocks.fetchWritings).toHaveBeenCalledWith('access-token', { page: 1, page_size: 3, status: 'DRAFT' }, expect.any(AbortSignal));
+    expect(mocks.fetchWritings).toHaveBeenCalledWith('access-token', { page: 1, page_size: 3, status: 'IN_REVIEW' }, expect.any(AbortSignal));
   });
 
 
@@ -355,8 +366,40 @@ describe('WritingEditorialPage', () => {
     confirmSpy.mockRestore();
   });
 
+
+  it('publishes a writing and refreshes the desk', async () => {
+    mocks.fetchEditorialQueue
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] })
+      .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('Publish');
+
+    expect(mocks.publishWriting).toHaveBeenCalledWith('access-token', 4);
+    expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(2);
+  });
+
+  it('archives a writing after confirmation and refreshes the desk', async () => {
+    mocks.authPermissions = [...mocks.authPermissions, 'writings.archive_writing'];
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    mocks.fetchEditorialQueue
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] })
+      .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('Archive');
+
+    expect(confirmSpy).toHaveBeenCalledWith('Archive this writing?');
+    expect(mocks.archiveWriting).toHaveBeenCalledWith('access-token', 4);
+    expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(2);
+    confirmSpy.mockRestore();
+  });
+
   it('calls the editorial queue endpoint with a status filter', async () => {
     mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+    mocks.fetchWritings.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
 
     await renderPage(root);
     await vi.waitFor(() => expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(1));
@@ -368,6 +411,7 @@ describe('WritingEditorialPage', () => {
 
   it('calls the editorial queue endpoint with search text', async () => {
     mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
+    mocks.fetchWritings.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
 
     await renderPage(root);
     await vi.waitFor(() => expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(1));
