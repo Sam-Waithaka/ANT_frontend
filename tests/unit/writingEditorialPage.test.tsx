@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   archiveWriting: vi.fn(),
   createWorkflowNote: vi.fn(),
   publishWriting: vi.fn(),
+  returnWritingToDraft: vi.fn(),
+  submitWritingForReview: vi.fn(),
   deleteWorkflowNote: vi.fn(),
   updateWorkflowNote: vi.fn(),
   authPermissions: [
@@ -49,6 +51,8 @@ vi.mock('../../src/services/writingApi', () => ({
   fetchEditorialQueue: mocks.fetchEditorialQueue,
   fetchWorkflowNotes: mocks.fetchWorkflowNotes,
   publishWriting: mocks.publishWriting,
+  returnWritingToDraft: mocks.returnWritingToDraft,
+  submitWritingForReview: mocks.submitWritingForReview,
   fetchWritings: mocks.fetchWritings,
   updateWorkflowNote: mocks.updateWorkflowNote,
 }));
@@ -87,6 +91,8 @@ const clickButton = async (label: string) => {
 const queueItem = (overrides: Record<string, unknown> = {}) => ({
   id: 4,
   author_attributions: [{ display_name: 'AIC Editorial Team', is_primary: true }],
+  author_display: 'AIC Editorial Team',
+  available_actions: ['open', 'edit', 'approve', 'publish'],
   author_ids: [7],
   is_author: true,
   latest_workflow_note: {
@@ -120,6 +126,8 @@ describe('WritingEditorialPage', () => {
     mocks.archiveWriting.mockReset();
     mocks.createWorkflowNote.mockReset();
     mocks.publishWriting.mockReset();
+    mocks.returnWritingToDraft.mockReset();
+    mocks.submitWritingForReview.mockReset();
     mocks.deleteWorkflowNote.mockReset();
     mocks.updateWorkflowNote.mockReset();
     mocks.fetchEditorialQueue.mockReset();
@@ -129,6 +137,8 @@ describe('WritingEditorialPage', () => {
     mocks.archiveWriting.mockResolvedValue({ id: 4 });
     mocks.createWorkflowNote.mockResolvedValue({ id: 9 });
     mocks.publishWriting.mockResolvedValue({ id: 4 });
+    mocks.returnWritingToDraft.mockResolvedValue({ id: 4 });
+    mocks.submitWritingForReview.mockResolvedValue({ id: 4 });
     mocks.deleteWorkflowNote.mockResolvedValue(undefined);
     mocks.updateWorkflowNote.mockResolvedValue({ id: 1 });
     mocks.fetchEditorialQueue.mockResolvedValue({ count: 0, next: null, previous: null, results: [] });
@@ -169,7 +179,7 @@ describe('WritingEditorialPage', () => {
 
 
 
-  it('shows Approve only with review permission', async () => {
+  it('shows Approve only when the backend includes the approve action', async () => {
     mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
 
     await renderPage(root);
@@ -180,8 +190,7 @@ describe('WritingEditorialPage', () => {
     act(() => root.unmount());
     container.innerHTML = '';
     root = createRoot(container);
-    mocks.authPermissions = ['writings.view_any_draft_writing', 'writings.publish_writing'];
-    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] });
+    mocks.fetchEditorialQueue.mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem({ available_actions: ['open', 'edit', 'publish'] })] });
 
     await renderPage(root);
 
@@ -384,7 +393,7 @@ describe('WritingEditorialPage', () => {
     mocks.authPermissions = [...mocks.authPermissions, 'writings.archive_writing'];
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     mocks.fetchEditorialQueue
-      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem()] })
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem({ available_actions: ['open', 'archive'] })] })
       .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
 
     await renderPage(root);
@@ -395,6 +404,32 @@ describe('WritingEditorialPage', () => {
     expect(mocks.archiveWriting).toHaveBeenCalledWith('access-token', 4);
     expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(2);
     confirmSpy.mockRestore();
+  });
+
+  it('submits a draft for review when the backend exposes the action', async () => {
+    mocks.fetchEditorialQueue
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem({ status: 'DRAFT', available_actions: ['open', 'submit_for_review'] })] })
+      .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('Submit for review');
+
+    expect(mocks.submitWritingForReview).toHaveBeenCalledWith('access-token', 4);
+    expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns an in-review writing to draft when the backend exposes the action', async () => {
+    mocks.fetchEditorialQueue
+      .mockResolvedValueOnce({ count: 1, next: null, previous: null, results: [queueItem({ available_actions: ['open', 'return_to_draft'] })] })
+      .mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Mercy in the Morning'));
+    await clickButton('Return to draft');
+
+    expect(mocks.returnWritingToDraft).toHaveBeenCalledWith('access-token', 4);
+    expect(mocks.fetchEditorialQueue).toHaveBeenCalledTimes(2);
   });
 
   it('calls the editorial queue endpoint with a status filter', async () => {

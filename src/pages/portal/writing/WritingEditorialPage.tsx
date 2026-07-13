@@ -14,9 +14,11 @@ import {
   fetchWritings,
   fetchWorkflowNotes,
   publishWriting,
+  returnWritingToDraft,
+  submitWritingForReview,
   updateWorkflowNote,
 } from '../../../services/writingApi';
-import type { EditorialQueueFilters, EditorialQueueItem, Writing, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
+import type { EditorialAction, EditorialQueueFilters, EditorialQueueItem, Writing, WritingStatus, WritingWorkflowNote } from '../../../types/writing';
 import { getEditorialWritingCapabilities } from '../../../utils/permissions';
 
 const statusLabels: Record<WritingStatus, string> = {
@@ -46,11 +48,16 @@ const formatDate = (value?: string | null) => {
 
 const authorLabel = (writing: EditorialQueueItem) => {
   const primary = writing.author_attributions?.find((item) => item.is_primary) || writing.author_attributions?.[0];
-  return primary?.display_name || primary?.name || (writing.is_author ? 'You' : 'Unknown author');
+  return writing.author_display || writing.byline || writing.authors?.[0]?.display_name || primary?.display_name || primary?.name || (writing.is_author ? 'You' : 'Unknown author');
 };
 
 const noteAuthorLabel = (note: WritingWorkflowNote) =>
-  note.created_by_detail?.name || note.created_by_name || 'Editorial note';
+  note.author_display || note.author?.display_name || note.created_by_detail?.name || note.created_by_name || 'Editorial note';
+
+const noteBody = (note: WritingWorkflowNote) => note.note || note.body || '';
+
+const hasAction = (writing: EditorialQueueItem, action: EditorialAction) =>
+  writing.available_actions?.includes(action) ?? false;
 
 const WritingEditorialPage = () => {
   const auth = useAuth();
@@ -67,6 +74,8 @@ const WritingEditorialPage = () => {
   const [approvingId, setApprovingId] = useState<number | string | null>(null);
   const [publishingId, setPublishingId] = useState<number | string | null>(null);
   const [archivingId, setArchivingId] = useState<number | string | null>(null);
+  const [returningId, setReturningId] = useState<number | string | null>(null);
+  const [submittingId, setSubmittingId] = useState<number | string | null>(null);
   const [statusCounts, setStatusCounts] = useState<Record<WritingStatus, number>>(emptyStatusCounts);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [summaryMessage, setSummaryMessage] = useState('');
@@ -215,6 +224,36 @@ const WritingEditorialPage = () => {
     }
   };
 
+  const handleReturnToDraft = async (writing: EditorialQueueItem) => {
+    setReturningId(writing.id);
+    setMessage('');
+
+    try {
+      await returnWritingToDraft(auth.accessToken, writing.id);
+      await refreshDesk();
+    } catch {
+      setMessage('Unable to return this writing to draft. It may already have changed state, or your permissions may have changed.');
+      await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
+    } finally {
+      setReturningId(null);
+    }
+  };
+
+  const handleSubmitForReview = async (writing: EditorialQueueItem) => {
+    setSubmittingId(writing.id);
+    setMessage('');
+
+    try {
+      await submitWritingForReview(auth.accessToken, writing.id);
+      await refreshDesk();
+    } catch {
+      setMessage('Unable to submit this writing for review. It may already have changed state, or your permissions may have changed.');
+      await loadQueue(undefined, { clearMessage: false, page: 1, showLoading: false });
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
   const loadNotes = async (writingId: number | string, showLoading = true) => {
     if (showLoading) setNotesLoading(true);
     try {
@@ -338,16 +377,15 @@ const WritingEditorialPage = () => {
     const byKey = new Map(groups.map((group) => [group.key, group]));
 
     items.forEach((writing) => {
-      const capabilities = getEditorialWritingCapabilities({ id: auth.user?.id, permissions: auth.permissions }, writing);
       if (writing.status === 'IN_REVIEW') byKey.get('in_review')?.items.push(writing);
-      else if (writing.status === 'DRAFT' && (capabilities.canPublish || capabilities.canReview)) byKey.get('drafts_actionable')?.items.push(writing);
+      else if (writing.status === 'DRAFT' && (hasAction(writing, 'publish') || hasAction(writing, 'submit_for_review') || hasAction(writing, 'edit'))) byKey.get('drafts_actionable')?.items.push(writing);
       else if (writing.status === 'SCHEDULED') byKey.get('scheduled')?.items.push(writing);
       else if (writing.status === 'PUBLISHED' || writing.status === 'ARCHIVED' || writing.reviewed_at) byKey.get('recent')?.items.push(writing);
       else byKey.get('other')?.items.push(writing);
     });
 
     return groups.filter((group) => group.items.length > 0);
-  }, [auth.permissions, auth.user?.id, items]);
+  }, [items]);
 
 
   const statusBadgeClass = (status: WritingStatus) => {
@@ -448,7 +486,7 @@ const WritingEditorialPage = () => {
                       </div>
                     ) : (
                       <>
-                        <p className="mt-3 text-sm leading-6">{note.note}</p>
+                        <p className="mt-3 text-sm leading-6">{noteBody(note)}</p>
                         {canManageOpenNotes ? (
                           <div className="mt-3 flex flex-wrap justify-end gap-2">
                             <button className={actionButtonClass} disabled={mutatingNote} onClick={() => beginEditNote(note)} type="button">Edit note</button>
@@ -624,19 +662,21 @@ const WritingEditorialPage = () => {
                               {writing.latest_workflow_note ? (
                                 <div className={`mt-4 rounded-2xl border p-4 ${darkMode ? 'border-white/10 bg-black/20' : 'border-[#eaded0] bg-[#fffaf0]'}`}>
                                   <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Latest note</p>
-                                  <p className="mt-2 text-sm leading-6">{writing.latest_workflow_note.note}</p>
+                                  <p className="mt-2 text-sm leading-6">{noteBody(writing.latest_workflow_note)}</p>
                                   <p className={`mt-2 text-xs ${portalSurface.softMutedText(darkMode)}`}>{noteAuthorLabel(writing.latest_workflow_note)} <span aria-hidden="true">&middot;</span> {formatDate(writing.latest_workflow_note.created_at)}</p>
                                 </div>
                               ) : null}
                             </div>
 
                             <div className="flex shrink-0 flex-wrap gap-2 lg:max-w-56 lg:justify-end">
-                              <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Open</Link>
-                              {capabilities.canEdit ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Edit</Link> : null}
+                              {hasAction(writing, 'open') || hasAction(writing, 'edit') ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Open</Link> : null}
+                              {hasAction(writing, 'edit') ? <Link className={actionButtonClass} to={`/portal/writing/${writing.id}`}>Edit</Link> : null}
                               <button className={actionButtonClass} onClick={() => void openNotes(writing)} type="button">View notes</button>
-                              {capabilities.canReview ? <button className={actionButtonClass} disabled={String(approvingId) === String(writing.id)} onClick={() => void handleApprove(writing)} type="button">{String(approvingId) === String(writing.id) ? 'Approving...' : 'Approve'}</button> : null}
-                              {capabilities.canPublish ? <button className={actionButtonClass} disabled={String(publishingId) === String(writing.id)} onClick={() => void handlePublish(writing)} type="button">{String(publishingId) === String(writing.id) ? 'Publishing...' : 'Publish'}</button> : null}
-                              {capabilities.canArchive ? <button className={actionButtonClass} disabled={String(archivingId) === String(writing.id)} onClick={() => void handleArchive(writing)} type="button">{String(archivingId) === String(writing.id) ? 'Archiving...' : 'Archive'}</button> : null}
+                              {hasAction(writing, 'submit_for_review') ? <button className={actionButtonClass} disabled={String(submittingId) === String(writing.id)} onClick={() => void handleSubmitForReview(writing)} type="button">{String(submittingId) === String(writing.id) ? 'Submitting...' : 'Submit for review'}</button> : null}
+                              {hasAction(writing, 'approve') ? <button className={actionButtonClass} disabled={String(approvingId) === String(writing.id)} onClick={() => void handleApprove(writing)} type="button">{String(approvingId) === String(writing.id) ? 'Approving...' : 'Approve'}</button> : null}
+                              {hasAction(writing, 'return_to_draft') ? <button className={actionButtonClass} disabled={String(returningId) === String(writing.id)} onClick={() => void handleReturnToDraft(writing)} type="button">{String(returningId) === String(writing.id) ? 'Returning...' : 'Return to draft'}</button> : null}
+                              {hasAction(writing, 'publish') ? <button className={actionButtonClass} disabled={String(publishingId) === String(writing.id)} onClick={() => void handlePublish(writing)} type="button">{String(publishingId) === String(writing.id) ? 'Publishing...' : 'Publish'}</button> : null}
+                              {hasAction(writing, 'archive') ? <button className={actionButtonClass} disabled={String(archivingId) === String(writing.id)} onClick={() => void handleArchive(writing)} type="button">{String(archivingId) === String(writing.id) ? 'Archiving...' : 'Archive'}</button> : null}
                             </div>
                           </div>
                         </article>

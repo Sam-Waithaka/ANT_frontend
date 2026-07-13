@@ -1,5 +1,14 @@
 export type WritingStatus = 'DRAFT' | 'IN_REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED';
 
+export type EditorialAction =
+  | 'open'
+  | 'edit'
+  | 'approve'
+  | 'publish'
+  | 'archive'
+  | 'return_to_draft'
+  | 'submit_for_review';
+
 export type WritingWorkflowNote = {
   action?: string;
   action_display?: string;
@@ -11,6 +20,12 @@ export type WritingWorkflowNote = {
     name?: string;
   } | null;
   created_by_name?: string;
+  author_display?: string | null;
+  body?: string;
+  author?: {
+    id: number | string;
+    display_name: string;
+  } | null;
   id: number | string;
   note: string;
   updated_at?: string;
@@ -228,12 +243,20 @@ export type Writing = {
 };
 
 export type EditorialQueueItem = Writing & {
+  author_display?: string;
+  authors?: Array<{ id: number | string; display_name: string }>;
   author_ids?: Array<number | string>;
+  available_actions?: EditorialAction[];
+  byline?: string;
+  categories?: unknown[];
+  created_at?: string;
   is_author?: boolean;
-  submitted_at?: string | null;
-  reviewed_at?: string | null;
-  workflow_notes_count?: number;
   latest_workflow_note?: WritingWorkflowNote | null;
+  resource_type_detail?: unknown | null;
+  reviewed_at?: string | null;
+  submitted_at?: string | null;
+  workflow_notes_count?: number;
+  writing_type?: string;
 };
 
 export type EditorialQueueFilters = {
