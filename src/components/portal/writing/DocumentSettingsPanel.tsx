@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { ChevronDown, FileText, Layers3, Plus, Settings2, Sparkles, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchResourcesNavigation } from '../../../services/resourcesApi';
-import type { WritingAuthorAttribution, WritingAuthorRole, WritingCategory, WritingMinistry, WritingResourceType, WritingSeries, WritingStatus, WritingTag } from '../../../types/writing';
+import type { PublicResourceSeries, WritingAuthorAttribution, WritingAuthorRole, WritingCategory, WritingMinistry, WritingResourceType, WritingStatus, WritingTag } from '../../../types/writing';
 
 export type DocumentSettingsAction = {
   disabled?: boolean;
@@ -53,7 +53,7 @@ type CollapsibleSectionProps = {
 };
 
 const AUTHOR_ROLES: WritingAuthorRole[] = ['AUTHOR', 'CONTRIBUTOR', 'EDITOR', 'REVIEWER', 'COMPILER', 'TRANSLATOR'];
-const seriesName = (series: WritingSeries) => series.title || series.name || series.slug;
+const seriesName = (series: PublicResourceSeries & { name?: string }) => series.title || series.name || series.slug;
 const tagName = (tag: WritingTag) => tag.name || tag.slug || String(tag.id);
 
 const statusLabel = (status: WritingStatus) => status
@@ -252,7 +252,7 @@ const DocumentSettingsPanel = ({
 }: DocumentSettingsPanelProps) => {
   const [categories, setCategories] = useState<WritingCategory[]>([]);
   const [ministries, setMinistries] = useState<WritingMinistry[]>([]);
-  const [series, setSeries] = useState<WritingSeries[]>([]);
+  const [series, setSeries] = useState<PublicResourceSeries[]>([]);
   const [taxonomyLoading, setTaxonomyLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [openSections, setOpenSections] = useState<Record<SettingsSectionKey, boolean>>({
@@ -310,7 +310,7 @@ const DocumentSettingsPanel = ({
 
   const selectedSeries = seriesIds
     .map((id) => series.find((item) => String(item.id) === String(id)))
-    .filter((item): item is WritingSeries => Boolean(item));
+    .filter((item): item is PublicResourceSeries => Boolean(item));
 
   const moveSeries = (index: number, direction: -1 | 1) => {
     if (!onSeriesIdsChange) return;

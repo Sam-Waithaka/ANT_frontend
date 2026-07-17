@@ -55,6 +55,7 @@ export type WritingResourceType = {
   sort_order: number;
   is_featured: boolean;
   is_active: boolean;
+  writing_count?: number;
 };
 
 export type WritingCategory = {
@@ -131,11 +132,14 @@ export type WritingCategorySeriesLink = {
   is_active: boolean;
 };
 export type ScriptureBookNavigationItem = {
+  abbreviation?: string;
   id?: number | string;
   name: string;
+  number?: number;
   osis_id?: string;
   osis?: string;
   slug?: string;
+  testament?: string;
   writing_count?: number;
 };
 
@@ -154,6 +158,7 @@ export type WritingMinistry = {
   id: number | string;
   name: string;
   slug?: string;
+  summary?: string;
   writing_count?: number;
 };
 
@@ -164,6 +169,35 @@ export type WritingMediaAsset = {
   image?: string;
   title?: string;
   url?: string;
+};
+
+export type PublicResourceType = WritingResourceType;
+
+export type PublicResourceSeries = {
+  cover_image_detail?: WritingMediaAsset | null;
+  description: string;
+  id: number | string;
+  slug: string;
+  title: string;
+  writing_count: number;
+};
+
+export type PublicScriptureBook = {
+  abbreviation: string;
+  id: number | string;
+  name: string;
+  number: number;
+  osis_id: string;
+  testament: string;
+  writing_count: number;
+};
+
+export type PublicResourceMinistry = {
+  id: number | string;
+  name: string;
+  slug: string;
+  summary: string;
+  writing_count: number;
 };
 
 export type WritingScriptureReferencePayload = {
@@ -206,6 +240,58 @@ export type WritingMediaEmbed = {
   position_hint?: string;
   writing: number | string;
 };
+export type PublicWritingCard = {
+  author_attributions: Array<{
+    display_name: string;
+    id: number | string;
+    is_primary: boolean;
+    order: number;
+    role: string;
+  }>;
+  author_display: string;
+  byline: string;
+  categories: WritingCategory[];
+  excerpt: string;
+  id: number | string;
+  ministries: PublicResourceMinistry[];
+  og_image_detail: WritingMediaAsset | null;
+  published_at: string;
+  reading_time_minutes: number;
+  resource_type_detail: PublicResourceType | null;
+  scripture_references: WritingScriptureReference[];
+  seo_description: string;
+  seo_title: string;
+  series: PublicResourceSeries[];
+  slug: string;
+  tags: WritingTag[];
+  title: string;
+  writing_type: string;
+};
+
+export type PublicWritingNeighbor = {
+  published_at: string;
+  slug: string;
+  title: string;
+};
+
+export type PublicWritingDetail = PublicWritingCard & {
+  canonical_lookup: {
+    published_at: string;
+    slug: string;
+  };
+  canonical_url: string;
+  content_html: string;
+  content_json: unknown;
+  content_text: string;
+  content_version: number;
+  media_embeds: WritingMediaEmbed[];
+  next_article: PublicWritingNeighbor | null;
+  og_description: string;
+  og_title: string;
+  previous_article: PublicWritingNeighbor | null;
+  slug_variants: PublicWritingCard[];
+};
+
 export type Writing = {
   id: number | string;
   title: string;
@@ -290,11 +376,22 @@ export type ResourcesNavigationFilters = {
 export type ResourcesNavigation = {
   categories: WritingCategory[];
   category_series_links: WritingCategorySeriesLink[];
-  ministries: WritingMinistry[];
+  ministries: PublicResourceMinistry[];
   resource_type_category_links: WritingResourceTypeCategoryLink[];
-  resource_types: WritingResourceType[];
-  scripture_books: ScriptureBookNavigationItem[];
-  series: WritingSeries[];
+  resource_types: PublicResourceType[];
+  scripture_books: PublicScriptureBook[];
+  series: PublicResourceSeries[];
+};
+
+export type ResourcesHome = {
+  featured_articles: PublicWritingCard[];
+  featured_categories: WritingCategory[];
+  featured_series: PublicResourceSeries[];
+  hero_featured: PublicWritingCard | null;
+  latest_articles: PublicWritingCard[];
+  ministries: PublicResourceMinistry[];
+  resource_types: PublicResourceType[];
+  scripture_books: PublicScriptureBook[];
 };
 
 export type WritingCreatePayload = {
