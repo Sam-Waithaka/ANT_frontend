@@ -115,6 +115,16 @@ describe('ResourcesPage', () => {
     expect(container.textContent).toContain('Latest Grace');
   });
 
+
+  it('shows landing skeletons while public resources are loading', async () => {
+    mocks.fetchResourcesHome.mockReturnValueOnce(new Promise(() => undefined));
+    mocks.fetchResourcesNavigation.mockReturnValueOnce(new Promise(() => undefined));
+
+    await renderPage(root);
+
+    expect(container.querySelector('.animate-pulse')).not.toBeNull();
+  });
+
   it('shows intentional empty states when public resources arrays are empty', async () => {
     mocks.fetchResourcesHome.mockResolvedValueOnce({
       featured_articles: [],

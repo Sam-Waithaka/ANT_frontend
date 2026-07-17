@@ -111,6 +111,7 @@ describe('resourcesApi', () => {
     expect(fetchMock).toHaveBeenCalledWith('/v1/resources/navigation/?category_slug=proverbs&resource_type_slug=bible-study', expect.objectContaining({
       headers: { Accept: 'application/json' },
     }));
+    expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
   });
 
   it('preserves resources navigation error detail and status', async () => {

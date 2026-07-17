@@ -133,4 +133,31 @@ describe('ResourcesBrowsePage', () => {
     expect(container.textContent).toContain('First Resource');
     expect(mocks.searchPublicWritings).toHaveBeenLastCalledWith({ resource_type_slug: 'devotional', page: 2, page_size: 24 }, undefined);
   });
+
+  it('shows a skeleton grid while browse results are loading', async () => {
+    mocks.searchPublicWritings.mockReturnValueOnce(new Promise(() => undefined));
+
+    await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
+
+    expect(container.textContent).toContain('Loading resources');
+    expect(container.querySelector('.animate-pulse')).not.toBeNull();
+  });
+
+  it('shows an intentional empty state when browse results are empty', async () => {
+    mocks.searchPublicWritings.mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+
+    await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
+
+    await vi.waitFor(() => expect(container.textContent).toContain('No published resources here yet.'));
+    expect(container.textContent).toContain('Once published writings are connected to this part of the library, they will appear here.');
+  });
+
+  it('shows a graceful error when browse results fail to load', async () => {
+    mocks.searchPublicWritings.mockRejectedValueOnce(new Error('Nope'));
+
+    await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
+
+    await vi.waitFor(() => expect(container.textContent).toContain('Unable to load these resources right now.'));
+  });
+
 });
