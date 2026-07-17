@@ -139,7 +139,7 @@ const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => (
 
 const ResourceTypeCard = ({ resourceType }: { resourceType: PublicResourceType }) => (
   <a
-    href="#resources-types"
+    href={`/resources/type/${resourceType.slug}`}
     className="flex min-h-24 min-w-0 items-center gap-4 rounded-2xl border border-black/10 bg-white p-5 shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25"
   >
     <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-red-950/5 text-red-800 dark:bg-red-950/35 dark:text-red-100">

@@ -10,6 +10,7 @@ import MediaWatchPage from './components/media/watch/MediaWatchPage';
 import MinistriesPage from './pages/MinistriesPage';
 import Project52Page from './pages/Project52Page';
 import PortalPage from './pages/PortalPage';
+import ResourcesBrowsePage from './pages/ResourcesBrowsePage';
 import ResourcesPage from './pages/ResourcesPage';
 import ScripturePage from './pages/ScripturePage';
 import WritingArticlesPage from './pages/portal/writing/WritingArticlesPage';
@@ -47,6 +48,10 @@ function App() {
               <Route path="/portal/writing/:id" element={<RequireAuth><WritingEditorPage /></RequireAuth>} />
               <Route path="/project52" element={<Project52Page />} />
               <Route path="/resources" element={<ResourcesPage />} />
+              <Route path="/resources/type/:slug" element={<ResourcesBrowsePage mode="type" />} />
+              <Route path="/resources/series/:slug" element={<ResourcesBrowsePage mode="series" />} />
+              <Route path="/resources/book/:osisId" element={<ResourcesBrowsePage mode="book" />} />
+              <Route path="/resources/ministry/:slug" element={<ResourcesBrowsePage mode="ministry" />} />
               <Route path="/scripture" element={<ScripturePage />} />
               <Route path="*" element={<LandingPage />} />
             </Routes>

@@ -10,7 +10,7 @@ import { $createDefaultChurchBlock } from './nodes/ChurchBlockNode';
 import { applyBlockFormat, toggleEditorialEmphasis, type BlockFormat } from './blockFormatting';
 import type { LexicalSelectionBookmark } from './selectionBookmark';
 import type { AudioVisualItem } from '../../../../types/audioVisual';
-import type { Writing } from '../../../../types/writing';
+import type { PublicWritingCard } from '../../../../types/writing';
 import { searchPublicAudioVisual, searchPublicWritings } from '../../../../services/publicSearchApi';
 
 type EditorToolbarProps = { darkMode: boolean; onRequestMedia?: (bookmark: LexicalSelectionBookmark | null) => void; onRequestScripture?: (bookmark: LexicalSelectionBookmark | null) => void; onRequestPastoral?: (bookmark: LexicalSelectionBookmark | null) => void; mediaDisabledLabel?: string; };
@@ -24,9 +24,9 @@ type LinkDestination = {
   title: string;
   url: string;
 };
-type LinkSearchState = { media: AudioVisualItem[]; status: 'done' | 'error' | 'idle' | 'loading'; writings: Writing[] };
+type LinkSearchState = { media: AudioVisualItem[]; status: 'done' | 'error' | 'idle' | 'loading'; writings: PublicWritingCard[] };
 const emptyLinkSearch: LinkSearchState = { media: [], status: 'idle', writings: [] };
-const getWritingLinkPath = (writing: Writing) => writing.slug ? `/resources?writing=${encodeURIComponent(writing.slug)}` : `/resources?writing=${encodeURIComponent(String(writing.id))}`;
+const getWritingLinkPath = (writing: PublicWritingCard) => writing.slug ? `/resources/${encodeURIComponent(writing.slug)}` : '/resources';
 const getMediaLinkPath = (item: AudioVisualItem) => item.slug ? `/media/watch/${encodeURIComponent(item.slug)}` : '/media';
 const stripWww = (host: string) => host.replace(/^www\./i, '');
 const getExternalPreview = (value: string): LinkDestination | null => {
@@ -44,7 +44,7 @@ const getExternalPreview = (value: string): LinkDestination | null => {
     return { kind: 'external', meta: 'Invalid URL', subtitle: 'Check the destination and try again.', title: 'Invalid URL', url: '' };
   }
 };
-const writingResultToDestination = (writing: Writing): LinkDestination => ({
+const writingResultToDestination = (writing: PublicWritingCard): LinkDestination => ({
   kind: 'writing',
   meta: writing.resource_type_detail?.name || 'Article',
   subtitle: writing.excerpt || writing.resource_type_detail?.name || 'Published writing',

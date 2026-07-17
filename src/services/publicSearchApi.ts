@@ -1,5 +1,5 @@
 import type { AudioVisualItem } from '../types/audioVisual';
-import type { PaginatedResponse, Writing } from '../types/writing';
+import type { PaginatedResponse, PublicWritingCard } from '../types/writing';
 import { apiGet } from './apiClient';
 import { normalizeAudioVisualItem } from './audioVisualApi';
 
@@ -8,7 +8,7 @@ export type PublicSearchQuery = {
   search?: string;
   page?: number;
   page_size?: number;
-  [key: string]: number | string | undefined;
+  [key: string]: boolean | number | string | undefined;
 };
 
 const emptyPage = <T>(): PaginatedResponse<T> => ({ count: 0, next: null, previous: null, results: [] });
@@ -46,7 +46,7 @@ export const searchPublicWritings = async (query: PublicSearchQuery, signal?: Ab
     timeoutMs: 12000,
   });
 
-  return normalizePage<Writing>(payload);
+  return normalizePage<PublicWritingCard>(payload);
 };
 
 export const searchPublicAudioVisual = async (query: PublicSearchQuery, signal?: AbortSignal) => {
