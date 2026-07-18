@@ -137,5 +137,57 @@ describe('DocumentSettingsPanel', () => {
     await act(async () => moveSecondUp.click());
     expect(onSeriesIdsChange).toHaveBeenCalledWith([4, 3]);
   });
-});
 
+  it('can split document settings into desktop left and right section groups', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({
+      categories: [{ id: 2, name: 'Prayer', slug: 'prayer' }],
+      ministries: [],
+      series: [{ id: 3, slug: 'project-52', title: 'Project 52' }],
+    })));
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(
+        <div>
+          <DocumentSettingsPanel
+            actions={[{ label: 'Save draft', onClick: () => undefined, variant: 'secondary' }]}
+            categoryIds={[]}
+            darkMode={false}
+            excerpt=""
+            onCategoryIdsChange={() => undefined}
+            onExcerptChange={() => undefined}
+            onResourceTypeChange={() => undefined}
+            resourceType="1"
+            resourceTypes={[{ id: 1, name: 'Devotional', slug: 'devotional' }]}
+            sectionGroup="left"
+            status="DRAFT"
+          />
+          <DocumentSettingsPanel
+            actions={[{ label: 'Save draft', onClick: () => undefined, variant: 'secondary' }]}
+            categoryIds={[]}
+            darkMode={false}
+            excerpt=""
+            metadata={[{ label: 'Reading time', value: '4 minutes' }]}
+            onCategoryIdsChange={() => undefined}
+            onExcerptChange={() => undefined}
+            onResourceTypeChange={() => undefined}
+            resourceType="1"
+            resourceTypes={[{ id: 1, name: 'Devotional', slug: 'devotional' }]}
+            sectionGroup="right"
+            status="DRAFT"
+            workflowControl={<p>Workflow controls</p>}
+          />
+        </div>,
+      );
+      await Promise.resolve();
+    });
+
+    expect(container.textContent).toContain('Article basics');
+    expect(container.textContent).toContain('Public presentation');
+    expect(container.textContent).toContain('Editorial workflow');
+    expect(container.textContent).toContain('Article details');
+    expect(container.textContent).not.toContain('Actions');
+    expect(container.textContent).not.toContain('Save draft');
+  });
+
+});

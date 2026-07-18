@@ -6,6 +6,7 @@ import type {
 } from "../../types/writing";
 import WritingArticleSurface from "./WritingArticleSurface";
 import WritingContentRenderer from "./WritingContentRenderer";
+import type { WritingMediaEmbedLike } from "./editor/nodes/ChurchBlockMediaContext";
 
 type WritingArticleReaderProps = {
   contentHtml?: string;
@@ -47,6 +48,7 @@ const WritingArticleReader = ({
   const resolvedContentJson = writing?.content_json ?? contentJson;
   const resolvedContentHtml = writing?.content_html || contentHtml || "";
   const resolvedMediaEmbeds = writing?.media_embeds || mediaEmbeds || [];
+  const rendererMediaEmbeds = resolvedMediaEmbeds as WritingMediaEmbedLike[];
   const imageUrl = coverImageUrl(resolvedCoverImage);
   const mutedTextClass = darkMode ? "text-stone-400" : "text-zinc-600";
   const dividerClass = darkMode ? "border-white/10" : "border-[#eaded0]";
@@ -90,7 +92,7 @@ const WritingArticleReader = ({
               contentJson={resolvedContentJson}
               darkMode={darkMode}
               emptyMessage="This article does not have content yet."
-              mediaEmbeds={resolvedMediaEmbeds}
+              mediaEmbeds={rendererMediaEmbeds}
             />
           ) : resolvedContentHtml ? (
             <div
@@ -102,7 +104,7 @@ const WritingArticleReader = ({
               contentJson={resolvedContentJson}
               darkMode={darkMode}
               emptyMessage="This article does not have content yet."
-              mediaEmbeds={resolvedMediaEmbeds}
+              mediaEmbeds={rendererMediaEmbeds}
             />
           )}
         </div>

@@ -10,7 +10,7 @@ type WritingPreviewProps = {
   excerpt?: string;
   onCoverImageRefresh?: () => Promise<MediaAsset | null>;
   title: string;
-  mediaEmbeds?: import("../writing/editor/nodes/ChurchBlockMediaContext").WritingMediaEmbedLike[];
+  mediaEmbeds?: import("../../writing/editor/nodes/ChurchBlockMediaContext").WritingMediaEmbedLike[];
 };
 
 const WritingPreview = ({

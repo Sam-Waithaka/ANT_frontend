@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { MediaAsset } from '../../../../../services/mediaAssetsApi';
+import type { MediaAsset } from '../../../../services/mediaAssetsApi';
 
 export type WritingMediaEmbedLike = {
   alt_text_override?: string;

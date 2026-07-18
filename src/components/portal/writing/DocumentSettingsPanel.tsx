@@ -37,6 +37,8 @@ type DocumentSettingsPanelProps = {
   tagIds?: Array<number | string>;
   tagOptions?: WritingTag[];
   workflowControl?: ReactNode;
+  heading?: string;
+  sectionGroup?: 'all' | 'left' | 'right';
 };
 
 type SettingsSectionKey = 'actions' | 'basics' | 'details' | 'presentation' | 'workflow';
@@ -249,6 +251,8 @@ const DocumentSettingsPanel = ({
   tagIds = [],
   tagOptions = [],
   workflowControl,
+  heading = 'Document Settings',
+  sectionGroup = 'all',
 }: DocumentSettingsPanelProps) => {
   const [categories, setCategories] = useState<WritingCategory[]>([]);
   const [ministries, setMinistries] = useState<WritingMinistry[]>([]);
@@ -341,6 +345,11 @@ const DocumentSettingsPanel = ({
     </span>
   );
   const showDetails = Boolean(series.length || ministries.length || tagOptions.length || authorAttributions.length || metadata.length);
+  const showBasics = sectionGroup === 'all' || sectionGroup === 'left';
+  const showPresentation = sectionGroup === 'all' || sectionGroup === 'left';
+  const showWorkflow = sectionGroup === 'all' || sectionGroup === 'right';
+  const showArticleDetails = sectionGroup === 'all' || sectionGroup === 'right';
+  const showActions = sectionGroup === 'all';
 
   return (
     <aside
@@ -358,9 +367,9 @@ const DocumentSettingsPanel = ({
             <Settings2 size={17} />
           </span>
           <span className="min-w-0">
-            <span className="block text-xs font-black uppercase tracking-[0.18em] text-red-800">Document Settings</span>
+            <span className="block text-xs font-black uppercase tracking-[0.18em] text-red-800">{heading}</span>
             <span className={`mt-1 block truncate text-xs font-medium ${mutedTextClass}`}>
-              {statusLabel(status)} · {selectedResourceType?.name || 'Choose resource type'}
+              {statusLabel(status)} &middot; {selectedResourceType?.name || 'Choose resource type'}
             </span>
           </span>
         </span>
@@ -368,7 +377,7 @@ const DocumentSettingsPanel = ({
       </button>
 
       <div className={`${open ? 'grid' : 'hidden'} mt-5 gap-3 lg:grid`}>
-        <CollapsibleSection
+        {showBasics ? <CollapsibleSection
           darkMode={darkMode}
           description="Classify where this writing belongs in the resource library."
           icon={<FileText size={14} />}
@@ -410,9 +419,9 @@ const DocumentSettingsPanel = ({
               selectedIds={categoryIds}
             />
           </div>
-        </CollapsibleSection>
+        </CollapsibleSection> : null}
 
-        <CollapsibleSection
+        {showPresentation ? <CollapsibleSection
           darkMode={darkMode}
           description="Shape how this article appears in cards, previews, and shared surfaces."
           icon={<Sparkles size={14} />}
@@ -440,9 +449,9 @@ const DocumentSettingsPanel = ({
           </label>
 
           {coverImageControl ? <div className="mt-5">{coverImageControl}</div> : null}
-        </CollapsibleSection>
+        </CollapsibleSection> : null}
 
-        {workflowControl ? (
+        {showWorkflow && workflowControl ? (
           <CollapsibleSection
             darkMode={darkMode}
             description="Move this writing through review, scheduling, and publishing readiness."
@@ -455,7 +464,7 @@ const DocumentSettingsPanel = ({
           </CollapsibleSection>
         ) : null}
 
-        {showDetails ? (
+        {showArticleDetails && showDetails ? (
           <CollapsibleSection
             darkMode={darkMode}
             icon={<Layers3 size={14} />}
@@ -502,7 +511,7 @@ const DocumentSettingsPanel = ({
           </CollapsibleSection>
         ) : null}
 
-        {actions.length ? (
+        {showActions && actions.length ? (
           <CollapsibleSection
             darkMode={darkMode}
             isOpen={openSections.actions}
@@ -543,4 +552,5 @@ const DocumentSettingsPanel = ({
 };
 
 export default DocumentSettingsPanel;
+
 
