@@ -48,6 +48,7 @@ const WritingEditorPage = () => {
   const [coverImageChange, setCoverImageChange] = useState<CoverImageChange>(undefined);
   const [coverImageId, setCoverImageId] = useState('');
   const [excerpt, setExcerpt] = useState('');
+  const [floatingActionBottom, setFloatingActionBottom] = useState(16);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [mediaEmbeds, setMediaEmbeds] = useState<WritingMediaEmbedLike[]>([]);
@@ -401,6 +402,47 @@ const WritingEditorPage = () => {
   }, [auth.accessToken, writing]);
   const saveStatusLabel = saveState === 'saved' ? 'Saved just now' : saveState === 'saving' ? 'Saving...' : saveState === 'error' ? 'Unable to save' : 'Draft changes are local';
 
+  useEffect(() => {
+    if (!writing) return undefined;
+
+    const footer = document.querySelector('[data-site-footer="true"]');
+    const baseOffset = 16;
+    const footerGap = 16;
+
+    if (!footer) {
+      setFloatingActionBottom(baseOffset);
+      return undefined;
+    }
+
+    let frame = 0;
+    const updateFloatingActionOffset = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const rect = footer.getBoundingClientRect();
+        const lift = rect.bottom > 0 ? Math.max(0, window.innerHeight - baseOffset - rect.top + footerGap) : 0;
+        setFloatingActionBottom(Math.ceil(baseOffset + lift));
+      });
+    };
+
+    const observer = new IntersectionObserver(updateFloatingActionOffset, {
+      root: null,
+      threshold: [0, 0.05, 0.1, 0.25, 0.5, 1],
+    });
+
+    observer.observe(footer);
+    updateFloatingActionOffset();
+    window.addEventListener('scroll', updateFloatingActionOffset, { passive: true });
+    window.addEventListener('resize', updateFloatingActionOffset);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('scroll', updateFloatingActionOffset);
+      window.removeEventListener('resize', updateFloatingActionOffset);
+    };
+  }, [writing]);
+
+
   const renderDocumentSettingsPanel = (panel?: { heading?: string; sectionGroup?: 'all' | 'left' | 'right' }) => {
     if (!writing) return null;
 
@@ -467,7 +509,7 @@ const WritingEditorPage = () => {
         {showPublishingPanel ? <div className="hidden xl:block"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing.scheduled_for} /></div> : null}
       </div> : null}
       {showPublishingPanel ? <div className="fixed inset-0 z-50 grid place-items-center p-3 xl:hidden" role="dialog" aria-modal="true" aria-label="Publishing"><button aria-label="Close publishing panel" className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setPublishingPanelOpen(false)} type="button" /><div className="relative z-10 max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-[34rem] overflow-y-auto rounded-[2rem]"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /></div></div> : null}
-      {writing ? <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 px-4"><div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-[#eaded0] bg-white/80 shadow-zinc-900/15')}><button aria-label="Save draft" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save size={16} />{saveState === 'saving' ? 'Saving...' : 'Save'}</button><button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>{workflowActions.canSubmitForReview ? <button aria-label="Submit for review" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send size={16} />Submit</button> : <button aria-label="Open document settings" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80'} onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button"><MoreHorizontal size={16} />Settings</button>}</div></div> : null}
+      {writing ? <div className="pointer-events-none fixed inset-x-0 z-30 px-4 transition-[bottom] duration-200 ease-out" style={{ bottom: `calc(${floatingActionBottom}px + env(safe-area-inset-bottom))` }}><div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-[#eaded0] bg-white/80 shadow-zinc-900/15')}><button aria-label="Save draft" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save size={16} />{saveState === 'saving' ? 'Saving...' : 'Save'}</button><button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>{workflowActions.canSubmitForReview ? <button aria-label="Submit for review" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send size={16} />Submit</button> : <button aria-label="Open document settings" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80'} onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button"><MoreHorizontal size={16} />Settings</button>}</div></div> : null}
       {message ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{message}</p> : null}
     </WritingStudioShell>
   );

@@ -354,7 +354,7 @@ const DocumentSettingsPanel = ({
   return (
     <aside
       aria-label="Document settings"
-      className={`self-start rounded-[2rem] border p-4 shadow-xl lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto ${shellClass}`}
+      className={`self-start rounded-[2rem] border p-4 shadow-xl xl:sticky xl:top-28 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto ${shellClass}`}
     >
       <button
         aria-expanded={open}
