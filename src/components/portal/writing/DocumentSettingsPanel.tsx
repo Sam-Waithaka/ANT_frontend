@@ -140,19 +140,19 @@ const CheckboxGroup = ({
     <div>
       <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">{label}</p>
       {options.length ? (
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid min-w-0 gap-2">
           {options.map((option) => {
             const checked = selected.has(String(option.id));
             return (
-              <label key={option.id} className={`flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm font-bold transition ${checked ? 'border-red-800 bg-red-950/[0.05] text-red-800' : darkMode ? 'border-white/10 bg-white/5 text-stone-200' : 'border-[#eaded0] bg-[#fffaf0] text-zinc-800'}`}>
+              <label key={option.id} className={`flex min-w-0 items-start gap-3 rounded-2xl border px-3 py-2 text-sm font-bold transition ${checked ? 'border-red-800 bg-red-950/[0.05] text-red-800' : darkMode ? 'border-white/10 bg-white/5 text-stone-200' : 'border-[#eaded0] bg-[#fffaf0] text-zinc-800'}`}>
                 <input
                   checked={checked}
-                  className="size-4 accent-red-800"
+                  className="mt-0.5 size-4 shrink-0 accent-red-800"
                   disabled={disabled || !onChange}
                   onChange={() => onChange?.(toggleId(selectedIds, option.id))}
                   type="checkbox"
                 />
-                <span>{option.label}</span>
+                <span className="min-w-0 break-words leading-5 [overflow-wrap:anywhere]">{option.label}</span>
               </label>
             );
           })}
@@ -190,8 +190,8 @@ const AuthorAttributionEditor = ({
 
   return (
     <div className="border-t border-[#eaded0] pt-4 dark:border-white/10">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Author attributions</p>
           <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{editable ? 'Manage the public byline for this article.' : 'Byline management requires editor permission.'}</p>
         </div>
@@ -201,19 +201,19 @@ const AuthorAttributionEditor = ({
       {authors.length ? (
         <div className="mt-3 grid gap-3">
           {authors.map((author, index) => (
-            <div key={`${author.user || 'manual'}-${index}`} className={darkMode ? 'rounded-2xl border border-white/10 bg-white/5 p-3' : 'rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-3'}>
+            <div key={`${author.user || 'manual'}-${index}`} className={darkMode ? 'min-w-0 rounded-2xl border border-white/10 bg-white/5 p-3' : 'min-w-0 rounded-2xl border border-[#eaded0] bg-[#fffaf0] p-3'}>
               <label className="grid gap-2 text-sm font-bold">
                 Display name
                 <input className={`w-full rounded-2xl border px-3 py-2 text-sm outline-none ${fieldClass}`} disabled={!editable} onChange={(event) => updateAuthor(index, { display_name: event.target.value })} placeholder="AIC Njoro Town Editorial Team" value={author.display_name || author.name || ''} />
               </label>
-              <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+              <div className="mt-3 grid min-w-0 gap-3 2xl:grid-cols-[minmax(0,1fr)_auto]">
                 <label className="grid gap-2 text-sm font-bold">
                   Role
                   <select className={`w-full rounded-2xl border px-3 py-2 text-sm outline-none ${fieldClass}`} disabled={!editable} onChange={(event) => updateAuthor(index, { role: event.target.value as WritingAuthorRole })} value={author.role || 'AUTHOR'}>
                     {AUTHOR_ROLES.map((role) => <option key={role} value={role}>{roleLabel(role)}</option>)}
                   </select>
                 </label>
-                <label className="flex items-end gap-2 pb-2 text-sm font-bold">
+                <label className="flex min-w-0 flex-wrap items-end gap-2 pb-2 text-sm font-bold">
                   <input checked={Boolean(author.is_primary)} className="size-4 accent-red-800" disabled={!editable} onChange={() => setPrimary(index)} type="radio" /> Primary
                 </label>
               </div>
@@ -472,18 +472,18 @@ const DocumentSettingsPanel = ({
             onToggle={() => toggleSection('details')}
             title="Article details"
           >
-            <div className="grid gap-5">
+            <div className="grid min-w-0 gap-5">
               <div>
                 <CheckboxGroup darkMode={darkMode} disabled={disabled} emptyLabel="No collections available yet." label="Series / collections" mutedTextClass={mutedTextClass} onChange={onSeriesIdsChange} options={series.map((item) => ({ id: item.id, label: seriesName(item) }))} selectedIds={seriesIds} />
                 {selectedSeries.length ? (
-                  <div className="mt-3 rounded-2xl border border-[#eaded0] bg-white/60 p-3 dark:border-white/10 dark:bg-white/5">
+                  <div className="mt-3 min-w-0 rounded-2xl border border-[#eaded0] bg-white/60 p-3 dark:border-white/10 dark:bg-white/5">
                     <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800">Series order</p>
                     <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>This order is sent as series_ids.</p>
                     <ol className="mt-3 grid gap-2">
                       {selectedSeries.map((item, index) => (
-                        <li key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-[#eaded0] bg-white px-3 py-2 text-sm font-bold dark:border-white/10 dark:bg-black/20">
-                          <span>{index + 1}. {seriesName(item)}</span>
-                          <span className="flex gap-2">
+                        <li key={item.id} className="grid min-w-0 gap-3 rounded-2xl border border-[#eaded0] bg-white px-3 py-2 text-sm font-bold dark:border-white/10 dark:bg-black/20">
+                          <span className="min-w-0 break-words leading-5 [overflow-wrap:anywhere]">{index + 1}. {seriesName(item)}</span>
+                          <span className="flex min-w-0 flex-wrap gap-2">
                             <button className="rounded-full border border-[#eaded0] px-2 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f574f] disabled:opacity-40 dark:border-white/10 dark:text-stone-200" disabled={disabled || index === 0} onClick={() => moveSeries(index, -1)} type="button">Up</button>
                             <button className="rounded-full border border-[#eaded0] px-2 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] text-[#5f574f] disabled:opacity-40 dark:border-white/10 dark:text-stone-200" disabled={disabled || index === selectedSeries.length - 1} onClick={() => moveSeries(index, 1)} type="button">Down</button>
                           </span>
@@ -502,7 +502,7 @@ const DocumentSettingsPanel = ({
                   {metadata.map((item) => (
                     <div key={item.label} className={`rounded-2xl border px-4 py-3 ${chipClass}`}>
                       <dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800">{item.label}</dt>
-                      <dd className="mt-1 font-semibold">{item.value}</dd>
+                      <dd className="mt-1 min-w-0 break-words font-semibold [overflow-wrap:anywhere]">{item.value}</dd>
                     </div>
                   ))}
                 </dl>
