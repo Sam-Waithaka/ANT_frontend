@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 type WritingArticleSurfaceProps = {
+  ariaLabel?: string;
   children: ReactNode;
   className?: string;
   contentClassName?: string;
@@ -20,6 +21,7 @@ export const getWritingArticlePaperClass = (darkMode: boolean) =>
     : "editor-paper-surface editor-paper-surface-light border-[#e6d8c8] bg-[#fffdf7] shadow-[inset_0_1px_0_rgba(255,255,255,0.75),inset_0_0_80px_rgba(120,72,24,0.045),0_18px_45px_rgba(70,45,20,0.10)]";
 
 const WritingArticleSurface = ({
+  ariaLabel,
   children,
   className = "",
   contentClassName = "",
@@ -28,6 +30,7 @@ const WritingArticleSurface = ({
   labelledBy,
 }: WritingArticleSurfaceProps) => (
   <section
+    aria-label={ariaLabel}
     aria-labelledby={labelledBy}
     className={`overflow-visible rounded-2xl border shadow-lg ${getWritingArticleShellClass(darkMode)} ${className}`}
   >

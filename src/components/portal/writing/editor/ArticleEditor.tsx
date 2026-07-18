@@ -54,6 +54,10 @@ import {
   $createApplicationBlockNode,
   ApplicationBlockNode,
 } from "./nodes/ApplicationBlockNode";
+import {
+  getWritingArticlePaperClass,
+  getWritingArticleShellClass,
+} from "../../../writing/WritingArticleSurface";
 import type {
   PastoralBlockData,
   PastoralBlockKind,
@@ -412,12 +416,8 @@ const ArticleEditor = ({
   const [pendingPastoral, setPendingPastoral] =
     useState<PendingPastoralBlock>(null);
   const media = useMemo(() => mediaEmbedMap(mediaEmbeds), [mediaEmbeds]);
-  const surfaceClass = darkMode
-    ? "border-white/10 bg-[#0f0e0d] text-stone-100 shadow-[0_28px_80px_rgba(0,0,0,0.58)]"
-    : "border-[#eaded0] bg-[#fbf3e8] text-zinc-950 shadow-[0_24px_70px_rgba(70,45,20,0.10)]";
-  const paperClass = darkMode
-    ? "border-white/15 bg-[#181512] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),inset_0_0_90px_rgba(0,0,0,0.32),0_22px_55px_rgba(0,0,0,0.55)]"
-    : "border-[#e6d8c8] bg-[#fffdf7] shadow-[inset_0_1px_0_rgba(255,255,255,0.75),inset_0_0_80px_rgba(120,72,24,0.045),0_18px_45px_rgba(70,45,20,0.10)]";
+  const surfaceClass = getWritingArticleShellClass(darkMode);
+  const paperClass = getWritingArticlePaperClass(darkMode);
   const contentClass = darkMode
     ? "text-stone-200 placeholder:text-stone-500"
     : "text-zinc-950 placeholder:text-[#8a7d70]";
@@ -505,11 +505,7 @@ const ArticleEditor = ({
             ) : null}
             <div
               className={
-                "editor-paper-surface " +
-                (darkMode
-                  ? "editor-paper-surface-dark "
-                  : "editor-paper-surface-light ") +
-                "relative m-3 min-h-[55vh] rounded-[1.5rem] border px-5 py-6 sm:m-4 sm:px-8 sm:py-8 lg:min-h-96 " +
+"relative m-3 min-h-[55vh] rounded-[1.5rem] border px-5 py-6 sm:m-4 sm:px-8 sm:py-8 lg:min-h-96 " +
                 paperClass
               }
             >

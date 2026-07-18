@@ -26,7 +26,7 @@ const WritingPreview = ({
   const dividerClass = darkMode ? "border-white/10" : "border-[#eaded0]";
 
   return (
-    <WritingArticleSurface darkMode={darkMode} labelledBy="writing-preview-title">
+    <WritingArticleSurface ariaLabel="Article preview" darkMode={darkMode} labelledBy="writing-preview-title">
       <div className="mx-auto max-w-3xl">
         {coverImage ? (
           <ResponsiveImage
