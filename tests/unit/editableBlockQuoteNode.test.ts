@@ -1,6 +1,6 @@
 import { createEditor } from 'lexical';
 import { describe, expect, it } from 'vitest';
-import { $createEditableBlockQuoteNode, EditableBlockQuoteNode } from '../../src/components/portal/writing/editor/nodes/EditableBlockQuoteNode';
+import { $createEditableBlockQuoteNode, EditableBlockQuoteNode } from '../../src/components/writing/editor/nodes/EditableBlockQuoteNode';
 
 describe('EditableBlockQuoteNode', () => {
   it('serializes and updates a dedicated editor blockquote', () => {

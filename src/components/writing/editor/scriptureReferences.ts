@@ -1,4 +1,4 @@
-import type { ScriptureData } from './nodes/scriptureTypes';
+import type { ScriptureData } from '../../../writing/editor/nodes/scriptureTypes';
 import type { WritingScriptureReference, WritingScriptureReferencePayload } from '../../../../types/writing';
 
 type LexicalLikeNode = {

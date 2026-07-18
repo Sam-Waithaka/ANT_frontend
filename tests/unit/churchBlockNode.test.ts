@@ -1,7 +1,7 @@
 import { createEditor } from 'lexical';
 import { describe, expect, it } from 'vitest';
-import { $createChurchBlockNode, ChurchBlockNode } from '../../src/components/portal/writing/editor/nodes/ChurchBlockNode';
-import { mediaEmbedMap } from '../../src/components/portal/writing/editor/nodes/ChurchBlockMediaContext';
+import { $createChurchBlockNode, ChurchBlockNode } from '../../src/components/writing/editor/nodes/ChurchBlockNode';
+import { mediaEmbedMap } from '../../src/components/writing/editor/nodes/ChurchBlockMediaContext';
 
 describe('ChurchBlockNode', () => {
   it('serializes Scripture content as durable editor JSON', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractImageBlocks, imageBlockRecordId } from '../../src/components/portal/writing/editor/imageBlocks';
+import { extractImageBlocks, imageBlockRecordId } from '../../src/components/writing/editor/imageBlocks';
 
 describe('extractImageBlocks', () => {
   it('derives backend position hints and separates stable embed identity from record id', () => {

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { AlignCenter, AlignLeft, AlignRight, BookOpenText, GripVertical, Image as ImageIcon, Maximize2, Minus, Sparkles, Trash2 } from 'lucide-react';
 import { $applyNodeReplacement, $getNodeByKey, DecoratorNode, type LexicalNode, type NodeKey, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import ResponsiveImage from '../../../../media/ResponsiveImage';
+import ResponsiveImage from '../../../media/ResponsiveImage';
 import { useChurchBlockMedia } from './ChurchBlockMediaContext';
 
 export type ChurchBlockKind = 'callout' | 'divider' | 'image' | 'scripture';

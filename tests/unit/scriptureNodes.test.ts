@@ -1,7 +1,7 @@
 import { createEditor } from 'lexical';
 import { describe, expect, it } from 'vitest';
-import { $createScriptureBlockNode, ScriptureBlockNode } from '../../src/components/portal/writing/editor/nodes/ScriptureBlockNode';
-import { $createScriptureReferenceNode, ScriptureReferenceNode } from '../../src/components/portal/writing/editor/nodes/ScriptureReferenceNode';
+import { $createScriptureBlockNode, ScriptureBlockNode } from '../../src/components/writing/editor/nodes/ScriptureBlockNode';
+import { $createScriptureReferenceNode, ScriptureReferenceNode } from '../../src/components/writing/editor/nodes/ScriptureReferenceNode';
 
 describe('Scripture Lexical nodes', () => {
   it('serializes an offline-safe API Scripture passage snapshot', () => {

@@ -8,19 +8,19 @@ import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
-import { normalizeLexicalContent } from "../portal/writing/editor/serialization";
-import { ChurchBlockNode } from "../portal/writing/editor/nodes/ChurchBlockNode";
-import { EditableBlockQuoteNode } from "../portal/writing/editor/nodes/EditableBlockQuoteNode";
-import { ScriptureBlockNode } from "../portal/writing/editor/nodes/ScriptureBlockNode";
-import { ScriptureReferenceNode } from "../portal/writing/editor/nodes/ScriptureReferenceNode";
-import { ReflectionBlockNode } from "../portal/writing/editor/nodes/ReflectionBlockNode";
-import { PrayerBlockNode } from "../portal/writing/editor/nodes/PrayerBlockNode";
-import { ApplicationBlockNode } from "../portal/writing/editor/nodes/ApplicationBlockNode";
+import { normalizeLexicalContent } from "./editor/serialization";
+import { ChurchBlockNode } from "./editor/nodes/ChurchBlockNode";
+import { EditableBlockQuoteNode } from "./editor/nodes/EditableBlockQuoteNode";
+import { ScriptureBlockNode } from "./editor/nodes/ScriptureBlockNode";
+import { ScriptureReferenceNode } from "./editor/nodes/ScriptureReferenceNode";
+import { ReflectionBlockNode } from "./editor/nodes/ReflectionBlockNode";
+import { PrayerBlockNode } from "./editor/nodes/PrayerBlockNode";
+import { ApplicationBlockNode } from "./editor/nodes/ApplicationBlockNode";
 import {
   ChurchBlockMediaContext,
   mediaEmbedMap,
   type WritingMediaEmbedLike,
-} from "../portal/writing/editor/nodes/ChurchBlockMediaContext";
+} from "./editor/nodes/ChurchBlockMediaContext";
 import { writingEditorTheme } from "./lexicalTheme";
 
 type WritingContentRendererProps = {

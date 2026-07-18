@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractScriptureReferencesFromContent, scriptureReferenceToNodeData } from '../../src/components/portal/writing/editor/scriptureReferences';
+import { extractScriptureReferencesFromContent, scriptureReferenceToNodeData } from '../../src/components/writing/editor/scriptureReferences';
 
 describe('extractScriptureReferencesFromContent', () => {
   it('derives backend scripture references from canonical Scripture nodes only', () => {

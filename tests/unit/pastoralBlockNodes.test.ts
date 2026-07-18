@@ -1,8 +1,8 @@
 import { createEditor } from 'lexical';
 import { describe, expect, it } from 'vitest';
-import { $createApplicationBlockNode, ApplicationBlockNode } from '../../src/components/portal/writing/editor/nodes/ApplicationBlockNode';
-import { $createPrayerBlockNode, PrayerBlockNode } from '../../src/components/portal/writing/editor/nodes/PrayerBlockNode';
-import { $createReflectionBlockNode, ReflectionBlockNode } from '../../src/components/portal/writing/editor/nodes/ReflectionBlockNode';
+import { $createApplicationBlockNode, ApplicationBlockNode } from '../../src/components/writing/editor/nodes/ApplicationBlockNode';
+import { $createPrayerBlockNode, PrayerBlockNode } from '../../src/components/writing/editor/nodes/PrayerBlockNode';
+import { $createReflectionBlockNode, ReflectionBlockNode } from '../../src/components/writing/editor/nodes/ReflectionBlockNode';
 
 describe('Pastoral Lexical blocks', () => {
   it('serializes reflection attribution separately from its meditation', () => {

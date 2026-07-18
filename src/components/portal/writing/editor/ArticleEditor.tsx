@@ -22,38 +22,38 @@ import {
 import { writingEditorTheme } from "../../../writing/lexicalTheme";
 import EditorStatus, { type EditorSaveState } from "./EditorStatus";
 import EditorToolbar from "./EditorToolbar";
-import { extractImageBlocks, type ImageBlockMetadata } from "./imageBlocks";
+import { extractImageBlocks, type ImageBlockMetadata } from "../../../writing/editor/imageBlocks";
 import {
   $createChurchBlockNode,
   ChurchBlockNode,
-} from "./nodes/ChurchBlockNode";
+} from "../../../writing/editor/nodes/ChurchBlockNode";
 import {
   $createEditableBlockQuoteNode,
   $isEditableBlockQuoteNode,
   EditableBlockQuoteNode,
   type BlockQuoteData,
-} from "./nodes/EditableBlockQuoteNode";
+} from "../../../writing/editor/nodes/EditableBlockQuoteNode";
 import {
   $createScriptureBlockNode,
   ScriptureBlockNode,
-} from "./nodes/ScriptureBlockNode";
+} from "../../../writing/editor/nodes/ScriptureBlockNode";
 import {
   $createScriptureReferenceNode,
   ScriptureReferenceNode,
-} from "./nodes/ScriptureReferenceNode";
-import type { ScriptureData } from "./nodes/scriptureTypes";
+} from "../../../writing/editor/nodes/ScriptureReferenceNode";
+import type { ScriptureData } from "../../../writing/editor/nodes/scriptureTypes";
 import {
   $createReflectionBlockNode,
   ReflectionBlockNode,
-} from "./nodes/ReflectionBlockNode";
+} from "../../../writing/editor/nodes/ReflectionBlockNode";
 import {
   $createPrayerBlockNode,
   PrayerBlockNode,
-} from "./nodes/PrayerBlockNode";
+} from "../../../writing/editor/nodes/PrayerBlockNode";
 import {
   $createApplicationBlockNode,
   ApplicationBlockNode,
-} from "./nodes/ApplicationBlockNode";
+} from "../../../writing/editor/nodes/ApplicationBlockNode";
 import {
   getWritingArticlePaperClass,
   getWritingArticleShellClass,
@@ -61,20 +61,20 @@ import {
 import type {
   PastoralBlockData,
   PastoralBlockKind,
-} from "./nodes/pastoralTypes";
-import { SpecialBlockEditorContext } from "./nodes/SpecialBlockEditorContext";
+} from "../../../writing/editor/nodes/pastoralTypes";
+import { SpecialBlockEditorContext } from "../../../writing/editor/nodes/SpecialBlockEditorContext";
 import {
   ChurchBlockMediaContext,
   mediaEmbedMap,
   type WritingMediaEmbedLike,
-} from "./nodes/ChurchBlockMediaContext";
+} from "../../../writing/editor/nodes/ChurchBlockMediaContext";
 import {
   countLexicalWords,
   lexicalContentToText,
   normalizeLexicalContent,
   type LexicalContentJson,
-} from "./serialization";
-import type { LexicalSelectionBookmark } from "./selectionBookmark";
+} from "../../../writing/editor/serialization";
+import type { LexicalSelectionBookmark } from "../../../writing/editor/selectionBookmark";
 import ScriptureInsertDialog from "./ScriptureInsertDialog";
 import PastoralBlockInsertDialog from "./PastoralBlockInsertDialog";
 

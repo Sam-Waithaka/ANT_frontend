@@ -99,4 +99,37 @@ describe("WritingArticleReader", () => {
     expect(container.textContent).toContain("Rich Lexical content");
     expect(container.textContent).not.toContain("Flat cached HTML");
   });
+  it("renders the dark shared paper surface for published reading", async () => {
+    await act(async () => {
+      root.render(
+        <WritingArticleReader
+          contentJson={{
+            root: {
+              children: [
+                {
+                  children: [{ text: "Dark published content", type: "text", version: 1 }],
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  type: "paragraph",
+                  version: 1,
+                },
+              ],
+              direction: null,
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1,
+            },
+          }}
+          darkMode
+          title="Dark Reader"
+        />,
+      );
+    });
+
+    expect(container.querySelector('[aria-label="Published writing"]')).not.toBeNull();
+    expect(container.querySelector(".editor-paper-surface-dark")).not.toBeNull();
+    expect(container.textContent).toContain("Dark published content");
+  });
 });

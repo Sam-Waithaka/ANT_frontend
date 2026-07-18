@@ -5,8 +5,8 @@ import DocumentSettingsPanel from '../../../components/portal/writing/DocumentSe
 import WritingPreview from '../../../components/portal/writing/WritingPreview';
 import CoverImagePicker from '../../../components/portal/writing/media/CoverImagePicker';
 import ArticleEditor from '../../../components/portal/writing/editor/ArticleEditor';
-import { createEmptyLexicalContent, type LexicalContentJson } from '../../../components/portal/writing/editor/serialization';
-import { extractScriptureReferencesFromContent } from '../../../components/portal/writing/editor/scriptureReferences';
+import { createEmptyLexicalContent, type LexicalContentJson } from '../../../components/writing/editor/serialization';
+import { extractScriptureReferencesFromContent } from '../../../components/writing/editor/scriptureReferences';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';

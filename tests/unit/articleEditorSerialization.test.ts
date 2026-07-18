@@ -4,7 +4,7 @@ import {
   createEmptyLexicalContent,
   lexicalContentToText,
   normalizeLexicalContent,
-} from '../../src/components/portal/writing/editor/serialization';
+} from '../../src/components/writing/editor/serialization';
 
 describe('article editor serialization', () => {
   it('creates and restores a safe empty Lexical document for invalid input', () => {

@@ -1,7 +1,7 @@
 import { HandHeart, MessageSquareQuote, Quote, Target, X } from 'lucide-react';
 import { useState } from 'react';
-import type { BlockQuoteData } from './nodes/EditableBlockQuoteNode';
-import type { PastoralBlockData, PastoralBlockKind } from './nodes/pastoralTypes';
+import type { BlockQuoteData } from '../../../writing/editor/nodes/EditableBlockQuoteNode';
+import type { PastoralBlockData, PastoralBlockKind } from '../../../writing/editor/nodes/pastoralTypes';
 
 export type SpecialContentKind = PastoralBlockKind | 'quotation';
 type SpecialContentData = PastoralBlockData | BlockQuoteData;

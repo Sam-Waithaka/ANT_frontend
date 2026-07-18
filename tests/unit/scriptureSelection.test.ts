@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatScriptureVerseSelection } from '../../src/components/portal/writing/editor/scriptureSelection';
+import { formatScriptureVerseSelection } from '../../src/components/writing/editor/scriptureSelection';
 
 describe('formatScriptureVerseSelection', () => {
   it('formats consecutive verses as a range', () => {

@@ -4,8 +4,8 @@ import BibleVersionPickerList from '../../../../components/scripture/BibleVersio
 import ScriptureReferencePickerGroup, { type ReferencePickerMenu } from '../../../../components/scripture/ScriptureReferencePickerGroup';
 import { getBibleBooks, getBibleChapters, getBibleVerses, getBibleVersions } from '../../../../services/scriptureApi';
 import type { BibleBook, BibleChapter, BibleVerse, BibleVersion } from '../../../../types/scripture';
-import type { ScriptureData, ScriptureDisplay } from './nodes/scriptureTypes';
-import { formatScriptureVerseSelection } from './scriptureSelection';
+import type { ScriptureData, ScriptureDisplay } from '../../../writing/editor/nodes/scriptureTypes';
+import { formatScriptureVerseSelection } from '../../../writing/editor/scriptureSelection';
 
 type ScriptureInsertDialogProps = { darkMode: boolean; initialData?: ScriptureData; onClose: () => void; onInsert: (data: ScriptureData) => void; };
 type Mode = 'library' | 'manual';
