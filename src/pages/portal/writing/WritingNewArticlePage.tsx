@@ -9,6 +9,7 @@ import { createEmptyLexicalContent, type LexicalContentJson } from '../../../com
 import { extractScriptureReferencesFromContent } from '../../../components/writing/editor/scriptureReferences';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import WritingStudioEditorLayout from '../../../components/portal/writing/WritingStudioEditorLayout';
+import WritingStudioFloatingActions from '../../../components/portal/writing/WritingStudioFloatingActions';
 import { usePortalToast } from '../../../components/portal/PortalToast';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -182,10 +183,25 @@ const WritingNewArticlePage = () => {
   );
 
   const floatingActions = (
-    <div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-[#eaded0] bg-white/80 shadow-zinc-900/15')}>
-      <button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>
-      <button aria-label="Create draft" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={saving || resourceTypesLoading || resourceTypes.length === 0 || !canCreateWriting(auth.permissions)} onClick={() => void createDraft()} type="button"><Save size={16} />{saving ? 'Creating...' : 'Create'}</button>
-    </div>
+    <WritingStudioFloatingActions
+      actions={[
+        {
+          ariaLabel: previewMode ? 'Back to editor' : 'Preview article',
+          icon: previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />,
+          label: previewMode ? 'Editor' : 'Preview',
+          onClick: () => setPreviewMode((current) => !current),
+          variant: previewMode ? 'primary' : 'accent',
+        },
+        {
+          ariaLabel: 'Create draft',
+          disabled: saving || resourceTypesLoading || resourceTypes.length === 0 || !canCreateWriting(auth.permissions),
+          icon: <Save size={16} />,
+          label: saving ? 'Creating...' : 'Create',
+          onClick: () => void createDraft(),
+          variant: 'primary',
+        },
+      ]}
+    />
   );
 
   return (

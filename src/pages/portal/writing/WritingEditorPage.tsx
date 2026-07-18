@@ -13,6 +13,7 @@ import { findWritingScriptureReference, scriptureDataToReferencePayload, scriptu
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import WritingStudioEditorLayout from '../../../components/portal/writing/WritingStudioEditorLayout';
+import WritingStudioFloatingActions from '../../../components/portal/writing/WritingStudioFloatingActions';
 import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
@@ -451,11 +452,37 @@ const WritingEditorPage = () => {
   const desktopPublishingPanel = showPublishingPanel ? <WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /> : null;
 
   const floatingActions = writing ? (
-    <div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-[#eaded0] bg-white/80 shadow-zinc-900/15')}>
-      <button aria-label="Save draft" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save size={16} />{saveState === 'saving' ? 'Saving...' : 'Save'}</button>
-      <button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>
-      {workflowActions.canSubmitForReview ? <button aria-label="Submit for review" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send size={16} />Submit</button> : <button aria-label="Open document settings" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80'} onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button"><MoreHorizontal size={16} />Settings</button>}
-    </div>
+    <WritingStudioFloatingActions
+      actions={[
+        {
+          ariaLabel: 'Save draft',
+          disabled: !editable || saveState === 'saving',
+          icon: <Save size={16} />,
+          label: saveState === 'saving' ? 'Saving...' : 'Save',
+          onClick: () => void saveNow(),
+        },
+        {
+          ariaLabel: previewMode ? 'Back to editor' : 'Preview article',
+          icon: previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />,
+          label: previewMode ? 'Editor' : 'Preview',
+          onClick: () => setPreviewMode((current) => !current),
+          variant: previewMode ? 'primary' : 'accent',
+        },
+        workflowActions.canSubmitForReview ? {
+          ariaLabel: 'Submit for review',
+          disabled: actionSaving,
+          icon: <Send size={16} />,
+          label: 'Submit',
+          onClick: () => void runWorkflowAction('submitForReview'),
+          variant: 'primary',
+        } : {
+          ariaLabel: 'Open document settings',
+          icon: <MoreHorizontal size={16} />,
+          label: 'Settings',
+          onClick: () => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' }),
+        },
+      ]}
+    />
   ) : null;
 
   return (
