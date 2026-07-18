@@ -11,6 +11,7 @@ import MinistriesPage from './pages/MinistriesPage';
 import Project52Page from './pages/Project52Page';
 import PortalPage from './pages/PortalPage';
 import ResourcesBrowsePage from './pages/ResourcesBrowsePage';
+import ResourcesDetailPage from './pages/ResourcesDetailPage';
 import ResourcesPage from './pages/ResourcesPage';
 import ScripturePage from './pages/ScripturePage';
 import WritingArticlesPage from './pages/portal/writing/WritingArticlesPage';
@@ -52,6 +53,7 @@ function App() {
               <Route path="/resources/series/:slug" element={<ResourcesBrowsePage mode="series" />} />
               <Route path="/resources/book/:osisId" element={<ResourcesBrowsePage mode="book" />} />
               <Route path="/resources/ministry/:slug" element={<ResourcesBrowsePage mode="ministry" />} />
+              <Route path="/resources/:slug" element={<ResourcesDetailPage />} />
               <Route path="/scripture" element={<ScripturePage />} />
               <Route path="*" element={<LandingPage />} />
             </Routes>

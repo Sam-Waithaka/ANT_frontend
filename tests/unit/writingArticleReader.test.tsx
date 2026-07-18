@@ -1,0 +1,102 @@
+// @vitest-environment jsdom
+
+import React from "react";
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import WritingArticleReader from "../../src/components/writing/WritingArticleReader";
+
+describe("WritingArticleReader", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  it("renders a published writing through the shared paper surface and read-only content renderer", async () => {
+    await act(async () => {
+      root.render(
+        <WritingArticleReader
+          contentJson={{
+            root: {
+              children: [
+                {
+                  children: [
+                    {
+                      text: "Come, let us worship and bow down.",
+                      type: "text",
+                      version: 1,
+                    },
+                  ],
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  type: "paragraph",
+                  version: 1,
+                },
+              ],
+              direction: null,
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1,
+            },
+          }}
+          darkMode={false}
+          excerpt="A call to worship from Psalm 95."
+          title="Psalm 95:6"
+        />,
+      );
+    });
+
+    expect(container.querySelector('[aria-label="Published writing"]')).not.toBeNull();
+    expect(container.querySelector('[aria-label="Article preview content"]')).not.toBeNull();
+    expect(container.querySelector(".editor-paper-surface-light")).not.toBeNull();
+    expect(container.textContent).toContain("Psalm 95:6");
+    expect(container.textContent).toContain("A call to worship from Psalm 95.");
+    expect(container.textContent).toContain("Come, let us worship and bow down.");
+  });
+
+  it("prefers Lexical JSON over cached HTML while rich HTML is not contract-ready", async () => {
+    await act(async () => {
+      root.render(
+        <WritingArticleReader
+          contentHtml="<p>Flat cached HTML</p>"
+          contentJson={{
+            root: {
+              children: [
+                {
+                  children: [{ text: "Rich Lexical content", type: "text", version: 1 }],
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  type: "paragraph",
+                  version: 1,
+                },
+              ],
+              direction: null,
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1,
+            },
+          }}
+          darkMode={false}
+          title="JSON First"
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("Rich Lexical content");
+    expect(container.textContent).not.toContain("Flat cached HTML");
+  });
+});
