@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Eye } from 'lucide-react';
+import { ArrowLeft, Eye, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import DocumentSettingsPanel from '../../../components/portal/writing/DocumentSettingsPanel';
 import WritingPreview from '../../../components/portal/writing/WritingPreview';
@@ -8,6 +8,7 @@ import ArticleEditor from '../../../components/portal/writing/editor/ArticleEdit
 import { createEmptyLexicalContent, type LexicalContentJson } from '../../../components/writing/editor/serialization';
 import { extractScriptureReferencesFromContent } from '../../../components/writing/editor/scriptureReferences';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
+import WritingStudioEditorLayout from '../../../components/portal/writing/WritingStudioEditorLayout';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
@@ -126,60 +127,78 @@ const WritingNewArticlePage = () => {
     </div>
   );
 
+  const settingsActions = [
+    {
+      icon: <Eye size={16} />,
+      label: previewMode ? 'Return to editor' : 'Preview',
+      onClick: () => setPreviewMode((current) => !current),
+      variant: 'secondary' as const,
+    },
+    {
+      disabled: saving || resourceTypesLoading || resourceTypes.length === 0 || !canCreateWriting(auth.permissions),
+      icon: <Save size={16} />,
+      label: saving ? 'Creating draft...' : 'Create draft',
+      onClick: () => void createDraft(),
+      variant: 'primary' as const,
+    },
+  ];
+
+  const renderDocumentSettingsPanel = (panel?: { heading?: string; sectionGroup?: 'all' | 'left' | 'right' }) => (
+    <DocumentSettingsPanel
+      actions={settingsActions}
+      authorAttributions={authorAttributions}
+      canManageAuthors
+      categoryIds={categoryIds}
+      coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onChange={setCoverImage} selectedAsset={coverImage} />}
+      darkMode={darkMode}
+      excerpt={excerpt}
+      heading={panel?.heading}
+      ministryIds={ministryIds}
+      onAuthorAttributionsChange={setAuthorAttributions}
+      onCategoryIdsChange={setCategoryIds}
+      onExcerptChange={setExcerpt}
+      onMinistryIdsChange={setMinistryIds}
+      onResourceTypeChange={setResourceType}
+      onSeriesIdsChange={setSeriesIds}
+      onTagIdsChange={setTagIds}
+      resourceType={resourceType}
+      resourceTypes={resourceTypes}
+      sectionGroup={panel?.sectionGroup}
+      seriesIds={seriesIds}
+      status="DRAFT"
+      tagIds={tagIds}
+      tagOptions={tagOptions}
+    />
+  );
+
+  const editorCenter = previewMode ? (
+    <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} onCoverImageRefresh={refreshCoverImage} title={title} />
+  ) : (
+    <>
+      <label className="mb-4 grid gap-2 text-sm font-bold">
+        Working title
+        <input autoFocus className={fieldClass} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} />
+      </label>
+      <ArticleEditor contentJson={contentJson} darkMode={darkMode} mediaDisabledLabel="Save draft to insert images" onChange={(nextContent) => setContentJson(nextContent)} saveState="idle" />
+    </>
+  );
+
+  const floatingActions = (
+    <div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-[#eaded0] bg-white/80 shadow-zinc-900/15')}>
+      <button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>
+      <button aria-label="Create draft" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={saving || resourceTypesLoading || resourceTypes.length === 0 || !canCreateWriting(auth.permissions)} onClick={() => void createDraft()} type="button"><Save size={16} />{saving ? 'Creating...' : 'Create'}</button>
+    </div>
+  );
+
   return (
     <WritingStudioShell hideNavigation intro={intro}>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <section className="min-w-0">
-          {previewMode ? (
-            <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} onCoverImageRefresh={refreshCoverImage} title={title} />
-          ) : (
-            <>
-              <label className="mb-4 grid gap-2 text-sm font-bold">
-                Working title
-                <input autoFocus className={fieldClass} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} />
-              </label>
-              <ArticleEditor contentJson={contentJson} darkMode={darkMode} mediaDisabledLabel="Save draft to insert images" onChange={(nextContent) => setContentJson(nextContent)} saveState="idle" />
-            </>
-          )}
-        </section>
-
-        <DocumentSettingsPanel
-          actions={[
-            {
-              icon: <Eye size={16} />,
-              label: previewMode ? 'Return to editor' : 'Preview',
-              onClick: () => setPreviewMode((current) => !current),
-              variant: 'secondary',
-            },
-            {
-              disabled: saving || resourceTypesLoading || resourceTypes.length === 0 || !canCreateWriting(auth.permissions),
-              label: saving ? 'Creating draft...' : 'Create draft',
-              onClick: () => void createDraft(),
-              variant: 'primary',
-            },
-          ]}
-          authorAttributions={authorAttributions}
-          canManageAuthors
-          categoryIds={categoryIds}
-          coverImageControl={<CoverImagePicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onChange={setCoverImage} selectedAsset={coverImage} />}
-          darkMode={darkMode}
-          excerpt={excerpt}
-          ministryIds={ministryIds}
-          onAuthorAttributionsChange={setAuthorAttributions}
-          onCategoryIdsChange={setCategoryIds}
-          onExcerptChange={setExcerpt}
-          onMinistryIdsChange={setMinistryIds}
-          onResourceTypeChange={setResourceType}
-          onSeriesIdsChange={setSeriesIds}
-          onTagIdsChange={setTagIds}
-          resourceType={resourceType}
-          resourceTypes={resourceTypes}
-          seriesIds={seriesIds}
-          status="DRAFT"
-          tagIds={tagIds}
-          tagOptions={tagOptions}
-        />
-      </div>
+      <WritingStudioEditorLayout
+        center={editorCenter}
+        floatingActions={floatingActions}
+        leftPanel={renderDocumentSettingsPanel({ heading: 'Document Settings', sectionGroup: 'left' })}
+        mobilePanel={renderDocumentSettingsPanel()}
+        rightPanel={renderDocumentSettingsPanel({ heading: 'Article Details', sectionGroup: 'right' })}
+      />
 
       {resourceTypesError ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{resourceTypesError}</p> : null}
       {error ? <p className="mt-4 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{error}</p> : null}
@@ -188,4 +207,3 @@ const WritingNewArticlePage = () => {
 };
 
 export default WritingNewArticlePage;
-

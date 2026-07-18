@@ -12,6 +12,7 @@ import { extractImageBlocks, imageBlockRecordId, type ImageBlockMetadata } from 
 import { findWritingScriptureReference, scriptureDataToReferencePayload, scriptureReferenceToNodeData } from '../../../components/writing/editor/scriptureReferences';
 import WritingStatusBadge from '../../../components/portal/writing/WritingStatusBadge';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
+import WritingStudioEditorLayout from '../../../components/portal/writing/WritingStudioEditorLayout';
 import { useAuth } from '../../../hooks/useAuth';
 import { useDebouncedWritingSave } from '../../../hooks/useDebouncedWritingSave';
 import { useTheme } from '../../../hooks/useTheme';
@@ -48,7 +49,6 @@ const WritingEditorPage = () => {
   const [coverImageChange, setCoverImageChange] = useState<CoverImageChange>(undefined);
   const [coverImageId, setCoverImageId] = useState('');
   const [excerpt, setExcerpt] = useState('');
-  const [floatingActionLift, setFloatingActionLift] = useState(0);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [mediaEmbeds, setMediaEmbeds] = useState<WritingMediaEmbedLike[]>([]);
@@ -402,46 +402,6 @@ const WritingEditorPage = () => {
   }, [auth.accessToken, writing]);
   const saveStatusLabel = saveState === 'saved' ? 'Saved just now' : saveState === 'saving' ? 'Saving...' : saveState === 'error' ? 'Unable to save' : 'Draft changes are local';
 
-  useEffect(() => {
-    if (!writing) return undefined;
-
-    const footer = document.querySelector('[data-site-footer="true"]');
-    const baseOffset = 16;
-    const footerGap = 16;
-
-    if (!footer) {
-      setFloatingActionLift(0);
-      return undefined;
-    }
-
-    let frame = 0;
-    const updateFloatingActionOffset = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const rect = footer.getBoundingClientRect();
-        const nextLift = rect.bottom > 0 ? Math.max(0, window.innerHeight - baseOffset - rect.top + footerGap) : 0;
-        setFloatingActionLift((current) => Math.abs(current - nextLift) < 3 ? current : Math.ceil(nextLift));
-      });
-    };
-
-    const observer = new IntersectionObserver(updateFloatingActionOffset, {
-      root: null,
-      threshold: [0, 0.05, 0.1, 0.25, 0.5, 1],
-    });
-
-    observer.observe(footer);
-    updateFloatingActionOffset();
-    window.addEventListener('scroll', updateFloatingActionOffset, { passive: true });
-    window.addEventListener('resize', updateFloatingActionOffset);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      window.removeEventListener('scroll', updateFloatingActionOffset);
-      window.removeEventListener('resize', updateFloatingActionOffset);
-    };
-  }, [writing]);
-
 
   const renderDocumentSettingsPanel = (panel?: { heading?: string; sectionGroup?: 'all' | 'left' | 'right' }) => {
     if (!writing) return null;
@@ -478,6 +438,26 @@ const WritingEditorPage = () => {
     );
   };
 
+  const editorCenter = writing ? (previewMode ? (
+    <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} mediaEmbeds={mediaEmbeds} onCoverImageRefresh={refreshCoverImage} title={title} />
+  ) : (
+    <>
+      <label className="mb-4 grid gap-2 text-sm font-bold"><span className="flex items-center justify-between gap-3">Working title <span className={'text-xs font-normal ' + mutedTextClass}>{title.length} / 120</span></span><input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} /></label>
+      {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
+      <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onCreateScriptureReference={createScriptureReferenceForNode} onDeleteScriptureReference={deleteScriptureReferenceForNode} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} onUpdateScriptureReference={updateScriptureReferenceForNode} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
+    </>
+  )) : null;
+
+  const desktopPublishingPanel = showPublishingPanel ? <WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /> : null;
+
+  const floatingActions = writing ? (
+    <div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-[#eaded0] bg-white/80 shadow-zinc-900/15')}>
+      <button aria-label="Save draft" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save size={16} />{saveState === 'saving' ? 'Saving...' : 'Save'}</button>
+      <button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>
+      {workflowActions.canSubmitForReview ? <button aria-label="Submit for review" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send size={16} />Submit</button> : <button aria-label="Open document settings" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80'} onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button"><MoreHorizontal size={16} />Settings</button>}
+    </div>
+  ) : null;
+
   return (
     <WritingStudioShell compact hideNavigation>
       <header className="mb-6 flex flex-wrap items-start justify-between gap-5 sm:mb-8">
@@ -489,27 +469,17 @@ const WritingEditorPage = () => {
         {writing ? <div className="flex flex-wrap items-center gap-3 pt-1"><WritingStatusBadge status={writing.status} /><span aria-live="polite" className={'inline-flex items-center gap-2 text-xs ' + mutedTextClass}><span className={'size-1.5 rounded-full ' + (saveState === 'error' ? 'bg-red-800' : saveState === 'saving' ? 'bg-amber-500' : 'bg-zinc-500')} />{saveStatusLabel}</span>{canModifyPublished ? <button className="inline-flex items-center gap-2 rounded-full border border-red-900/20 bg-white px-4 py-2 text-xs font-black text-red-800 shadow-sm transition hover:-translate-y-0.5 hover:bg-red-950/5 disabled:cursor-not-allowed disabled:opacity-60" disabled={actionSaving} onClick={() => void runCreateRevision()} type="button"><PenLine size={15} /> Modify</button> : null}{publishingActions.canPublish ? <button className="inline-flex items-center gap-2 rounded-full bg-red-800 px-4 py-2 text-xs font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60" disabled={actionSaving} onClick={() => setPublishingPanelOpen(true)} type="button"><Rocket size={15} /> Publish</button> : null}{publishingActions.canArchive ? <div className="relative"><button aria-expanded={moreActionsOpen} aria-haspopup="menu" className={darkMode ? 'inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs font-bold text-stone-200 hover:bg-white/10' : 'inline-flex items-center gap-2 rounded-full border border-[#eaded0] bg-white px-3 py-2 text-xs font-bold text-[#786f66] hover:bg-red-950/5'} onClick={() => setMoreActionsOpen((current) => !current)} type="button"><MoreHorizontal size={15} /> More actions</button>{moreActionsOpen ? <div className={darkMode ? 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-white/10 bg-[#171717] p-2 shadow-xl' : 'absolute right-0 z-10 mt-2 w-36 rounded-2xl border border-[#eaded0] bg-white p-2 shadow-xl'} role="menu"><button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold text-red-800 hover:bg-red-950/5" disabled={actionSaving} onClick={() => { setMoreActionsOpen(false); void runArchive(); }} role="menuitem" type="button"><Archive size={14} /> Archive</button></div> : null}</div> : null}</div> : null}
       </header>
       {loading ? <p className={mutedTextClass}>Loading editor...</p> : null}
-      {writing ? <div className={`grid gap-6 pb-28 lg:gap-8 ${showPublishingPanel ? 'xl:grid-cols-[17rem_minmax(0,1fr)_17rem_23rem]' : 'xl:grid-cols-[17rem_minmax(0,1fr)_17rem]'}`}>
-        <div className="hidden xl:block">
-          {renderDocumentSettingsPanel({ heading: 'Document Settings', sectionGroup: 'left' })}
-        </div>
-        <section className="min-w-0">
-          {previewMode ? <WritingPreview contentJson={contentJson} coverImage={coverImage} darkMode={darkMode} excerpt={excerpt} mediaEmbeds={mediaEmbeds} onCoverImageRefresh={refreshCoverImage} title={title} /> : <>
-            <label className="mb-4 grid gap-2 text-sm font-bold"><span className="flex items-center justify-between gap-3">Working title <span className={'text-xs font-normal ' + mutedTextClass}>{title.length} / 120</span></span><input className={fieldClass} disabled={!editable} maxLength={120} onChange={(event) => setTitle(event.target.value)} placeholder="Give this resource a clear, pastoral title" value={title} /></label>
-            {mediaPickerOpen ? <WritingMediaEmbedPicker accessToken={auth.accessToken} canUpload={canUploadMedia(auth.permissions)} darkMode={darkMode} onClose={() => setMediaPickerOpen(false)} onSelect={insertMediaEmbed} /> : null}
-            <ArticleEditor contentJson={contentJson} darkMode={darkMode} editable={editable} mediaEmbeds={mediaEmbeds} onChange={(nextContent) => setContentJson(nextContent)} onCreateScriptureReference={createScriptureReferenceForNode} onDeleteScriptureReference={deleteScriptureReferenceForNode} onImageBlocksChange={syncImageBlocks} onPendingMediaInserted={() => setPendingMediaEmbed(null)} onRequestMedia={editable ? () => setMediaPickerOpen(true) : undefined} onUpdateScriptureReference={updateScriptureReferenceForNode} pendingMediaEmbed={pendingMediaEmbed} saveState={saveState} />
-          </>}
-        </section>
-        <div className="hidden xl:block">
-          {renderDocumentSettingsPanel({ heading: 'Editorial Settings', sectionGroup: 'right' })}
-        </div>
-        <div className="xl:hidden">
-          {renderDocumentSettingsPanel()}
-        </div>
-        {showPublishingPanel ? <div className="hidden xl:block"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing.scheduled_for} /></div> : null}
-      </div> : null}
+      {writing ? (
+        <WritingStudioEditorLayout
+          center={editorCenter}
+          floatingActions={floatingActions}
+          leftPanel={renderDocumentSettingsPanel({ heading: 'Document Settings', sectionGroup: 'left' })}
+          mobilePanel={renderDocumentSettingsPanel()}
+          publishingPanel={desktopPublishingPanel}
+          rightPanel={renderDocumentSettingsPanel({ heading: 'Editorial Settings', sectionGroup: 'right' })}
+        />
+      ) : null}
       {showPublishingPanel ? <div className="fixed inset-0 z-50 grid place-items-center p-3 xl:hidden" role="dialog" aria-modal="true" aria-label="Publishing"><button aria-label="Close publishing panel" className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={() => setPublishingPanelOpen(false)} type="button" /><div className="relative z-10 max-h-[min(44rem,calc(100dvh-1.5rem))] w-full max-w-[34rem] overflow-y-auto rounded-[2rem]"><WritingPublishingPanel canPublish={workflowActions.canPublish} canSchedule={workflowActions.canSchedule} darkMode={darkMode} onClose={() => setPublishingPanelOpen(false)} onPublish={runPublishNow} onSchedule={(scheduledFor) => runWorkflowAction('schedule', scheduledFor)} saving={actionSaving} scheduledFor={writing?.scheduled_for} /></div></div> : null}
-      {writing ? <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 px-4 transition-transform duration-200 ease-out will-change-transform" style={{ transform: `translate3d(0, -${floatingActionLift}px, 0)` }}><div className={'pointer-events-auto mx-auto flex w-fit max-w-full items-center gap-2 rounded-[2rem] border p-2 shadow-2xl backdrop-blur-xl ' + (darkMode ? 'border-white/10 bg-zinc-950/90 shadow-black/40' : 'border-[#eaded0] bg-white/80 shadow-zinc-900/15')}><button aria-label="Save draft" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-40'} disabled={!editable || saveState === 'saving'} onClick={() => void saveNow()} type="button"><Save size={16} />{saveState === 'saving' ? 'Saving...' : 'Save'}</button><button aria-label={previewMode ? 'Back to editor' : 'Preview article'} className={previewMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-4 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700' : darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-red-900/25 bg-white/80 px-4 text-sm font-bold text-red-800 transition hover:bg-red-950/5'} onClick={() => setPreviewMode((current) => !current)} type="button">{previewMode ? <ArrowLeft size={16} /> : <Eye size={16} />}{previewMode ? 'Editor' : 'Preview'}</button>{workflowActions.canSubmitForReview ? <button aria-label="Submit for review" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-bold text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50" disabled={actionSaving} onClick={() => void runWorkflowAction('submitForReview')} type="button"><Send size={16} />Submit</button> : <button aria-label="Open document settings" className={darkMode ? 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 text-sm font-bold text-stone-100 transition hover:bg-white/15' : 'inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#eaded0] bg-white/70 px-4 text-sm font-bold text-zinc-700 transition hover:bg-white/80'} onClick={() => document.querySelector('[aria-label="Document settings"]')?.scrollIntoView({ behavior: 'smooth' })} type="button"><MoreHorizontal size={16} />Settings</button>}</div></div> : null}
       {message ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{message}</p> : null}
     </WritingStudioShell>
   );
