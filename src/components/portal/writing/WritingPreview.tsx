@@ -1,5 +1,6 @@
 import type { MediaAsset } from "../../../services/mediaAssetsApi";
 import ResponsiveImage from "../../media/ResponsiveImage";
+import WritingArticleSurface from "../../writing/WritingArticleSurface";
 import WritingContentRenderer from "../../writing/WritingContentRenderer";
 
 type WritingPreviewProps = {
@@ -21,30 +22,27 @@ const WritingPreview = ({
   onCoverImageRefresh,
   title,
 }: WritingPreviewProps) => {
-  const surfaceClass = darkMode
-    ? "border-white/10 bg-zinc-950 text-stone-100 shadow-black/25"
-    : "border-black/10 bg-white text-zinc-950 shadow-zinc-900/5";
   const mutedTextClass = darkMode ? "text-stone-400" : "text-zinc-600";
+  const dividerClass = darkMode ? "border-white/10" : "border-[#eaded0]";
 
   return (
-    <article
-      aria-label="Article preview"
-      className={"overflow-hidden rounded-3xl border shadow-lg " + surfaceClass}
-    >
-      <ResponsiveImage
-        alt={coverImage?.alt_text || coverImage?.title || "Article cover image"}
-        asset={coverImage}
-        className="aspect-[16/8] w-full object-cover"
-        fetchPriority="high"
-        loading="eager"
-        onRefreshAsset={onCoverImageRefresh}
-        preset="articleCover"
-      />
-      <div className="mx-auto max-w-3xl px-6 py-8 sm:px-10 sm:py-12">
+    <WritingArticleSurface darkMode={darkMode} labelledBy="writing-preview-title">
+      <div className="mx-auto max-w-3xl">
+        {coverImage ? (
+          <ResponsiveImage
+            alt={coverImage.alt_text || coverImage.title || "Article cover image"}
+            asset={coverImage}
+            className="mb-8 aspect-[16/8] w-full rounded-[1.25rem] border border-black/5 object-cover shadow-sm dark:border-white/10"
+            fetchPriority="high"
+            loading="eager"
+            onRefreshAsset={onCoverImageRefresh}
+            preset="articleCover"
+          />
+        ) : null}
         <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800">
           Article Preview
         </p>
-        <h1 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">
+        <h1 id="writing-preview-title" className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">
           {title || "Untitled article"}
         </h1>
         {excerpt ? (
@@ -52,12 +50,7 @@ const WritingPreview = ({
             {excerpt}
           </p>
         ) : null}
-        <div
-          className={
-            "mt-8 border-t pt-8 " +
-            (darkMode ? "border-white/10" : "border-black/10")
-          }
-        >
+        <div className={"mt-8 border-t pt-8 " + dividerClass}>
           <WritingContentRenderer
             contentJson={contentJson}
             darkMode={darkMode}
@@ -66,7 +59,7 @@ const WritingPreview = ({
           />
         </div>
       </div>
-    </article>
+    </WritingArticleSurface>
   );
 };
 
