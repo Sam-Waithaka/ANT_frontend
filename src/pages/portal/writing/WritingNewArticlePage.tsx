@@ -9,6 +9,7 @@ import { createEmptyLexicalContent, type LexicalContentJson } from '../../../com
 import { extractScriptureReferencesFromContent } from '../../../components/writing/editor/scriptureReferences';
 import WritingStudioShell from '../../../components/portal/writing/WritingStudioShell';
 import WritingStudioEditorLayout from '../../../components/portal/writing/WritingStudioEditorLayout';
+import { usePortalToast } from '../../../components/portal/PortalToast';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import { fetchMediaAsset, type MediaAsset } from '../../../services/mediaAssetsApi';
@@ -22,17 +23,16 @@ const WritingNewArticlePage = () => {
   const auth = useAuth();
   const navigate = useNavigate();
   const { darkMode } = useTheme();
+  const { error: showPortalError } = usePortalToast();
   const [authorAttributions, setAuthorAttributions] = useState<WritingAuthorAttribution[]>([]);
   const [categoryIds, setCategoryIds] = useState<Array<number | string>>([]);
   const [contentJson, setContentJson] = useState<LexicalContentJson>(() => createEmptyLexicalContent());
   const [coverImage, setCoverImage] = useState<MediaAsset | null>(null);
-  const [error, setError] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
   const [ministryIds, setMinistryIds] = useState<Array<number | string>>([]);
   const [resourceType, setResourceType] = useState('');
   const [resourceTypes, setResourceTypes] = useState<WritingResourceType[]>([]);
-  const [resourceTypesError, setResourceTypesError] = useState('');
   const [resourceTypesLoading, setResourceTypesLoading] = useState(true);
   const [seriesIds, setSeriesIds] = useState<Array<number | string>>([]);
   const [saving, setSaving] = useState(false);
@@ -48,14 +48,13 @@ const WritingNewArticlePage = () => {
   useEffect(() => {
     const controller = new AbortController();
     setResourceTypesLoading(true);
-    setResourceTypesError('');
 
     fetchResourceTypes(auth.accessToken, controller.signal)
       .then((page) => setResourceTypes(page.results))
       .catch(() => {
         if (!controller.signal.aborted) {
           setResourceTypes([]);
-          setResourceTypesError(RESOURCE_TYPES_ERROR);
+          showPortalError(RESOURCE_TYPES_ERROR);
         }
       })
       .finally(() => {
@@ -66,7 +65,7 @@ const WritingNewArticlePage = () => {
       .catch(() => setTagOptions([]));
 
     return () => controller.abort();
-  }, [auth.accessToken]);
+  }, [auth.accessToken, showPortalError]);
 
   const refreshCoverImage = async () => {
     if (!coverImage) return null;
@@ -78,16 +77,15 @@ const WritingNewArticlePage = () => {
   const createDraft = async () => {
     if (!canCreateWriting(auth.permissions)) return;
     if (!resourceTypes.length) {
-      setError(RESOURCE_TYPES_ERROR);
+      showPortalError(RESOURCE_TYPES_ERROR);
       return;
     }
     if (!title.trim() || !resourceType) {
-      setError('Add a title and resource type before creating the draft.');
+      showPortalError('Add a title and resource type before creating the draft.');
       return;
     }
 
     setSaving(true);
-    setError('');
     try {
       const writing = await createWriting(auth.accessToken, {
         ...(authorAttributions.length ? { author_attributions: authorAttributions } : {}),
@@ -108,7 +106,7 @@ const WritingNewArticlePage = () => {
       }
       navigate('/portal/writing/' + writing.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to create draft.');
+      showPortalError(err instanceof Error ? err.message : 'Unable to create draft.');
     } finally {
       setSaving(false);
     }
@@ -200,8 +198,6 @@ const WritingNewArticlePage = () => {
         rightPanel={renderDocumentSettingsPanel({ heading: 'Article Details', sectionGroup: 'right' })}
       />
 
-      {resourceTypesError ? <p className="mt-6 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{resourceTypesError}</p> : null}
-      {error ? <p className="mt-4 rounded-2xl bg-red-950/5 p-4 text-sm font-bold text-red-800">{error}</p> : null}
     </WritingStudioShell>
   );
 };

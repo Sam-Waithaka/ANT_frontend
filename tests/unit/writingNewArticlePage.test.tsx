@@ -12,6 +12,12 @@ const mocks = vi.hoisted(() => ({
   createWritingScriptureReference: vi.fn(),
   fetchResourceTypes: vi.fn(),
   fetchWritingTags: vi.fn(),
+  portalToastDismiss: vi.fn(),
+  portalToastError: vi.fn(),
+  portalToastInfo: vi.fn(),
+  portalToastShow: vi.fn(),
+  portalToastSuccess: vi.fn(),
+  portalToastWarning: vi.fn(),
 }));
 
 vi.mock('../../src/hooks/useAuth', () => ({
@@ -20,6 +26,17 @@ vi.mock('../../src/hooks/useAuth', () => ({
 
 vi.mock('../../src/hooks/useTheme', () => ({
   useTheme: () => ({ darkMode: false }),
+}));
+
+vi.mock('../../src/components/portal/PortalToast', () => ({
+  usePortalToast: () => ({
+    dismiss: mocks.portalToastDismiss,
+    error: mocks.portalToastError,
+    info: mocks.portalToastInfo,
+    show: mocks.portalToastShow,
+    success: mocks.portalToastSuccess,
+    warning: mocks.portalToastWarning,
+  }),
 }));
 
 vi.mock('../../src/services/writingApi', () => ({
@@ -146,7 +163,7 @@ describe('WritingNewArticlePage resource types', () => {
     mocks.fetchResourceTypes.mockRejectedValueOnce(new Error('Network failed'));
 
     await renderPage(root);
-    await vi.waitFor(() => expect(container.textContent).toContain('Resource types could not be loaded. Please refresh and try again.'));
+    await vi.waitFor(() => expect(mocks.portalToastError).toHaveBeenCalledWith('Resource types could not be loaded. Please refresh and try again.'));
 
     const resourceTypeSelect = container.querySelector('[aria-label="Resource type"]') as HTMLSelectElement;
     expect([...resourceTypeSelect.options].map((option) => option.text)).toEqual(['Choose type']);
