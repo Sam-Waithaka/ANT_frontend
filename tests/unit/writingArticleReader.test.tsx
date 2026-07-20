@@ -66,6 +66,48 @@ describe("WritingArticleReader", () => {
     expect(container.textContent).toContain("Come, let us worship and bow down.");
   });
 
+  it("loads the cover image through the shared responsive image path", async () => {
+    await act(async () => {
+      root.render(
+        <WritingArticleReader
+          contentJson={{
+            root: {
+              children: [
+                {
+                  children: [{ text: "Covered article body", type: "text", version: 1 }],
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  type: "paragraph",
+                  version: 1,
+                },
+              ],
+              direction: null,
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1,
+            },
+          }}
+          coverImage={{
+            alt_text: "Church congregation worshipping",
+            id: 19,
+            title: "Sunday worship",
+            url: "/media/sunday-worship.jpg",
+          }}
+          darkMode={false}
+          title="Covered Article"
+        />,
+      );
+    });
+
+    const image = container.querySelector('img[alt="Church congregation worshipping"]') as HTMLImageElement;
+    expect(image).not.toBeNull();
+    expect(image.getAttribute("loading")).toBe("eager");
+    expect(image.getAttribute("fetchpriority") || image.getAttribute("fetchPriority")).toBe("high");
+    expect(image.getAttribute("src")).toBe("/media/sunday-worship.jpg");
+  });
+
   it("prefers Lexical JSON over cached HTML while rich HTML is not contract-ready", async () => {
     await act(async () => {
       root.render(

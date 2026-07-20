@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import ResponsiveImage from "../media/ResponsiveImage";
+import type { MediaAsset } from "../../services/mediaAssetsApi";
 import type {
   PublicWritingDetail,
   WritingMediaAsset,
@@ -23,6 +25,26 @@ type WritingArticleReaderProps = {
 
 const coverImageUrl = (asset?: WritingMediaAsset | null) =>
   asset?.url || asset?.image || asset?.file || "";
+
+const toResponsiveCoverAsset = (asset?: WritingMediaAsset | null): MediaAsset | null => {
+  if (!asset) return null;
+  const record = asset as WritingMediaAsset & Partial<MediaAsset>;
+  const fallbackUrl = record.original_url || coverImageUrl(asset);
+
+  if (!fallbackUrl) return null;
+
+  return {
+    ...record,
+    caption: record.caption || "",
+    height: record.height ?? null,
+    original_url: fallbackUrl,
+    status: record.status || "ready",
+    uuid: record.uuid || String(record.id),
+    variant_map: record.variant_map || {},
+    variants: record.variants || [],
+    width: record.width ?? null,
+  };
+};
 
 const hasContentJson = (contentJson: unknown) => {
   if (!contentJson || typeof contentJson !== "object") return false;
@@ -49,7 +71,7 @@ const WritingArticleReader = ({
   const resolvedContentHtml = writing?.content_html || contentHtml || "";
   const resolvedMediaEmbeds = writing?.media_embeds || mediaEmbeds || [];
   const rendererMediaEmbeds = resolvedMediaEmbeds as WritingMediaEmbedLike[];
-  const imageUrl = coverImageUrl(resolvedCoverImage);
+  const responsiveCoverImage = toResponsiveCoverAsset(resolvedCoverImage);
   const mutedTextClass = darkMode ? "text-stone-400" : "text-zinc-600";
   const dividerClass = darkMode ? "border-white/10" : "border-[#eaded0]";
 
@@ -61,15 +83,18 @@ const WritingArticleReader = ({
       labelledBy="writing-article-reader-title"
     >
       <article className="mx-auto max-w-3xl">
-        {imageUrl ? (
-          <img
+        {responsiveCoverImage ? (
+          <ResponsiveImage
             alt={
               resolvedCoverImage?.alt_text ||
               resolvedCoverImage?.title ||
               "Article cover image"
             }
+            asset={responsiveCoverImage}
             className="mb-8 aspect-[16/8] w-full rounded-[1.25rem] border border-black/5 object-cover shadow-sm dark:border-white/10"
-            src={imageUrl}
+            fetchPriority="high"
+            loading="eager"
+            preset="articleCover"
           />
         ) : null}
         {metadata ? (
