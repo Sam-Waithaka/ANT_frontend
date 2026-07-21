@@ -1,21 +1,21 @@
 import { ApiError, createApiUrl } from './apiClient';
 import type { PaginatedResponse, WritingMediaAsset } from '../types/writing';
 
-export type MediaAssetStatus = 'pending' | 'processing' | 'ready' | 'failed';
+export type MediaAssetStatus = 'pending' | 'processing' | 'ready' | 'failed' | 'PENDING' | 'PROCESSING' | 'READY' | 'FAILED' | string;
 export type MediaVariantFormat = 'avif' | 'webp' | 'jpeg';
 export type MediaVariantSize = 'thumb' | 'small' | 'medium' | 'large';
 
 export type MediaVariant = {
   file_size: number | null;
-  format: MediaVariantFormat;
+  format: MediaVariantFormat | string;
   generated_at: string | null;
-  height: number;
-  id: number;
+  height: number | null;
+  id: number | string;
   quality: number | null;
-  size_name: MediaVariantSize;
+  size_name: MediaVariantSize | string;
   status: MediaAssetStatus;
   url: string | null;
-  width: number;
+  width: number | null;
 };
 
 export type MediaVariantMap = Partial<Record<MediaVariantFormat, Partial<Record<MediaVariantSize, MediaVariant>>>>;
@@ -111,24 +111,65 @@ export const uploadMediaAsset = async (
 };
 
 const mediaVariantSizes: MediaVariantSize[] = ['thumb', 'small', 'medium', 'large'];
+const mediaVariantFormatOrder: MediaVariantFormat[] = ['avif', 'webp', 'jpeg'];
+
+export const isReadyMediaStatus = (status?: string | null) => !status || status.toLowerCase() === 'ready';
+
+const legacyMediaUrl = (asset?: WritingMediaAsset | null) => asset?.url || asset?.image || asset?.file || '';
+
+export const normalizeMediaAssetForDisplay = (asset?: WritingMediaAsset | MediaAsset | null): MediaAsset | null => {
+  if (!asset) return null;
+  const record = asset as WritingMediaAsset & Partial<MediaAsset>;
+  const originalUrl = record.original_url || legacyMediaUrl(asset) || null;
+  const variants = Array.isArray(record.variants) ? record.variants : [];
+  const variantMap = record.variant_map || {};
+  const hasVariantUrl = variants.some((variant) => Boolean(variant.url))
+    || mediaVariantFormatOrder.some((format) => mediaVariantSizes.some((size) => Boolean(variantMap[format]?.[size]?.url)));
+
+  if (!originalUrl && !hasVariantUrl) return null;
+
+  return {
+    ...record,
+    caption: record.caption || '',
+    height: record.height ?? null,
+    original_url: originalUrl,
+    status: record.status || 'ready',
+    uuid: record.uuid || String(record.id),
+    variant_map: variantMap,
+    variants,
+    width: record.width ?? null,
+  };
+};
+
+const isReadyVariant = (variant?: MediaVariant | null): variant is MediaVariant => Boolean(variant?.url && isReadyMediaStatus(variant.status));
 
 export const readyMediaVariants = (asset: MediaAsset | null | undefined, format: MediaVariantFormat) => {
-  if (!asset || asset.status !== 'ready') return [];
+  if (!asset || !isReadyMediaStatus(asset.status)) return [];
 
-  return mediaVariantSizes
-    .map((size) => asset.variant_map[format]?.[size])
-    .filter((variant): variant is MediaVariant => Boolean(variant?.url && variant.status === 'ready'));
+  const fromMap = mediaVariantSizes
+    .map((size) => asset.variant_map?.[format]?.[size])
+    .filter(isReadyVariant);
+  const fromList = (asset.variants || [])
+    .filter((variant): variant is MediaVariant => variant.format === format && isReadyVariant(variant));
+  const seen = new Set<string>();
+
+  return [...fromMap, ...fromList].filter((variant) => {
+    const key = [variant.format, variant.size_name, variant.width, variant.url].join(':');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 };
 
-export const mediaAssetImageUrl = (asset?: MediaAsset | null) => {
-  if (!asset || asset.status !== 'ready') return '';
-  const preferredVariant = readyMediaVariants(asset, 'avif').find((variant) => variant.size_name === 'medium')
-    || readyMediaVariants(asset, 'avif')[0]
-    || readyMediaVariants(asset, 'webp').find((variant) => variant.size_name === 'medium')
-    || readyMediaVariants(asset, 'webp')[0]
-    || readyMediaVariants(asset, 'jpeg').find((variant) => variant.size_name === 'medium')
-    || readyMediaVariants(asset, 'jpeg')[0];
-  return preferredVariant?.url || asset.original_url || '';
+export const mediaAssetImageUrl = (asset?: MediaAsset | WritingMediaAsset | null, preferredSize: MediaVariantSize = 'medium') => {
+  const displayAsset = normalizeMediaAssetForDisplay(asset);
+  if (!displayAsset || !isReadyMediaStatus(displayAsset.status)) return '';
+
+  for (const format of mediaVariantFormatOrder) {
+    const variants = readyMediaVariants(displayAsset, format);
+    const preferredVariant = variants.find((variant) => variant.size_name === preferredSize) || variants[0];
+    if (preferredVariant?.url) return preferredVariant.url;
+  }
+
+  return displayAsset.original_url || '';
 };
-
-

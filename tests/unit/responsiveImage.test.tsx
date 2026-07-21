@@ -46,6 +46,43 @@ describe('responsive media rendering', () => {
     expect(readyMediaVariants({ ...asset, status: 'processing' }, 'webp')).toEqual([]);
   });
 
+  it('accepts uppercase READY status from public resources payloads', async () => {
+    const publicAsset: MediaAsset = {
+      ...asset,
+      status: 'READY',
+      variant_map: {
+        avif: { medium: { format: 'avif', size_name: 'medium', status: 'READY', url: 'https://example.test/medium.avif', width: 960, height: 540, id: 'avif-medium', file_size: 1, quality: 62, generated_at: null } },
+      },
+    };
+
+    expect(readyMediaVariants(publicAsset, 'avif')).toHaveLength(1);
+
+    await act(async () => {
+      root.render(<ResponsiveImage asset={publicAsset} preset="card" />);
+    });
+
+    expect(container.querySelector('source[type="image/avif"]')?.getAttribute('srcset')).toContain('medium.avif');
+  });
+
+  it('falls back to variants list and original_url when variant_map is sparse', async () => {
+    const listOnlyAsset: MediaAsset = {
+      ...asset,
+      original_url: 'https://example.test/original-only.jpg',
+      variant_map: {},
+      variants: [
+        { format: 'webp', size_name: 'medium', status: 'READY', url: 'https://example.test/list-medium.webp', width: 900, height: 506, id: 'webp-list', file_size: 1, quality: 76, generated_at: null },
+      ],
+    };
+
+    expect(readyMediaVariants(listOnlyAsset, 'webp')[0]?.url).toBe('https://example.test/list-medium.webp');
+
+    await act(async () => {
+      root.render(<ResponsiveImage asset={{ ...listOnlyAsset, variants: [], variant_map: {} }} preset="card" />);
+    });
+
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('https://example.test/original-only.jpg');
+  });
+
   it('renders AVIF, WebP, and JPEG fallback sources with layout dimensions', async () => {
     await act(async () => {
       root.render(<ResponsiveImage asset={asset} preset="card" />);

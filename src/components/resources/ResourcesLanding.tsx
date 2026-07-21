@@ -1,7 +1,9 @@
 import { ArrowRight, Clock3, FileText, Rss, ScrollText, UsersRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import ResourcesCategoryTabs from './ResourcesCategoryTabs';
+import ResponsiveImage from '../media/ResponsiveImage';
 import SiteButton from '../ui/SiteButton';
+import { normalizeMediaAssetForDisplay } from '../../services/mediaAssetsApi';
 import type {
   PublicResourceMinistry,
   PublicResourceSeries,
@@ -21,8 +23,8 @@ type ResourcesLandingProps = {
 };
 
 type ImageBlockProps = {
+  asset?: PublicWritingCard['og_image_detail'] | PublicResourceSeries['cover_image_detail'];
   className?: string;
-  imageUrl?: string;
   tone: string;
 };
 
@@ -47,21 +49,24 @@ const centeredSectionHeaderClass = 'shrink-0 text-center text-sm font-black uppe
 
 const countLabel = (count?: number) => `${count ?? 0} ${(count ?? 0) === 1 ? 'Article' : 'Articles'}`;
 const writingHref = (article: PublicWritingCard) => `/resources/${article.slug}`;
-const imageUrl = (image?: PublicWritingCard['og_image_detail'] | PublicResourceSeries['cover_image_detail']) => image?.url || image?.image || image?.file;
 const toneFor = (seed: number | string) => fallbackTones[Math.abs(String(seed).split('').reduce((total, char) => total + char.charCodeAt(0), 0)) % fallbackTones.length];
 const articleAccent = (article: PublicWritingCard) => article.resource_type_detail?.name || article.writing_type || 'Resource';
 const articleAuthor = (article: PublicWritingCard) => article.byline || article.author_display || article.author_attributions?.[0]?.display_name || 'A.I.C Njoro Town';
 
-const ImageBlock = ({ className = '', imageUrl: src, tone }: ImageBlockProps) => (
-  <div className={`relative overflow-hidden bg-gradient-to-br ${tone} ${className}`}>
-    {src ? <img alt="" className="absolute inset-0 size-full object-cover" src={src} /> : null}
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(255,255,255,0.46),transparent_20%),linear-gradient(180deg,transparent,rgba(0,0,0,0.52))]" />
-    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(150deg,transparent_18%,rgba(255,255,255,0.18)_19%,transparent_20%,transparent_32%,rgba(255,255,255,0.12)_33%,transparent_34%)]" />
-    <div className="absolute bottom-8 left-1/2 h-16 w-px -translate-x-1/2 bg-white/45" />
-    <div className="absolute bottom-8 left-1/2 size-3 -translate-x-1/2 rounded-full border border-white/70" />
-    <div className="absolute bottom-0 left-1/2 h-28 w-32 -translate-x-1/2 rounded-t-full bg-black/25 blur-xl" />
-  </div>
-);
+const ImageBlock = ({ asset, className = '', tone }: ImageBlockProps) => {
+  const responsiveAsset = normalizeMediaAssetForDisplay(asset);
+
+  return (
+    <div className={`relative overflow-hidden bg-gradient-to-br ${tone} ${className}`}>
+      {responsiveAsset ? <ResponsiveImage alt="" asset={responsiveAsset} className="absolute inset-0 size-full object-cover" preset="card" /> : null}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(255,255,255,0.46),transparent_20%),linear-gradient(180deg,transparent,rgba(0,0,0,0.52))]" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(150deg,transparent_18%,rgba(255,255,255,0.18)_19%,transparent_20%,transparent_32%,rgba(255,255,255,0.12)_33%,transparent_34%)]" />
+      <div className="absolute bottom-8 left-1/2 h-16 w-px -translate-x-1/2 bg-white/45" />
+      <div className="absolute bottom-8 left-1/2 size-3 -translate-x-1/2 rounded-full border border-white/70" />
+      <div className="absolute bottom-0 left-1/2 h-28 w-32 -translate-x-1/2 rounded-t-full bg-black/25 blur-xl" />
+    </div>
+  );
+};
 
 const MetaItem = ({ children, icon: Icon }: { children: ReactNode; icon: typeof Clock3 }) => (
   <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-stone-400">
@@ -96,7 +101,7 @@ const FeaturedArticleCard = ({ article, darkMode, loading }: { article?: PublicW
 
   return (
     <article className="grid overflow-hidden rounded-3xl border border-black/10 bg-white shadow-2xl shadow-zinc-900/10 transition dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/30 lg:grid-cols-[1.12fr_0.88fr]">
-      <ImageBlock imageUrl={imageUrl(article.og_image_detail)} tone={toneFor(article.slug || article.id)} className="min-h-72 lg:min-h-[23rem]" />
+      <ImageBlock asset={article.og_image_detail} tone={toneFor(article.slug || article.id)} className="min-h-72 lg:min-h-[23rem]" />
       <div className="flex flex-col justify-between p-6 sm:p-8">
         <div>
           <p className={sectionLabelClass}>{articleAccent(article)}</p>
@@ -125,7 +130,7 @@ const FeaturedArticleCard = ({ article, darkMode, loading }: { article?: PublicW
 
 const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => (
   <a href={writingHref(article)} className="grid min-w-0 grid-cols-[7rem_1fr] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">
-    <ImageBlock imageUrl={imageUrl(article.og_image_detail)} tone={toneFor(article.slug || article.id)} className="min-h-[8.5rem]" />
+    <ImageBlock asset={article.og_image_detail} tone={toneFor(article.slug || article.id)} className="min-h-[8.5rem]" />
     <div className="min-w-0 p-5">
       <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">{articleAccent(article)}</p>
       <h3 className="mt-3 text-lg font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{article.title}</h3>
@@ -157,7 +162,7 @@ const CollectionCard = ({ collection }: { collection: PublicResourceSeries }) =>
     href={`/resources/series/${collection.slug}`}
     className={`relative flex min-h-64 overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br ${toneFor(collection.slug || collection.id)} p-5 shadow-lg shadow-zinc-900/10 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:shadow-black/30`}
   >
-    {imageUrl(collection.cover_image_detail) ? <img alt="" className="absolute inset-0 size-full object-cover" src={imageUrl(collection.cover_image_detail)} /> : null}
+    {normalizeMediaAssetForDisplay(collection.cover_image_detail) ? <ResponsiveImage alt="" asset={normalizeMediaAssetForDisplay(collection.cover_image_detail)} className="absolute inset-0 size-full object-cover" preset="card" /> : null}
     <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-white/10" />
     <span className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(140deg,transparent_24%,rgba(255,255,255,0.13)_25%,transparent_26%,transparent_44%,rgba(255,255,255,0.1)_45%,transparent_46%)]" />
     <span className="relative mt-auto min-w-0 text-white">

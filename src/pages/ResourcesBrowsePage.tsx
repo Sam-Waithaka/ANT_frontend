@@ -1,9 +1,11 @@
 import { ArrowLeft, ArrowRight, Clock3, UserRound } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import ResponsiveImage from '../components/media/ResponsiveImage';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { useTheme } from '../hooks/useTheme';
+import { normalizeMediaAssetForDisplay } from '../services/mediaAssetsApi';
 import { searchPublicWritings, type PublicSearchQuery } from '../services/publicSearchApi';
 import type { PaginatedResponse, PublicWritingCard } from '../types/writing';
 
@@ -27,7 +29,6 @@ const titleCase = (value = '') => value
   .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const toneFor = (seed: number | string) => fallbackTones[Math.abs(String(seed).split('').reduce((total, char) => total + char.charCodeAt(0), 0)) % fallbackTones.length];
-const imageUrl = (article: PublicWritingCard) => article.og_image_detail?.url || article.og_image_detail?.image || article.og_image_detail?.file;
 const articleAccent = (article: PublicWritingCard) => article.resource_type_detail?.name || article.writing_type || 'Resource';
 const articleAuthor = (article: PublicWritingCard) => article.byline || article.author_display || article.author_attributions?.[0]?.display_name || 'A.I.C Njoro Town';
 
@@ -68,12 +69,16 @@ const resolveBrowseConfig = (mode: BrowseMode, params: RouteParams): { descripti
   };
 };
 
-const ImageBlock = ({ article }: { article: PublicWritingCard }) => (
-  <div className={`relative min-h-[8.5rem] overflow-hidden bg-gradient-to-br ${toneFor(article.slug || article.id)}`}>
-    {imageUrl(article) ? <img alt="" className="absolute inset-0 size-full object-cover" src={imageUrl(article)} /> : null}
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(255,255,255,0.46),transparent_20%),linear-gradient(180deg,transparent,rgba(0,0,0,0.52))]" />
-  </div>
-);
+const ImageBlock = ({ article }: { article: PublicWritingCard }) => {
+  const responsiveAsset = normalizeMediaAssetForDisplay(article.og_image_detail);
+
+  return (
+    <div className={`relative min-h-[8.5rem] overflow-hidden bg-gradient-to-br ${toneFor(article.slug || article.id)}`}>
+      {responsiveAsset ? <ResponsiveImage alt="" asset={responsiveAsset} className="absolute inset-0 size-full object-cover" preset="card" /> : null}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(255,255,255,0.46),transparent_20%),linear-gradient(180deg,transparent,rgba(0,0,0,0.52))]" />
+    </div>
+  );
+};
 
 const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => (
   <Link to={`/resources/${article.slug}`} className="grid min-w-0 grid-cols-[7rem_1fr] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">

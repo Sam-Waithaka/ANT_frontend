@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import ResponsiveImage from "../media/ResponsiveImage";
-import type { MediaAsset } from "../../services/mediaAssetsApi";
+import { normalizeMediaAssetForDisplay } from "../../services/mediaAssetsApi";
 import type {
   PublicWritingDetail,
   WritingMediaAsset,
@@ -21,29 +21,6 @@ type WritingArticleReaderProps = {
   metadata?: ReactNode;
   title: string;
   writing?: PublicWritingDetail;
-};
-
-const coverImageUrl = (asset?: WritingMediaAsset | null) =>
-  asset?.url || asset?.image || asset?.file || "";
-
-const toResponsiveCoverAsset = (asset?: WritingMediaAsset | null): MediaAsset | null => {
-  if (!asset) return null;
-  const record = asset as WritingMediaAsset & Partial<MediaAsset>;
-  const fallbackUrl = record.original_url || coverImageUrl(asset);
-
-  if (!fallbackUrl) return null;
-
-  return {
-    ...record,
-    caption: record.caption || "",
-    height: record.height ?? null,
-    original_url: fallbackUrl,
-    status: record.status || "ready",
-    uuid: record.uuid || String(record.id),
-    variant_map: record.variant_map || {},
-    variants: record.variants || [],
-    width: record.width ?? null,
-  };
 };
 
 const hasContentJson = (contentJson: unknown) => {
@@ -71,7 +48,7 @@ const WritingArticleReader = ({
   const resolvedContentHtml = writing?.content_html || contentHtml || "";
   const resolvedMediaEmbeds = writing?.media_embeds || mediaEmbeds || [];
   const rendererMediaEmbeds = resolvedMediaEmbeds as WritingMediaEmbedLike[];
-  const responsiveCoverImage = toResponsiveCoverAsset(resolvedCoverImage);
+  const responsiveCoverImage = normalizeMediaAssetForDisplay(resolvedCoverImage);
   const mutedTextClass = darkMode ? "text-stone-400" : "text-zinc-600";
   const dividerClass = darkMode ? "border-white/10" : "border-[#eaded0]";
 

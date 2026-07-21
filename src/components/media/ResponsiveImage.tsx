@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { readyMediaVariants, type MediaAsset, type MediaVariant } from '../../services/mediaAssetsApi';
+import { isReadyMediaStatus, normalizeMediaAssetForDisplay, readyMediaVariants, type MediaAsset, type MediaVariant } from '../../services/mediaAssetsApi';
 
 export type ResponsiveImagePreset = 'articleCover' | 'card' | 'hero' | 'thumbnail';
 
@@ -10,12 +10,15 @@ const imagePresets: Record<ResponsiveImagePreset, { sizes: string }> = {
   thumbnail: { sizes: '160px' },
 };
 
-const toSrcSet = (variants: MediaVariant[]) => variants.map((variant) => `${variant.url} ${variant.width}w`).join(', ');
+const toSrcSet = (variants: MediaVariant[]) => variants
+  .filter((variant) => variant.url && variant.width)
+  .map((variant) => `${variant.url} ${variant.width}w`)
+  .join(', ');
 
 const firstReadyVariant = (asset: MediaAsset) =>
-  readyMediaVariants(asset, 'jpeg')[0]
+  readyMediaVariants(asset, 'avif')[0]
   || readyMediaVariants(asset, 'webp')[0]
-  || readyMediaVariants(asset, 'avif')[0];
+  || readyMediaVariants(asset, 'jpeg')[0];
 
 type ResponsiveImageProps = {
   alt?: string;
@@ -44,19 +47,20 @@ const ResponsiveImage = ({
     setHasRetried(false);
   }, [asset]);
 
-  if (!activeAsset || activeAsset.status !== 'ready') return null;
+  const displayAsset = normalizeMediaAssetForDisplay(activeAsset);
+  if (!displayAsset || !isReadyMediaStatus(displayAsset.status)) return null;
 
-  const avif = readyMediaVariants(activeAsset, 'avif');
-  const webp = readyMediaVariants(activeAsset, 'webp');
-  const jpeg = readyMediaVariants(activeAsset, 'jpeg');
-  const fallbackVariant = firstReadyVariant(activeAsset);
-  const fallbackUrl = jpeg[0]?.url || fallbackVariant?.url || activeAsset.original_url;
+  const avif = readyMediaVariants(displayAsset, 'avif');
+  const webp = readyMediaVariants(displayAsset, 'webp');
+  const jpeg = readyMediaVariants(displayAsset, 'jpeg');
+  const fallbackVariant = firstReadyVariant(displayAsset);
+  const fallbackUrl = jpeg[0]?.url || fallbackVariant?.url || displayAsset.original_url;
 
   if (!fallbackUrl) return null;
 
-  const width = activeAsset.width || fallbackVariant?.width;
-  const height = activeAsset.height || fallbackVariant?.height;
-  const resolvedAlt = alt ?? activeAsset.alt_text ?? activeAsset.title ?? '';
+  const width = displayAsset.width || fallbackVariant?.width || undefined;
+  const height = displayAsset.height || fallbackVariant?.height || undefined;
+  const resolvedAlt = alt ?? displayAsset.alt_text ?? displayAsset.title ?? '';
 
   const handleError = async () => {
     if (hasRetried || !onRefreshAsset) return;
@@ -69,10 +73,14 @@ const ResponsiveImage = ({
     }
   };
 
+  const avifSrcSet = toSrcSet(avif);
+  const webpSrcSet = toSrcSet(webp);
+  const jpegSrcSet = toSrcSet(jpeg);
+
   return (
     <picture>
-      {avif.length ? <source srcSet={toSrcSet(avif)} sizes={imagePresets[preset].sizes} type="image/avif" /> : null}
-      {webp.length ? <source srcSet={toSrcSet(webp)} sizes={imagePresets[preset].sizes} type="image/webp" /> : null}
+      {avifSrcSet ? <source srcSet={avifSrcSet} sizes={imagePresets[preset].sizes} type="image/avif" /> : null}
+      {webpSrcSet ? <source srcSet={webpSrcSet} sizes={imagePresets[preset].sizes} type="image/webp" /> : null}
       <img
         alt={resolvedAlt}
         className={className}
@@ -83,7 +91,7 @@ const ResponsiveImage = ({
         onError={() => { void handleError(); }}
         sizes={imagePresets[preset].sizes}
         src={fallbackUrl}
-        srcSet={jpeg.length ? toSrcSet(jpeg) : undefined}
+        srcSet={jpegSrcSet || undefined}
         width={width}
       />
     </picture>
