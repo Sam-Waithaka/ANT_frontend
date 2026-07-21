@@ -268,6 +268,12 @@ export type PublicWritingCard = {
   writing_type: string;
 };
 
+export type PublicResourceTypeRail = {
+  count: number;
+  items: PublicWritingCard[];
+  resource_type: PublicResourceType;
+};
+
 export type PublicWritingNeighbor = {
   published_at: string;
   slug: string;
@@ -390,6 +396,7 @@ export type ResourcesHome = {
   hero_featured: PublicWritingCard | null;
   latest_articles: PublicWritingCard[];
   ministries: PublicResourceMinistry[];
+  resource_type_rails: PublicResourceTypeRail[];
   resource_types: PublicResourceType[];
   scripture_books: PublicScriptureBook[];
 };
@@ -430,4 +437,5 @@ export type MediaAssetUsage = {
   references?: Array<{ id?: number | string; title?: string; type?: string }>;
   usage_count?: number;
 };
+
 

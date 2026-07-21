@@ -18,6 +18,7 @@ const emptyHome: ResourcesHome = {
   hero_featured: null,
   latest_articles: [],
   ministries: [],
+  resource_type_rails: [],
   resource_types: [],
   scripture_books: [],
 };
@@ -81,6 +82,7 @@ export const normalizeResourcesHome = (payload: unknown): ResourcesHome => {
     hero_featured: record.hero_featured && typeof record.hero_featured === 'object' ? record.hero_featured as ResourcesHome['hero_featured'] : null,
     latest_articles: readArray(record, 'latest_articles'),
     ministries: readArray(record, 'ministries'),
+    resource_type_rails: readArray(record, 'resource_type_rails'),
     resource_types: readArray(record, 'resource_types'),
     scripture_books: readArray(record, 'scripture_books'),
   };
@@ -152,3 +154,4 @@ export const fetchPublicResourceDetail = async (slug: string, publishedAt?: stri
 
   return payload as PublicWritingDetail;
 };
+

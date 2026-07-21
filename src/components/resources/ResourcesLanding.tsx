@@ -8,6 +8,7 @@ import type {
   PublicResourceMinistry,
   PublicResourceSeries,
   PublicResourceType,
+  PublicResourceTypeRail,
   PublicScriptureBook,
   PublicWritingCard,
   ResourcesHome,
@@ -226,6 +227,32 @@ const ArticleGrid = ({ articles, emptyText, loading }: { articles: PublicWriting
   return <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{articles.map((article) => <ResourceArticleCard article={article} key={article.id} />)}</div>;
 };
 
+
+const ResourceTypePreviewRail = ({ rail }: { rail: PublicResourceTypeRail }) => {
+  const resourceType = rail.resource_type;
+  const count = rail.count ?? resourceType.writing_count ?? rail.items.length;
+
+  return (
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/25 sm:p-6">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className={sectionLabelClass}>{resourceType.name}</p>
+          <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-stone-400">
+            {countLabel(count)} available
+          </p>
+        </div>
+        <a
+          href={`/resources/type/${resourceType.slug}`}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/5 dark:text-red-100 dark:hover:bg-white/10"
+        >
+          View more {resourceType.name}
+          <ArrowRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+      <ArticleGrid articles={rail.items ?? []} emptyText={`Published ${resourceType.name.toLowerCase()} resources will appear here soon.`} loading={false} />
+    </article>
+  );
+};
 const ResourcesSubscribeStrip = ({ darkMode }: { darkMode: boolean }) => (
   <section className="rounded-2xl border border-black/10 bg-[#fffaf0] p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717] dark:shadow-black/25">
     <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -259,6 +286,7 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
   const featuredArticles = home?.featured_articles ?? [];
   const featuredSeries = home?.featured_series ?? [];
   const latestArticles = home?.latest_articles ?? [];
+  const resourceTypeRails = home?.resource_type_rails ?? [];
   const heroArticle = home?.hero_featured || latestArticles[0] || null;
   const heroEyebrow = home?.hero_featured ? 'Featured Resource' : heroArticle ? 'Latest Resource' : 'Featured Resource';
   const scriptureBooks = home?.scripture_books.length ? home.scripture_books : navigation?.scripture_books ?? [];
@@ -323,6 +351,19 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
           </div>
         ) : null}
 
+
+        <section id="resources-resource-type-rails" className="scroll-mt-28" aria-labelledby="resources-resource-type-rails-heading">
+          <CenteredSectionHeader id="resources-resource-type-rails-heading" title="Browse by Resource Type" />
+          {loading ? (
+            <div className="grid gap-6">
+              {[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-56 rounded-[2rem]" />)}
+            </div>
+          ) : resourceTypeRails.length ? (
+            <div className="grid gap-6">
+              {resourceTypeRails.map((rail) => <ResourceTypePreviewRail key={rail.resource_type.id} rail={rail} />)}
+            </div>
+          ) : null}
+        </section>
         <section id="resources-featured" className="scroll-mt-28" aria-labelledby="resources-featured-heading">
           <CenteredSectionHeader id="resources-featured-heading" title="Featured" />
           <ArticleGrid articles={featuredArticles} emptyText="Featured published writings will appear here once they are curated." loading={loading} />
@@ -378,3 +419,5 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
 };
 
 export default ResourcesLanding;
+
+

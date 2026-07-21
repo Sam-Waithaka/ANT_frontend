@@ -46,7 +46,7 @@ const article = (overrides: Record<string, unknown> = {}) => ({
   og_image_detail: null,
   published_at: '2026-07-17T09:00:00Z',
   reading_time_minutes: 6,
-  resource_type_detail: { id: 1, name: 'Devotional', slug: 'devotional' },
+  resource_type_detail: { id: 1, name: 'Devotional', slug: 'devotional', description: '', is_active: true, is_featured: true, sort_order: 0, writing_count: 2 },
   scripture_references: [],
   seo_description: 'SEO description.',
   seo_title: 'SEO title',
@@ -73,6 +73,13 @@ describe('ResourcesPage', () => {
       hero_featured: article({ title: 'Hero Resource' }),
       latest_articles: [article({ id: 12, title: 'Latest Grace', slug: 'latest-grace' })],
       ministries: [{ id: 3, name: 'Youth Ministry', slug: 'youth', summary: 'Youth resources', writing_count: 7 }],
+      resource_type_rails: [
+        {
+          count: 2,
+          items: [article({ id: 21, title: 'Rail Devotion', slug: 'rail-devotion' })],
+          resource_type: { id: 1, name: 'Devotional', slug: 'devotional', description: '', is_active: true, is_featured: true, sort_order: 0, writing_count: 2 },
+        },
+      ],
       resource_types: [{ id: 1, name: 'Devotional', slug: 'devotional', description: '', is_active: true, is_featured: true, sort_order: 0, writing_count: 2 }],
       scripture_books: [{ abbreviation: 'Ps', id: 19, name: 'Psalms', number: 19, osis_id: 'Ps', testament: 'OT', writing_count: 8 }],
     });
@@ -109,6 +116,10 @@ describe('ResourcesPage', () => {
     expect(container.textContent).toContain('Devotional');
     expect(container.textContent).toContain('Bible Study');
     expect(container.textContent).toContain('Featured Mercy');
+    expect(container.textContent).toContain('Browse by Resource Type');
+    expect(container.textContent).toContain('Rail Devotion');
+    expect(container.textContent).toContain('View more Devotional');
+    expect(container.querySelector('a[href="/resources/type/devotional"]')).not.toBeNull();
     expect(container.textContent).toContain('Project 52');
     expect(container.textContent).toContain('Psalms');
     expect(container.textContent).toContain('Youth Ministry');
@@ -133,6 +144,7 @@ describe('ResourcesPage', () => {
       hero_featured: null,
       latest_articles: [article({ id: 44, slug: 'latest-stand-in', title: 'Latest Stand In' })],
       ministries: [],
+      resource_type_rails: [],
       resource_types: [],
       scripture_books: [],
     });
@@ -152,6 +164,7 @@ describe('ResourcesPage', () => {
       hero_featured: null,
       latest_articles: [],
       ministries: [],
+      resource_type_rails: [],
       resource_types: [],
       scripture_books: [],
     });
@@ -181,3 +194,7 @@ describe('ResourcesPage', () => {
     await vi.waitFor(() => expect(container.textContent).toContain('Unable to load the resources library right now.'));
   });
 });
+
+
+
+
