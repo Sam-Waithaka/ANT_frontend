@@ -125,6 +125,25 @@ describe('ResourcesPage', () => {
     expect(container.querySelector('.animate-pulse')).not.toBeNull();
   });
 
+  it('uses the latest article in the hero when no featured hero is curated', async () => {
+    mocks.fetchResourcesHome.mockResolvedValueOnce({
+      featured_articles: [],
+      featured_categories: [],
+      featured_series: [],
+      hero_featured: null,
+      latest_articles: [article({ id: 44, slug: 'latest-stand-in', title: 'Latest Stand In' })],
+      ministries: [],
+      resource_types: [],
+      scripture_books: [],
+    });
+
+    await renderPage(root);
+
+    await vi.waitFor(() => expect(container.textContent).toContain('Latest Stand In'));
+    expect(container.textContent).toContain('Latest Resource');
+    expect(container.textContent).not.toContain('No featured resource yet.');
+  });
+
   it('shows intentional empty states when public resources arrays are empty', async () => {
     mocks.fetchResourcesHome.mockResolvedValueOnce({
       featured_articles: [],

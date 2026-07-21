@@ -85,13 +85,13 @@ const EmptyState = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-const FeaturedArticleCard = ({ article, darkMode, loading }: { article?: PublicWritingCard | null; darkMode: boolean; loading: boolean }) => {
+const FeaturedArticleCard = ({ article, darkMode, eyebrow = 'Featured Resource', loading }: { article?: PublicWritingCard | null; darkMode: boolean; eyebrow?: string; loading: boolean }) => {
   if (loading) return <SkeletonBlock className="min-h-[28rem] rounded-3xl" />;
   if (!article) {
     return (
       <div className="grid min-h-72 place-items-center rounded-3xl border border-black/10 bg-white/70 p-8 text-center shadow-2xl shadow-zinc-900/10 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/30 lg:min-h-[23rem]">
         <div>
-          <p className={sectionLabelClass}>Featured Resource</p>
+          <p className={sectionLabelClass}>{eyebrow}</p>
           <h2 className="mt-4 font-serif text-3xl font-bold">No featured resource yet.</h2>
           <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-stone-400">Published featured writings will appear here once they are curated.</p>
         </div>
@@ -104,7 +104,7 @@ const FeaturedArticleCard = ({ article, darkMode, loading }: { article?: PublicW
       <ImageBlock asset={article.og_image_detail} tone={toneFor(article.slug || article.id)} className="min-h-72 lg:min-h-[23rem]" />
       <div className="flex flex-col justify-between p-6 sm:p-8">
         <div>
-          <p className={sectionLabelClass}>{articleAccent(article)}</p>
+          <p className={sectionLabelClass}>{eyebrow}</p>
           <h2 className="mt-4 max-w-sm text-3xl font-extrabold leading-tight tracking-normal text-zinc-950 dark:text-stone-100 sm:text-4xl">
             {article.title}
           </h2>
@@ -259,6 +259,8 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
   const featuredArticles = home?.featured_articles ?? [];
   const featuredSeries = home?.featured_series ?? [];
   const latestArticles = home?.latest_articles ?? [];
+  const heroArticle = home?.hero_featured || latestArticles[0] || null;
+  const heroEyebrow = home?.hero_featured ? 'Featured Resource' : heroArticle ? 'Latest Resource' : 'Featured Resource';
   const scriptureBooks = home?.scripture_books.length ? home.scripture_books : navigation?.scripture_books ?? [];
   const ministries = home?.ministries.length ? home.ministries : navigation?.ministries ?? [];
   const scriptureItems = scriptureBooks.map((book: PublicScriptureBook) => ({
@@ -308,7 +310,7 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
               </a>
             </div>
           </div>
-          <FeaturedArticleCard article={home?.hero_featured} darkMode={darkMode} loading={loading} />
+          <FeaturedArticleCard article={heroArticle} darkMode={darkMode} eyebrow={heroEyebrow} loading={loading} />
         </div>
       </section>
 
