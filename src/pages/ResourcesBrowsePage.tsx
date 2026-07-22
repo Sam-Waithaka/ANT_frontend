@@ -9,7 +9,7 @@ import { normalizeMediaAssetForDisplay } from '../services/mediaAssetsApi';
 import { searchPublicWritings, type PublicSearchQuery } from '../services/publicSearchApi';
 import type { PaginatedResponse, PublicWritingCard } from '../types/writing';
 
-type BrowseMode = 'book' | 'ministry' | 'series' | 'type';
+type BrowseMode = 'book' | 'category' | 'ministry' | 'series' | 'type';
 
 type RouteParams = {
   osisId?: string;
@@ -39,6 +39,15 @@ const resolveBrowseConfig = (mode: BrowseMode, params: RouteParams): { descripti
       description: 'Published resources grouped under this resource type.',
       filter: { resource_type_slug: slug },
       label: 'Resource Type',
+      title: titleCase(slug),
+    };
+  }
+  if (mode === 'category') {
+    const slug = params.slug || '';
+    return {
+      description: 'Published resources grouped under this category.',
+      filter: { category_slug: slug },
+      label: 'Category',
       title: titleCase(slug),
     };
   }

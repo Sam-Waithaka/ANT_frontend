@@ -1,14 +1,15 @@
-import { ArrowRight, Clock3, FileText, Rss, ScrollText, UsersRound } from 'lucide-react';
+import { ArrowRight, Clock3, Rss, ScrollText, UsersRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import ResourcesCategoryTabs from './ResourcesCategoryTabs';
 import ResponsiveImage from '../media/ResponsiveImage';
 import SiteButton from '../ui/SiteButton';
 import { normalizeMediaAssetForDisplay } from '../../services/mediaAssetsApi';
 import type {
+  PublicCategoryRail,
   PublicResourceMinistry,
   PublicResourceSeries,
-  PublicResourceType,
   PublicResourceTypeRail,
+  PublicSeriesRail,
   PublicScriptureBook,
   PublicWritingCard,
   ResourcesHome,
@@ -143,37 +144,6 @@ const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => (
   </a>
 );
 
-const ResourceTypeCard = ({ resourceType }: { resourceType: PublicResourceType }) => (
-  <a
-    href={`/resources/type/${resourceType.slug}`}
-    className="flex min-h-24 min-w-0 items-center gap-4 rounded-2xl border border-black/10 bg-white p-5 shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25"
-  >
-    <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-red-950/5 text-red-800 dark:bg-red-950/35 dark:text-red-100">
-      <FileText size={24} aria-hidden="true" />
-    </span>
-    <span className="min-w-0">
-      <span className="block truncate text-base font-black text-zinc-950 dark:text-stone-100">{resourceType.name}</span>
-      <span className="mt-1 block text-sm font-semibold text-zinc-600 dark:text-stone-400">{countLabel(resourceType.writing_count)}</span>
-    </span>
-  </a>
-);
-
-const CollectionCard = ({ collection }: { collection: PublicResourceSeries }) => (
-  <a
-    href={`/resources/series/${collection.slug}`}
-    className={`relative flex min-h-64 overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br ${toneFor(collection.slug || collection.id)} p-5 shadow-lg shadow-zinc-900/10 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:shadow-black/30`}
-  >
-    {normalizeMediaAssetForDisplay(collection.cover_image_detail) ? <ResponsiveImage alt="" asset={normalizeMediaAssetForDisplay(collection.cover_image_detail)} className="absolute inset-0 size-full object-cover" preset="card" /> : null}
-    <span className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-white/10" />
-    <span className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(140deg,transparent_24%,rgba(255,255,255,0.13)_25%,transparent_26%,transparent_44%,rgba(255,255,255,0.1)_45%,transparent_46%)]" />
-    <span className="relative mt-auto min-w-0 text-white">
-      <span className="block text-xl font-black">{collection.title}</span>
-      <span className="mt-2 block max-w-48 text-sm font-semibold leading-6 text-white/90">{collection.description}</span>
-      <span className="mt-4 block text-sm font-black">{countLabel(collection.writing_count)}</span>
-    </span>
-  </a>
-);
-
 const BrowseListCard = ({ emptyText, id, items, title }: { emptyText: string; id?: string; items: BrowseItem[]; title: string }) => (
   <section id={id} className="scroll-mt-28">
     <div className="mb-4 flex items-center justify-between gap-4">
@@ -219,6 +189,66 @@ const CenteredSectionHeader = ({ id, title }: { id?: string; title: string }) =>
   </div>
 );
 
+
+const FeaturedWritingCard = ({ article }: { article: PublicWritingCard }) => (
+  <a href={writingHref(article)} className="grid min-w-0 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25 sm:grid-cols-[9rem_1fr]">
+    <ImageBlock asset={article.og_image_detail} tone={toneFor(article.slug || article.id)} className="min-h-44 sm:min-h-full" />
+    <span className="min-w-0 p-5">
+      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Featured Article</span>
+      <span className="mt-3 block text-xl font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{article.title}</span>
+      <span className="mt-3 line-clamp-2 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{article.excerpt || article.seo_description || 'Read this featured writing from the church library.'}</span>
+      <span className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+        <MetaItem icon={Clock3}>{article.reading_time_minutes || 1} min read</MetaItem>
+        <MetaItem icon={UsersRound}>{articleAuthor(article)}</MetaItem>
+      </span>
+    </span>
+  </a>
+);
+
+const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_categories'][number] }) => (
+  <a href={`/resources/category/${category.slug}`} className="flex min-h-44 min-w-0 flex-col justify-between rounded-2xl border border-black/10 bg-white p-5 shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">
+    <span>
+      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Featured Collection</span>
+      <span className="mt-3 block text-xl font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{category.name}</span>
+      <span className="mt-3 line-clamp-3 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{category.description || 'Browse writings gathered around this collection.'}</span>
+    </span>
+    <span className="mt-5 inline-flex items-center gap-2 text-sm font-black text-red-800 dark:text-red-100">
+      Open collection
+      <ArrowRight size={14} aria-hidden="true" />
+    </span>
+  </a>
+);
+
+const FeaturedSeriesCard = ({ series }: { series: PublicResourceSeries }) => (
+  <a href={`/resources/series/${series.slug}`} className="grid min-w-0 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25 sm:grid-cols-[9rem_1fr]">
+    <ImageBlock asset={series.cover_image_detail} tone={toneFor(series.slug || series.id)} className="min-h-44 sm:min-h-full" />
+    <span className="min-w-0 p-5">
+      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Featured Series</span>
+      <span className="mt-3 block text-xl font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{series.title}</span>
+      <span className="mt-3 line-clamp-2 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{series.description || 'Follow this curated journey through the church library.'}</span>
+      <span className="mt-4 block text-sm font-black text-zinc-600 dark:text-stone-400">{countLabel(series.writing_count)}</span>
+    </span>
+  </a>
+);
+
+const FeaturedShowcase = ({ articles, categories, series, loading }: { articles: PublicWritingCard[]; categories: ResourcesHome['featured_categories']; series: PublicResourceSeries[]; loading: boolean }) => {
+  if (loading) {
+    return <div className="grid min-w-0 gap-5 lg:grid-cols-2">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-44" />)}</div>;
+  }
+
+  if (!articles.length && !categories.length && !series.length) {
+    return <EmptyState>Featured resources will appear here once they are curated.</EmptyState>;
+  }
+
+  return (
+    <div className="grid min-w-0 gap-5 lg:grid-cols-2">
+      {articles.map((article) => <FeaturedWritingCard article={article} key={`article-${article.id}`} />)}
+      {categories.map((category) => <FeaturedCategoryCard category={category} key={`category-${category.id}`} />)}
+      {series.map((item) => <FeaturedSeriesCard series={item} key={`series-${item.id}`} />)}
+    </div>
+  );
+};
+
 const ArticleGrid = ({ articles, emptyText, loading }: { articles: PublicWritingCard[]; emptyText: string; loading: boolean }) => {
   if (loading) {
     return <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{[0, 1, 2, 3].map((item) => <SkeletonBlock key={item} className="h-36" />)}</div>;
@@ -253,6 +283,58 @@ const ResourceTypePreviewRail = ({ rail }: { rail: PublicResourceTypeRail }) => 
     </article>
   );
 };
+
+const CategoryPreviewRail = ({ rail }: { rail: PublicCategoryRail }) => {
+  const category = rail.category;
+  const count = rail.count ?? category.writing_count ?? rail.items.length;
+
+  return (
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/25 sm:p-6">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className={sectionLabelClass}>{category.name}</p>
+          <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-stone-400">
+            {countLabel(count)} available
+          </p>
+        </div>
+        <a
+          href={`/resources/category/${category.slug}`}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/5 dark:text-red-100 dark:hover:bg-white/10"
+        >
+          View more {category.name}
+          <ArrowRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+      <ArticleGrid articles={rail.items ?? []} emptyText={`Published ${category.name.toLowerCase()} resources will appear here soon.`} loading={false} />
+    </article>
+  );
+};
+
+const SeriesPreviewRail = ({ rail }: { rail: PublicSeriesRail }) => {
+  const series = rail.series;
+  const count = rail.count ?? series.writing_count ?? rail.items.length;
+
+  return (
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/25 sm:p-6">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className={sectionLabelClass}>{series.title}</p>
+          <p className="mt-2 text-sm font-semibold text-zinc-600 dark:text-stone-400">
+            {countLabel(count)} available
+          </p>
+        </div>
+        <a
+          href={`/resources/series/${series.slug}`}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/5 dark:text-red-100 dark:hover:bg-white/10"
+        >
+          View more {series.title}
+          <ArrowRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+      <ArticleGrid articles={rail.items ?? []} emptyText={`Published writings from ${series.title} will appear here soon.`} loading={false} />
+    </article>
+  );
+};
 const ResourcesSubscribeStrip = ({ darkMode }: { darkMode: boolean }) => (
   <section className="rounded-2xl border border-black/10 bg-[#fffaf0] p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717] dark:shadow-black/25">
     <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -284,9 +366,12 @@ const ResourcesSubscribeStrip = ({ darkMode }: { darkMode: boolean }) => (
 const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: ResourcesLandingProps) => {
   const resourceTypes = navigation?.resource_types.length ? navigation.resource_types : home?.resource_types ?? [];
   const featuredArticles = home?.featured_articles ?? [];
+  const featuredCategories = home?.featured_categories ?? [];
   const featuredSeries = home?.featured_series ?? [];
   const latestArticles = home?.latest_articles ?? [];
   const resourceTypeRails = home?.resource_type_rails ?? [];
+  const categoryRails = home?.category_rails ?? [];
+  const seriesRails = home?.series_rails ?? [];
   const heroArticle = home?.hero_featured || latestArticles[0] || null;
   const heroEyebrow = home?.hero_featured ? 'Featured Resource' : heroArticle ? 'Latest Resource' : 'Featured Resource';
   const scriptureBooks = home?.scripture_books.length ? home.scripture_books : navigation?.scripture_books ?? [];
@@ -352,8 +437,18 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
         ) : null}
 
 
+        <section id="resources-featured" className="scroll-mt-28" aria-labelledby="resources-featured-heading">
+          <CenteredSectionHeader id="resources-featured-heading" title="Featured" />
+          <FeaturedShowcase articles={featuredArticles} categories={featuredCategories} series={featuredSeries} loading={loading} />
+        </section>
+
+        <section aria-labelledby="resources-latest">
+          <CenteredSectionHeader id="resources-latest" title="Latest" />
+          <ArticleGrid articles={latestArticles} emptyText="Latest published writings will appear here soon." loading={loading} />
+        </section>
+
         <section id="resources-resource-type-rails" className="scroll-mt-28" aria-labelledby="resources-resource-type-rails-heading">
-          <CenteredSectionHeader id="resources-resource-type-rails-heading" title="Browse by Resource Type" />
+          <CenteredSectionHeader id="resources-resource-type-rails-heading" title="Explore by Resource Type" />
           {loading ? (
             <div className="grid gap-6">
               {[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-56 rounded-[2rem]" />)}
@@ -364,52 +459,36 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
             </div>
           ) : null}
         </section>
-        <section id="resources-featured" className="scroll-mt-28" aria-labelledby="resources-featured-heading">
-          <CenteredSectionHeader id="resources-featured-heading" title="Featured" />
-          <ArticleGrid articles={featuredArticles} emptyText="Featured published writings will appear here once they are curated." loading={loading} />
-        </section>
 
-        <section id="resources-types" className="scroll-mt-28" aria-labelledby="resources-types-heading">
-          <CenteredSectionHeader id="resources-types-heading" title="Explore by Type" />
+        <section id="resources-category-rails" className="scroll-mt-28" aria-labelledby="resources-category-rails-heading">
+          <CenteredSectionHeader id="resources-category-rails-heading" title="Explore by Category" />
           {loading ? (
-            <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">{[0, 1, 2, 3, 4].map((item) => <SkeletonBlock key={item} className="h-24" />)}</div>
-          ) : resourceTypes.length ? (
-            <div className="mt-5 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              {resourceTypes.map((resourceType) => <ResourceTypeCard key={resourceType.id} resourceType={resourceType} />)}
+            <div className="grid gap-6">
+              {[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-56 rounded-[2rem]" />)}
             </div>
-          ) : <EmptyState>Resource types will appear here once published resources are categorized.</EmptyState>}
+          ) : categoryRails.length ? (
+            <div className="grid gap-6">
+              {categoryRails.map((rail) => <CategoryPreviewRail key={rail.category.id} rail={rail} />)}
+            </div>
+          ) : null}
         </section>
 
-        <section className="grid min-w-0 gap-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-          <div id="resources-collections" className="min-w-0 scroll-mt-28">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <h2 className={sectionLabelClass}>Featured Collections</h2>
-              <a
-                href="#resources-collections"
-                className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 dark:text-stone-300 dark:hover:text-red-100"
-              >
-                View all collections
-                <ArrowRight size={14} aria-hidden="true" />
-              </a>
+        <section id="resources-series-rails" className="scroll-mt-28" aria-labelledby="resources-series-rails-heading">
+          <CenteredSectionHeader id="resources-series-rails-heading" title="Explore by Series" />
+          {loading ? (
+            <div className="grid gap-6">
+              {[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-56 rounded-[2rem]" />)}
             </div>
-            {loading ? (
-              <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">{[0, 1, 2, 3].map((item) => <SkeletonBlock key={item} className="h-64" />)}</div>
-            ) : featuredSeries.length ? (
-              <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
-                {featuredSeries.map((collection) => <CollectionCard collection={collection} key={collection.id} />)}
-              </div>
-            ) : <EmptyState>Featured series will appear here once published writings are curated into collections.</EmptyState>}
-          </div>
-
-          <div className="grid min-w-0 gap-8 md:grid-cols-2 xl:grid-cols-2">
-            {loading ? <SkeletonBlock className="h-80" /> : <BrowseListCard emptyText="Scripture books will appear here once published articles reference them." id="resources-scripture" title="Browse Scripture" items={scriptureItems} />}
-            {loading ? <SkeletonBlock className="h-80" /> : <BrowseListCard emptyText="Ministry resources will appear here once published writings are connected to ministries." id="resources-ministry" title="Browse Ministry" items={ministryItems} />}
-          </div>
+          ) : seriesRails.length ? (
+            <div className="grid gap-6">
+              {seriesRails.map((rail) => <SeriesPreviewRail key={rail.series.id} rail={rail} />)}
+            </div>
+          ) : null}
         </section>
 
-        <section aria-labelledby="resources-latest">
-          <CenteredSectionHeader id="resources-latest" title="Latest" />
-          <ArticleGrid articles={latestArticles} emptyText="Latest published writings will appear here soon." loading={loading} />
+        <section className="grid min-w-0 gap-8 md:grid-cols-2">
+          {loading ? <SkeletonBlock className="h-80" /> : <BrowseListCard emptyText="Scripture books will appear here once published articles reference them." id="resources-scripture" title="Browse Scripture" items={scriptureItems} />}
+          {loading ? <SkeletonBlock className="h-80" /> : <BrowseListCard emptyText="Ministry resources will appear here once published writings are connected to ministries." id="resources-ministry" title="Browse Ministry" items={ministryItems} />}
         </section>
 
         <ResourcesSubscribeStrip darkMode={darkMode} />
@@ -419,5 +498,6 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
 };
 
 export default ResourcesLanding;
+
 
 

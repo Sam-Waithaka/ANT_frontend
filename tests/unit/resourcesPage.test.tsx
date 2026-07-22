@@ -67,8 +67,17 @@ describe('ResourcesPage', () => {
     mocks.fetchResourcesHome.mockReset();
     mocks.fetchResourcesNavigation.mockReset();
     mocks.fetchResourcesHome.mockResolvedValue({
+      category_rails: [
+        {
+          category: { id: 31, name: 'Prayer', slug: 'prayer', description: '', parent: null, is_active: true, is_featured: true, sort_order: 0, writing_count: 3 },
+          count: 3,
+          items: [article({ id: 22, title: 'Rail Prayer', slug: 'rail-prayer' })],
+        },
+      ],
       featured_articles: [article({ id: 11, title: 'Featured Mercy', slug: 'featured-mercy' })],
-      featured_categories: [],
+      featured_categories: [
+        { children: [], description: 'Life group studies.', id: 32, is_active: true, is_featured: true, name: 'Life Group Material', parent: null, slug: 'life-group-material', sort_order: 0, writing_count: 5 },
+      ],
       featured_series: [{ description: 'A year in the Word.', id: 4, slug: 'project-52', title: 'Project 52', writing_count: 52 }],
       hero_featured: article({ title: 'Hero Resource' }),
       latest_articles: [article({ id: 12, title: 'Latest Grace', slug: 'latest-grace' })],
@@ -82,6 +91,13 @@ describe('ResourcesPage', () => {
       ],
       resource_types: [{ id: 1, name: 'Devotional', slug: 'devotional', description: '', is_active: true, is_featured: true, sort_order: 0, writing_count: 2 }],
       scripture_books: [{ abbreviation: 'Ps', id: 19, name: 'Psalms', number: 19, osis_id: 'Ps', testament: 'OT', writing_count: 8 }],
+      series_rails: [
+        {
+          count: 52,
+          items: [article({ id: 23, title: 'Rail Project 52', slug: 'rail-project-52' })],
+          series: { cover_image_detail: null, description: 'A year in the Word.', id: 4, slug: 'project-52', title: 'Project 52', writing_count: 52 },
+        },
+      ],
     });
     mocks.fetchResourcesNavigation.mockResolvedValue({
       categories: [],
@@ -116,10 +132,23 @@ describe('ResourcesPage', () => {
     expect(container.textContent).toContain('Devotional');
     expect(container.textContent).toContain('Bible Study');
     expect(container.textContent).toContain('Featured Mercy');
-    expect(container.textContent).toContain('Browse by Resource Type');
+    expect(container.textContent).toContain('Featured Article');
+    expect(container.textContent).toContain('Featured Collection');
+    expect(container.textContent).toContain('Life Group Material');
+    expect(container.querySelector('a[href="/resources/category/life-group-material"]')).not.toBeNull();
+    expect(container.textContent).toContain('Featured Series');
+    expect(container.textContent).toContain('Explore by Resource Type');
     expect(container.textContent).toContain('Rail Devotion');
     expect(container.textContent).toContain('View more Devotional');
     expect(container.querySelector('a[href="/resources/type/devotional"]')).not.toBeNull();
+    expect(container.textContent).toContain('Explore by Category');
+    expect(container.textContent).toContain('Rail Prayer');
+    expect(container.textContent).toContain('View more Prayer');
+    expect(container.querySelector('a[href="/resources/category/prayer"]')).not.toBeNull();
+    expect(container.textContent).toContain('Explore by Series');
+    expect(container.textContent).toContain('Rail Project 52');
+    expect(container.textContent).toContain('View more Project 52');
+    expect(container.querySelector('a[href="/resources/series/project-52"]')).not.toBeNull();
     expect(container.textContent).toContain('Project 52');
     expect(container.textContent).toContain('Psalms');
     expect(container.textContent).toContain('Youth Ministry');
@@ -158,6 +187,7 @@ describe('ResourcesPage', () => {
 
   it('shows intentional empty states when public resources arrays are empty', async () => {
     mocks.fetchResourcesHome.mockResolvedValueOnce({
+      category_rails: [],
       featured_articles: [],
       featured_categories: [],
       featured_series: [],
@@ -167,6 +197,7 @@ describe('ResourcesPage', () => {
       resource_type_rails: [],
       resource_types: [],
       scripture_books: [],
+      series_rails: [],
     });
     mocks.fetchResourcesNavigation.mockResolvedValueOnce({
       categories: [],
@@ -181,8 +212,8 @@ describe('ResourcesPage', () => {
     await renderPage(root);
 
     await vi.waitFor(() => expect(container.textContent).toContain('No featured resource yet.'));
-    expect(container.textContent).toContain('Resource types will appear here once published resources are categorized.');
-    expect(container.textContent).toContain('Featured series will appear here once published writings are curated into collections.');
+    expect(container.textContent).toContain('Featured resources will appear here once they are curated.');
+    expect(container.textContent).not.toContain('Featured Collections');
     expect(container.textContent).toContain('Scripture books will appear here once published articles reference them.');
   });
 

@@ -111,6 +111,10 @@ function App() {
                   element={<ResourcesBrowsePage mode="type" />}
                 />
                 <Route
+                  path="/resources/category/:slug"
+                  element={<ResourcesBrowsePage mode="category" />}
+                />
+                <Route
                   path="/resources/series/:slug"
                   element={<ResourcesBrowsePage mode="series" />}
                 />

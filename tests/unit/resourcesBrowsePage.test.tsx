@@ -50,7 +50,7 @@ const article = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const renderBrowse = async (root: Root, path: string, route: string, mode: 'book' | 'ministry' | 'series' | 'type') => {
+const renderBrowse = async (root: Root, path: string, route: string, mode: 'book' | 'category' | 'ministry' | 'series' | 'type') => {
   await act(async () => {
     root.render(
       <MemoryRouter initialEntries={[path]}>
@@ -92,6 +92,14 @@ describe('ResourcesBrowsePage', () => {
     await vi.waitFor(() => expect(container.textContent).toContain('Grace for Today'));
     expect(container.textContent).toContain('Devotional');
     expect(mocks.searchPublicWritings).toHaveBeenCalledWith({ resource_type_slug: 'devotional', page: 1, page_size: 24 }, expect.any(AbortSignal));
+  });
+
+  it('loads category browse results with category_slug', async () => {
+    await renderBrowse(root, '/resources/category/prayer', '/resources/category/:slug', 'category');
+
+    await vi.waitFor(() => expect(container.textContent).toContain('Grace for Today'));
+    expect(container.textContent).toContain('Prayer');
+    expect(mocks.searchPublicWritings).toHaveBeenCalledWith({ category_slug: 'prayer', page: 1, page_size: 24 }, expect.any(AbortSignal));
   });
 
   it('loads series browse results with series_slug', async () => {

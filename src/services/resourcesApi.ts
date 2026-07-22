@@ -12,6 +12,7 @@ const emptyNavigation: ResourcesNavigation = {
 };
 
 const emptyHome: ResourcesHome = {
+  category_rails: [],
   featured_articles: [],
   featured_categories: [],
   featured_series: [],
@@ -21,6 +22,7 @@ const emptyHome: ResourcesHome = {
   resource_type_rails: [],
   resource_types: [],
   scripture_books: [],
+  series_rails: [],
 };
 
 const parseJson = async (response: Response) => {
@@ -76,6 +78,7 @@ export const normalizeResourcesHome = (payload: unknown): ResourcesHome => {
   const record = payload as Record<string, unknown>;
 
   return {
+    category_rails: readArray(record, 'category_rails'),
     featured_articles: readArray(record, 'featured_articles'),
     featured_categories: readArray(record, 'featured_categories'),
     featured_series: readArray(record, 'featured_series'),
@@ -85,6 +88,7 @@ export const normalizeResourcesHome = (payload: unknown): ResourcesHome => {
     resource_type_rails: readArray(record, 'resource_type_rails'),
     resource_types: readArray(record, 'resource_types'),
     scripture_books: readArray(record, 'scripture_books'),
+    series_rails: readArray(record, 'series_rails'),
   };
 };
 
@@ -154,4 +158,6 @@ export const fetchPublicResourceDetail = async (slug: string, publishedAt?: stri
 
   return payload as PublicWritingDetail;
 };
+
+
 

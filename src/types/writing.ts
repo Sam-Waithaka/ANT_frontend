@@ -173,6 +173,18 @@ export type WritingMediaAsset = {
 
 export type PublicResourceType = WritingResourceType;
 
+export type PublicWritingCategory = {
+  description: string;
+  id: number | string;
+  is_active: boolean;
+  is_featured: boolean;
+  name: string;
+  parent: number | string | null;
+  slug: string;
+  sort_order: number;
+  writing_count: number | null;
+};
+
 export type PublicResourceSeries = {
   cover_image_detail?: WritingMediaAsset | null;
   description: string;
@@ -272,6 +284,18 @@ export type PublicResourceTypeRail = {
   count: number;
   items: PublicWritingCard[];
   resource_type: PublicResourceType;
+};
+
+export type PublicCategoryRail = {
+  category: PublicWritingCategory;
+  count: number;
+  items: PublicWritingCard[];
+};
+
+export type PublicSeriesRail = {
+  count: number;
+  items: PublicWritingCard[];
+  series: PublicResourceSeries;
 };
 
 export type PublicWritingNeighbor = {
@@ -390,6 +414,7 @@ export type ResourcesNavigation = {
 };
 
 export type ResourcesHome = {
+  category_rails: PublicCategoryRail[];
   featured_articles: PublicWritingCard[];
   featured_categories: WritingCategory[];
   featured_series: PublicResourceSeries[];
@@ -399,6 +424,7 @@ export type ResourcesHome = {
   resource_type_rails: PublicResourceTypeRail[];
   resource_types: PublicResourceType[];
   scripture_books: PublicScriptureBook[];
+  series_rails: PublicSeriesRail[];
 };
 
 export type WritingCreatePayload = {
@@ -437,5 +463,8 @@ export type MediaAssetUsage = {
   references?: Array<{ id?: number | string; title?: string; type?: string }>;
   usage_count?: number;
 };
+
+
+
 
 
