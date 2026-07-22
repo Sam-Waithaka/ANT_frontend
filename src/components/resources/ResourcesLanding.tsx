@@ -142,16 +142,19 @@ const CenteredSectionHeader = ({ id, title }: { id?: string; title: string }) =>
 );
 
 
-const FeaturedWritingCard = ({ article }: { article: PublicWritingCard }) => <ResourceCard article={article} eyebrow="Featured Article" />;
+const FeaturedWritingCard = ({ article }: { article: PublicWritingCard }) => (
+  <ResourceCard article={article} className="min-w-[20rem] max-w-[24rem] snap-start" eyebrow="Featured Article" />
+);
 
 const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_categories'][number] }) => (
-  <a href={`/resources/category/${category.slug}`} className="flex min-h-44 min-w-0 flex-col justify-between rounded-2xl border border-black/10 bg-white p-5 shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">
+  <a href={`/resources/category/${category.slug}`} className="group flex min-h-72 min-w-[18rem] max-w-[21rem] snap-start flex-col justify-between rounded-[1.75rem] border border-[#eaded0] bg-[#fffaf0] p-6 shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/30 dark:hover:bg-white/[0.07]">
     <span>
-      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Featured Collection</span>
-      <span className="mt-3 block text-xl font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{category.name}</span>
-      <span className="mt-3 line-clamp-3 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{category.description || 'Browse writings gathered around this collection.'}</span>
+      <span className="inline-flex rounded-full border border-red-900/10 bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-red-800 dark:border-red-200/10 dark:bg-red-950/30 dark:text-red-100">Featured Collection</span>
+      <span className="mt-8 block font-serif text-3xl font-semibold leading-tight tracking-normal text-zinc-950 dark:text-stone-100">{category.name}</span>
+      <span className="mt-5 block h-px w-14 bg-red-700/70" aria-hidden="true" />
+      <span className="mt-5 line-clamp-4 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{category.description || 'Browse writings gathered around this collection.'}</span>
     </span>
-    <span className="mt-5 inline-flex items-center gap-2 text-sm font-black text-red-800 dark:text-red-100">
+    <span className="mt-7 inline-flex items-center gap-2 text-sm font-black text-red-800 transition group-hover:translate-x-1 dark:text-red-100">
       Open collection
       <ArrowRight size={14} aria-hidden="true" />
     </span>
@@ -159,31 +162,55 @@ const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_
 );
 
 const FeaturedSeriesCard = ({ series }: { series: PublicResourceSeries }) => (
-  <a href={`/resources/series/${series.slug}`} className="grid min-w-0 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25 sm:grid-cols-[9rem_1fr]">
-    <ImageBlock asset={series.cover_image_detail} tone={toneFor(series.slug || series.id)} className="min-h-44 sm:min-h-full" />
-    <span className="min-w-0 p-5">
-      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Featured Series</span>
-      <span className="mt-3 block text-xl font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{series.title}</span>
-      <span className="mt-3 line-clamp-2 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{series.description || 'Follow this curated journey through the church library.'}</span>
-      <span className="mt-4 block text-sm font-black text-zinc-600 dark:text-stone-400">{countLabel(series.writing_count)}</span>
+  <a href={`/resources/series/${series.slug}`} className="group grid min-h-72 min-w-[22rem] max-w-[26rem] snap-start overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/30 sm:grid-cols-[10rem_1fr]">
+    <ImageBlock asset={series.cover_image_detail} tone={toneFor(series.slug || series.id)} className="min-h-72" />
+    <span className="flex min-w-0 flex-col justify-between p-6">
+      <span>
+        <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Featured Series</span>
+        <span className="mt-5 block font-serif text-2xl font-semibold leading-tight tracking-normal text-zinc-950 dark:text-stone-100">{series.title}</span>
+        <span className="mt-4 line-clamp-3 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{series.description || 'Follow this curated journey through the church library.'}</span>
+      </span>
+      <span className="mt-6 flex items-center justify-between gap-3 border-t border-black/10 pt-4 text-sm font-black text-zinc-600 dark:border-white/10 dark:text-stone-400">
+        {countLabel(series.writing_count)}
+        <ArrowRight size={15} className="text-red-800 transition group-hover:translate-x-1 dark:text-red-100" aria-hidden="true" />
+      </span>
     </span>
   </a>
 );
 
 const FeaturedShowcase = ({ articles, categories, series, loading }: { articles: PublicWritingCard[]; categories: ResourcesHome['featured_categories']; series: PublicResourceSeries[]; loading: boolean }) => {
+  const featuredCount = articles.length + categories.length + series.length;
+
   if (loading) {
-    return <div className="grid min-w-0 gap-5 lg:grid-cols-2">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-44" />)}</div>;
+    return (
+      <div className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-72" />)}</div>
+      </div>
+    );
   }
 
-  if (!articles.length && !categories.length && !series.length) {
+  if (!featuredCount) {
     return <EmptyState>Featured resources will appear here once they are curated.</EmptyState>;
   }
 
   return (
-    <div className="grid min-w-0 gap-5 lg:grid-cols-2">
-      {articles.map((article) => <FeaturedWritingCard article={article} key={`article-${article.id}`} />)}
-      {categories.map((category) => <FeaturedCategoryCard category={category} key={`category-${category.id}`} />)}
-      {series.map((item) => <FeaturedSeriesCard series={item} key={`series-${item.id}`} />)}
+    <div className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-featured-shelf="true">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className={sectionLabelClass}>Curated Shelf</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-stone-400">
+            Editor-selected articles, collections, and series gathered for prominent discovery.
+          </p>
+        </div>
+        <p className="rounded-full border border-[#eaded0] bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-zinc-600 dark:border-white/10 dark:bg-white/5 dark:text-stone-400">
+          {featuredCount} featured
+        </p>
+      </div>
+      <div className="-mx-2 flex snap-x gap-5 overflow-x-auto px-2 pb-3">
+        {articles.map((article) => <FeaturedWritingCard article={article} key={`article-${article.id}`} />)}
+        {categories.map((category) => <FeaturedCategoryCard category={category} key={`category-${category.id}`} />)}
+        {series.map((item) => <FeaturedSeriesCard series={item} key={`series-${item.id}`} />)}
+      </div>
     </div>
   );
 };

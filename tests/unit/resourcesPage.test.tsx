@@ -132,6 +132,9 @@ describe('ResourcesPage', () => {
     expect(container.textContent).toContain('Devotional');
     expect(container.textContent).toContain('Bible Study');
     expect(container.textContent).toContain('Featured Mercy');
+    expect(container.textContent).toContain('Curated Shelf');
+    expect(container.textContent).toContain('3 featured');
+    expect(container.querySelector('[data-resources-featured-shelf="true"]')).not.toBeNull();
     expect(container.textContent).toContain('Featured Article');
     expect(container.textContent).toContain('Featured Collection');
     expect(container.textContent).toContain('Life Group Material');
