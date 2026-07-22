@@ -124,7 +124,7 @@ describe('ResourcesPage', () => {
   it('loads public resources home and navigation, then renders backend-powered sections', async () => {
     await renderPage(root);
 
-    await vi.waitFor(() => expect(container.textContent).toContain('Hero Resource'));
+    await vi.waitFor(() => expect(container.textContent).toContain('Latest Grace'));
 
     expect(mocks.fetchResourcesHome).toHaveBeenCalledWith(expect.any(AbortSignal));
     expect(mocks.fetchResourcesNavigation).toHaveBeenCalledWith({}, expect.any(AbortSignal));
@@ -152,7 +152,9 @@ describe('ResourcesPage', () => {
     expect(container.textContent).toContain('Project 52');
     expect(container.textContent).toContain('Psalms');
     expect(container.textContent).toContain('Youth Ministry');
+    expect(container.textContent).toContain('Latest Publication');
     expect(container.textContent).toContain('Latest Grace');
+    expect(container.textContent).not.toContain('Hero Resource');
     expect(container.querySelector('[data-resource-card-cover="editorial"]')).not.toBeNull();
   });
 
@@ -166,7 +168,7 @@ describe('ResourcesPage', () => {
     expect(container.querySelector('.animate-pulse')).not.toBeNull();
   });
 
-  it('uses the latest article in the hero when no featured hero is curated', async () => {
+  it('uses the latest article as the hero publication', async () => {
     mocks.fetchResourcesHome.mockResolvedValueOnce({
       featured_articles: [],
       featured_categories: [],
@@ -182,8 +184,8 @@ describe('ResourcesPage', () => {
     await renderPage(root);
 
     await vi.waitFor(() => expect(container.textContent).toContain('Latest Stand In'));
-    expect(container.textContent).toContain('Latest Resource');
-    expect(container.textContent).not.toContain('No featured resource yet.');
+    expect(container.textContent).toContain('Latest Publication');
+    expect(container.textContent).not.toContain('No latest publication yet.');
   });
 
   it('shows intentional empty states when public resources arrays are empty', async () => {
@@ -212,7 +214,7 @@ describe('ResourcesPage', () => {
 
     await renderPage(root);
 
-    await vi.waitFor(() => expect(container.textContent).toContain('No featured resource yet.'));
+    await vi.waitFor(() => expect(container.textContent).toContain('No latest publication yet.'));
     expect(container.textContent).toContain('Featured resources will appear here once they are curated.');
     expect(container.textContent).not.toContain('Featured Collections');
     expect(container.textContent).toContain('Scripture books will appear here once published articles reference them.');
