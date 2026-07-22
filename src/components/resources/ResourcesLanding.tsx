@@ -223,13 +223,25 @@ const ArticleGrid = ({ articles, emptyText, loading }: { articles: PublicWriting
   return <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{articles.map((article) => <ResourceArticleCard article={article} key={article.id} />)}</div>;
 };
 
+const ArticleShelf = ({ articles, emptyText }: { articles: PublicWritingCard[]; emptyText: string }) => {
+  if (!articles.length) return <EmptyState>{emptyText}</EmptyState>;
+
+  return (
+    <div className="-mx-2 flex snap-x gap-5 overflow-x-auto px-2 pb-3" data-resources-article-shelf="true">
+      {articles.map((article) => (
+        <ResourceCard article={article} className="min-w-[21rem] max-w-[24rem] snap-start" key={article.id} variant="compact" />
+      ))}
+    </div>
+  );
+};
+
 
 const ResourceTypePreviewRail = ({ rail }: { rail: PublicResourceTypeRail }) => {
   const resourceType = rail.resource_type;
   const count = rail.count ?? resourceType.writing_count ?? rail.items.length;
 
   return (
-    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/25 sm:p-6">
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-taxonomy-shelf="resource-type">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className={sectionLabelClass}>{resourceType.name}</p>
@@ -245,7 +257,7 @@ const ResourceTypePreviewRail = ({ rail }: { rail: PublicResourceTypeRail }) => 
           <ArrowRight size={14} aria-hidden="true" />
         </a>
       </div>
-      <ArticleGrid articles={rail.items ?? []} emptyText={`Published ${resourceType.name.toLowerCase()} resources will appear here soon.`} loading={false} />
+      <ArticleShelf articles={rail.items ?? []} emptyText={`Published ${resourceType.name.toLowerCase()} resources will appear here soon.`} />
     </article>
   );
 };
@@ -255,7 +267,7 @@ const CategoryPreviewRail = ({ rail }: { rail: PublicCategoryRail }) => {
   const count = rail.count ?? category.writing_count ?? rail.items.length;
 
   return (
-    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/25 sm:p-6">
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-taxonomy-shelf="category">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className={sectionLabelClass}>{category.name}</p>
@@ -271,7 +283,7 @@ const CategoryPreviewRail = ({ rail }: { rail: PublicCategoryRail }) => {
           <ArrowRight size={14} aria-hidden="true" />
         </a>
       </div>
-      <ArticleGrid articles={rail.items ?? []} emptyText={`Published ${category.name.toLowerCase()} resources will appear here soon.`} loading={false} />
+      <ArticleShelf articles={rail.items ?? []} emptyText={`Published ${category.name.toLowerCase()} resources will appear here soon.`} />
     </article>
   );
 };
@@ -281,7 +293,7 @@ const SeriesPreviewRail = ({ rail }: { rail: PublicSeriesRail }) => {
   const count = rail.count ?? series.writing_count ?? rail.items.length;
 
   return (
-    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/25 sm:p-6">
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-taxonomy-shelf="series">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className={sectionLabelClass}>{series.title}</p>
@@ -297,7 +309,7 @@ const SeriesPreviewRail = ({ rail }: { rail: PublicSeriesRail }) => {
           <ArrowRight size={14} aria-hidden="true" />
         </a>
       </div>
-      <ArticleGrid articles={rail.items ?? []} emptyText={`Published writings from ${series.title} will appear here soon.`} loading={false} />
+      <ArticleShelf articles={rail.items ?? []} emptyText={`Published writings from ${series.title} will appear here soon.`} />
     </article>
   );
 };

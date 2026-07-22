@@ -144,14 +144,18 @@ describe('ResourcesPage', () => {
     expect(container.textContent).toContain('Rail Devotion');
     expect(container.textContent).toContain('View more Devotional');
     expect(container.querySelector('a[href="/resources/type/devotional"]')).not.toBeNull();
+    expect(container.querySelector('[data-resources-taxonomy-shelf="resource-type"]')).not.toBeNull();
+    expect(container.querySelector('[data-resources-article-shelf="true"]')).not.toBeNull();
     expect(container.textContent).toContain('Explore by Category');
     expect(container.textContent).toContain('Rail Prayer');
     expect(container.textContent).toContain('View more Prayer');
     expect(container.querySelector('a[href="/resources/category/prayer"]')).not.toBeNull();
+    expect(container.querySelector('[data-resources-taxonomy-shelf="category"]')).not.toBeNull();
     expect(container.textContent).toContain('Explore by Series');
     expect(container.textContent).toContain('Rail Project 52');
     expect(container.textContent).toContain('View more Project 52');
     expect(container.querySelector('a[href="/resources/series/project-52"]')).not.toBeNull();
+    expect(container.querySelector('[data-resources-taxonomy-shelf="series"]')).not.toBeNull();
     expect(container.textContent).toContain('Project 52');
     expect(container.textContent).toContain('Psalms');
     expect(container.textContent).toContain('Youth Ministry');
