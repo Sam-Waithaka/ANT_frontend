@@ -153,6 +153,7 @@ describe('ResourcesPage', () => {
     expect(container.textContent).toContain('Psalms');
     expect(container.textContent).toContain('Youth Ministry');
     expect(container.textContent).toContain('Latest Grace');
+    expect(container.querySelector('[data-resource-card-cover="editorial"]')).not.toBeNull();
   });
 
 

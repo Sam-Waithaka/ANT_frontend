@@ -1,6 +1,7 @@
-import { ArrowRight, Clock3, Rss, ScrollText, UsersRound } from 'lucide-react';
+import { ArrowRight, Rss, ScrollText, UsersRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import ResourcesCategoryTabs from './ResourcesCategoryTabs';
+import ResourceCard from './ResourceCard';
 import ResponsiveImage from '../media/ResponsiveImage';
 import SiteButton from '../ui/SiteButton';
 import { normalizeMediaAssetForDisplay } from '../../services/mediaAssetsApi';
@@ -50,11 +51,7 @@ const heroLabelClass = 'text-sm font-black uppercase tracking-[0.16em] text-red-
 const centeredSectionHeaderClass = 'shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] text-zinc-950 dark:text-stone-100';
 
 const countLabel = (count?: number) => `${count ?? 0} ${(count ?? 0) === 1 ? 'Article' : 'Articles'}`;
-const writingHref = (article: PublicWritingCard) => `/resources/${article.slug}`;
 const toneFor = (seed: number | string) => fallbackTones[Math.abs(String(seed).split('').reduce((total, char) => total + char.charCodeAt(0), 0)) % fallbackTones.length];
-const articleAccent = (article: PublicWritingCard) => article.resource_type_detail?.name || article.writing_type || 'Resource';
-const articleAuthor = (article: PublicWritingCard) => article.byline || article.author_display || article.author_attributions?.[0]?.display_name || 'A.I.C Njoro Town';
-
 const ImageBlock = ({ asset, className = '', tone }: ImageBlockProps) => {
   const responsiveAsset = normalizeMediaAssetForDisplay(asset);
 
@@ -70,13 +67,6 @@ const ImageBlock = ({ asset, className = '', tone }: ImageBlockProps) => {
   );
 };
 
-const MetaItem = ({ children, icon: Icon }: { children: ReactNode; icon: typeof Clock3 }) => (
-  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-stone-400">
-    <Icon size={14} aria-hidden="true" />
-    {children}
-  </span>
-);
-
 const SkeletonBlock = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse rounded-2xl border border-black/10 bg-white/70 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/5 ${className}`} />
 );
@@ -87,7 +77,7 @@ const EmptyState = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-const FeaturedArticleCard = ({ article, darkMode, eyebrow = 'Featured Resource', loading }: { article?: PublicWritingCard | null; darkMode: boolean; eyebrow?: string; loading: boolean }) => {
+const FeaturedArticleCard = ({ article, eyebrow = 'Featured Resource', loading }: { article?: PublicWritingCard | null; eyebrow?: string; loading: boolean }) => {
   if (loading) return <SkeletonBlock className="min-h-[28rem] rounded-3xl" />;
   if (!article) {
     return (
@@ -101,48 +91,10 @@ const FeaturedArticleCard = ({ article, darkMode, eyebrow = 'Featured Resource',
     );
   }
 
-  return (
-    <article className="grid overflow-hidden rounded-3xl border border-black/10 bg-white shadow-2xl shadow-zinc-900/10 transition dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/30 lg:grid-cols-[1.12fr_0.88fr]">
-      <ImageBlock asset={article.og_image_detail} tone={toneFor(article.slug || article.id)} className="min-h-72 lg:min-h-[23rem]" />
-      <div className="flex flex-col justify-between p-6 sm:p-8">
-        <div>
-          <p className={sectionLabelClass}>{eyebrow}</p>
-          <h2 className="mt-4 max-w-sm text-3xl font-extrabold leading-tight tracking-normal text-zinc-950 dark:text-stone-100 sm:text-4xl">
-            {article.title}
-          </h2>
-          <p className="mt-5 max-w-sm text-base leading-7 text-zinc-600 dark:text-stone-300">
-            {article.excerpt || article.seo_description}
-          </p>
-        </div>
-        <div className="mt-7 border-t border-black/10 pt-5 dark:border-white/10">
-          <div className="flex flex-wrap gap-x-6 gap-y-3">
-            <MetaItem icon={Clock3}>{article.reading_time_minutes || 1} min read</MetaItem>
-            <MetaItem icon={UsersRound}>{articleAuthor(article)}</MetaItem>
-          </div>
-          <div className="mt-7">
-            <SiteButton darkMode={darkMode} href={writingHref(article)} icon={ArrowRight} iconPosition="after" variant="tertiary">
-              Read Article
-            </SiteButton>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
+  return <ResourceCard article={article} eyebrow={eyebrow} variant="feature" />;
 };
 
-const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => (
-  <a href={writingHref(article)} className="grid min-w-0 grid-cols-[7rem_1fr] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">
-    <ImageBlock asset={article.og_image_detail} tone={toneFor(article.slug || article.id)} className="min-h-[8.5rem]" />
-    <div className="min-w-0 p-5">
-      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">{articleAccent(article)}</p>
-      <h3 className="mt-3 text-lg font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{article.title}</h3>
-      <div className="mt-4 grid gap-2">
-        <MetaItem icon={Clock3}>{article.reading_time_minutes || 1} min read</MetaItem>
-        <MetaItem icon={UsersRound}>{articleAuthor(article)}</MetaItem>
-      </div>
-    </div>
-  </a>
-);
+const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => <ResourceCard article={article} variant="rail" />;
 
 const BrowseListCard = ({ emptyText, id, items, title }: { emptyText: string; id?: string; items: BrowseItem[]; title: string }) => (
   <section id={id} className="scroll-mt-28">
@@ -190,20 +142,7 @@ const CenteredSectionHeader = ({ id, title }: { id?: string; title: string }) =>
 );
 
 
-const FeaturedWritingCard = ({ article }: { article: PublicWritingCard }) => (
-  <a href={writingHref(article)} className="grid min-w-0 overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25 sm:grid-cols-[9rem_1fr]">
-    <ImageBlock asset={article.og_image_detail} tone={toneFor(article.slug || article.id)} className="min-h-44 sm:min-h-full" />
-    <span className="min-w-0 p-5">
-      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">Featured Article</span>
-      <span className="mt-3 block text-xl font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100">{article.title}</span>
-      <span className="mt-3 line-clamp-2 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{article.excerpt || article.seo_description || 'Read this featured writing from the church library.'}</span>
-      <span className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-        <MetaItem icon={Clock3}>{article.reading_time_minutes || 1} min read</MetaItem>
-        <MetaItem icon={UsersRound}>{articleAuthor(article)}</MetaItem>
-      </span>
-    </span>
-  </a>
-);
+const FeaturedWritingCard = ({ article }: { article: PublicWritingCard }) => <ResourceCard article={article} eyebrow="Featured Article" />;
 
 const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_categories'][number] }) => (
   <a href={`/resources/category/${category.slug}`} className="flex min-h-44 min-w-0 flex-col justify-between rounded-2xl border border-black/10 bg-white p-5 shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">
@@ -423,7 +362,7 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
               </a>
             </div>
           </div>
-          <FeaturedArticleCard article={heroArticle} darkMode={darkMode} eyebrow={heroEyebrow} loading={loading} />
+          <FeaturedArticleCard article={heroArticle} eyebrow={heroEyebrow} loading={loading} />
         </div>
       </section>
 
