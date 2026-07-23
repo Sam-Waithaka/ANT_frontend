@@ -94,7 +94,7 @@ const FeaturedArticleCard = ({ article, eyebrow = 'Latest Publication', loading 
   return <ResourceCard article={article} eyebrow={eyebrow} presentation="hero" variant="feature" />;
 };
 
-const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => <ResourceCard article={article} variant="rail" />;
+const ResourceArticleCard = ({ article, className = '' }: { article: PublicWritingCard; className?: string }) => <ResourceCard article={article} className={className} variant="rail" />;
 
 const BrowseListCard = ({ emptyText, id, items, title }: { emptyText: string; id?: string; items: BrowseItem[]; title: string }) => (
   <section id={id} className="scroll-mt-28">
@@ -143,11 +143,11 @@ const CenteredSectionHeader = ({ id, title }: { id?: string; title: string }) =>
 
 
 const FeaturedWritingCard = ({ article }: { article: PublicWritingCard }) => (
-  <ResourceCard article={article} className="min-w-[17.5rem] max-w-[24rem] sm:min-w-[20rem] snap-start" eyebrow="Featured Article" />
+  <ResourceCard article={article} className="mb-5 break-inside-avoid" eyebrow="Featured Article" />
 );
 
 const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_categories'][number] }) => (
-  <a href={`/resources/category/${category.slug}`} className="group flex min-h-72 min-w-[17.5rem] max-w-[21rem] sm:min-w-[18rem] snap-start flex-col justify-between rounded-[1.75rem] border border-[#eaded0] bg-[#fffaf0] p-6 shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#211a13] dark:shadow-black/50 dark:hover:bg-[#2a2118]">
+  <a href={`/resources/category/${category.slug}`} className="group mb-5 flex min-h-72 break-inside-avoid flex-col justify-between rounded-[1.75rem] border border-[#eaded0] bg-[#fffaf0] p-6 shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#211a13] dark:shadow-black/50 dark:hover:bg-[#2a2118]">
     <span>
       <span className="inline-flex rounded-full border border-red-900/10 bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-red-800 dark:border-red-200/10 dark:bg-red-950/30 dark:text-red-100">Featured Collection</span>
       <span className="mt-8 block font-serif text-3xl font-semibold leading-tight tracking-normal text-zinc-950 dark:text-stone-100">{category.name}</span>
@@ -162,7 +162,7 @@ const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_
 );
 
 const FeaturedSeriesCard = ({ series }: { series: PublicResourceSeries }) => (
-  <a href={`/resources/series/${series.slug}`} className="group grid min-h-72 min-w-[18.5rem] max-w-[26rem] sm:min-w-[22rem] snap-start overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#16110d] dark:shadow-black/45 sm:grid-cols-[10rem_1fr]">
+  <a href={`/resources/series/${series.slug}`} className="group mb-5 grid min-h-72 break-inside-avoid overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#16110d] dark:shadow-black/45 sm:grid-cols-[10rem_1fr]">
     <ImageBlock asset={series.cover_image_detail} tone={toneFor(series.slug || series.id)} className="min-h-72" />
     <span className="flex min-w-0 flex-col justify-between p-6">
       <span>
@@ -206,7 +206,7 @@ const FeaturedShowcase = ({ articles, categories, series, loading }: { articles:
           {featuredCount} featured
         </p>
       </div>
-      <div className="-mx-3 flex snap-x gap-4 overflow-x-auto px-3 pb-4 sm:gap-5">
+      <div className="columns-1 gap-5 sm:columns-2 xl:columns-3" data-resources-masonry-shelf="featured">
         {articles.map((article) => <FeaturedWritingCard article={article} key={`article-${article.id}`} />)}
         {categories.map((category) => <FeaturedCategoryCard category={category} key={`category-${category.id}`} />)}
         {series.map((item) => <FeaturedSeriesCard series={item} key={`series-${item.id}`} />)}
@@ -220,7 +220,7 @@ const ArticleGrid = ({ articles, emptyText, loading }: { articles: PublicWriting
     return <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{[0, 1, 2, 3].map((item) => <SkeletonBlock key={item} className="h-36" />)}</div>;
   }
   if (!articles.length) return <EmptyState>{emptyText}</EmptyState>;
-  return <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{articles.map((article) => <ResourceArticleCard article={article} key={article.id} />)}</div>;
+  return <div className="columns-1 gap-5 sm:columns-2 xl:columns-3 2xl:columns-4" data-resources-masonry-shelf="latest">{articles.map((article) => <ResourceArticleCard article={article} className="mb-5 break-inside-avoid" key={article.id} />)}</div>;
 };
 
 const ArticleShelf = ({ articles, emptyText }: { articles: PublicWritingCard[]; emptyText: string }) => {
@@ -229,9 +229,9 @@ const ArticleShelf = ({ articles, emptyText }: { articles: PublicWritingCard[]; 
   const previewArticles = articles.slice(0, 3);
 
   return (
-    <div className="-mx-3 flex snap-x gap-4 overflow-x-auto px-3 pb-4 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:gap-5 2xl:grid-cols-3" data-resources-article-shelf="true">
+    <div className="columns-1 gap-5 md:columns-2 2xl:columns-3" data-resources-article-shelf="true" data-resources-masonry-shelf="taxonomy">
       {previewArticles.map((article) => (
-        <ResourceCard article={article} className="min-w-[21rem] snap-start md:min-w-0" key={article.id} variant="rail" />
+        <ResourceCard article={article} className="mb-5 break-inside-avoid" key={article.id} variant="rail" />
       ))}
     </div>
   );

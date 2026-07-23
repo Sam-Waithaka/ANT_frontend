@@ -16,7 +16,25 @@ type ResourceCardProps = {
 };
 
 const writingHref = (article: PublicWritingCard) => `/resources/${article.slug}`;
-const articleAuthor = (article: PublicWritingCard) => article.byline || article.author_display || article.author_attributions?.[0]?.display_name || 'A.I.C Njoro Town';
+const formatAuthorNames = (names: string[]) => {
+  const uniqueNames = Array.from(new Set(names.map((name) => name.trim()).filter(Boolean)));
+
+  if (uniqueNames.length === 0) return 'A.I.C Njoro Town';
+  if (uniqueNames.length === 1) return uniqueNames[0];
+  if (uniqueNames.length === 2) return `${uniqueNames[0]} & ${uniqueNames[1]}`;
+
+  return `${uniqueNames.slice(0, -1).join(', ')} & ${uniqueNames[uniqueNames.length - 1]}`;
+};
+
+const articleAuthor = (article: PublicWritingCard) => {
+  const attributionNames = [...(article.author_attributions ?? [])]
+    .sort((first, second) => (first.order ?? 0) - (second.order ?? 0))
+    .map((attribution) => attribution.display_name)
+    .filter((name): name is string => Boolean(name?.trim()));
+
+  if (attributionNames.length) return formatAuthorNames(attributionNames);
+  return article.byline || article.author_display || 'A.I.C Njoro Town';
+};
 const articleAccent = (article: PublicWritingCard) => article.resource_type_detail?.name || article.writing_type || 'Resource';
 
 const MetaItem = ({ children, icon: Icon }: { children: ReactNode; icon: typeof Clock3 }) => (
@@ -26,7 +44,7 @@ const MetaItem = ({ children, icon: Icon }: { children: ReactNode; icon: typeof 
   </span>
 );
 
-const EditorialCover = ({ article, className = '' }: { article: PublicWritingCard; className?: string }) => {
+const EditorialCover = ({ article, className = '', eyebrow }: { article: PublicWritingCard; className?: string; eyebrow?: string }) => {
   const presentation = getEditorialCoverPresentation({
     categories: article.categories,
     resourceType: article.resource_type_detail,
@@ -71,6 +89,11 @@ const EditorialCover = ({ article, className = '' }: { article: PublicWritingCar
       <div aria-hidden="true" className="absolute inset-x-4 bottom-4 h-px bg-black/18" />
 
       <div className="relative z-10 flex min-h-full w-full flex-col px-5 py-6 pl-11 sm:px-7 sm:py-8 sm:pl-14">
+        {eyebrow ? (
+          <div className="mb-4 max-w-[13rem] text-[9px] font-black uppercase leading-[1.15] tracking-[0.22em]" style={{ color: palette.accent }}>
+            {eyebrow}
+          </div>
+        ) : null}
         <div className="max-w-[13rem] text-[10px] font-black uppercase leading-[1.15] tracking-[0.24em] sm:text-[11px]" style={{ color: palette.text }}>
           {resource?.label || articleAccent(article)}
         </div>
@@ -104,8 +127,14 @@ const EditorialCover = ({ article, className = '' }: { article: PublicWritingCar
         <div className="mt-auto pt-8">
           <div className="h-px w-full bg-white/18" />
           <div className="mt-4 grid gap-2 text-xs font-bold opacity-92">
-            <span>{article.reading_time_minutes || 1} min read</span>
-            <span>{articleAuthor(article)}</span>
+            <span className="inline-flex items-center gap-2">
+              <Clock3 size={13} aria-hidden="true" />
+              {article.reading_time_minutes || 1} min read
+            </span>
+            <span className="inline-flex items-start gap-2 leading-5">
+              <UsersRound className="mt-0.5 shrink-0" size={13} aria-hidden="true" />
+              <span className="line-clamp-2">{articleAuthor(article)}</span>
+            </span>
           </div>
         </div>
       </div>
@@ -134,6 +163,24 @@ const Cover = ({ article, className = '' }: { article: PublicWritingCard; classN
 const ResourceCard = ({ article, className = '', eyebrow, presentation = 'default', variant = 'compact' }: ResourceCardProps) => {
   const hasCover = hasArticleCover(article);
   const isHero = presentation === 'hero';
+
+  if (!hasCover) {
+    const editorialCoverClass = isHero
+      ? 'min-h-[34rem] lg:min-h-[39rem]'
+      : variant === 'rail'
+        ? 'min-h-[24rem] md:min-h-[26rem]'
+        : 'min-h-[24rem]';
+
+    return (
+      <a
+        href={writingHref(article)}
+        className={`group block rounded-[1.35rem] transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 ${className}`}
+        data-resource-card-mode="editorial-cover-only"
+      >
+        <EditorialCover article={article} className={`${editorialCoverClass} transition duration-300 group-hover:shadow-2xl`} eyebrow={eyebrow} />
+      </a>
+    );
+  }
 
   if (variant === 'feature') {
     return (

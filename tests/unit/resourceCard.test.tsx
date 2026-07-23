@@ -64,6 +64,22 @@ describe('ResourceCard', () => {
     expect(container.textContent).toContain('True Security from Proverbs 21');
   });
 
+
+  it('uses the editorial cover as the whole card and supports multiple authors', async () => {
+    await renderCard(root, article({
+      author_attributions: [
+        { display_name: 'Grace W.', id: 2, is_primary: false, order: 1, role: 'AUTHOR' },
+        { display_name: 'Samuel Waithaka', id: 1, is_primary: true, order: 0, role: 'AUTHOR' },
+      ],
+      author_display: 'Fallback Author',
+      byline: 'Fallback Byline',
+    }));
+
+    expect(container.querySelector('[data-resource-card-mode="editorial-cover-only"]')).not.toBeNull();
+    expect(container.textContent).toContain('Samuel Waithaka & Grace W.');
+    expect(container.textContent).not.toContain('Fallback Byline');
+  });
+
   it('renders the photography cover path when the article has a cover image', async () => {
     await renderCard(root, article({
       og_image_detail: {
