@@ -75,8 +75,8 @@ const SectionHeading = ({ title }: { title: string }) => (
 );
 
 const ResourceCardMasonry = ({ articles, shelf }: { articles: PublicWritingCard[]; shelf: string }) => (
-  <div className="columns-1 gap-5 sm:columns-2 xl:columns-3 2xl:columns-4" data-resources-masonry-shelf={shelf}>
-    {articles.map((article) => <ResourceCard article={article} className="mb-5 break-inside-avoid" key={article.id} variant="rail" />)}
+  <div className="columns-2 gap-3 sm:gap-5 md:columns-2 lg:columns-3 2xl:columns-4 [@media(min-width:1800px)]:columns-5" data-resources-masonry-shelf={shelf}>
+    {articles.map((article) => <ResourceCard article={article} className="mb-3 break-inside-avoid sm:mb-5" key={article.id} variant="masonry" />)}
   </div>
 );
 

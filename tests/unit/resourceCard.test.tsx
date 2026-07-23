@@ -30,9 +30,9 @@ const article = (overrides: Partial<PublicWritingCard> = {}): PublicWritingCard 
   ...overrides,
 });
 
-const renderCard = async (root: Root, item: PublicWritingCard) => {
+const renderCard = async (root: Root, item: PublicWritingCard, variant?: 'compact' | 'feature' | 'masonry' | 'rail') => {
   await act(async () => {
-    root.render(<ResourceCard article={item} />);
+    root.render(<ResourceCard article={item} variant={variant} />);
     await Promise.resolve();
   });
 };
@@ -99,5 +99,27 @@ describe('ResourceCard', () => {
 
     expect(container.querySelector('[data-resource-card-cover="photography"]')).not.toBeNull();
     expect(container.querySelector('img[src="/media/church.jpg"]')).not.toBeNull();
+  });
+
+  it('renders image-backed articles as compact masonry cards', async () => {
+    await renderCard(root, article({
+      og_image_detail: {
+        alt_text: 'Church building',
+        caption: '',
+        height: 800,
+        id: 99,
+        original_url: '/media/church.jpg',
+        status: 'READY',
+        title: 'Church cover',
+        uuid: 'image-99',
+        variant_map: {},
+        variants: [],
+        width: 1200,
+      },
+    }), 'masonry');
+
+    expect(container.querySelector('[data-resource-card-mode="masonry-image"]')).not.toBeNull();
+    expect(container.querySelector('[data-resource-card-cover="photography"]')).not.toBeNull();
+    expect(container.textContent).toContain('True Security from Proverbs 21');
   });
 });

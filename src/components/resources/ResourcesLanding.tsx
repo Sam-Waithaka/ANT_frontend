@@ -94,7 +94,7 @@ const FeaturedArticleCard = ({ article, eyebrow = 'Latest Publication', loading 
   return <ResourceCard article={article} eyebrow={eyebrow} presentation="hero" variant="feature" />;
 };
 
-const ResourceArticleCard = ({ article, className = '' }: { article: PublicWritingCard; className?: string }) => <ResourceCard article={article} className={className} variant="rail" />;
+const ResourceArticleCard = ({ article, className = '' }: { article: PublicWritingCard; className?: string }) => <ResourceCard article={article} className={className} variant="masonry" />;
 
 const BrowseListCard = ({ emptyText, id, items, title }: { emptyText: string; id?: string; items: BrowseItem[]; title: string }) => (
   <section id={id} className="scroll-mt-28">
@@ -206,7 +206,7 @@ const FeaturedShowcase = ({ articles, categories, series, loading }: { articles:
           {featuredCount} featured
         </p>
       </div>
-      <div className="columns-1 gap-5 sm:columns-2 xl:columns-3" data-resources-masonry-shelf="featured">
+      <div className="columns-2 gap-3 sm:gap-5 md:columns-2 lg:columns-3 2xl:columns-4" data-resources-masonry-shelf="featured">
         {articles.map((article) => <FeaturedWritingCard article={article} key={`article-${article.id}`} />)}
         {categories.map((category) => <FeaturedCategoryCard category={category} key={`category-${category.id}`} />)}
         {series.map((item) => <FeaturedSeriesCard series={item} key={`series-${item.id}`} />)}
@@ -220,7 +220,7 @@ const ArticleGrid = ({ articles, emptyText, loading }: { articles: PublicWriting
     return <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{[0, 1, 2, 3].map((item) => <SkeletonBlock key={item} className="h-36" />)}</div>;
   }
   if (!articles.length) return <EmptyState>{emptyText}</EmptyState>;
-  return <div className="columns-1 gap-5 sm:columns-2 xl:columns-3 2xl:columns-4" data-resources-masonry-shelf="latest">{articles.map((article) => <ResourceArticleCard article={article} className="mb-5 break-inside-avoid" key={article.id} />)}</div>;
+  return <div className="columns-2 gap-3 sm:gap-5 md:columns-2 lg:columns-3 2xl:columns-4 [@media(min-width:1800px)]:columns-5" data-resources-masonry-shelf="latest">{articles.map((article) => <ResourceArticleCard article={article} className="mb-3 break-inside-avoid sm:mb-5" key={article.id} />)}</div>;
 };
 
 const ArticleShelf = ({ articles, emptyText }: { articles: PublicWritingCard[]; emptyText: string }) => {
@@ -229,9 +229,9 @@ const ArticleShelf = ({ articles, emptyText }: { articles: PublicWritingCard[]; 
   const previewArticles = articles.slice(0, 3);
 
   return (
-    <div className="columns-1 gap-5 md:columns-2 2xl:columns-3" data-resources-article-shelf="true" data-resources-masonry-shelf="taxonomy">
+    <div className="columns-2 gap-3 sm:gap-5 md:columns-2 lg:columns-3 2xl:columns-4" data-resources-article-shelf="true" data-resources-masonry-shelf="taxonomy">
       {previewArticles.map((article) => (
-        <ResourceCard article={article} className="mb-5 break-inside-avoid" key={article.id} variant="rail" />
+        <ResourceCard article={article} className="mb-3 break-inside-avoid sm:mb-5" key={article.id} variant="masonry" />
       ))}
     </div>
   );

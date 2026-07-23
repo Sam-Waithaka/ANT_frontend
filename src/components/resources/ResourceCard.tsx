@@ -5,7 +5,7 @@ import { normalizeMediaAssetForDisplay } from '../../services/mediaAssetsApi';
 import type { PublicWritingCard } from '../../types/writing';
 import { getEditorialCoverPresentation } from '../../utils/resourceEditorialPresentation';
 
-export type ResourceCardVariant = 'compact' | 'feature' | 'rail';
+export type ResourceCardVariant = 'compact' | 'feature' | 'masonry' | 'rail';
 
 type ResourceCardProps = {
   article: PublicWritingCard;
@@ -167,14 +167,18 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
   if (!hasCover) {
     const editorialCoverClass = isHero
       ? 'min-h-[29rem] lg:min-h-[32rem]'
-      : variant === 'rail'
-        ? 'min-h-[17rem] md:min-h-[18rem]'
-        : 'min-h-[16rem]';
+      : variant === 'masonry'
+        ? 'min-h-[13rem] sm:min-h-[17rem] md:min-h-[18rem]'
+        : variant === 'rail'
+          ? 'min-h-[17rem] md:min-h-[18rem]'
+          : 'min-h-[16rem]';
     const editorialWidthClass = isHero
       ? 'mx-auto w-full max-w-[38rem] lg:max-w-[43rem]'
-      : variant === 'rail'
-        ? 'w-full max-w-[30rem]'
-        : 'w-full max-w-[24rem]';
+      : variant === 'masonry'
+        ? 'w-full'
+        : variant === 'rail'
+          ? 'w-full max-w-[30rem]'
+          : 'w-full max-w-[24rem]';
 
     return (
       <a
@@ -206,6 +210,27 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
               Read Article
               <ArrowRight size={15} aria-hidden="true" />
             </span>
+          </span>
+        </span>
+      </a>
+    );
+  }
+
+  if (variant === 'masonry') {
+    return (
+      <a
+        href={writingHref(article)}
+        className={`block min-w-0 overflow-hidden rounded-[1.15rem] border border-[#eaded0] bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/45 sm:rounded-2xl ${className}`}
+        data-resource-card-mode="masonry-image"
+      >
+        <Cover article={article} className="min-h-[9.5rem] sm:min-h-[13rem] lg:min-h-[14rem]" />
+        <span className="block min-w-0 p-3.5 sm:p-5">
+          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-red-800 dark:text-red-200 sm:text-[11px]">{eyebrow || articleAccent(article)}</span>
+          <span className="mt-2.5 block text-base font-black leading-snug tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-3 sm:text-xl">{article.title}</span>
+          <span className="mt-2 hidden text-sm leading-6 text-zinc-600 dark:text-stone-400 sm:line-clamp-2 sm:block">{article.excerpt || article.seo_description || 'Read this writing from the church library.'}</span>
+          <span className="mt-3 grid gap-1.5 sm:mt-4 sm:gap-2">
+            <MetaItem icon={Clock3}>{article.reading_time_minutes || 1} min read</MetaItem>
+            <MetaItem icon={UsersRound}>{articleAuthor(article)}</MetaItem>
           </span>
         </span>
       </a>
