@@ -94,32 +94,32 @@ const EditorialCover = ({ article, className = '', eyebrow }: { article: PublicW
             {eyebrow}
           </div>
         ) : null}
-        <div className="max-w-[13rem] text-[10px] font-black uppercase leading-[1.15] tracking-[0.24em] sm:text-[11px]" style={{ color: palette.text }}>
+        <div className="max-w-full text-[10px] font-black uppercase leading-[1.15] tracking-[0.24em] sm:text-[11px]" style={{ color: palette.text }}>
           {resource?.label || articleAccent(article)}
         </div>
 
         <div className="mt-6 h-px w-10 sm:mt-7" style={{ backgroundColor: palette.accent }} />
 
         {category ? (
-          <div className="mt-4 max-w-[13rem] font-serif text-base leading-snug sm:mt-5 sm:text-lg" style={{ color: palette.accent }}>
+          <div className="mt-4 max-w-full font-serif text-base leading-snug sm:mt-5 sm:text-lg" style={{ color: palette.accent }}>
             {category.label}
           </div>
         ) : null}
 
         {series ? (
-          <div className="mt-4 max-w-[13rem] text-[9px] font-black uppercase leading-[1.35] tracking-[0.2em] opacity-90 sm:text-[10px]">
+          <div className="mt-4 max-w-full text-[9px] font-black uppercase leading-[1.35] tracking-[0.2em] opacity-90 sm:text-[10px]">
             {series.label}
           </div>
         ) : null}
 
         <div className="mt-4 h-px w-9 sm:mt-5" style={{ backgroundColor: palette.accent }} />
 
-        <h3 className="mt-4 max-w-[14rem] font-serif text-[1.65rem] font-semibold leading-[1.04] tracking-[-0.02em] sm:text-[2rem]">
+        <h3 className="mt-4 max-w-full font-serif text-[1.65rem] font-semibold leading-[1.04] tracking-[-0.02em] sm:text-[2rem]">
           {title}
         </h3>
 
         {description ? (
-          <p className="mt-5 line-clamp-4 max-w-[14rem] text-xs font-medium leading-5 opacity-86 sm:text-sm sm:leading-6">
+          <p className="mt-5 max-w-full text-xs font-medium leading-5 opacity-86 sm:text-sm sm:leading-6">
             {description}
           </p>
         ) : null}
