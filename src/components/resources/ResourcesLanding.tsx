@@ -377,15 +377,15 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
       }`}
     >
       <section className="border-b border-black/10 px-4 py-12 dark:border-[#3a2b20] sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-        <div className="grid gap-10 lg:grid-cols-[minmax(39rem,0.98fr)_minmax(0,0.86fr)] lg:items-center xl:gap-12">
-          <div className="max-w-xl xl:pl-16">
+        <div className="grid gap-10 md:grid-cols-[minmax(0,0.82fr)_minmax(20rem,1fr)] md:items-center md:gap-8 lg:grid-cols-[minmax(39rem,0.98fr)_minmax(0,0.86fr)] xl:gap-12" data-resources-hero-layout="two-column-tablet">
+          <div className="max-w-xl md:max-w-none xl:pl-16">
             <p className={heroLabelClass}>THE LIBRARY</p>
-            <p className="mt-7 max-w-none font-serif text-[3.25rem] font-bold leading-[1.02] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-8 sm:text-[3.55rem] lg:text-[3.95rem] xl:text-[4.15rem]">
+            <p className="mt-7 max-w-none font-serif text-[3rem] font-bold leading-[1.02] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-8 sm:text-[3.35rem] md:text-[3rem] lg:text-[3.95rem] xl:text-[4.15rem]">
               <span className="block lg:whitespace-nowrap">Study deeply.</span>
               <span className="block lg:whitespace-nowrap">Reflect faithfully.</span>
               <span className="block text-red-700 lg:whitespace-nowrap">Live differently.</span>
             </p>
-            <p className="mt-7 max-w-[30rem] text-base leading-8 text-zinc-700 dark:text-stone-300 sm:mt-8 sm:text-lg">
+            <p className="mt-7 max-w-[30rem] text-base leading-8 text-zinc-700 dark:text-stone-300 sm:mt-8 md:max-w-[25rem] md:text-base lg:max-w-[30rem] lg:text-lg">
               Articles, Bible studies, pastoral guidance, and devotional reflections.
             </p>
             <div className="mt-8 h-px w-16 bg-red-700" aria-hidden="true" />
@@ -399,7 +399,9 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
               </a>
             </div>
           </div>
-          <FeaturedArticleCard article={latestPublication} eyebrow="Latest Publication" loading={loading} />
+          <div className="min-w-0 md:justify-self-end md:[&_a[data-resource-card-mode='editorial-cover-only']]:max-w-full" data-resources-hero-article="true">
+            <FeaturedArticleCard article={latestPublication} eyebrow="Latest Publication" loading={loading} />
+          </div>
         </div>
       </section>
 
