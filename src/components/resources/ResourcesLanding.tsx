@@ -377,12 +377,9 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
       }`}
     >
       <section className="border-b border-black/10 px-4 py-12 dark:border-[#3a2b20] sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-        <div className="grid gap-10 lg:grid-cols-[minmax(19rem,0.55fr)_minmax(0,1.2fr)] lg:items-center xl:gap-12">
+        <div className="grid gap-10 lg:grid-cols-[minmax(19rem,0.58fr)_minmax(0,1fr)] lg:items-center xl:gap-12">
           <div className="max-w-xl xl:pl-16">
             <p className={heroLabelClass}>THE LIBRARY</p>
-            <h1 className="mt-5 font-serif text-5xl font-bold leading-[0.98] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-6 sm:text-6xl lg:text-7xl">
-              Read
-            </h1>
             <p className="mt-7 max-w-lg font-serif text-4xl font-bold leading-[1.05] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-8 sm:text-5xl">
               Study deeply.
               <span className="block">Reflect faithfully.</span>
