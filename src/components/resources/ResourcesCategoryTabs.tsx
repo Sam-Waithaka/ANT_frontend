@@ -1,11 +1,10 @@
 import { FileText, Grid2X2 } from 'lucide-react';
-import { useState } from 'react';
 import type { PublicResourceType } from '../../types/writing';
 
 type ResourceCategory = {
   key: string;
   label: string;
-  targetId: string;
+  href: string;
 };
 
 type ResourcesCategoryTabsProps = {
@@ -14,20 +13,15 @@ type ResourcesCategoryTabsProps = {
 };
 
 const ResourcesCategoryTabs = ({ darkMode, resourceTypes = [] }: ResourcesCategoryTabsProps) => {
+  const currentPath = typeof window === 'undefined' ? '/resources' : window.location.pathname;
   const categories: ResourceCategory[] = [
-    { key: 'all', label: 'All', targetId: 'resources-featured' },
+    { key: 'all', label: 'All', href: '/resources' },
     ...resourceTypes.map((resourceType) => ({
       key: String(resourceType.slug || resourceType.id),
       label: resourceType.name,
-      targetId: 'resources-types',
+      href: `/resources/type/${encodeURIComponent(String(resourceType.slug || resourceType.id))}`,
     })),
   ];
-  const [activeCategory, setActiveCategory] = useState('all');
-
-  const selectCategory = (category: ResourceCategory) => {
-    setActiveCategory(category.key);
-    document.getElementById(category.targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
 
   return (
     <nav className="-mt-7 px-4 sm:px-6 lg:px-8" aria-label="Resource library categories">
@@ -38,14 +32,13 @@ const ResourcesCategoryTabs = ({ darkMode, resourceTypes = [] }: ResourcesCatego
       >
         {categories.map((category, index) => {
           const Icon = index === 0 ? Grid2X2 : FileText;
-          const isActive = activeCategory === category.key;
+          const isActive = currentPath === category.href || (category.key === 'all' && currentPath === '/resources/');
 
           return (
-            <button
+            <a
               key={category.key}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => selectCategory(category)}
+              aria-current={isActive ? 'page' : undefined}
+              href={category.href}
               className={`flex min-h-12 min-w-36 items-center justify-center gap-2 rounded-xl px-3 text-sm font-bold transition lg:min-w-0 ${
                 isActive
                   ? 'bg-red-800 text-white shadow-md shadow-red-950/30'
@@ -56,7 +49,7 @@ const ResourcesCategoryTabs = ({ darkMode, resourceTypes = [] }: ResourcesCatego
             >
               <Icon size={17} aria-hidden="true" />
               {category.label}
-            </button>
+            </a>
           );
         })}
       </div>

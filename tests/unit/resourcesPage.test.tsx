@@ -129,8 +129,10 @@ describe('ResourcesPage', () => {
     expect(mocks.fetchResourcesHome).toHaveBeenCalledWith(expect.any(AbortSignal));
     expect(mocks.fetchResourcesNavigation).toHaveBeenCalledWith({}, expect.any(AbortSignal));
     expect(container.textContent).toContain('All');
+    expect(container.querySelector('a[href="/resources"]')).not.toBeNull();
     expect(container.textContent).toContain('Devotional');
     expect(container.textContent).toContain('Bible Study');
+    expect(container.querySelector('a[href="/resources/type/bible-study"]')).not.toBeNull();
     expect(container.textContent).toContain('Featured Mercy');
     expect(container.textContent).toContain('Curated Shelf');
     expect(container.textContent).toContain('3 featured');

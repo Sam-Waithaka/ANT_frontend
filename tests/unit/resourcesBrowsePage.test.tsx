@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ResourcesBrowsePage from '../../src/pages/ResourcesBrowsePage';
 
 const mocks = vi.hoisted(() => ({
+  fetchResourceTypeDetail: vi.fn(),
   searchPublicWritings: vi.fn(),
 }));
 
@@ -25,6 +26,10 @@ vi.mock('../../src/components/SiteFooter', () => ({
 
 vi.mock('../../src/services/publicSearchApi', () => ({
   searchPublicWritings: mocks.searchPublicWritings,
+}));
+
+vi.mock('../../src/services/resourcesApi', () => ({
+  fetchResourceTypeDetail: mocks.fetchResourceTypeDetail,
 }));
 
 const article = (overrides: Record<string, unknown> = {}) => ({
@@ -69,7 +74,23 @@ describe('ResourcesBrowsePage', () => {
 
   beforeEach(() => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+    mocks.fetchResourceTypeDetail.mockReset();
     mocks.searchPublicWritings.mockReset();
+    mocks.fetchResourceTypeDetail.mockResolvedValue({
+      articles: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [article()],
+      },
+      categories: [{ id: 2, name: 'Prayer', slug: 'prayer' }],
+      category_rails: [{ category: { id: 2, name: 'Prayer', slug: 'prayer' }, count: 1, items: [article({ id: 20, title: 'Prayer Resource', slug: 'prayer-resource' })] }],
+      featured_articles: [article({ id: 21, title: 'Featured Devotional', slug: 'featured-devotional' })],
+      latest_articles: [article({ id: 22, title: 'Latest Devotional', slug: 'latest-devotional' })],
+      resource_type: { id: 1, name: 'Devotional', slug: 'devotional', description: 'Devotional resources for the church.' },
+      series: [{ id: 3, title: 'Project 52', slug: 'project-52' }],
+      series_rails: [{ series: { id: 3, title: 'Project 52', slug: 'project-52' }, count: 1, items: [article({ id: 23, title: 'Series Resource', slug: 'series-resource' })] }],
+    });
     mocks.searchPublicWritings.mockResolvedValue({
       count: 1,
       next: null,
@@ -86,12 +107,17 @@ describe('ResourcesBrowsePage', () => {
     container.remove();
   });
 
-  it('loads resource type browse results with resource_type_slug', async () => {
+  it('loads resource type browse results from the composed resource type endpoint', async () => {
     await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
 
     await vi.waitFor(() => expect(container.textContent).toContain('Grace for Today'));
-    expect(container.textContent).toContain('Devotional');
-    expect(mocks.searchPublicWritings).toHaveBeenCalledWith({ resource_type_slug: 'devotional', page: 1, page_size: 24 }, expect.any(AbortSignal));
+    expect(container.textContent).toContain('Devotional resources for the church.');
+    expect(container.textContent).toContain('Featured Devotional');
+    expect(container.textContent).toContain('Latest Devotional');
+    expect(container.textContent).toContain('Explore by Category');
+    expect(container.textContent).toContain('Explore by Series');
+    expect(mocks.fetchResourceTypeDetail).toHaveBeenCalledWith('devotional', { page: 1, pageSize: 24 }, expect.any(AbortSignal));
+    expect(mocks.searchPublicWritings).not.toHaveBeenCalled();
   });
 
   it('loads category browse results with category_slug', async () => {
@@ -126,10 +152,28 @@ describe('ResourcesBrowsePage', () => {
     expect(mocks.searchPublicWritings).toHaveBeenCalledWith({ ministry_slug: 'youth', page: 1, page_size: 24 }, expect.any(AbortSignal));
   });
 
-  it('loads more and appends the next public writings page', async () => {
-    mocks.searchPublicWritings
-      .mockResolvedValueOnce({ count: 2, next: '/v1/search/writings/?page=2', previous: null, results: [article({ id: 1, title: 'First Resource' })] })
-      .mockResolvedValueOnce({ count: 2, next: null, previous: '/v1/search/writings/?page=1', results: [article({ id: 2, title: 'Second Resource', slug: 'second-resource' })] });
+  it('loads more and appends the next composed resource type page', async () => {
+    mocks.fetchResourceTypeDetail
+      .mockResolvedValueOnce({
+        articles: { count: 2, next: '/v1/resources/type/devotional/?page=2&page_size=24', previous: null, results: [article({ id: 1, title: 'First Resource' })] },
+        categories: [],
+        category_rails: [],
+        featured_articles: [],
+        latest_articles: [],
+        resource_type: { id: 1, name: 'Devotional', slug: 'devotional', description: 'Devotional resources.' },
+        series: [],
+        series_rails: [],
+      })
+      .mockResolvedValueOnce({
+        articles: { count: 2, next: null, previous: '/v1/resources/type/devotional/?page=1&page_size=24', results: [article({ id: 2, title: 'Second Resource', slug: 'second-resource' })] },
+        categories: [],
+        category_rails: [],
+        featured_articles: [],
+        latest_articles: [],
+        resource_type: { id: 1, name: 'Devotional', slug: 'devotional', description: 'Devotional resources.' },
+        series: [],
+        series_rails: [],
+      });
 
     await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
     await vi.waitFor(() => expect(container.textContent).toContain('First Resource'));
@@ -139,11 +183,11 @@ describe('ResourcesBrowsePage', () => {
 
     await vi.waitFor(() => expect(container.textContent).toContain('Second Resource'));
     expect(container.textContent).toContain('First Resource');
-    expect(mocks.searchPublicWritings).toHaveBeenLastCalledWith({ resource_type_slug: 'devotional', page: 2, page_size: 24 }, undefined);
+    expect(mocks.fetchResourceTypeDetail).toHaveBeenLastCalledWith('devotional', { page: 2, pageSize: 24 }, undefined);
   });
 
   it('shows a skeleton grid while browse results are loading', async () => {
-    mocks.searchPublicWritings.mockReturnValueOnce(new Promise(() => undefined));
+    mocks.fetchResourceTypeDetail.mockReturnValueOnce(new Promise(() => undefined));
 
     await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
 
@@ -152,7 +196,7 @@ describe('ResourcesBrowsePage', () => {
   });
 
   it('shows an intentional empty state when browse results are empty', async () => {
-    mocks.searchPublicWritings.mockResolvedValueOnce({ count: 0, next: null, previous: null, results: [] });
+    mocks.fetchResourceTypeDetail.mockResolvedValueOnce({ articles: { count: 0, next: null, previous: null, results: [] }, categories: [], category_rails: [], featured_articles: [], latest_articles: [], resource_type: { id: 1, name: 'Devotional', slug: 'devotional', description: '' }, series: [], series_rails: [] });
 
     await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
 
@@ -161,7 +205,7 @@ describe('ResourcesBrowsePage', () => {
   });
 
   it('shows a graceful error when browse results fail to load', async () => {
-    mocks.searchPublicWritings.mockRejectedValueOnce(new Error('Nope'));
+    mocks.fetchResourceTypeDetail.mockRejectedValueOnce(new Error('Nope'));
 
     await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
 
