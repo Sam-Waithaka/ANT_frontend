@@ -193,7 +193,7 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
 
   if (variant === 'feature') {
     return (
-      <a href={writingHref(article)} className={`group grid overflow-hidden rounded-3xl border border-[#eaded0] bg-white shadow-2xl shadow-zinc-900/10 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(17,17,17,0.12)] active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/50 dark:hover:shadow-black/65 lg:grid-cols-[1.12fr_0.88fr] ${!hasCover ? (isHero ? 'lg:grid-cols-[minmax(24rem,0.86fr)_minmax(0,1fr)]' : 'lg:grid-cols-[minmax(22rem,0.92fr)_minmax(0,0.78fr)]') : ''} ${className}`}>
+      <a href={writingHref(article)} className={`group grid overflow-hidden rounded-3xl border border-[#eaded0] bg-white shadow-2xl shadow-zinc-900/10 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_24px_60px_rgba(17,17,17,0.12)] active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/40 dark:hover:shadow-black/50 lg:grid-cols-[1.12fr_0.88fr] ${!hasCover ? (isHero ? 'lg:grid-cols-[minmax(24rem,0.86fr)_minmax(0,1fr)]' : 'lg:grid-cols-[minmax(22rem,0.92fr)_minmax(0,0.78fr)]') : ''} ${className}`}>
         <Cover article={article} className={hasCover ? 'min-h-72 lg:min-h-[23rem]' : (isHero ? 'min-h-[30rem] lg:min-h-[36rem]' : 'min-h-[28rem] lg:min-h-[32rem]')} />
         <span className={`flex flex-col justify-between p-6 sm:p-8 ${isHero && !hasCover ? 'lg:p-10' : ''}`}>
           <span>
@@ -201,7 +201,7 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
             <span className={`mt-4 block max-w-sm font-extrabold leading-tight tracking-normal text-zinc-950 transition-colors duration-300 group-hover:text-red-800 dark:text-stone-100 dark:group-hover:text-red-100 ${isHero && !hasCover ? 'text-4xl sm:text-5xl' : 'text-3xl sm:text-4xl'}`}>{article.title}</span>
             <span className={`mt-5 block max-w-sm text-zinc-600 dark:text-stone-300 ${isHero && !hasCover ? 'text-lg leading-8' : 'text-base leading-7'}`}>{article.excerpt || article.seo_description}</span>
           </span>
-          <span className="mt-7 border-t border-black/10 pt-5 dark:border-[#3a2b20]">
+          <span className="mt-7 border-t border-black/10 pt-5 dark:border-white/10">
             <span className="flex flex-wrap gap-x-6 gap-y-3">
               <MetaItem icon={Clock3}>{article.reading_time_minutes || 1} min read</MetaItem>
               <MetaItem icon={UsersRound}>{articleAuthor(article)}</MetaItem>
@@ -220,7 +220,7 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
     return (
       <a
         href={writingHref(article)}
-        className={`group block min-w-0 overflow-hidden rounded-[1.15rem] border border-[#eaded0] bg-white shadow-lg shadow-zinc-900/5 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-900/10 active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/45 dark:hover:shadow-black/65 sm:rounded-2xl ${className}`}
+        className={`group block min-w-0 overflow-hidden rounded-[1.15rem] border border-[#eaded0] bg-white shadow-lg shadow-zinc-900/5 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-900/10 active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/40 dark:hover:shadow-black/50 sm:rounded-2xl ${className}`}
         data-resource-card-mode="masonry-image"
       >
         <Cover article={article} className="min-h-[9.5rem] sm:min-h-[13rem] lg:min-h-[14rem]" />
@@ -239,7 +239,7 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
 
   if (variant === 'rail') {
     return (
-      <a href={writingHref(article)} className={`group grid min-w-0 grid-cols-[8.5rem_1fr] overflow-hidden sm:grid-cols-[11rem_1fr] rounded-2xl border border-[#eaded0] bg-white shadow-lg shadow-zinc-900/5 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-900/10 active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/45 dark:hover:shadow-black/65 ${!hasCover ? 'grid-cols-[13rem_1fr] sm:grid-cols-[16rem_1fr]' : ''} ${className}`}>
+      <a href={writingHref(article)} className={`group grid min-w-0 grid-cols-[8.5rem_1fr] overflow-hidden sm:grid-cols-[11rem_1fr] rounded-2xl border border-[#eaded0] bg-white shadow-lg shadow-zinc-900/5 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-900/10 active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/40 dark:hover:shadow-black/50 ${!hasCover ? 'grid-cols-[13rem_1fr] sm:grid-cols-[16rem_1fr]' : ''} ${className}`}>
         <Cover article={article} className={hasCover ? 'min-h-[13rem] sm:min-h-[15rem]' : 'min-h-[22rem] sm:min-h-[25rem]'} />
         <span className="min-w-0 p-5 sm:p-6">
           <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 transition-colors duration-300 group-hover:text-red-700 dark:text-red-200 dark:group-hover:text-red-100">{eyebrow || articleAccent(article)}</span>
@@ -254,7 +254,7 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
   }
 
   return (
-    <a href={writingHref(article)} className={`group grid min-w-0 overflow-hidden rounded-2xl border border-[#eaded0] bg-white shadow-lg shadow-zinc-900/5 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-900/10 active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/45 dark:hover:shadow-black/65 sm:grid-cols-[9rem_1fr] ${!hasCover ? 'sm:grid-cols-[17rem_1fr]' : ''} ${className}`}>
+    <a href={writingHref(article)} className={`group grid min-w-0 overflow-hidden rounded-2xl border border-[#eaded0] bg-white shadow-lg shadow-zinc-900/5 transition duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-zinc-900/10 active:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/40 dark:hover:shadow-black/50 sm:grid-cols-[9rem_1fr] ${!hasCover ? 'sm:grid-cols-[17rem_1fr]' : ''} ${className}`}>
       <Cover article={article} className={hasCover ? 'min-h-44 sm:min-h-full' : 'min-h-[22rem] sm:min-h-full'} />
       <span className="min-w-0 p-5">
         <span className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 transition-colors duration-300 group-hover:text-red-700 dark:text-red-200 dark:group-hover:text-red-100">{eyebrow || articleAccent(article)}</span>

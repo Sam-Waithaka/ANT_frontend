@@ -68,9 +68,9 @@ const resolveBrowseConfig = (mode: BrowseMode, params: RouteParams): { descripti
 
 const SectionHeading = ({ title }: { title: string }) => (
   <div className="flex items-center gap-4">
-    <div className="h-px flex-1 bg-[#eaded0] dark:bg-[#3a2b20]" />
+    <div className="h-px flex-1 bg-[#eaded0] dark:bg-white/10" />
     <h2 className="shrink-0 text-center text-sm font-black uppercase tracking-[0.16em] text-zinc-950 dark:text-stone-100">{title}</h2>
-    <div className="h-px flex-1 bg-[#eaded0] dark:bg-[#3a2b20]" />
+    <div className="h-px flex-1 bg-[#eaded0] dark:bg-white/10" />
   </div>
 );
 
@@ -89,7 +89,7 @@ const ResourceCardMasonry = ({ articles, shelf }: { articles: PublicWritingCard[
 
 const SkeletonGrid = () => (
   <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    {[0, 1, 2, 3].map((item) => <div key={item} className="h-36 animate-pulse rounded-2xl border border-black/10 bg-white/70 shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1d1711]" />)}
+    {[0, 1, 2, 3].map((item) => <div key={item} className="h-36 animate-pulse rounded-2xl border border-black/10 bg-white/70 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717]" />)}
   </div>
 );
 
@@ -152,8 +152,8 @@ const ResourcesBrowsePage = ({ mode }: { mode: BrowseMode }) => {
   return (
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader activePath="/resources" darkMode={darkMode} onToggleTheme={toggleTheme} />
-      <main className={`flex-1 ${darkMode ? 'bg-[radial-gradient(circle_at_top,rgba(120,72,38,0.14),transparent_34%),linear-gradient(180deg,#0b0907,#15110d_44%,#0b0907)]' : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)]'}`}>
-        <section className="border-b border-black/10 px-4 py-14 dark:border-[#3a2b20] sm:px-6 lg:px-8">
+      <main className={`flex-1 ${darkMode ? 'bg-[#080808]' : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)]'}`}>
+        <section className="border-b border-black/10 px-4 py-14 dark:border-white/10 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <Link to="/resources" className="inline-flex items-center gap-2 text-sm font-black text-red-800 transition hover:text-red-700 dark:text-red-100">
               <ArrowLeft size={16} aria-hidden="true" /> Back to Resources
@@ -164,12 +164,12 @@ const ResourcesBrowsePage = ({ mode }: { mode: BrowseMode }) => {
             {mode === 'type' && (categoryChips.length || seriesChips.length) ? (
               <div className="mt-8 flex flex-wrap gap-3">
                 {categoryChips.map((category) => (
-                  <Link className="rounded-full border border-[#eaded0] bg-white/75 px-4 py-2 text-sm font-bold text-zinc-700 shadow-sm transition hover:bg-white hover:text-red-800 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:text-stone-300 dark:hover:text-red-100" key={`category-${category.id}`} to={`/resources/category/${category.slug}`}>
+                  <Link className="rounded-full border border-[#eaded0] bg-white/75 px-4 py-2 text-sm font-bold text-zinc-700 shadow-sm transition hover:bg-white hover:text-red-800 dark:border-white/10 dark:bg-zinc-950 dark:text-stone-300 dark:hover:text-red-100" key={`category-${category.id}`} to={`/resources/category/${category.slug}`}>
                     {category.name}
                   </Link>
                 ))}
                 {seriesChips.map((series) => (
-                  <Link className="rounded-full border border-[#eaded0] bg-white/75 px-4 py-2 text-sm font-bold text-zinc-700 shadow-sm transition hover:bg-white hover:text-red-800 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:text-stone-300 dark:hover:text-red-100" key={`series-${series.id}`} to={`/resources/series/${series.slug}`}>
+                  <Link className="rounded-full border border-[#eaded0] bg-white/75 px-4 py-2 text-sm font-bold text-zinc-700 shadow-sm transition hover:bg-white hover:text-red-800 dark:border-white/10 dark:bg-zinc-950 dark:text-stone-300 dark:hover:text-red-100" key={`series-${series.id}`} to={`/resources/series/${series.slug}`}>
                     {series.title}
                   </Link>
                 ))}
@@ -205,13 +205,13 @@ const ResourcesBrowsePage = ({ mode }: { mode: BrowseMode }) => {
             <section className="grid gap-6">
               <SectionHeading title="Explore by Category" />
               {resourceTypeDetail.category_rails.map((rail) => (
-                <div className="rounded-[1.65rem] border border-[#eaded0] bg-[#fffaf0] p-5 shadow-xl shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#120f0b] dark:shadow-black/35" key={rail.category.id}>
+                <div className="rounded-[1.65rem] border border-[#eaded0] bg-[#fffaf0] p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717] dark:shadow-black/35" key={rail.category.id}>
                   <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <h3 className="text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-200">{rail.category.name}</h3>
                       <p className="mt-2 text-sm text-zinc-700 dark:text-stone-300">{rail.count} {rail.count === 1 ? 'Article' : 'Articles'} available</p>
                     </div>
-                    <Link className="inline-flex items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm transition hover:-translate-y-0.5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:text-red-100" to={`/resources/category/${rail.category.slug}`}>
+                    <Link className="inline-flex items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-zinc-950 dark:text-red-100" to={`/resources/category/${rail.category.slug}`}>
                       View more {rail.category.name}
                       <ArrowRight size={14} aria-hidden="true" />
                     </Link>
@@ -226,13 +226,13 @@ const ResourcesBrowsePage = ({ mode }: { mode: BrowseMode }) => {
             <section className="grid gap-6">
               <SectionHeading title="Explore by Series" />
               {resourceTypeDetail.series_rails.map((rail) => (
-                <div className="rounded-[1.65rem] border border-[#eaded0] bg-[#fffaf0] p-5 shadow-xl shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#120f0b] dark:shadow-black/35" key={rail.series.id}>
+                <div className="rounded-[1.65rem] border border-[#eaded0] bg-[#fffaf0] p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717] dark:shadow-black/35" key={rail.series.id}>
                   <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <h3 className="text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-200">{rail.series.title}</h3>
                       <p className="mt-2 text-sm text-zinc-700 dark:text-stone-300">{rail.count} {rail.count === 1 ? 'Article' : 'Articles'} available</p>
                     </div>
-                    <Link className="inline-flex items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm transition hover:-translate-y-0.5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:text-red-100" to={`/resources/series/${rail.series.slug}`}>
+                    <Link className="inline-flex items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-zinc-950 dark:text-red-100" to={`/resources/series/${rail.series.slug}`}>
                       View more {rail.series.title}
                       <ArrowRight size={14} aria-hidden="true" />
                     </Link>
@@ -249,7 +249,7 @@ const ResourcesBrowsePage = ({ mode }: { mode: BrowseMode }) => {
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-200">{count} {count === 1 ? 'Resource' : 'Resources'}</p>
               </div>
               {items.length ? <ResourceCardMasonry articles={items} shelf="browse-results" /> : (
-                <div className="rounded-2xl border border-black/10 bg-white/70 p-8 text-center shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1d1711]">
+                <div className="rounded-2xl border border-black/10 bg-white/70 p-8 text-center shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717]">
                   <h2 className="font-serif text-3xl font-bold">No published resources here yet.</h2>
                   <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-600 dark:text-stone-400">Once published writings are connected to this part of the library, they will appear here.</p>
                 </div>
