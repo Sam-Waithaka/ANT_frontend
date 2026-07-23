@@ -377,13 +377,13 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
       }`}
     >
       <section className="border-b border-black/10 px-4 py-12 dark:border-[#3a2b20] sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-        <div className="grid gap-10 lg:grid-cols-[minmax(19rem,0.58fr)_minmax(0,1fr)] lg:items-center xl:gap-12">
+        <div className="grid gap-10 lg:grid-cols-[minmax(39rem,0.98fr)_minmax(0,0.86fr)] lg:items-center xl:gap-12">
           <div className="max-w-xl xl:pl-16">
             <p className={heroLabelClass}>THE LIBRARY</p>
-            <p className="mt-7 max-w-lg font-serif text-4xl font-bold leading-[1.05] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-8 sm:text-5xl">
-              Study deeply.
-              <span className="block">Reflect faithfully.</span>
-              <span className="block text-red-700">Live differently.</span>
+            <p className="mt-7 max-w-none font-serif text-[3.25rem] font-bold leading-[1.02] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-8 sm:text-[3.55rem] lg:text-[3.95rem] xl:text-[4.15rem]">
+              <span className="block lg:whitespace-nowrap">Study deeply.</span>
+              <span className="block lg:whitespace-nowrap">Reflect faithfully.</span>
+              <span className="block text-red-700 lg:whitespace-nowrap">Live differently.</span>
             </p>
             <p className="mt-7 max-w-[30rem] text-base leading-8 text-zinc-700 dark:text-stone-300 sm:mt-8 sm:text-lg">
               Articles, Bible studies, pastoral guidance, and devotional reflections.

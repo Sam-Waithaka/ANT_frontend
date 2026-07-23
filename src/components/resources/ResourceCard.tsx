@@ -166,7 +166,7 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
 
   if (!hasCover) {
     const editorialCoverClass = isHero
-      ? 'min-h-[31rem] lg:min-h-[34rem]'
+      ? 'min-h-[29rem] lg:min-h-[32rem]'
       : variant === 'rail'
         ? 'min-h-[24rem] md:min-h-[26rem]'
         : 'min-h-[24rem]';
@@ -174,7 +174,7 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
     return (
       <a
         href={writingHref(article)}
-        className={`group block rounded-[1.35rem] transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 ${isHero ? 'mx-auto w-full max-w-[42rem] lg:max-w-[48rem]' : ''} ${className}`}
+        className={`group block rounded-[1.35rem] transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 ${isHero ? 'mx-auto w-full max-w-[38rem] lg:max-w-[43rem]' : ''} ${className}`}
         data-resource-card-mode="editorial-cover-only"
       >
         <EditorialCover article={article} className={`${editorialCoverClass} transition duration-300 group-hover:shadow-2xl`} eyebrow={eyebrow} />
