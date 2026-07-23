@@ -427,6 +427,17 @@ export type ResourcesHome = {
   series_rails: PublicSeriesRail[];
 };
 
+export type PublicResourceTypeDetail = {
+  articles: PaginatedResponse<PublicWritingCard>;
+  categories: PublicWritingCategory[];
+  category_rails: PublicCategoryRail[];
+  featured_articles: PublicWritingCard[];
+  latest_articles: PublicWritingCard[];
+  resource_type: PublicResourceType;
+  series: PublicResourceSeries[];
+  series_rails: PublicSeriesRail[];
+};
+
 export type WritingCreatePayload = {
   author_attributions?: WritingAuthorAttribution[];
   category_ids?: Array<number | string>;

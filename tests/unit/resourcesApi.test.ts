@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../../src/services/apiClient';
-import { fetchPublicResourceDetail, fetchResourcesHome, fetchResourcesNavigation, normalizeResourcesHome, normalizeResourcesNavigation } from '../../src/services/resourcesApi';
+import { fetchPublicResourceDetail, fetchResourcesHome, fetchResourcesNavigation, fetchResourceTypeDetail, normalizeResourceTypeDetail, normalizeResourcesHome, normalizeResourcesNavigation } from '../../src/services/resourcesApi';
 
 const jsonResponse = (payload: unknown, init: ResponseInit = {}) =>
   new Response(JSON.stringify(payload), {
@@ -68,6 +68,46 @@ describe('resourcesApi', () => {
     });
 
     expect(fetchMock).toHaveBeenCalledWith('/v1/resources/home/', expect.objectContaining({
+      headers: { Accept: 'application/json' },
+    }));
+    expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
+  });
+
+  it('normalizes resource type detail payloads for focused tab views', () => {
+    expect(normalizeResourceTypeDetail({
+      resource_type: { id: 1, name: 'Bible Study', slug: 'bible-study' },
+      featured_articles: [{ id: 10, title: 'Featured Study' }],
+      latest_articles: [{ id: 11, title: 'Latest Study' }],
+      categories: [{ id: 2, name: 'Life Group Material' }],
+      series: [{ id: 3, title: 'Proverbs' }],
+      category_rails: [{ category: { id: 2, name: 'Life Group Material' }, count: 1, items: [] }],
+      series_rails: [{ series: { id: 3, title: 'Proverbs' }, count: 1, items: [] }],
+      articles: { count: 2, next: '/v1/resources/type/bible-study/?page=2&page_size=24', previous: null, results: [{ id: 12, title: 'Article' }] },
+    })).toMatchObject({
+      resource_type: { name: 'Bible Study' },
+      featured_articles: [{ title: 'Featured Study' }],
+      latest_articles: [{ title: 'Latest Study' }],
+      categories: [{ name: 'Life Group Material' }],
+      series: [{ title: 'Proverbs' }],
+      category_rails: [{ count: 1 }],
+      series_rails: [{ count: 1 }],
+      articles: { count: 2, next: '/v1/resources/type/bible-study/?page=2&page_size=24', results: [{ title: 'Article' }] },
+    });
+  });
+
+  it('fetches resource type detail without auth headers and with pagination params', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+      resource_type: { id: 1, name: 'Bible Study', slug: 'bible-study' },
+      articles: { count: 1, next: null, previous: null, results: [{ id: 12, title: 'Article' }] },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchResourceTypeDetail('bible-study', { page: 2, pageSize: 12 })).resolves.toMatchObject({
+      resource_type: { name: 'Bible Study' },
+      articles: { count: 1, results: [{ title: 'Article' }] },
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith('/v1/resources/type/bible-study/?page=2&page_size=12', expect.objectContaining({
       headers: { Accept: 'application/json' },
     }));
     expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
