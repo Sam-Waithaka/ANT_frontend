@@ -76,7 +76,14 @@ const SectionHeading = ({ title }: { title: string }) => (
 
 const ResourceCardMasonry = ({ articles, shelf }: { articles: PublicWritingCard[]; shelf: string }) => (
   <div className="columns-2 gap-3 sm:gap-5 md:columns-2 lg:columns-3 2xl:columns-4 [@media(min-width:1800px)]:columns-5" data-resources-masonry-shelf={shelf}>
-    {articles.map((article) => <ResourceCard article={article} className="mb-3 break-inside-avoid sm:mb-5" key={article.id} variant="masonry" />)}
+    {articles.map((article, index) => {
+      const shouldBreakGrid = (index + 1) % 9 === 0;
+      return shouldBreakGrid ? (
+        <ResourceCard article={article} className="mb-4 break-inside-avoid [column-span:all] sm:mb-6" key={article.id} variant="feature" />
+      ) : (
+        <ResourceCard article={article} className="mb-3 break-inside-avoid sm:mb-5" key={article.id} variant="masonry" />
+      );
+    })}
   </div>
 );
 

@@ -220,7 +220,18 @@ const ArticleGrid = ({ articles, emptyText, loading }: { articles: PublicWriting
     return <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">{[0, 1, 2, 3].map((item) => <SkeletonBlock key={item} className="h-36" />)}</div>;
   }
   if (!articles.length) return <EmptyState>{emptyText}</EmptyState>;
-  return <div className="columns-2 gap-3 sm:gap-5 md:columns-2 lg:columns-3 2xl:columns-4 [@media(min-width:1800px)]:columns-5" data-resources-masonry-shelf="latest">{articles.map((article) => <ResourceArticleCard article={article} className="mb-3 break-inside-avoid sm:mb-5" key={article.id} />)}</div>;
+  return (
+    <div className="columns-2 gap-3 sm:gap-5 md:columns-2 lg:columns-3 2xl:columns-4 [@media(min-width:1800px)]:columns-5" data-resources-masonry-shelf="latest">
+      {articles.map((article, index) => {
+        const shouldBreakGrid = (index + 1) % 9 === 0;
+        return shouldBreakGrid ? (
+          <ResourceCard article={article} className="mb-4 break-inside-avoid [column-span:all] sm:mb-6" key={article.id} variant="feature" />
+        ) : (
+          <ResourceArticleCard article={article} className="mb-3 break-inside-avoid sm:mb-5" key={article.id} />
+        );
+      })}
+    </div>
+  );
 };
 
 const ArticleShelf = ({ articles, emptyText }: { articles: PublicWritingCard[]; emptyText: string }) => {
