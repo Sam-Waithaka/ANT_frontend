@@ -111,11 +111,16 @@ describe('ResourcesBrowsePage', () => {
     await renderBrowse(root, '/resources/type/devotional', '/resources/type/:slug', 'type');
 
     await vi.waitFor(() => expect(container.textContent).toContain('Grace for Today'));
+    expect(container.textContent).toContain('Devotional');
     expect(container.textContent).toContain('Devotional resources for the church.');
     expect(container.textContent).toContain('Featured Devotional');
     expect(container.textContent).toContain('Latest Devotional');
+    expect(container.textContent).toContain('Prayer Resource');
+    expect(container.textContent).toContain('Series Resource');
     expect(container.textContent).toContain('Explore by Category');
     expect(container.textContent).toContain('Explore by Series');
+    expect(container.querySelector('a[href="/resources/category/prayer"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/resources/series/project-52"]')).not.toBeNull();
     expect(mocks.fetchResourceTypeDetail).toHaveBeenCalledWith('devotional', { page: 1, pageSize: 24 }, expect.any(AbortSignal));
     expect(mocks.searchPublicWritings).not.toHaveBeenCalled();
   });
@@ -152,7 +157,7 @@ describe('ResourcesBrowsePage', () => {
     expect(mocks.searchPublicWritings).toHaveBeenCalledWith({ ministry_slug: 'youth', page: 1, page_size: 24 }, expect.any(AbortSignal));
   });
 
-  it('loads more and appends the next composed resource type page', async () => {
+  it('shows load more from articles.next, then appends the next composed resource type page', async () => {
     mocks.fetchResourceTypeDetail
       .mockResolvedValueOnce({
         articles: { count: 2, next: '/v1/resources/type/devotional/?page=2&page_size=24', previous: null, results: [article({ id: 1, title: 'First Resource' })] },
@@ -179,6 +184,7 @@ describe('ResourcesBrowsePage', () => {
     await vi.waitFor(() => expect(container.textContent).toContain('First Resource'));
 
     const button = [...container.querySelectorAll('button')].find((item) => item.textContent?.includes('Load more')) as HTMLButtonElement;
+    expect(button).toBeTruthy();
     await act(async () => button.click());
 
     await vi.waitFor(() => expect(container.textContent).toContain('Second Resource'));
