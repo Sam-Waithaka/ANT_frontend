@@ -68,11 +68,11 @@ const ImageBlock = ({ asset, className = '', tone }: ImageBlockProps) => {
 };
 
 const SkeletonBlock = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse rounded-2xl border border-black/10 bg-white/70 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/5 ${className}`} />
+  <div className={`animate-pulse rounded-2xl border border-black/10 bg-white/70 shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1d1711] ${className}`} />
 );
 
 const EmptyState = ({ children }: { children: ReactNode }) => (
-  <div className="rounded-2xl border border-black/10 bg-white/70 p-6 text-sm font-semibold text-zinc-600 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/5 dark:text-stone-400">
+  <div className="rounded-2xl border border-black/10 bg-white/70 p-6 text-sm font-semibold text-zinc-600 shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1d1711] dark:text-stone-400">
     {children}
   </div>
 );
@@ -81,7 +81,7 @@ const FeaturedArticleCard = ({ article, eyebrow = 'Latest Publication', loading 
   if (loading) return <SkeletonBlock className="min-h-[28rem] rounded-3xl" />;
   if (!article) {
     return (
-      <div className="grid min-h-72 place-items-center rounded-3xl border border-black/10 bg-white/70 p-8 text-center shadow-2xl shadow-zinc-900/10 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/30 lg:min-h-[23rem]">
+      <div className="grid min-h-72 place-items-center rounded-3xl border border-black/10 bg-white/70 p-8 text-center shadow-2xl shadow-zinc-900/10 dark:border-[#3a2b20] dark:bg-[#16110d] dark:shadow-black/45 lg:min-h-[23rem]">
         <div>
           <p className={sectionLabelClass}>{eyebrow}</p>
           <h2 className="mt-4 font-serif text-3xl font-bold">No latest publication yet.</h2>
@@ -91,7 +91,7 @@ const FeaturedArticleCard = ({ article, eyebrow = 'Latest Publication', loading 
     );
   }
 
-  return <ResourceCard article={article} eyebrow={eyebrow} variant="feature" />;
+  return <ResourceCard article={article} eyebrow={eyebrow} presentation="hero" variant="feature" />;
 };
 
 const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => <ResourceCard article={article} variant="rail" />;
@@ -109,7 +109,7 @@ const BrowseListCard = ({ emptyText, id, items, title }: { emptyText: string; id
       </a>
     </div>
     {items.length ? (
-      <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">
+      <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#16110d] dark:shadow-black/50">
         {items.map((item) => {
           const Icon = item.icon;
 
@@ -117,7 +117,7 @@ const BrowseListCard = ({ emptyText, id, items, title }: { emptyText: string; id
             <a
               href={item.href}
               key={`${item.href}-${item.label}`}
-              className="flex min-h-12 items-center gap-3 border-b border-black/10 px-4 text-sm transition last:border-b-0 hover:bg-[#fffaf0] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-700 dark:border-white/10 dark:hover:bg-white/5"
+              className="flex min-h-12 items-center gap-3 border-b border-black/10 px-4 text-sm transition last:border-b-0 hover:bg-[#fffaf0] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-700 dark:border-[#3a2b20] dark:hover:bg-[#241c15]"
             >
               <span className="grid size-7 shrink-0 place-items-center rounded-full bg-red-950/5 text-red-800 dark:bg-red-950/35 dark:text-red-100">
                 <Icon size={14} aria-hidden="true" />
@@ -143,11 +143,11 @@ const CenteredSectionHeader = ({ id, title }: { id?: string; title: string }) =>
 
 
 const FeaturedWritingCard = ({ article }: { article: PublicWritingCard }) => (
-  <ResourceCard article={article} className="min-w-[20rem] max-w-[24rem] snap-start" eyebrow="Featured Article" />
+  <ResourceCard article={article} className="min-w-[17.5rem] max-w-[24rem] sm:min-w-[20rem] snap-start" eyebrow="Featured Article" />
 );
 
 const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_categories'][number] }) => (
-  <a href={`/resources/category/${category.slug}`} className="group flex min-h-72 min-w-[18rem] max-w-[21rem] snap-start flex-col justify-between rounded-[1.75rem] border border-[#eaded0] bg-[#fffaf0] p-6 shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/30 dark:hover:bg-white/[0.07]">
+  <a href={`/resources/category/${category.slug}`} className="group flex min-h-72 min-w-[17.5rem] max-w-[21rem] sm:min-w-[18rem] snap-start flex-col justify-between rounded-[1.75rem] border border-[#eaded0] bg-[#fffaf0] p-6 shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#211a13] dark:shadow-black/50 dark:hover:bg-[#2a2118]">
     <span>
       <span className="inline-flex rounded-full border border-red-900/10 bg-red-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-red-800 dark:border-red-200/10 dark:bg-red-950/30 dark:text-red-100">Featured Collection</span>
       <span className="mt-8 block font-serif text-3xl font-semibold leading-tight tracking-normal text-zinc-950 dark:text-stone-100">{category.name}</span>
@@ -162,7 +162,7 @@ const FeaturedCategoryCard = ({ category }: { category: ResourcesHome['featured_
 );
 
 const FeaturedSeriesCard = ({ series }: { series: PublicResourceSeries }) => (
-  <a href={`/resources/series/${series.slug}`} className="group grid min-h-72 min-w-[22rem] max-w-[26rem] snap-start overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/30 sm:grid-cols-[10rem_1fr]">
+  <a href={`/resources/series/${series.slug}`} className="group grid min-h-72 min-w-[18.5rem] max-w-[26rem] sm:min-w-[22rem] snap-start overflow-hidden rounded-[1.75rem] border border-black/10 bg-white shadow-xl shadow-zinc-900/5 transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#16110d] dark:shadow-black/45 sm:grid-cols-[10rem_1fr]">
     <ImageBlock asset={series.cover_image_detail} tone={toneFor(series.slug || series.id)} className="min-h-72" />
     <span className="flex min-w-0 flex-col justify-between p-6">
       <span>
@@ -170,7 +170,7 @@ const FeaturedSeriesCard = ({ series }: { series: PublicResourceSeries }) => (
         <span className="mt-5 block font-serif text-2xl font-semibold leading-tight tracking-normal text-zinc-950 dark:text-stone-100">{series.title}</span>
         <span className="mt-4 line-clamp-3 block text-sm leading-6 text-zinc-600 dark:text-stone-400">{series.description || 'Follow this curated journey through the church library.'}</span>
       </span>
-      <span className="mt-6 flex items-center justify-between gap-3 border-t border-black/10 pt-4 text-sm font-black text-zinc-600 dark:border-white/10 dark:text-stone-400">
+      <span className="mt-6 flex items-center justify-between gap-3 border-t border-black/10 pt-4 text-sm font-black text-zinc-600 dark:border-[#3a2b20] dark:text-stone-400">
         {countLabel(series.writing_count)}
         <ArrowRight size={15} className="text-red-800 transition group-hover:translate-x-1 dark:text-red-100" aria-hidden="true" />
       </span>
@@ -183,7 +183,7 @@ const FeaturedShowcase = ({ articles, categories, series, loading }: { articles:
 
   if (loading) {
     return (
-      <div className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6">
+      <div className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/50 sm:p-6">
         <div className="grid min-w-0 gap-5 lg:grid-cols-3">{[0, 1, 2].map((item) => <SkeletonBlock key={item} className="h-72" />)}</div>
       </div>
     );
@@ -194,7 +194,7 @@ const FeaturedShowcase = ({ articles, categories, series, loading }: { articles:
   }
 
   return (
-    <div className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-featured-shelf="true">
+    <div className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/50 sm:p-6" data-resources-featured-shelf="true">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className={sectionLabelClass}>Curated Shelf</p>
@@ -202,11 +202,11 @@ const FeaturedShowcase = ({ articles, categories, series, loading }: { articles:
             Editor-selected articles, collections, and series gathered for prominent discovery.
           </p>
         </div>
-        <p className="rounded-full border border-[#eaded0] bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-zinc-600 dark:border-white/10 dark:bg-white/5 dark:text-stone-400">
+        <p className="rounded-full border border-[#eaded0] bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-zinc-600 dark:border-[#3a2b20] dark:bg-[#1d1711] dark:text-stone-400">
           {featuredCount} featured
         </p>
       </div>
-      <div className="-mx-2 flex snap-x gap-5 overflow-x-auto px-2 pb-3">
+      <div className="-mx-3 flex snap-x gap-4 overflow-x-auto px-3 pb-4 sm:gap-5">
         {articles.map((article) => <FeaturedWritingCard article={article} key={`article-${article.id}`} />)}
         {categories.map((category) => <FeaturedCategoryCard category={category} key={`category-${category.id}`} />)}
         {series.map((item) => <FeaturedSeriesCard series={item} key={`series-${item.id}`} />)}
@@ -226,10 +226,12 @@ const ArticleGrid = ({ articles, emptyText, loading }: { articles: PublicWriting
 const ArticleShelf = ({ articles, emptyText }: { articles: PublicWritingCard[]; emptyText: string }) => {
   if (!articles.length) return <EmptyState>{emptyText}</EmptyState>;
 
+  const previewArticles = articles.slice(0, 3);
+
   return (
-    <div className="-mx-2 flex snap-x gap-5 overflow-x-auto px-2 pb-3" data-resources-article-shelf="true">
-      {articles.map((article) => (
-        <ResourceCard article={article} className="min-w-[21rem] max-w-[24rem] snap-start" key={article.id} variant="compact" />
+    <div className="-mx-3 flex snap-x gap-4 overflow-x-auto px-3 pb-4 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 md:pb-0 xl:gap-5 2xl:grid-cols-3" data-resources-article-shelf="true">
+      {previewArticles.map((article) => (
+        <ResourceCard article={article} className="min-w-[21rem] snap-start md:min-w-0" key={article.id} variant="rail" />
       ))}
     </div>
   );
@@ -241,7 +243,7 @@ const ResourceTypePreviewRail = ({ rail }: { rail: PublicResourceTypeRail }) => 
   const count = rail.count ?? resourceType.writing_count ?? rail.items.length;
 
   return (
-    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-taxonomy-shelf="resource-type">
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/50 sm:p-6" data-resources-taxonomy-shelf="resource-type">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className={sectionLabelClass}>{resourceType.name}</p>
@@ -251,7 +253,7 @@ const ResourceTypePreviewRail = ({ rail }: { rail: PublicResourceTypeRail }) => 
         </div>
         <a
           href={`/resources/type/${resourceType.slug}`}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/5 dark:text-red-100 dark:hover:bg-white/10"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1d1711] dark:text-red-100 dark:hover:bg-[#2a2118]"
         >
           View more {resourceType.name}
           <ArrowRight size={14} aria-hidden="true" />
@@ -267,7 +269,7 @@ const CategoryPreviewRail = ({ rail }: { rail: PublicCategoryRail }) => {
   const count = rail.count ?? category.writing_count ?? rail.items.length;
 
   return (
-    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-taxonomy-shelf="category">
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/50 sm:p-6" data-resources-taxonomy-shelf="category">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className={sectionLabelClass}>{category.name}</p>
@@ -277,7 +279,7 @@ const CategoryPreviewRail = ({ rail }: { rail: PublicCategoryRail }) => {
         </div>
         <a
           href={`/resources/category/${category.slug}`}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/5 dark:text-red-100 dark:hover:bg-white/10"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1d1711] dark:text-red-100 dark:hover:bg-[#2a2118]"
         >
           View more {category.name}
           <ArrowRight size={14} aria-hidden="true" />
@@ -293,7 +295,7 @@ const SeriesPreviewRail = ({ rail }: { rail: PublicSeriesRail }) => {
   const count = rail.count ?? series.writing_count ?? rail.items.length;
 
   return (
-    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/30 sm:p-6" data-resources-taxonomy-shelf="series">
+    <article className="rounded-[2rem] border border-[#eaded0] bg-[#fffaf0]/80 p-5 shadow-xl shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/50 sm:p-6" data-resources-taxonomy-shelf="series">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className={sectionLabelClass}>{series.title}</p>
@@ -303,7 +305,7 @@ const SeriesPreviewRail = ({ rail }: { rail: PublicSeriesRail }) => {
         </div>
         <a
           href={`/resources/series/${series.slug}`}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-white/5 dark:text-red-100 dark:hover:bg-white/10"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 py-2 text-sm font-black text-red-800 shadow-sm shadow-zinc-900/5 transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#1d1711] dark:text-red-100 dark:hover:bg-[#2a2118]"
         >
           View more {series.title}
           <ArrowRight size={14} aria-hidden="true" />
@@ -314,7 +316,7 @@ const SeriesPreviewRail = ({ rail }: { rail: PublicSeriesRail }) => {
   );
 };
 const ResourcesSubscribeStrip = ({ darkMode }: { darkMode: boolean }) => (
-  <section className="rounded-2xl border border-black/10 bg-[#fffaf0] p-5 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-[#171717] dark:shadow-black/25">
+  <section className="rounded-2xl border border-black/10 bg-[#fffaf0] p-5 shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1a1510] dark:shadow-black/50">
     <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-4">
         <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-red-950/5 text-red-800 dark:bg-red-950/35 dark:text-red-100">
@@ -370,23 +372,23 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
     <main
       className={`flex-1 ${
         darkMode
-          ? 'bg-[#080808] text-stone-100'
+          ? 'bg-[radial-gradient(circle_at_top,rgba(120,72,38,0.16),transparent_34%),linear-gradient(180deg,#0b0907,#15110d_44%,#0b0907)] text-stone-100'
           : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)] text-zinc-950'
       }`}
     >
-      <section className="border-b border-black/10 px-4 py-16 dark:border-white/10 sm:px-6 sm:py-20 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[minmax(19rem,0.55fr)_minmax(0,1.2fr)] lg:items-center">
+      <section className="border-b border-black/10 px-4 py-12 dark:border-[#3a2b20] sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="grid gap-10 lg:grid-cols-[minmax(19rem,0.55fr)_minmax(0,1.2fr)] lg:items-center xl:gap-12">
           <div className="max-w-xl xl:pl-16">
             <p className={heroLabelClass}>THE LIBRARY</p>
-            <h1 className="mt-6 font-serif text-5xl font-bold leading-[0.98] tracking-normal text-zinc-950 dark:text-stone-100 sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 font-serif text-5xl font-bold leading-[0.98] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-6 sm:text-6xl lg:text-7xl">
               Read
             </h1>
-            <p className="mt-8 max-w-lg font-serif text-4xl font-bold leading-[1.05] tracking-normal text-zinc-950 dark:text-stone-100 sm:text-5xl">
+            <p className="mt-7 max-w-lg font-serif text-4xl font-bold leading-[1.05] tracking-normal text-zinc-950 dark:text-stone-100 sm:mt-8 sm:text-5xl">
               Study deeply.
               <span className="block">Reflect faithfully.</span>
               <span className="block text-red-700">Live differently.</span>
             </p>
-            <p className="mt-8 max-w-[30rem] text-lg leading-8 text-zinc-700 dark:text-stone-300">
+            <p className="mt-7 max-w-[30rem] text-base leading-8 text-zinc-700 dark:text-stone-300 sm:mt-8 sm:text-lg">
               Articles, Bible studies, pastoral guidance, and devotional reflections.
             </p>
             <div className="mt-8 h-px w-16 bg-red-700" aria-hidden="true" />
@@ -406,7 +408,7 @@ const ResourcesLanding = ({ darkMode, error = '', home, loading, navigation }: R
 
       <ResourcesCategoryTabs darkMode={darkMode} resourceTypes={resourceTypes} />
 
-      <div className="grid gap-10 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="grid gap-8 px-4 py-8 sm:gap-10 sm:px-6 sm:py-10 lg:px-8">
         {error ? (
           <div className="rounded-2xl border border-red-900/15 bg-red-50 p-5 text-sm font-bold text-red-800 dark:border-red-400/20 dark:bg-red-950/30 dark:text-red-100">
             {error}

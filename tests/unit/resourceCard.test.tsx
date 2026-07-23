@@ -57,6 +57,7 @@ describe('ResourceCard', () => {
     await renderCard(root, article());
 
     expect(container.querySelector('[data-resource-card-cover="editorial"]')).not.toBeNull();
+    expect(container.querySelector('[data-editorial-book-object="true"]')).not.toBeNull();
     expect(container.textContent).toContain('Bible Study');
     expect(container.textContent).toContain('Wisdom');
     expect(container.textContent).toContain('Book of Proverbs');

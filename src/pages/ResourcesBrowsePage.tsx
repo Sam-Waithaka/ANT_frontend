@@ -90,7 +90,7 @@ const ImageBlock = ({ article }: { article: PublicWritingCard }) => {
 };
 
 const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => (
-  <Link to={`/resources/${article.slug}`} className="grid min-w-0 grid-cols-[7rem_1fr] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-white/10 dark:bg-zinc-950 dark:shadow-black/25">
+  <Link to={`/resources/${article.slug}`} className="grid min-w-0 grid-cols-[7rem_1fr] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-lg shadow-zinc-900/5 transition hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-[#3a2b20] dark:bg-[#16110d] dark:shadow-black/50">
     <ImageBlock article={article} />
     <div className="min-w-0 p-5">
       <p className="text-[11px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">{articleAccent(article)}</p>
@@ -105,7 +105,7 @@ const ResourceArticleCard = ({ article }: { article: PublicWritingCard }) => (
 
 const SkeletonGrid = () => (
   <div className="grid min-w-0 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-    {[0, 1, 2, 3].map((item) => <div key={item} className="h-36 animate-pulse rounded-2xl border border-black/10 bg-white/70 shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/5" />)}
+    {[0, 1, 2, 3].map((item) => <div key={item} className="h-36 animate-pulse rounded-2xl border border-black/10 bg-white/70 shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1d1711]" />)}
   </div>
 );
 
@@ -152,8 +152,8 @@ const ResourcesBrowsePage = ({ mode }: { mode: BrowseMode }) => {
   return (
     <div className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader activePath="/resources" darkMode={darkMode} onToggleTheme={toggleTheme} />
-      <main className={`flex-1 ${darkMode ? 'bg-[#080808]' : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)]'}`}>
-        <section className="border-b border-black/10 px-4 py-14 dark:border-white/10 sm:px-6 lg:px-8">
+      <main className={`flex-1 ${darkMode ? 'bg-[radial-gradient(circle_at_top,rgba(120,72,38,0.14),transparent_34%),linear-gradient(180deg,#0b0907,#15110d_44%,#0b0907)]' : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)]'}`}>
+        <section className="border-b border-black/10 px-4 py-14 dark:border-[#3a2b20] sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <Link to="/resources" className="inline-flex items-center gap-2 text-sm font-black text-red-800 transition hover:text-red-700 dark:text-red-100">
               <ArrowLeft size={16} aria-hidden="true" /> Back to Resources
@@ -174,7 +174,7 @@ const ResourcesBrowsePage = ({ mode }: { mode: BrowseMode }) => {
               {items.map((article) => <ResourceArticleCard article={article} key={article.id} />)}
             </div>
           ) : (
-            <div className="rounded-2xl border border-black/10 bg-white/70 p-8 text-center shadow-lg shadow-zinc-900/5 dark:border-white/10 dark:bg-white/5">
+            <div className="rounded-2xl border border-black/10 bg-white/70 p-8 text-center shadow-lg shadow-zinc-900/5 dark:border-[#3a2b20] dark:bg-[#1d1711]">
               <h2 className="font-serif text-3xl font-bold">No published resources here yet.</h2>
               <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-600 dark:text-stone-400">Once published writings are connected to this part of the library, they will appear here.</p>
             </div>
