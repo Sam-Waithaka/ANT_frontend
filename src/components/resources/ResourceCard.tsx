@@ -168,13 +168,18 @@ const ResourceCard = ({ article, className = '', eyebrow, presentation = 'defaul
     const editorialCoverClass = isHero
       ? 'min-h-[29rem] lg:min-h-[32rem]'
       : variant === 'rail'
-        ? 'min-h-[24rem] md:min-h-[26rem]'
-        : 'min-h-[24rem]';
+        ? 'min-h-[17rem] md:min-h-[18rem]'
+        : 'min-h-[16rem]';
+    const editorialWidthClass = isHero
+      ? 'mx-auto w-full max-w-[38rem] lg:max-w-[43rem]'
+      : variant === 'rail'
+        ? 'w-full max-w-[30rem]'
+        : 'w-full max-w-[24rem]';
 
     return (
       <a
         href={writingHref(article)}
-        className={`group block rounded-[1.35rem] transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 ${isHero ? 'mx-auto w-full max-w-[38rem] lg:max-w-[43rem]' : ''} ${className}`}
+        className={`group block rounded-[1.35rem] transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 ${editorialWidthClass} ${className}`}
         data-resource-card-mode="editorial-cover-only"
       >
         <EditorialCover article={article} className={`${editorialCoverClass} transition duration-300 group-hover:shadow-2xl`} eyebrow={eyebrow} />
