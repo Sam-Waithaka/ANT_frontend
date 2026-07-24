@@ -58,7 +58,7 @@ const WritingArticleReader = ({
       footer={footer}
       labelledBy="writing-article-reader-title"
     >
-      <article className="mx-auto max-w-3xl">
+      <article className="mx-auto max-w-[42rem]">
         <header className="grid gap-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             {metadata ? (
@@ -88,13 +88,13 @@ const WritingArticleReader = ({
               "Article cover image"
             }
             asset={responsiveCoverImage}
-            className="mt-8 aspect-[16/7] w-full rounded-[1.25rem] border border-black/5 object-cover shadow-sm dark:border-white/10"
+            className="mt-7 aspect-[16/6] max-h-[22rem] w-full rounded-[1rem] border border-black/5 object-cover shadow-sm dark:border-white/10"
             fetchPriority="high"
             loading="eager"
             preset="articleCover"
           />
         ) : null}
-        <div className={"mt-8 border-t pt-8 " + dividerClass}>
+        <div className={"mt-7 border-t pt-7 " + dividerClass}>
           <WritingContentRenderer
             contentJson={hasContentJson(resolvedContentJson) ? resolvedContentJson : null}
             darkMode={darkMode}
