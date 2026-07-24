@@ -112,7 +112,6 @@ describe("WritingArticleReader", () => {
     await act(async () => {
       root.render(
         <WritingArticleReader
-          contentHtml="<p>Flat cached HTML</p>"
           contentJson={{
             root: {
               children: [

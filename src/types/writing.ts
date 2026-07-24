@@ -299,9 +299,26 @@ export type PublicSeriesRail = {
 };
 
 export type PublicWritingNeighbor = {
+  id: number | string;
   published_at: string;
   slug: string;
   title: string;
+};
+
+export type ContinueReadingPayload = {
+  more_from_categories: Array<{
+    category: PublicWritingCategory;
+    items: PublicWritingCard[];
+  }>;
+  more_from_series: Array<{
+    items: PublicWritingCard[];
+    series: PublicResourceSeries;
+  }>;
+  more_resources: PublicWritingCard[];
+  study_same_scriptures: Array<{
+    book: PublicScriptureBook;
+    items: PublicWritingCard[];
+  }>;
 };
 
 export type PublicWritingDetail = PublicWritingCard & {
@@ -312,8 +329,9 @@ export type PublicWritingDetail = PublicWritingCard & {
   canonical_url: string;
   content_html: string;
   content_json: unknown;
-  content_text: string;
+  content_text?: string;
   content_version: number;
+  continue_reading: ContinueReadingPayload;
   media_embeds: WritingMediaEmbed[];
   next_article: PublicWritingNeighbor | null;
   og_description: string;

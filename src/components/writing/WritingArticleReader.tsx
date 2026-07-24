@@ -11,7 +11,6 @@ import WritingContentRenderer from "./WritingContentRenderer";
 import type { WritingMediaEmbedLike } from "./editor/nodes/ChurchBlockMediaContext";
 
 type WritingArticleReaderProps = {
-  contentHtml?: string;
   contentJson?: unknown;
   coverImage?: WritingMediaAsset | null;
   darkMode: boolean;
@@ -45,7 +44,6 @@ const WritingArticleReader = ({
   const resolvedExcerpt = writing?.excerpt || excerpt || "";
   const resolvedCoverImage = writing?.og_image_detail || coverImage || null;
   const resolvedContentJson = writing?.content_json ?? contentJson;
-  const resolvedContentHtml = writing?.content_html || contentHtml || "";
   const resolvedMediaEmbeds = writing?.media_embeds || mediaEmbeds || [];
   const rendererMediaEmbeds = resolvedMediaEmbeds as WritingMediaEmbedLike[];
   const responsiveCoverImage = normalizeMediaAssetForDisplay(resolvedCoverImage);
@@ -89,26 +87,12 @@ const WritingArticleReader = ({
           </p>
         ) : null}
         <div className={"mt-8 border-t pt-8 " + dividerClass}>
-          {hasContentJson(resolvedContentJson) ? (
-            <WritingContentRenderer
-              contentJson={resolvedContentJson}
-              darkMode={darkMode}
-              emptyMessage="This article does not have content yet."
-              mediaEmbeds={rendererMediaEmbeds}
-            />
-          ) : resolvedContentHtml ? (
-            <div
-              className={darkMode ? "text-stone-100" : "text-zinc-950"}
-              dangerouslySetInnerHTML={{ __html: resolvedContentHtml }}
-            />
-          ) : (
-            <WritingContentRenderer
-              contentJson={resolvedContentJson}
-              darkMode={darkMode}
-              emptyMessage="This article does not have content yet."
-              mediaEmbeds={rendererMediaEmbeds}
-            />
-          )}
+          <WritingContentRenderer
+            contentJson={hasContentJson(resolvedContentJson) ? resolvedContentJson : null}
+            darkMode={darkMode}
+            emptyMessage="This article does not have content yet."
+            mediaEmbeds={rendererMediaEmbeds}
+          />
         </div>
       </article>
     </WritingArticleSurface>

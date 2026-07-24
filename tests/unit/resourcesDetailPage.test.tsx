@@ -71,6 +71,12 @@ const detail = (overrides: Record<string, unknown> = {}) => ({
   id: 10,
   media_embeds: [],
   ministries: [],
+  continue_reading: {
+    more_from_categories: [],
+    more_from_series: [],
+    more_resources: [],
+    study_same_scriptures: [],
+  },
   next_article: null,
   og_description: "OG description.",
   og_image_detail: null,
@@ -87,6 +93,31 @@ const detail = (overrides: Record<string, unknown> = {}) => ({
   slug_variants: [],
   tags: [],
   title: "Grace for Today",
+  writing_type: "ARTICLE",
+  ...overrides,
+});
+
+
+
+const card = (slug: string, title: string, overrides: Record<string, unknown> = {}) => ({
+  author_attributions: [],
+  author_display: "A.I.C Njoro Town",
+  byline: "A.I.C Njoro Town",
+  categories: [],
+  excerpt: `Excerpt for ${title}`,
+  id: slug,
+  ministries: [],
+  og_image_detail: null,
+  published_at: "2026-07-18T09:00:00Z",
+  reading_time_minutes: 4,
+  resource_type_detail: { id: 1, name: "Devotional", slug: "devotional" },
+  scripture_references: [],
+  seo_description: `SEO for ${title}`,
+  seo_title: title,
+  series: [],
+  slug,
+  tags: [],
+  title,
   writing_type: "ARTICLE",
   ...overrides,
 });
@@ -156,6 +187,145 @@ describe("ResourcesDetailPage", () => {
         expect.any(AbortSignal),
       ),
     );
+  });
+
+
+
+  it("renders taxonomy links and previous/next reader navigation from the public detail payload", async () => {
+    mocks.fetchPublicResourceDetail.mockResolvedValueOnce(
+      detail({
+        categories: [
+          {
+            description: "",
+            id: 2,
+            is_active: true,
+            is_featured: false,
+            name: "Prayer",
+            parent: null,
+            slug: "prayer",
+            sort_order: 1,
+            writing_count: 3,
+          },
+        ],
+        next_article: {
+          id: 12,
+          published_at: "2026-07-19T09:00:00Z",
+          slug: "next-resource",
+          title: "Next Resource",
+        },
+        previous_article: {
+          id: 8,
+          published_at: "2026-07-16T09:00:00Z",
+          slug: "previous-resource",
+          title: "Previous Resource",
+        },
+        scripture_references: [
+          {
+            book: "John",
+            book_detail: {
+              abbreviation: "Jn",
+              id: 43,
+              name: "John",
+              number: 43,
+              osis_id: "John",
+              testament: "NT",
+            },
+            book_osis: "John",
+            chapter_start: 3,
+            display_text: "John 3:16",
+            id: 99,
+            verse_start: 16,
+            version: "BSB",
+            writing: 10,
+          },
+        ],
+        series: [
+          {
+            cover_image_detail: null,
+            description: "",
+            id: 3,
+            slug: "advent-readings",
+            title: "Advent Readings",
+            writing_count: 5,
+          },
+        ],
+      }),
+    );
+
+    await renderDetail(root);
+
+    await vi.waitFor(() => expect(container.textContent).toContain("About this Resource"));
+    expect(container.querySelector('a[href="/resources/type/devotional"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/resources/category/prayer"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/resources/series/advent-readings"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/resources/book/John"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/resources/previous-resource"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/resources/next-resource"]')).not.toBeNull();
+  });
+
+  it("renders backend-composed continue reading groups without extra search fan-out", async () => {
+    mocks.fetchPublicResourceDetail.mockResolvedValueOnce(
+      detail({
+        continue_reading: {
+          more_from_categories: [
+            {
+              category: {
+                description: "",
+                id: 2,
+                is_active: true,
+                is_featured: false,
+                name: "Prayer",
+                parent: null,
+                slug: "prayer",
+                sort_order: 1,
+                writing_count: 3,
+              },
+              items: [card("more-prayer", "A Prayer Resource")],
+            },
+          ],
+          more_from_series: [
+            {
+              series: {
+                cover_image_detail: null,
+                description: "",
+                id: 3,
+                slug: "advent-readings",
+                title: "Advent Readings",
+                writing_count: 5,
+              },
+              items: [card("series-resource", "A Series Resource")],
+            },
+          ],
+          more_resources: [card("more-resource", "Another Resource")],
+          study_same_scriptures: [
+            {
+              book: {
+                abbreviation: "Jn",
+                id: 43,
+                name: "John",
+                number: 43,
+                osis_id: "John",
+                testament: "NT",
+                writing_count: 4,
+              },
+              items: [card("john-resource", "A John Resource")],
+            },
+          ],
+        },
+      }),
+    );
+
+    await renderDetail(root);
+
+    await vi.waitFor(() => expect(container.textContent).toContain("More from this Series"));
+    expect(container.textContent).toContain("More from Prayer");
+    expect(container.textContent).toContain("Study the Same Scriptures");
+    expect(container.textContent).toContain("More Resources");
+    expect(container.textContent).toContain("A Series Resource");
+    expect(container.textContent).toContain("A Prayer Resource");
+    expect(container.textContent).toContain("A John Resource");
+    expect(container.textContent).toContain("Another Resource");
+    expect(mocks.fetchPublicResourceDetail).toHaveBeenCalledTimes(1);
   });
 
   it("shows a graceful error when the public detail cannot load", async () => {

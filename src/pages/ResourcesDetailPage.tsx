@@ -1,12 +1,13 @@
-import { ArrowLeft, Clock3, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Clock3, FolderOpen, Layers3, LibraryBig, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import ResourceCard from "../components/resources/ResourceCard";
 import WritingArticleReader from "../components/writing/WritingArticleReader";
 import { useTheme } from "../hooks/useTheme";
 import { fetchPublicResourceDetail } from "../services/resourcesApi";
-import type { PublicWritingDetail } from "../types/writing";
+import type { PublicWritingCard, PublicWritingDetail } from "../types/writing";
 
 const articleAuthor = (writing: PublicWritingDetail) =>
   writing.byline ||
@@ -23,6 +24,214 @@ const formatPublishedDate = (value?: string) => {
     month: "long",
     year: "numeric",
   });
+};
+
+
+type ContinueReadingSection = {
+  href?: string;
+  items: PublicWritingCard[];
+  title: string;
+};
+
+const cardGridClass =
+  "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4";
+
+const sectionShellClass = (darkMode: boolean) =>
+  darkMode
+    ? "rounded-[1.75rem] border border-white/10 bg-zinc-950/80 p-4 shadow-2xl shadow-black/30 sm:p-6"
+    : "rounded-[1.75rem] border border-[#eaded0] bg-[#fffaf0]/85 p-4 shadow-xl shadow-zinc-900/5 sm:p-6";
+
+const buildContinueReadingSections = (
+  writing: PublicWritingDetail,
+): ContinueReadingSection[] => {
+  const recommendations = writing.continue_reading;
+  if (!recommendations) return [];
+
+  return [
+    ...(recommendations.more_from_series ?? []).map((group) => ({
+      href: `/resources/series/${group.series.slug}`,
+      items: group.items,
+      title: "More from this Series",
+    })),
+    ...(recommendations.more_from_categories ?? []).map((group) => ({
+      href: `/resources/category/${group.category.slug}`,
+      items: group.items,
+      title: `More from ${group.category.name}`,
+    })),
+    ...(recommendations.study_same_scriptures ?? []).map((group) => ({
+      href: `/resources/book/${group.book.osis_id}`,
+      items: group.items,
+      title: "Study the Same Scriptures",
+    })),
+    {
+      href: "/resources",
+      items: recommendations.more_resources ?? [],
+      title: "More Resources",
+    },
+  ].filter((section) => section.items.length > 0);
+};
+
+const ResourceCatalog = ({
+  darkMode,
+  writing,
+}: {
+  darkMode: boolean;
+  writing: PublicWritingDetail;
+}) => {
+  const links = [
+    writing.resource_type_detail
+      ? {
+          href: `/resources/type/${writing.resource_type_detail.slug}`,
+          icon: LibraryBig,
+          label: writing.resource_type_detail.name,
+          title: "Resource type",
+        }
+      : null,
+    ...(writing.categories ?? []).map((category) => ({
+      href: `/resources/category/${category.slug}`,
+      icon: FolderOpen,
+      label: category.name,
+      title: "Category",
+    })),
+    ...(writing.series ?? []).map((series) => ({
+      href: `/resources/series/${series.slug}`,
+      icon: Layers3,
+      label: series.title,
+      title: "Series",
+    })),
+    ...(writing.scripture_references ?? [])
+      .map((reference) => {
+        const osisId = reference.book_detail?.osis_id || reference.book_osis;
+        if (!osisId) return null;
+        return {
+          href: `/resources/book/${osisId}`,
+          icon: BookOpen,
+          label: reference.display_text || osisId,
+          title: "Scripture",
+        };
+      })
+      .filter(Boolean),
+  ].filter(Boolean) as Array<{
+    href: string;
+    icon: typeof LibraryBig;
+    label: string;
+    title: string;
+  }>;
+
+  if (!links.length) return null;
+
+  return (
+    <section className={sectionShellClass(darkMode)} aria-labelledby="resource-catalog-title">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-red-800 dark:text-red-200">
+            Catalog
+          </p>
+          <h2 id="resource-catalog-title" className="mt-1 font-serif text-2xl">
+            About this Resource
+          </h2>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2.5">
+        {links.map((link) => {
+          const Icon = link.icon;
+          return (
+            <Link
+              className={
+                darkMode
+                  ? "inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-stone-200 transition hover:border-red-200/40 hover:text-red-100"
+                  : "inline-flex items-center gap-2 rounded-full border border-[#eaded0] bg-white px-3 py-2 text-sm font-bold text-zinc-800 shadow-sm transition hover:border-red-200 hover:text-red-800"
+              }
+              key={`${link.title}-${link.href}-${link.label}`}
+              to={link.href}
+            >
+              <Icon size={15} aria-hidden="true" />
+              <span className="text-[10px] font-black uppercase tracking-[0.16em] text-red-800 dark:text-red-200">
+                {link.title}
+              </span>
+              <span>{link.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
+
+const PreviousNext = ({
+  darkMode,
+  writing,
+}: {
+  darkMode: boolean;
+  writing: PublicWritingDetail;
+}) => {
+  const linkClass = darkMode
+    ? "group rounded-[1.5rem] border border-white/10 bg-zinc-950/80 p-5 transition hover:border-red-200/30 hover:bg-white/5"
+    : "group rounded-[1.5rem] border border-[#eaded0] bg-white p-5 shadow-lg shadow-zinc-900/5 transition hover:border-red-200 hover:bg-[#fffaf0]";
+  const mutedClass = darkMode ? "text-stone-400" : "text-zinc-600";
+
+  if (!writing.previous_article && !writing.next_article) return null;
+
+  return (
+    <nav aria-label="Previous and next resources" className="grid gap-4 md:grid-cols-2">
+      {writing.previous_article ? (
+        <Link className={linkClass} to={`/resources/${writing.previous_article.slug}`}>
+          <span className={`text-xs font-black uppercase tracking-[0.18em] ${mutedClass}`}>
+            Previous Resource
+          </span>
+          <span className="mt-2 block font-serif text-2xl leading-tight transition group-hover:text-red-800 dark:group-hover:text-red-100">
+            {writing.previous_article.title}
+          </span>
+        </Link>
+      ) : <span />}
+      {writing.next_article ? (
+        <Link className={`${linkClass} md:text-right`} to={`/resources/${writing.next_article.slug}`}>
+          <span className={`text-xs font-black uppercase tracking-[0.18em] ${mutedClass}`}>
+            Next Resource
+          </span>
+          <span className="mt-2 block font-serif text-2xl leading-tight transition group-hover:text-red-800 dark:group-hover:text-red-100">
+            {writing.next_article.title}
+          </span>
+        </Link>
+      ) : null}
+    </nav>
+  );
+};
+
+const ContinueReading = ({
+  darkMode,
+  writing,
+}: {
+  darkMode: boolean;
+  writing: PublicWritingDetail;
+}) => {
+  const sections = buildContinueReadingSections(writing);
+  if (!sections.length) return null;
+
+  return (
+    <section className="grid gap-6" aria-label="Continue reading recommendations">
+      {sections.map((section) => (
+        <div className={sectionShellClass(darkMode)} key={section.title}>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-serif text-3xl leading-tight">{section.title}</h2>
+            {section.href ? (
+              <Link
+                className="inline-flex items-center gap-2 text-sm font-black text-red-800 transition hover:text-red-700 dark:text-red-100"
+                to={section.href}
+              >
+                View more <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+            ) : null}
+          </div>
+          <div className={cardGridClass}>
+            {section.items.map((article) => (
+              <ResourceCard article={article} key={article.id} variant="masonry" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
+  );
 };
 
 const ReaderSkeleton = () => (
@@ -129,6 +338,9 @@ const ResourcesDetailPage = () => {
               title={writing.title}
               writing={writing}
             />
+            <ResourceCatalog darkMode={darkMode} writing={writing} />
+            <PreviousNext darkMode={darkMode} writing={writing} />
+            <ContinueReading darkMode={darkMode} writing={writing} />
           </section>
         ) : null}
       </main>
