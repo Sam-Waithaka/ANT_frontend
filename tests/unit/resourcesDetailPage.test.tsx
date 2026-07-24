@@ -263,6 +263,35 @@ describe("ResourcesDetailPage", () => {
     expect(container.querySelector('a[href="/resources/next-resource"]')).not.toBeNull();
   });
 
+
+  it("does not render previous/next controls without series context", async () => {
+    mocks.fetchPublicResourceDetail.mockResolvedValueOnce(
+      detail({
+        next_article: {
+          id: 12,
+          published_at: "2026-07-19T09:00:00Z",
+          slug: "next-resource",
+          title: "Next Resource",
+        },
+        previous_article: {
+          id: 8,
+          published_at: "2026-07-16T09:00:00Z",
+          slug: "previous-resource",
+          title: "Previous Resource",
+        },
+        series: [],
+      }),
+    );
+
+    await renderDetail(root);
+
+    await vi.waitFor(() => expect(container.textContent).toContain("Grace for Today"));
+    expect(container.textContent).not.toContain("Previous in Series");
+    expect(container.textContent).not.toContain("Next in Series");
+    expect(container.querySelector('a[href="/resources/previous-resource"]')).toBeNull();
+    expect(container.querySelector('a[href="/resources/next-resource"]')).toBeNull();
+  });
+
   it("renders backend-composed continue reading groups without extra search fan-out", async () => {
     mocks.fetchPublicResourceDetail.mockResolvedValueOnce(
       detail({

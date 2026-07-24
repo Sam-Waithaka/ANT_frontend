@@ -33,8 +33,8 @@ type ContinueReadingSection = {
   title: string;
 };
 
-const cardGridClass =
-  "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4";
+const recommendationMasonryClass =
+  "columns-2 gap-3 sm:gap-4 lg:columns-3 xl:columns-4";
 
 const sectionShellClass = (darkMode: boolean) =>
   darkMode
@@ -170,14 +170,16 @@ const PreviousNext = ({
     : "group rounded-[1.5rem] border border-[#eaded0] bg-white p-5 shadow-lg shadow-zinc-900/5 transition hover:border-red-200 hover:bg-[#fffaf0]";
   const mutedClass = darkMode ? "text-stone-400" : "text-zinc-600";
 
-  if (!writing.previous_article && !writing.next_article) return null;
+  const hasSeriesContext = (writing.series ?? []).length > 0;
+
+  if (!hasSeriesContext || (!writing.previous_article && !writing.next_article)) return null;
 
   return (
-    <nav aria-label="Previous and next resources" className="grid gap-4 md:grid-cols-2">
+    <nav aria-label="Previous and next resources in this series" className="grid gap-4 md:grid-cols-2">
       {writing.previous_article ? (
         <Link className={linkClass} to={`/resources/${writing.previous_article.slug}`}>
           <span className={`text-xs font-black uppercase tracking-[0.18em] ${mutedClass}`}>
-            Previous Resource
+            Previous in Series
           </span>
           <span className="mt-2 block font-serif text-2xl leading-tight transition group-hover:text-red-800 dark:group-hover:text-red-100">
             {writing.previous_article.title}
@@ -187,7 +189,7 @@ const PreviousNext = ({
       {writing.next_article ? (
         <Link className={`${linkClass} md:text-right`} to={`/resources/${writing.next_article.slug}`}>
           <span className={`text-xs font-black uppercase tracking-[0.18em] ${mutedClass}`}>
-            Next Resource
+            Next in Series
           </span>
           <span className="mt-2 block font-serif text-2xl leading-tight transition group-hover:text-red-800 dark:group-hover:text-red-100">
             {writing.next_article.title}
@@ -223,9 +225,14 @@ const ContinueReading = ({
               </Link>
             ) : null}
           </div>
-          <div className={cardGridClass}>
+          <div className={recommendationMasonryClass} data-resource-detail-recommendations="masonry">
             {section.items.map((article) => (
-              <ResourceCard article={article} key={article.id} variant="masonry" />
+              <ResourceCard
+                article={article}
+                className="mb-3 break-inside-avoid sm:mb-4"
+                key={article.id}
+                variant="masonry"
+              />
             ))}
           </div>
         </div>
