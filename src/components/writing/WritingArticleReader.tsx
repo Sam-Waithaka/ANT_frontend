@@ -16,6 +16,7 @@ type WritingArticleReaderProps = {
   darkMode: boolean;
   excerpt?: string;
   footer?: ReactNode;
+  headerAction?: ReactNode;
   mediaEmbeds?: WritingMediaEmbed[];
   metadata?: ReactNode;
   title: string;
@@ -29,12 +30,12 @@ const hasContentJson = (contentJson: unknown) => {
 };
 
 const WritingArticleReader = ({
-  contentHtml,
   contentJson,
   coverImage,
   darkMode,
   excerpt,
   footer,
+  headerAction,
   mediaEmbeds,
   metadata,
   title,
@@ -58,6 +59,27 @@ const WritingArticleReader = ({
       labelledBy="writing-article-reader-title"
     >
       <article className="mx-auto max-w-3xl">
+        <header className="grid gap-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            {metadata ? (
+              <div className={"min-w-0 text-sm " + mutedTextClass}>{metadata}</div>
+            ) : <span />}
+            {headerAction ? <div className="shrink-0 sm:ml-6">{headerAction}</div> : null}
+          </div>
+          <div>
+            <h1
+              id="writing-article-reader-title"
+              className="font-serif text-4xl leading-tight sm:text-5xl"
+            >
+              {resolvedTitle}
+            </h1>
+            {resolvedExcerpt ? (
+              <p className={"mt-5 max-w-2xl text-lg leading-8 " + mutedTextClass}>
+                {resolvedExcerpt}
+              </p>
+            ) : null}
+          </div>
+        </header>
         {responsiveCoverImage ? (
           <ResponsiveImage
             alt={
@@ -66,25 +88,11 @@ const WritingArticleReader = ({
               "Article cover image"
             }
             asset={responsiveCoverImage}
-            className="mb-8 aspect-[16/8] w-full rounded-[1.25rem] border border-black/5 object-cover shadow-sm dark:border-white/10"
+            className="mt-8 aspect-[16/7] w-full rounded-[1.25rem] border border-black/5 object-cover shadow-sm dark:border-white/10"
             fetchPriority="high"
             loading="eager"
             preset="articleCover"
           />
-        ) : null}
-        {metadata ? (
-          <div className={"mb-4 text-sm " + mutedTextClass}>{metadata}</div>
-        ) : null}
-        <h1
-          id="writing-article-reader-title"
-          className="font-serif text-4xl leading-tight sm:text-5xl"
-        >
-          {resolvedTitle}
-        </h1>
-        {resolvedExcerpt ? (
-          <p className={"mt-5 max-w-2xl text-lg leading-8 " + mutedTextClass}>
-            {resolvedExcerpt}
-          </p>
         ) : null}
         <div className={"mt-8 border-t pt-8 " + dividerClass}>
           <WritingContentRenderer

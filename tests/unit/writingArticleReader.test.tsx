@@ -66,6 +66,53 @@ describe("WritingArticleReader", () => {
     expect(container.textContent).toContain("Come, let us worship and bow down.");
   });
 
+
+  it("renders header actions beside metadata before the cover image", async () => {
+    await act(async () => {
+      root.render(
+        <WritingArticleReader
+          contentJson={{
+            root: {
+              children: [
+                {
+                  children: [{ text: "Reader body", type: "text", version: 1 }],
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  type: "paragraph",
+                  version: 1,
+                },
+              ],
+              direction: null,
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1,
+            },
+          }}
+          coverImage={{
+            alt_text: "Article cover",
+            id: 20,
+            title: "Cover",
+            url: "/media/cover.jpg",
+          }}
+          darkMode={false}
+          headerAction={<button type="button">Share</button>}
+          metadata={<span>Pastor Jane / 2 min read</span>}
+          title="Reader Header"
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("Share");
+    expect(container.textContent).toContain("Pastor Jane / 2 min read");
+    const titleNode = container.querySelector("#writing-article-reader-title");
+    const image = container.querySelector('img[alt="Article cover"]');
+    expect(titleNode).not.toBeNull();
+    expect(image).not.toBeNull();
+    expect(titleNode?.compareDocumentPosition(image as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
   it("loads the cover image through the shared responsive image path", async () => {
     await act(async () => {
       root.render(

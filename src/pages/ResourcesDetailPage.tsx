@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, BookOpen, Clock3, FolderOpen, Layers3, LibraryBig, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, Clock3, FolderOpen, Layers3, LibraryBig, Share2, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
@@ -7,6 +7,7 @@ import ResourceCard from "../components/resources/ResourceCard";
 import WritingArticleReader from "../components/writing/WritingArticleReader";
 import { useTheme } from "../hooks/useTheme";
 import { fetchPublicResourceDetail } from "../services/resourcesApi";
+import { copyToClipboard } from "../utils/copyToClipboard";
 import type { PublicWritingCard, PublicWritingDetail } from "../types/writing";
 
 const articleAuthor = (writing: PublicWritingDetail) =>
@@ -253,6 +254,7 @@ const ResourcesDetailPage = () => {
   const [searchParams] = useSearchParams();
   const { darkMode, toggleTheme } = useTheme();
   const [writing, setWriting] = useState<PublicWritingDetail | null>(null);
+  const [shareStatus, setShareStatus] = useState<'copied' | 'idle'>('idle');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const publishedAt = searchParams.get("published_at") || undefined;
@@ -285,19 +287,66 @@ const ResourcesDetailPage = () => {
     if (!writing) return null;
 
     return (
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span className="inline-flex items-center gap-1.5 font-semibold">
           <UserRound size={15} aria-hidden="true" />
           {articleAuthor(writing)}
         </span>
+        <span aria-hidden="true" className="opacity-60">&middot;</span>
         <span className="inline-flex items-center gap-1.5 font-semibold">
           <Clock3 size={15} aria-hidden="true" />
           {writing.reading_time_minutes || 1} min read
         </span>
+        <span aria-hidden="true" className="opacity-60">&middot;</span>
         <span>{formatPublishedDate(writing.published_at)}</span>
       </div>
     );
   }, [writing]);
+
+
+  const handleShare = async () => {
+    if (!writing) return;
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const shareUrl = writing.canonical_url?.startsWith("http")
+      ? writing.canonical_url
+      : `${origin}/resources/${writing.slug}`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: writing.og_title || writing.title,
+          text: writing.og_description || writing.excerpt,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // Fall through to clipboard when native sharing is cancelled or unavailable.
+      }
+    }
+
+    const copied = await copyToClipboard(shareUrl);
+    if (copied) {
+      setShareStatus("copied");
+      window.setTimeout(() => setShareStatus("idle"), 2200);
+    }
+  };
+
+  const shareAction = writing ? (
+    <button
+      aria-live="polite"
+      className={
+        darkMode
+          ? "inline-flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-sm font-black text-stone-100 transition hover:-translate-y-0.5 hover:border-red-200/30 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-red-200/50"
+          : "inline-flex min-h-10 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 text-sm font-black text-zinc-800 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 focus:ring-offset-[#fffaf0]"
+      }
+      onClick={handleShare}
+      type="button"
+    >
+      {shareStatus === "copied" ? <Check size={16} aria-hidden="true" /> : <Share2 size={16} aria-hidden="true" />}
+      {shareStatus === "copied" ? "Link copied" : "Share"}
+    </button>
+  ) : null;
 
   return (
     <div
@@ -341,6 +390,7 @@ const ResourcesDetailPage = () => {
             </Link>
             <WritingArticleReader
               darkMode={darkMode}
+              headerAction={shareAction}
               metadata={metadata}
               title={writing.title}
               writing={writing}
