@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, BookOpen, Check, Clock3, Copy, Mail, MessageCircle, Share2, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Clock3, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import SiteFooter from "../components/SiteFooter";
@@ -8,7 +8,9 @@ import WritingArticleReader from "../components/writing/WritingArticleReader";
 import { useTheme } from "../hooks/useTheme";
 import { normalizeMediaAssetForDisplay } from "../services/mediaAssetsApi";
 import { fetchPublicResourceDetail } from "../services/resourcesApi";
-import { copyToClipboard } from "../utils/copyToClipboard";
+import ShareButton from "../components/share/ShareButton";
+import ShareLinks from "../components/share/ShareLinks";
+import { buildEmailShareHref, buildWhatsAppShareHref, useShareAction, type SharePayload } from "../components/share/useShareAction";
 import type { PublicWritingCard, PublicWritingDetail } from "../types/writing";
 
 const articleAuthor = (writing: PublicWritingCard) =>
@@ -283,31 +285,12 @@ const ShareLinksSection = ({
   emailHref: string;
   onCopy: () => void;
   whatsappHref: string;
-}) => {
-  const linkClass = darkMode
-    ? "inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-bold text-stone-300 transition hover:bg-white/5 hover:text-red-100 focus:outline-none focus:ring-2 focus:ring-red-200/40"
-    : "inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-bold text-zinc-700 transition hover:bg-white hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-700";
-
-  return (
-    <section className={railSectionClass(darkMode)} aria-labelledby="share-article-title">
-      <h2 id="share-article-title" className={railHeadingClass}>Share this article</h2>
-      <div className="grid gap-1">
-        <button className={`${linkClass} text-left`} onClick={onCopy} type="button">
-          <Copy size={14} aria-hidden="true" />
-          {copyLabel}
-        </button>
-        <a className={linkClass} href={whatsappHref} rel="noreferrer" target="_blank">
-          <MessageCircle size={14} aria-hidden="true" />
-          WhatsApp
-        </a>
-        <a className={linkClass} href={emailHref}>
-          <Mail size={14} aria-hidden="true" />
-          Email
-        </a>
-      </div>
-    </section>
-  );
-};
+}) => (
+  <section className={railSectionClass(darkMode)} aria-labelledby="share-article-title">
+    <h2 id="share-article-title" className={railHeadingClass}>Share this article</h2>
+    <ShareLinks copyLabel={copyLabel} darkMode={darkMode} emailHref={emailHref} onCopy={onCopy} whatsappHref={whatsappHref} />
+  </section>
+);
 
 const ContinueReading = ({
   darkMode,
@@ -384,7 +367,6 @@ const ResourcesDetailPage = () => {
   const [searchParams] = useSearchParams();
   const { darkMode, toggleTheme } = useTheme();
   const [writing, setWriting] = useState<PublicWritingDetail | null>(null);
-  const [shareStatus, setShareStatus] = useState<'copied' | 'idle'>('idle');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const publishedAt = searchParams.get("published_at") || undefined;
@@ -432,65 +414,26 @@ const ResourcesDetailPage = () => {
       </div>
     );
   }, [writing]);
-
-
-  const shareUrl = useMemo(() => {
-    if (!writing) return "";
+  const sharePayload = useMemo<SharePayload | null>(() => {
+    if (!writing) return null;
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return writing.canonical_url?.startsWith("http")
+    const url = writing.canonical_url?.startsWith("http")
       ? writing.canonical_url
       : `${origin}/resources/${writing.slug}`;
+
+    return {
+      text: writing.og_description || writing.excerpt,
+      title: writing.og_title || writing.title,
+      url,
+    };
   }, [writing]);
-
-  const copyShareUrl = async () => {
-    if (!shareUrl) return;
-    const copied = await copyToClipboard(shareUrl);
-    if (copied) {
-      setShareStatus("copied");
-      window.setTimeout(() => setShareStatus("idle"), 2200);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!writing || !shareUrl) return;
-
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: writing.og_title || writing.title,
-          text: writing.og_description || writing.excerpt,
-          url: shareUrl,
-        });
-        return;
-      } catch {
-        // Fall through to clipboard when native sharing is cancelled or unavailable.
-      }
-    }
-
-    await copyShareUrl();
-  };
-
-  const encodedShareUrl = encodeURIComponent(shareUrl);
-  const encodedShareTitle = encodeURIComponent(writing?.title || "A.I.C Njoro Town resource");
-  const whatsappHref = `https://wa.me/?text=${encodedShareTitle}%20${encodedShareUrl}`;
-  const emailHref = `mailto:?subject=${encodedShareTitle}&body=${encodedShareUrl}`;
+  const { copyShareUrl, share, shareStatus } = useShareAction(sharePayload);
+  const whatsappHref = sharePayload ? buildWhatsAppShareHref(sharePayload) : "";
+  const emailHref = sharePayload ? buildEmailShareHref(sharePayload) : "";
 
   const shareAction = writing ? (
-    <button
-      aria-live="polite"
-      className={
-        darkMode
-          ? "inline-flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 text-sm font-black text-stone-100 transition hover:-translate-y-0.5 hover:border-red-200/30 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-red-200/50"
-          : "inline-flex min-h-10 items-center gap-2 rounded-full border border-[#eaded0] bg-white px-4 text-sm font-black text-zinc-800 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-700 focus:ring-offset-2 focus:ring-offset-[#fffaf0]"
-      }
-      onClick={handleShare}
-      type="button"
-    >
-      {shareStatus === "copied" ? <Check size={16} aria-hidden="true" /> : <Share2 size={16} aria-hidden="true" />}
-      {shareStatus === "copied" ? "Link copied" : "Share"}
-    </button>
+    <ShareButton darkMode={darkMode} onShare={share} shareStatus={shareStatus} variant="outline" />
   ) : null;
-
   return (
     <div
       className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${
