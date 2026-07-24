@@ -322,7 +322,7 @@ const ArticleSupportingRail = ({
   whatsappHref: string;
   writing: PublicWritingDetail;
 }) => (
-  <aside className="grid gap-0 xl:sticky xl:top-28" data-resource-detail-supporting-rail="true">
+  <aside className="grid gap-0 xl:sticky xl:top-28 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto xl:overscroll-contain xl:pr-2" data-resource-detail-supporting-rail="true">
     <ShareLinksSection copyLabel={copyLabel} darkMode={darkMode} emailHref={emailHref} onCopy={onCopy} whatsappHref={whatsappHref} />
     <AboutResourceSection darkMode={darkMode} writing={writing} />
     <ContinueReading darkMode={darkMode} writing={writing} />
@@ -442,14 +442,14 @@ const ResourcesDetailPage = () => {
           </section>
         ) : null}
         {!loading && writing ? (
-          <section className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:px-6 lg:px-8">
+          <section className="mx-auto grid max-w-[88rem] gap-6 px-4 py-10 sm:px-6 lg:px-8">
             <Link
               to="/resources"
               className="inline-flex w-fit items-center gap-2 text-sm font-black text-red-800 transition hover:text-red-700 dark:text-red-100"
             >
               <ArrowLeft size={16} aria-hidden="true" /> Back to Resources
             </Link>
-            <div className="grid gap-8 xl:grid-cols-[minmax(0,48rem)_minmax(18rem,21rem)] xl:items-start xl:gap-10">
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,56rem)_minmax(18rem,21rem)] xl:items-start xl:gap-10">
               <div className="grid min-w-0 gap-6">
                 <WritingArticleReader
                   darkMode={darkMode}

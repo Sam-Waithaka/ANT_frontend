@@ -58,7 +58,7 @@ const WritingArticleReader = ({
       footer={footer}
       labelledBy="writing-article-reader-title"
     >
-      <article className="mx-auto max-w-[42rem]">
+      <article className="mx-auto max-w-[48rem]">
         <header className="grid gap-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             {metadata ? (
@@ -74,7 +74,7 @@ const WritingArticleReader = ({
               {resolvedTitle}
             </h1>
             {resolvedExcerpt ? (
-              <p className={"mt-5 max-w-2xl text-lg leading-8 " + mutedTextClass}>
+              <p className={"mt-5 max-w-3xl text-lg leading-8 " + mutedTextClass}>
                 {resolvedExcerpt}
               </p>
             ) : null}
