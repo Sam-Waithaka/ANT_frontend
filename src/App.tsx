@@ -1,13 +1,11 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { CalendarDays, CircleHelp, Settings } from "lucide-react";
 import { Route, Routes } from "react-router-dom";
 import RouteTransition from "./components/routing/RouteTransition";
 import MobileBottomActionsProvider from "./components/navigation/MobileBottomActionsProvider";
 import RequireAuth from "./components/auth/RequireAuth";
 import RequirePortalAccess from "./components/auth/RequirePortalAccess";
-import { PortalToastProvider } from "./components/portal/PortalToast";
 import AboutPage from "./pages/AboutPage";
-import AccountPage from "./pages/AccountPage";
 import ContactPage from "./pages/ContactPage";
 import GivePage from "./pages/GivePage";
 import LandingPage from "./pages/LandingPage";
@@ -15,31 +13,51 @@ import MediaPage from "./pages/MediaPage";
 import MediaWatchPage from "./components/media/watch/MediaWatchPage";
 import MinistriesPage from "./pages/MinistriesPage";
 import Project52Page from "./pages/Project52Page";
-import PortalPage from "./pages/PortalPage";
 import PlannedDestinationPage from "./pages/PlannedDestinationPage";
 import ResourcesBrowsePage from "./pages/ResourcesBrowsePage";
 import ResourcesDetailPage from "./pages/ResourcesDetailPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import ScripturePage from "./pages/ScripturePage";
-import WritingArticlesPage from "./pages/portal/writing/WritingArticlesPage";
-import WritingEditorPage from "./pages/portal/writing/WritingEditorPage";
-import WritingEditorialPage from "./pages/portal/writing/WritingEditorialPage";
-import WritingLibraryPage from "./pages/portal/writing/WritingLibraryPage";
-import WritingNewArticlePage from "./pages/portal/writing/WritingNewArticlePage";
-import WritingStudioPage from "./pages/portal/writing/WritingStudioPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Project52Provider } from "./contexts/Project52Context";
 import { ScriptureReaderProvider } from "./contexts/ScriptureReaderContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
+const AccountPage = lazy(() => import("./pages/AccountPage"));
+const PortalRuntime = lazy(() => import("./components/portal/PortalRuntime"));
+const PortalPage = lazy(() => import("./pages/PortalPage"));
+const WritingArticlesPage = lazy(() => import("./pages/portal/writing/WritingArticlesPage"));
+const WritingEditorPage = lazy(() => import("./pages/portal/writing/WritingEditorPage"));
+const WritingEditorialPage = lazy(() => import("./pages/portal/writing/WritingEditorialPage"));
+const WritingLibraryPage = lazy(() => import("./pages/portal/writing/WritingLibraryPage"));
+const WritingNewArticlePage = lazy(() => import("./pages/portal/writing/WritingNewArticlePage"));
+const WritingStudioPage = lazy(() => import("./pages/portal/writing/WritingStudioPage"));
+
+const ProtectedRouteLoadingState = ({ label }: { label: string }) => (
+  <div
+    className="grid min-h-screen place-items-center bg-[#f8f5ef] px-4 text-center text-zinc-700 dark:bg-[#080808] dark:text-stone-300"
+    role="status"
+  >
+    <div className="rounded-3xl border border-black/10 bg-white px-6 py-5 text-sm font-bold shadow-xl shadow-zinc-900/10 dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/30">
+      {label}
+    </div>
+  </div>
+);
+
 const PortalRoute = ({ children }: { children: ReactNode }) => (
   <RequirePortalAccess>
-    <PortalToastProvider>{children}</PortalToastProvider>
+    <Suspense fallback={<ProtectedRouteLoadingState label="Opening Portal..." />}>
+      <PortalRuntime>{children}</PortalRuntime>
+    </Suspense>
   </RequirePortalAccess>
 );
 
 const AccountRoute = ({ children }: { children: ReactNode }) => (
-  <RequireAuth>{children}</RequireAuth>
+  <RequireAuth>
+    <Suspense fallback={<ProtectedRouteLoadingState label="Opening your account..." />}>
+      {children}
+    </Suspense>
+  </RequireAuth>
 );
 
 function App() {

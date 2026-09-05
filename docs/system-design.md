@@ -32,12 +32,15 @@ Browser
   |
   | BrowserRouter + RouteTransition
   v
-Public routes                           Protected routes
-  Landing / Scripture / Project 52       RequireAuth
-  Resources / Media / church pages         |
+Public routes                           Protected route boundaries
+  Landing / Scripture / Project 52       Account: RequireAuth
+  Resources / Media / church pages       Portal: RequirePortalAccess
+                                            |
                                             v
-                                      PortalToastProvider
-                                      Portal / Writing Studio
+                                      Local Suspense boundary
+                                            |
+                                            v
+                                      Account or Portal runtime/page chunk
   |
   v
 Application providers
@@ -88,6 +91,8 @@ The application is mounted in React `StrictMode`. Development effects may theref
 
 | Route | Responsibility |
 | --- | --- |
+| `/account` | Authenticated account settings |
+| `/account/profile` | Authenticated profile settings |
 | `/portal` | Authenticated portal dashboard |
 | `/portal/writing` | Writing Studio entry point |
 | `/portal/writing/articles` | Writing library/article management |
@@ -96,7 +101,9 @@ The application is mounted in React `StrictMode`. Development effects may theref
 | `/portal/writing/editorial` | Editorial workflow |
 | `/portal/writing/:id` | Writing editor |
 
-Protected routes are wrapped by `RequireAuth` and `PortalToastProvider`. Unknown routes currently fall back to the landing page. Static-host refresh fallback is provided by `public/_redirects`.
+Account routes are guarded by `RequireAuth`. Portal routes are guarded by `RequirePortalAccess`, which first establishes an authenticated user and then checks Portal capability. The lazy boundary is deliberately inside each guard: unauthorized visitors are redirected without resolving the protected page module. After access is established, a local `Suspense` boundary loads the Account page or the Portal runtime and matched Portal page. `PortalToastProvider` is part of that lazy Portal runtime and is therefore absent from the public entry bundle.
+
+Public routes remain eager in this focused phase, and there is no application-wide route fallback. This avoids introducing an `Opening page...` transition across the public site while keeping authenticated tooling out of public downloads. Unknown routes currently fall back to the landing page. Static-host refresh fallback is provided by `public/_redirects`.
 
 ## Application Providers and State Ownership
 
@@ -322,7 +329,8 @@ Important responsive states should be checked around 360, 390, 430, 768, 820, 10
 
 - Public API memory caching has no TTL or background revalidation.
 - Generic public writing search remains outside Resources namespace caching.
-- Route and player code is still eagerly bundled; HLS/DASH and media-player dependencies require lazy-loading work.
+- Public route and player code is still eagerly bundled; HLS/DASH and media-player dependencies require a separate lazy-loading pass.
+- Account and Portal route modules are lazy-loaded behind their authorization guards; finer public-route and Writing renderer boundaries remain future work.
 - Some API normalizers remain deliberately tolerant while backend contracts stabilize.
 - Browser end-to-end runs depend on the configured Vite test server becoming available within its startup timeout.
 - Continue refining shared navigation behavior with real content and authenticated states at every viewport.
