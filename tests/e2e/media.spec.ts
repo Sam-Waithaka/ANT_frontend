@@ -122,11 +122,17 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
   await expect.poll(() => pagedRequests.some((url) => url.includes('type=sermon') && url.includes('page=2'))).toBe(true);
 
   await page.getByRole('button', { name: /Series/i }).click();
-  await page.getByRole('button', { name: /Dying Well/i }).click();
+  await page.getByRole('link', { name: /Dying Well/i }).first().click();
+  await expect(page).toHaveURL(/\/media\/series\/dying-well$/);
   await expect(page.getByRole('heading', { name: 'Dying Well' }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Dying Well Messages' })).toBeVisible();
   await expect(page.getByText('Purpose Proceeds without permission')).toBeVisible();
 
+  await page.reload();
+  await expect(page).toHaveURL(/\/media\/series\/dying-well$/);
+  await expect(page.getByRole('heading', { name: 'Dying Well Messages' })).toBeVisible();
+
+  await page.getByRole('link', { name: /Back to Media/i }).click();
   await page.getByRole('button', { name: /Explore/i }).click();
   await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
   await expect(page.getByText('Church Family Update')).toBeVisible();

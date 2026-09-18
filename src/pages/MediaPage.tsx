@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import MediaCallout from '../components/media/MediaCallout';
 import MediaCategoryTabs from '../components/media/MediaCategoryTabs';
 import type { MediaTabKey } from '../components/media/MediaCategoryTabs';
 import MediaFeatured from '../components/media/MediaFeatured';
 import MediaHero from '../components/media/MediaHero';
 import MediaRail from '../components/media/MediaRail';
-import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import MediaSeriesRail from '../components/media/MediaSeriesRail';
 import MusicSubcategoryTabs from '../components/media/MusicSubcategoryTabs';
 import type { MusicSubcategoryKey } from '../components/media/MusicSubcategoryTabs';
@@ -25,7 +25,7 @@ import {
   fetchLatestSermon,
   fetchLiveAudioVisualCta,
 } from '../services/audioVisualApi';
-import type { AudioVisualGroupDetail, AudioVisualHomePayload, AudioVisualItem, AudioVisualLookup, AudioVisualRail } from '../types/audioVisual';
+import type { AudioVisualHomePayload, AudioVisualItem, AudioVisualLookup, AudioVisualRail } from '../types/audioVisual';
 
 type PagedMediaKey = Extract<MediaTabKey, 'explore' | 'featured' | 'livestreams' | 'sermons' | 'shorts' | 'teachings'>;
 
@@ -154,6 +154,8 @@ const hydrateSeriesThumbnails = async (series: AudioVisualLookup[], signal: Abor
 
 const MediaPage = () => {
   const { darkMode, toggleTheme } = useTheme();
+  const location = useLocation();
+  const returnTab = (location.state as { mediaTab?: MediaTabKey } | null)?.mediaTab;
   const [homePayload, setHomePayload] = useState<AudioVisualHomePayload>(fallbackMediaHome);
   const [latestSermon, setLatestSermon] = useState<AudioVisualItem | null>(null);
   const [endpointRails, setEndpointRails] = useState<AudioVisualRail[]>([]);
@@ -163,9 +165,6 @@ const MediaPage = () => {
   const [musicItems, setMusicItems] = useState<AudioVisualItem[]>([]);
   const [sermonItems, setSermonItems] = useState<AudioVisualItem[]>([]);
   const [seriesItems, setSeriesItems] = useState<AudioVisualLookup[]>([]);
-  const [selectedSeries, setSelectedSeries] = useState<AudioVisualLookup | null>(null);
-  const [selectedSeriesDetail, setSelectedSeriesDetail] = useState<AudioVisualGroupDetail | null>(null);
-  const [selectedSeriesStatus, setSelectedSeriesStatus] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [shortItems, setShortItems] = useState<AudioVisualItem[]>([]);
   const [teachingItems, setTeachingItems] = useState<AudioVisualItem[]>([]);
   const [activeMusicSubcategory, setActiveMusicSubcategory] = useState<MusicSubcategoryKey>('all');
@@ -176,7 +175,7 @@ const MediaPage = () => {
     other: emptyPagedState(),
     pnw: emptyPagedState(),
   });
-  const [activeTab, setActiveTab] = useState<MediaTabKey>('all');
+  const [activeTab, setActiveTab] = useState<MediaTabKey>(() => returnTab === 'series' ? 'series' : 'all');
   const [previewCounts, setPreviewCounts] = useState(getPreviewCounts);
   const [pagedMedia, setPagedMedia] = useState<Record<PagedMediaKey, PagedMediaState>>({
     explore: emptyPagedState(),
@@ -282,34 +281,6 @@ const MediaPage = () => {
   }, [seriesItems]);
 
   useEffect(() => {
-    if (!selectedSeries?.slug) {
-      setSelectedSeriesDetail(null);
-      setSelectedSeriesStatus('idle');
-      return;
-    }
-
-    const controller = new AbortController();
-
-    setSelectedSeriesStatus('loading');
-    setSelectedSeriesDetail(null);
-
-    fetchAudioVisualSeriesDetail(selectedSeries.slug, controller.signal)
-      .then((detail) => {
-        if (!controller.signal.aborted) {
-          setSelectedSeriesDetail(detail);
-          setSelectedSeriesStatus('ready');
-        }
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) {
-          setSelectedSeriesStatus('error');
-        }
-      });
-
-    return () => controller.abort();
-  }, [selectedSeries]);
-
-  useEffect(() => {
     if (!isPagedMediaTab(activeTab) || pagedMedia[activeTab].status !== 'idle') {
       return;
     }
@@ -412,14 +383,6 @@ const MediaPage = () => {
     [homePayload, latestSermon, status]
   );
   const sermonSeries = useMemo(() => (seriesItems.length > 0 ? seriesItems : status === 'fallback' ? fallbackSeries() : []), [seriesItems, status]);
-  const handleSeriesSelect = (series: AudioVisualLookup) => {
-    if (!series.slug) {
-      return;
-    }
-
-    setSelectedSeries(series);
-    setActiveTab('series');
-  };
   const handleLoadMore = async (tab: PagedMediaKey) => {
     const currentPage = pagedMedia[tab];
 
@@ -541,8 +504,7 @@ const MediaPage = () => {
                   darkMode={darkMode}
                   items={sermonSeries}
                   onViewMore={() => setActiveTab('series')}
-                  selectedSlug={selectedSeries?.slug}
-                  onSeriesSelect={handleSeriesSelect}
+                  returnTab="all"
                 />
                 <MediaRail
                   darkMode={darkMode}
@@ -635,15 +597,11 @@ const MediaPage = () => {
               />
             )}
             {activeTab === 'series' && (
-              <>
-                <MediaSeriesRail
-                  darkMode={darkMode}
-                  items={sermonSeries}
-                  selectedSlug={selectedSeries?.slug}
-                  onSeriesSelect={handleSeriesSelect}
-                />
-                <MediaSeriesDetail darkMode={darkMode} series={selectedSeriesDetail} status={selectedSeriesStatus} />
-              </>
+              <MediaSeriesRail
+                darkMode={darkMode}
+                items={sermonSeries}
+                returnTab="series"
+              />
             )}
             {activeTab === 'livestreams' && (
               <MediaRail

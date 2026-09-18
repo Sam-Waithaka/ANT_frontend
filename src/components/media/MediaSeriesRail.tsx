@@ -1,4 +1,5 @@
 import { ArrowRight, Layers, Play } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import SiteButton from '../ui/SiteButton';
 import type { AudioVisualLookup } from '../../types/audioVisual';
 
@@ -6,13 +7,13 @@ type MediaSeriesRailProps = {
   darkMode: boolean;
   items: AudioVisualLookup[];
   onViewMore?: () => void;
-  onSeriesSelect?: (series: AudioVisualLookup) => void;
-  selectedSlug?: string;
+  returnTab?: 'all' | 'series';
 };
 
 const INITIAL_VISIBLE_SERIES = 10;
 
-const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selectedSlug }: MediaSeriesRailProps) => {
+const MediaSeriesRail = ({ darkMode, items, onViewMore, returnTab = 'all' }: MediaSeriesRailProps) => {
+  const location = useLocation();
   if (items.length === 0) return null;
 
   const visibleItems = items.slice(0, INITIAL_VISIBLE_SERIES);
@@ -26,19 +27,15 @@ const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selected
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {visibleItems.map((series) => (
-          <button
-            key={series.slug || series.name}
-            type="button"
-            onClick={() => onSeriesSelect?.(series)}
-            className={`group block w-full overflow-hidden rounded-2xl border text-left shadow-lg transition duration-300 hover:-translate-y-1 ${
-              selectedSlug && series.slug === selectedSlug
-                ? darkMode
-                  ? 'border-red-400/60 bg-red-950/25 shadow-red-950/30'
-                  : 'border-red-800/45 bg-red-50 shadow-red-900/15'
-                : darkMode
-                  ? 'border-white/10 bg-zinc-950 shadow-black/25 hover:shadow-red-950/25'
-                  : 'border-black/10 bg-white shadow-zinc-900/10 hover:shadow-zinc-900/15'
+        {visibleItems.map((series) => series.slug ? (
+          <Link
+            key={series.slug}
+            to={`/media/series/${encodeURIComponent(series.slug)}`}
+            state={{ from: `${location.pathname}${location.search}${location.hash}`, mediaReturnTab: returnTab }}
+            className={`group block w-full overflow-hidden rounded-2xl border text-left shadow-lg transition duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-700 ${
+              darkMode
+                ? 'border-white/10 bg-zinc-950 shadow-black/25 hover:shadow-red-950/25'
+                : 'border-black/10 bg-white shadow-zinc-900/10 hover:shadow-zinc-900/15'
             }`}
           >
             <div className={`relative ${darkMode ? 'bg-[#171717]' : 'bg-[#ece7de]'}`}>
@@ -69,8 +66,8 @@ const MediaSeriesRail = ({ darkMode, items, onSeriesSelect, onViewMore, selected
                 </p>
               )}
             </div>
-          </button>
-        ))}
+          </Link>
+        ) : null)}
       </div>
       {onViewMore && (
         <div className="mt-6 flex justify-center">

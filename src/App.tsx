@@ -10,6 +10,7 @@ import ContactPage from "./pages/ContactPage";
 import GivePage from "./pages/GivePage";
 import LandingPage from "./pages/LandingPage";
 import MediaPage from "./pages/MediaPage";
+import MediaSeriesPage from "./pages/MediaSeriesPage";
 import MediaWatchPage from "./components/media/watch/MediaWatchPage";
 import MinistriesPage from "./pages/MinistriesPage";
 import Project52Page from "./pages/Project52Page";
@@ -76,6 +77,7 @@ function App() {
                 <Route path="/give" element={<GivePage />} />
                 <Route path="/help" element={<PlannedDestinationPage eyebrow="Support" icon={CircleHelp} title="Help" description="Guidance for using Scripture, Project 52, Resources, Media, and your church account will live here." />} />
                 <Route path="/media" element={<MediaPage />} />
+                <Route path="/media/series/:slug" element={<MediaSeriesPage />} />
                 <Route path="/media/watch/:slug" element={<MediaWatchPage />} />
                 <Route path="/ministries" element={<MinistriesPage />} />
                 <Route path="/settings" element={<PlannedDestinationPage eyebrow="Preferences" icon={Settings} title="Settings" description="Site preferences, accessibility options, notifications, and personal defaults will be managed here." />} />
