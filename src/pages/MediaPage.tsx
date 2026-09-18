@@ -11,6 +11,7 @@ import MusicSubcategoryTabs from '../components/media/MusicSubcategoryTabs';
 import type { MusicSubcategoryKey } from '../components/media/MusicSubcategoryTabs';
 import { fallbackMediaHome } from '../components/media/mediaContent';
 import { selectMediaHeroItem } from '../components/media/mediaHeroSelection';
+import { hasMoreMediaItems, mergeUniqueMediaItems } from '../components/media/mediaPagination';
 import SiteFooter from '../components/navigation/SiteFooter';
 import SiteHeader from '../components/navigation/SiteHeader';
 import { useTheme } from '../hooks/useTheme';
@@ -73,11 +74,6 @@ const musicSubcategoryQuery = (subcategory: MusicSubcategoryKey) => ({
 
 const musicSubcategoryTitle = (subcategory: MusicSubcategoryKey) =>
   subcategory === 'all' ? 'Music' : subcategory === 'pnw' ? 'Praise and Worship' : subcategory === 'choir' ? 'Choir' : 'Explore Music';
-
-const mergeMediaItems = (current: AudioVisualItem[], next: AudioVisualItem[]) => {
-  const seen = new Set(current.map((item) => item.slug));
-  return [...current, ...next.filter((item) => !seen.has(item.slug))];
-};
 
 const getPreviewCounts = () => {
   if (typeof window === 'undefined') {
@@ -405,7 +401,7 @@ const MediaPage = () => {
         ...current,
         [tab]: {
           count: page.count,
-          items: mergeMediaItems(current[tab].items, page.items),
+          items: mergeUniqueMediaItems(current[tab].items, page.items),
           page: nextPage,
           status: 'ready',
         },
@@ -440,7 +436,7 @@ const MediaPage = () => {
         ...current,
         [activeMusicSubcategory]: {
           count: page.count,
-          items: mergeMediaItems(current[activeMusicSubcategory].items, page.items),
+          items: mergeUniqueMediaItems(current[activeMusicSubcategory].items, page.items),
           page: nextPage,
           status: 'ready',
         },
@@ -456,11 +452,10 @@ const MediaPage = () => {
   const tabItems = (tab: PagedMediaKey, fallbackItems: AudioVisualItem[]) =>
     pagedMedia[tab].items.length > 0 ? pagedMedia[tab].items : fallbackItems;
 
-  const canLoadMore = (tab: PagedMediaKey) =>
-    pagedMedia[tab].count > 0 && pagedMedia[tab].items.length < pagedMedia[tab].count;
+  const canLoadMore = (tab: PagedMediaKey) => hasMoreMediaItems(pagedMedia[tab]);
   const activeMusicState = musicPagedMedia[activeMusicSubcategory];
   const musicTabItems = activeMusicState.items.length > 0 ? activeMusicState.items : activeMusicSubcategory === 'all' ? rails.music.items : [];
-  const canLoadMoreMusic = activeMusicState.count > 0 && activeMusicState.items.length < activeMusicState.count;
+  const canLoadMoreMusic = hasMoreMediaItems(activeMusicState);
   const activeMusicTitle = musicSubcategoryTitle(activeMusicSubcategory);
   const resolvedPreviewCounts = {
     ...getPreviewCounts(),

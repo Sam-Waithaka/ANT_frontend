@@ -78,6 +78,7 @@ The application is mounted in React `StrictMode`. Development effects may theref
 | `/project52` | Full Project 52 reading plan |
 | `/scripture` | Scripture reader, Project 52 widget, search, comparison, and tools |
 | `/media` | Public media discovery and collections |
+| `/media/series/:slug` | Shareable, paginated audiovisual series detail |
 | `/media/watch/:slug` | Media playback/detail experience |
 | `/resources` | Public editorial Resources library |
 | `/resources/type/:slug` | Resource-type detail and browse view |
@@ -192,7 +193,7 @@ The homepage Resources highlight uses the same Resources Home response but appli
 
 ## Media Composition
 
-The Media page owns collection filtering, featured/latest media, series, music subcategories, and the watch experience. On mobile and tablet, Media and Resources share `FloatingBrowseControl`, including:
+The Media page owns collection filtering, featured/latest media, series discovery, music subcategories, and the watch experience. Series cards open `/media/series/:slug`; that route loads series metadata independently and pages through the audiovisual list endpoint with the series filter, oldest-first ordering, deduplication, and the shared `MediaRail` load-more control. On mobile and tablet, Media and Resources share `FloatingBrowseControl`, including:
 
 - compact floating pill presentation;
 - footer avoidance and scroll-direction concealment;

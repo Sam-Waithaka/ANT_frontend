@@ -126,7 +126,10 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
   await expect(page).toHaveURL(/\/media\/series\/dying-well$/);
   await expect(page.getByRole('heading', { name: 'Dying Well' }).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Dying Well Messages' })).toBeVisible();
+  await expect(page.getByText('Purpose Proceeds without permission')).toHaveCount(0);
+  await page.getByRole('button', { name: /Load more/i }).click();
   await expect(page.getByText('Purpose Proceeds without permission')).toBeVisible();
+  await expect.poll(() => pagedRequests.some((url) => url.includes('series=dying-well') && url.includes('page=2'))).toBe(true);
 
   await page.reload();
   await expect(page).toHaveURL(/\/media\/series\/dying-well$/);

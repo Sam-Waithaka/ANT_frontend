@@ -1,10 +1,11 @@
 import { ArrowLeft } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import SiteFooter from '../components/navigation/SiteFooter';
 import SiteHeader from '../components/navigation/SiteHeader';
+import { usePaginatedMediaItems } from '../hooks/usePaginatedMediaItems';
 import { useTheme } from '../hooks/useTheme';
 import { fetchAudioVisualSeriesDetail } from '../services/audioVisualApi';
 import type { AudioVisualGroupDetail } from '../types/audioVisual';
@@ -15,15 +16,24 @@ type SeriesRequestState = {
   status: 'loading' | 'ready' | 'error';
 };
 
+const SERIES_PAGE_SIZE = 12;
+
 const MediaSeriesPage = () => {
   const { slug = '' } = useParams<{ slug?: string }>();
   const location = useLocation();
   const { darkMode, toggleTheme } = useTheme();
   const [requestState, setRequestState] = useState<SeriesRequestState>({ series: null, slug, status: 'loading' });
   const mediaReturnTab = (location.state as { mediaReturnTab?: 'all' | 'series' } | null)?.mediaReturnTab;
+  const seriesQuery = useMemo(() => ({ ordering: 'oldest' as const, series: slug }), [slug]);
+  const media = usePaginatedMediaItems(seriesQuery, { pageSize: SERIES_PAGE_SIZE });
   const currentState = requestState.slug === slug
     ? requestState
     : { series: null, slug, status: 'loading' as const };
+  const pageStatus = currentState.status === 'error' || media.status === 'error'
+    ? 'error'
+    : currentState.status === 'loading' || media.status === 'loading'
+      ? 'loading'
+      : 'ready';
 
   useEffect(() => {
     const controller = new AbortController();
@@ -55,7 +65,17 @@ const MediaSeriesPage = () => {
             <ArrowLeft size={16} aria-hidden="true" />
             Back to Media
           </Link>
-          <MediaSeriesDetail darkMode={darkMode} series={currentState.series} status={currentState.status} />
+          <MediaSeriesDetail
+            canLoadMore={media.canLoadMore}
+            darkMode={darkMode}
+            itemCount={media.count}
+            items={media.items}
+            loadMoreError={media.error}
+            loadingMore={media.loadingMore}
+            onLoadMore={() => { void media.loadMore(); }}
+            series={currentState.series}
+            status={pageStatus}
+          />
         </PageContainer>
       </main>
       <SiteFooter darkMode={darkMode} />

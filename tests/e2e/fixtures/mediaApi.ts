@@ -186,12 +186,16 @@ const itemsForQuery = (url: URL) => {
   const category = url.searchParams.get('category');
   const musicSubcategory = url.searchParams.get('music_subcategory');
   const page = Number(url.searchParams.get('page') || '1');
+  const pageSize = Number(url.searchParams.get('page_size') || '0');
 
   if (featured === 'true') {
     return [dyingWell, finalInstructions];
   }
 
   if (series === 'dying-well') {
+    if (pageSize === 12) {
+      return page > 1 ? [purposeProceeds] : [dyingWell];
+    }
     return [dyingWell, purposeProceeds];
   }
 
@@ -241,6 +245,11 @@ const itemsForQuery = (url: URL) => {
 const countForQuery = (url: URL, matchingItems: unknown[]) => {
   const type = url.searchParams.get('type')?.toLowerCase();
   const musicSubcategory = url.searchParams.get('music_subcategory');
+  const series = url.searchParams.get('series');
+
+  if (series === 'dying-well') {
+    return 2;
+  }
 
   if (type === 'music' && musicSubcategory === 'choir') {
     return 2;
