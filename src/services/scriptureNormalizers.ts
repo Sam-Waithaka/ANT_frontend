@@ -138,12 +138,14 @@ export const normalizeBooksResponse = (payload: unknown): BibleBook[] =>
   unwrapCollection(payload).map((item, index) => {
     const record = asRecord(item);
     const testament = readString(record, ['testament', 'section']).toLowerCase();
+    const recordId = readString(record, ['id', '_id', 'uuid']);
 
     return {
       abbreviation: readString(record, ['abbreviation', 'abbr']) || undefined,
       canonicalAbbreviation: readString(record, ['canonical_abbreviation']) || undefined,
       canonicalName: readString(record, ['canonical_name']) || undefined,
       id: readString(record, ['osis_id', 'osisId', 'canonical_abbreviation', 'code', 'bookId', 'id', '_id', 'uuid'], `book-${index + 1}`),
+      ...(recordId ? { recordId } : {}),
       longName: readString(record, ['long_name']) || undefined,
       name: readString(record, ['name', 'title', 'label', 'book'], `Book ${index + 1}`),
       number: readNumber(record, ['number', 'order'], 0) || undefined,

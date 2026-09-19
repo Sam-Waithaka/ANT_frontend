@@ -7,6 +7,7 @@ export type ScriptureVerse = {
 };
 
 export type ScriptureData = {
+  book?: number | string;
   book_osis?: string;
   bookLabel?: string;
   chapter_start?: number;

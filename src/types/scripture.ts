@@ -19,6 +19,7 @@ export type BibleBook = {
   canonicalAbbreviation?: string;
   canonicalName?: string;
   id: string;
+  recordId?: string | number;
   osis_id?: string;
   longName?: string;
   name: string;

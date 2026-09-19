@@ -97,7 +97,9 @@ export const scriptureDataToMemorialReferencePayload = (
   block: MemorialId,
   data: ScriptureData,
 ): MemorialRichTextScriptureReferencePayload | null => {
-  const book = typeof data.book_osis === 'string' ? data.book_osis.trim() : '';
+  const book = data.book === undefined || data.book === null || data.book === ''
+    ? ''
+    : data.book;
   const chapter_start = readPositiveNumber(data.chapter_start);
   const verse_start = readPositiveNumber(data.verse_start);
 
@@ -106,6 +108,7 @@ export const scriptureDataToMemorialReferencePayload = (
   const chapter_end = readPositiveNumber(data.chapter_end) ?? null;
   const verse_end = readPositiveNumber(data.verse_end) ?? null;
   const display_text = (data.display_text || data.reference || '').trim();
+  const bookLabel = data.bookLabel || data.book_osis || String(book);
 
   return {
     block,
@@ -114,7 +117,7 @@ export const scriptureDataToMemorialReferencePayload = (
     chapter_start,
     display_text:
       display_text
-      || `${data.bookLabel || book} ${chapter_start}:${verse_start}${
+      || `${bookLabel} ${chapter_start}:${verse_start}${
         verse_end ? `-${verse_end}` : ''
       }`,
     verse_end,
@@ -128,6 +131,7 @@ export const memorialScriptureReferenceToNodeData = (
   current?: ScriptureData,
 ): ScriptureData => ({
   ...current,
+  book: reference.book,
   book_osis: reference.book_detail?.osis_id || String(reference.book),
   bookLabel: reference.book_detail?.name || current?.bookLabel || String(reference.book),
   chapter_end: reference.chapter_end ?? null,

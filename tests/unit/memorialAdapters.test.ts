@@ -77,6 +77,7 @@ describe('memorialAdapters', () => {
 
   it('maps ScriptureData to memorial scripture payloads and back', () => {
     const payload = scriptureDataToMemorialReferencePayload(5, {
+      book: 43,
       book_osis: 'John',
       chapter_start: 11,
       display: 'block',
@@ -89,7 +90,7 @@ describe('memorialAdapters', () => {
 
     expect(payload).toEqual({
       block: 5,
-      book: 'John',
+      book: 43,
       chapter_end: null,
       chapter_start: 11,
       display_text: 'John 11:25',
@@ -111,12 +112,23 @@ describe('memorialAdapters', () => {
     };
 
     expect(memorialScriptureReferenceToNodeData(reference)).toMatchObject({
+      book: 43,
       bookLabel: 'John',
       book_osis: 'John',
       chapter_start: 11,
       reference: 'John 11:25 BSB',
       verse_start: 25,
     });
+    expect(scriptureDataToMemorialReferencePayload(5, {
+      book_osis: 'John',
+      chapter_start: 11,
+      display: 'block',
+      reference: 'John 11:25',
+      source: 'api',
+      text: 'I am the resurrection and the life.',
+      verse_start: 25,
+      version: 'BSB',
+    })).toBeNull();
   });
 
   it('extracts unique memorial scripture references from Lexical content', () => {
@@ -125,6 +137,7 @@ describe('memorialAdapters', () => {
         children: [
           {
             data: {
+              book: 43,
               book_osis: 'John',
               chapter_start: 11,
               display: 'block',
@@ -138,6 +151,7 @@ describe('memorialAdapters', () => {
           },
           {
             data: {
+              book: 43,
               book_osis: 'John',
               chapter_start: 11,
               display: 'inline',
@@ -159,7 +173,7 @@ describe('memorialAdapters', () => {
       findMemorialScriptureReference(
         [{
           block: 5,
-          book: 'John',
+          book: 43,
           chapter_start: 11,
           display_text: 'John 11:25',
           id: 10,
@@ -168,6 +182,7 @@ describe('memorialAdapters', () => {
         }],
         5,
         {
+          book: 43,
           book_osis: 'John',
           chapter_start: 11,
           display: 'block',
