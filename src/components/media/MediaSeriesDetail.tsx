@@ -1,5 +1,6 @@
 import { Video } from 'lucide-react';
 import type { AudioVisualGroupDetail, AudioVisualItem } from '../../types/audioVisual';
+import MediaHeroSurface from './MediaHeroSurface';
 import MediaHeroTile from './MediaHeroTile';
 import MediaRail from './MediaRail';
 
@@ -66,25 +67,26 @@ const MediaSeriesDetail = ({
 
   return (
     <section className="grid min-w-0 gap-10 lg:gap-12">
-      <div className={`grid min-w-0 gap-8 rounded-3xl border p-5 shadow-xl sm:p-7 lg:grid-cols-[minmax(0,0.8fr)_minmax(22rem,1.2fr)] lg:items-center lg:gap-10 lg:p-8 xl:grid-cols-[minmax(0,0.72fr)_minmax(28rem,1.28fr)] ${
-        darkMode
-          ? 'border-white/10 bg-[linear-gradient(135deg,rgba(153,27,27,0.16),rgba(255,255,255,0.035))] shadow-black/25'
-          : 'border-black/10 bg-white shadow-zinc-900/10'
-      }`}>
-        <div className="min-w-0 lg:py-4">
-          <p className={`text-xs font-black uppercase tracking-[0.18em] ${darkMode ? 'text-red-200' : 'text-red-800'}`}>Media series</p>
-          <h1 className={`mt-3 max-w-2xl break-words text-4xl font-black leading-[1.02] sm:text-5xl xl:text-6xl ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{series.name}</h1>
-          {series.description && (
-            <p className={`mt-4 max-w-2xl break-words text-base leading-7 sm:text-lg sm:leading-8 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>{series.description}</p>
-          )}
-          <p className={`mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
-            <Video size={18} aria-hidden="true" />
-            {countLabel}
-          </p>
-        </div>
+      <MediaHeroSurface
+        className="rounded-[2rem] px-5 py-10 sm:px-7 lg:px-8 lg:py-12"
+        darkMode={darkMode}
+        variant="solid"
+      >
+        <div className={`grid min-w-0 gap-10 ${featuredItem ? 'lg:grid-cols-[minmax(0,0.92fr)_minmax(26rem,0.78fr)] lg:items-center' : ''}`}>
+          <div className="mx-auto min-w-0 max-w-2xl text-left lg:mx-0">
+            <p className="text-sm font-black uppercase tracking-[0.16em] text-red-700">Media series</p>
+            <h1 className={`mt-4 max-w-2xl break-words text-4xl font-black leading-[1.02] sm:text-5xl xl:text-6xl ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{series.name}</h1>
+            <div className="mt-6 h-px w-16 bg-red-700" />
+            {series.description && (
+              <p className={`mt-5 max-w-2xl break-words text-base leading-7 sm:text-lg sm:leading-8 ${darkMode ? 'text-stone-300' : 'text-zinc-700'}`}>{series.description}</p>
+            )}
+            <p className={`${series.description ? 'mt-6' : 'mt-5'} inline-flex min-h-11 items-center gap-2 text-sm font-bold ${darkMode ? 'text-stone-300' : 'text-zinc-600'}`}>
+              <Video size={18} aria-hidden="true" />
+              {countLabel}
+            </p>
+          </div>
 
-        {featuredItem ? (
-          <div className="w-full min-w-0 max-w-3xl justify-self-end">
+          {featuredItem ? (
             <MediaHeroTile
               badgeLabel="Message 1"
               darkMode={darkMode}
@@ -93,9 +95,9 @@ const MediaSeriesDetail = ({
               item={featuredItem}
               linkAriaLabel={`Watch ${featuredItem.title}`}
             />
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      </MediaHeroSurface>
 
       <section className="min-w-0" aria-labelledby="series-messages-heading">
         <div className={`mb-5 flex min-w-0 flex-wrap items-center gap-3 border-b pb-4 pr-[calc(var(--mobile-give-action-width)+var(--mobile-bottom-action-gap))] md:pr-0 ${darkMode ? 'border-white/10' : 'border-black/10'}`}>

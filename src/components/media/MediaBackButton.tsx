@@ -1,11 +1,11 @@
 import { ArrowLeft } from 'lucide-react';
 
-type WatchBackButtonProps = {
+type MediaBackButtonProps = {
   darkMode: boolean;
   onBack: () => void;
 };
 
-const WatchBackButton = ({ darkMode, onBack }: WatchBackButtonProps) => (
+const MediaBackButton = ({ darkMode, onBack }: MediaBackButtonProps) => (
   <button
     type="button"
     onClick={onBack}
@@ -26,4 +26,4 @@ const WatchBackButton = ({ darkMode, onBack }: WatchBackButtonProps) => (
   </button>
 );
 
-export default WatchBackButton;
+export default MediaBackButton;

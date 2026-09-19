@@ -1,12 +1,12 @@
 import SiteFooter from '../../navigation/SiteFooter';
 import SiteHeader from '../../navigation/SiteHeader';
 import { useTheme } from '../../../hooks/useTheme';
+import MediaBackButton from '../MediaBackButton';
 import AutoplayControls from './AutoplayControls';
 import MediaWatchStatus from './MediaWatchStatus';
 import RelatedMediaRow from './RelatedMediaRow';
 import { useMediaWatchController } from './useMediaWatchController';
 import VideoPlayer from './VideoPlayer';
-import WatchBackButton from './WatchBackButton';
 import WatchDetails from './WatchDetails';
 
 const MediaWatchPage = () => {
@@ -21,7 +21,7 @@ const MediaWatchPage = () => {
         <div className="absolute inset-x-0 top-0 h-[34rem] bg-[radial-gradient(circle_at_50%_0%,rgba(127,29,29,0.32),transparent_36%)]" />
         <div className="relative px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
           <div className="mb-6 flex flex-wrap items-center gap-3">
-            <WatchBackButton darkMode={darkMode} onBack={controller.handleBack} />
+            <MediaBackButton darkMode={darkMode} onBack={controller.handleBack} />
           </div>
 
           {controller.status !== 'ready' && (

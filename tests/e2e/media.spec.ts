@@ -138,7 +138,7 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
   await expect(page).toHaveURL(/\/media\/series\/dying-well$/);
   await expect(page.getByRole('heading', { name: 'Messages in this series' })).toBeVisible();
 
-  await page.getByRole('link', { name: /Back to Media/i }).click();
+  await page.getByRole('button', { name: 'Back' }).click();
   await page.getByRole('button', { name: /Explore/i }).click();
   await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
   await expect(page.getByText('Church Family Update')).toBeVisible();

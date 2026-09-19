@@ -1,6 +1,6 @@
-import { ArrowLeft } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import MediaBackButton from '../components/media/MediaBackButton';
 import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import SiteFooter from '../components/navigation/SiteFooter';
 import SiteHeader from '../components/navigation/SiteHeader';
@@ -22,6 +22,7 @@ const SERIES_PAGE_SIZE = 12;
 const MediaSeriesPage = () => {
   const { slug = '' } = useParams<{ slug?: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const { darkMode, toggleTheme } = useTheme();
   const [requestState, setRequestState] = useState<SeriesRequestState>({ series: null, slug, status: 'loading' });
   const mediaReturnTab = (location.state as { mediaReturnTab?: 'all' | 'series' } | null)?.mediaReturnTab;
@@ -48,6 +49,11 @@ const MediaSeriesPage = () => {
     };
   }, [currentState.series, pageStatus, slug]);
   const { share, shareStatus } = useShareAction(sharePayload);
+  const handleBack = () => {
+    navigate('/media', {
+      state: { mediaTab: mediaReturnTab === 'series' ? 'series' : 'all' },
+    });
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,14 +78,7 @@ const MediaSeriesPage = () => {
       <main className={`flex-1 py-8 sm:py-10 lg:py-12 ${darkMode ? 'bg-[#080808]' : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)]'}`}>
         <div className="box-border grid w-full max-w-full min-w-0 gap-6 px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex min-w-0 items-center justify-between gap-4">
-            <Link
-              className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full text-sm font-black text-red-800 transition hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:text-red-100"
-              state={{ mediaTab: mediaReturnTab === 'series' ? 'series' : 'all' }}
-              to="/media"
-            >
-              <ArrowLeft size={16} aria-hidden="true" />
-              Back to Media
-            </Link>
+            <MediaBackButton darkMode={darkMode} onBack={handleBack} />
             {sharePayload ? (
               <ShareButton
                 darkMode={darkMode}

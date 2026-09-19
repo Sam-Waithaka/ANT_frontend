@@ -102,6 +102,7 @@ describe('MediaSeriesPage', () => {
         <MemoryRouter initialEntries={['/media/series/dying-well']}>
           <Routes>
             <Route path="/media/series/:slug" element={<MediaSeriesPage />} />
+            <Route path="/media" element={<div>Media destination</div>} />
           </Routes>
         </MemoryRouter>,
       );
@@ -121,7 +122,7 @@ describe('MediaSeriesPage', () => {
     expect(container.querySelector('h1')?.textContent).toBe('Dying Well');
     expect(container.textContent).toContain('2 messages');
     expect(container.textContent).toContain('Messages in this series');
-    expect(container.querySelector('a[href="/media"]')?.textContent).toContain('Back to Media');
+    expect([...container.querySelectorAll('button')].some((button) => button.textContent?.includes('Back'))).toBe(true);
     expect([...container.querySelectorAll('button')].some((button) => button.textContent === 'Share')).toBe(true);
     expect(container.querySelectorAll('a[href="/media/watch/dying-well-part-one"]')).toHaveLength(2);
     expect(container.textContent).toContain('Rev. First Speaker');
@@ -153,6 +154,19 @@ describe('MediaSeriesPage', () => {
       title: series.name,
       url: `${window.location.origin}/media/series/dying-well`,
     });
+  });
+
+  it('returns to Media through the shared back button', async () => {
+    await renderPage();
+
+    const backButton = await vi.waitFor(() => {
+      const button = [...container.querySelectorAll('button')].find((item) => item.textContent?.includes('Back'));
+      expect(button).toBeDefined();
+      return button as HTMLButtonElement;
+    });
+    await act(async () => backButton.click());
+
+    expect(container.textContent).toContain('Media destination');
   });
 
   it('links series cards to their canonical route', async () => {
@@ -319,6 +333,6 @@ describe('MediaSeriesPage', () => {
     await renderPage();
 
     await vi.waitFor(() => expect(container.textContent).toContain('We could not load this series right now.'));
-    expect(container.querySelector('a[href="/media"]')).not.toBeNull();
+    expect([...container.querySelectorAll('button')].some((button) => button.textContent?.includes('Back'))).toBe(true);
   });
 });
