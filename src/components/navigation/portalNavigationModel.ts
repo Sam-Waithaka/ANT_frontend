@@ -32,6 +32,15 @@ const portalNavigationSections: PortalNavigationSection[] = [
         type: 'route',
       },
       {
+        href: '/portal/memorials',
+        icon: siteIcons.giving,
+        id: 'portal-memorials',
+        isVisible: ({ hasPortalAccess }) => hasPortalAccess,
+        label: 'Memorials',
+        match: 'prefix',
+        type: 'route',
+      },
+      {
         href: '/portal/writing',
         icon: siteIcons.resources,
         id: 'portal-writing-studio',
