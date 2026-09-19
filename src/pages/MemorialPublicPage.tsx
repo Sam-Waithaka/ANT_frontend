@@ -160,7 +160,7 @@ function MemorialPublicPage() {
   return (
     <SitePageShell darkMode={darkMode} onToggleTheme={toggleTheme}>
       {requestState.status === "loading" ? (
-        <MemorialContentShell>
+        <MemorialContentShell darkMode={darkMode}>
           <MemorialStatusCard
             eyebrow="Memorial"
             title="Loading memorial page"
@@ -170,7 +170,7 @@ function MemorialPublicPage() {
       ) : null}
 
       {requestState.status === "not-found" ? (
-        <MemorialContentShell>
+        <MemorialContentShell darkMode={darkMode}>
           <MemorialStatusCard
             eyebrow="404"
             title="Memorial page not found"
@@ -181,7 +181,7 @@ function MemorialPublicPage() {
       ) : null}
 
       {requestState.status === "error" ? (
-        <MemorialContentShell>
+        <MemorialContentShell darkMode={darkMode}>
           <MemorialStatusCard
             eyebrow="Memorial"
             title="We could not load this memorial"
@@ -191,7 +191,7 @@ function MemorialPublicPage() {
         </MemorialContentShell>
       ) : null}
 
-      {requestState.status === "ready" ? <MemorialReadyState payload={requestState.payload} /> : null}
+      {requestState.status === "ready" ? <MemorialReadyState darkMode={darkMode} payload={requestState.payload} /> : null}
     </SitePageShell>
   );
 }
@@ -214,12 +214,12 @@ function SitePageShell({
   );
 }
 
-function MemorialReadyState({ payload }: { payload: MemorialPublicPayload }) {
+function MemorialReadyState({ darkMode, payload }: { darkMode: boolean; payload: MemorialPublicPayload }) {
   const { sections } = payload;
   const renderedNavSections = navSectionKeys.filter((sectionKey) => shouldRenderSection(sections[sectionKey]));
 
   return (
-    <MemorialContentShell>
+    <MemorialContentShell darkMode={darkMode}>
       <MemorialHero payload={payload} />
       <MemorialSectionNav sectionKeys={renderedNavSections} />
 
@@ -277,7 +277,7 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
             loading="eager"
             preferredSize="large"
           />
-          <div className="absolute inset-0 -z-10 bg-[rgba(255,253,247,0.86)]" aria-hidden="true" />
+          <div className="absolute inset-0 -z-10 bg-[var(--memorial-hero-overlay)]" aria-hidden="true" />
         </>
       ) : null}
 
@@ -287,9 +287,9 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
           <h1 className="mt-4 max-w-5xl text-[clamp(3.35rem,8.2vw,8.4rem)] font-black leading-[0.88] text-[var(--memorial-ink)]">
             {page.full_name}
           </h1>
-          <div className="mt-5 space-y-1 text-lg text-[#222] sm:text-xl">
+          <div className="mt-5 space-y-1 text-lg text-[var(--memorial-ink)] sm:text-xl">
             <p className="font-extrabold">{page.role_title}</p>
-            <p className="text-[#35302b]">{page.years_of_service}</p>
+            <p className="text-[var(--memorial-muted-strong)]">{page.years_of_service}</p>
           </div>
           <span className="memorial-rule mt-7" aria-hidden="true" />
           {heroContent?.content_html ? (
@@ -308,7 +308,7 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
               <ArrowRight aria-hidden="true" size={18} strokeWidth={2} />
             </a>
             <a
-              className="inline-flex min-h-12 items-center justify-center gap-2 px-2 text-sm font-bold text-[#514a42] underline decoration-[var(--memorial-line)] underline-offset-8 transition hover:text-[var(--memorial-burgundy)]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 px-2 text-sm font-bold text-[var(--memorial-muted-strong)] underline decoration-[var(--memorial-line)] underline-offset-8 transition hover:text-[var(--memorial-burgundy)]"
               href="#arrangements"
             >
               Service arrangements
@@ -340,7 +340,7 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
         <aside className="hidden h-full min-h-[24rem] flex-col justify-center border-l border-[var(--memorial-line)] pl-7 lg:flex xl:pl-9">
           <p className="memorial-scripture text-3xl xl:text-4xl">Faith.<br />Service.<br />Lasting impact.</p>
           <span className="memorial-rule mt-7" aria-hidden="true" />
-          <p className="mt-6 max-w-44 text-xs font-bold uppercase leading-6 tracking-[0.34em] text-[#716960]">
+          <p className="mt-6 max-w-44 text-xs font-bold uppercase leading-6 tracking-[0.34em] text-[var(--memorial-muted-soft)]">
             A beloved chairman. A cherished brother.
           </p>
         </aside>
@@ -355,12 +355,12 @@ function MemorialSectionNav({ sectionKeys }: { sectionKeys: MemorialNavSectionKe
   };
 
   return (
-    <nav className="sticky top-[4.75rem] z-20 border-b border-[var(--memorial-line)] bg-[rgba(255,253,247,0.95)] backdrop-blur lg:top-[5rem]" aria-label="Memorial sections">
+    <nav className="sticky top-[4.75rem] z-20 border-b border-[var(--memorial-line)] bg-[var(--memorial-nav)] backdrop-blur lg:top-[5rem]" aria-label="Memorial sections">
       <div className="mx-auto w-full max-w-[88rem] px-6 sm:px-8 lg:px-12">
         <div className="hidden items-center justify-center gap-1 lg:flex">
           {sectionKeys.map((sectionKey) => (
             <a
-              className="px-5 py-5 text-sm font-semibold text-[#4f4840] transition hover:text-[var(--memorial-burgundy)]"
+              className="px-5 py-5 text-sm font-semibold text-[var(--memorial-muted-strong)] transition hover:text-[var(--memorial-burgundy)]"
               href={`#${sectionKey}`}
               key={sectionKey}
             >
@@ -422,7 +422,7 @@ function CoreMemorialSection({
             {content.title || section.label || friendlySectionLabels[sectionKey]}
           </h2>
           {content.subtitle ? (
-            <p className="mx-auto mt-4 max-w-2xl text-base font-bold text-[#4b443d]">{content.subtitle}</p>
+            <p className="mx-auto mt-4 max-w-2xl text-base font-bold text-[var(--memorial-muted-strong)]">{content.subtitle}</p>
           ) : null}
           <span className="memorial-rule mx-auto mt-7" aria-hidden="true" />
           <RichTextBlock className="mx-auto mt-8 max-w-3xl text-xl sm:text-2xl" html={content.content_html} />
@@ -444,7 +444,7 @@ function CoreMemorialSection({
             {content.title || section.label || friendlySectionLabels[sectionKey]}
           </h2>
           {content.subtitle ? (
-            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[#625b52]">{content.subtitle}</p>
+            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[var(--memorial-muted)]">{content.subtitle}</p>
           ) : null}
           <span className="memorial-rule mt-6" aria-hidden="true" />
         </div>
@@ -454,10 +454,10 @@ function CoreMemorialSection({
             <RichTextBlock html={content.content_html} />
             <MediaEmbeds embeds={content.media_embeds} />
           </div>
-          <aside className="space-y-5 border-[var(--memorial-line)] text-sm leading-6 text-[#625b52] xl:border-l xl:pl-8">
+          <aside className="space-y-5 border-[var(--memorial-line)] text-sm leading-6 text-[var(--memorial-muted)] xl:border-l xl:pl-8">
             <ScriptureReferences references={content.scripture_references} />
             {content.reading_time_minutes ? (
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7a7066]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--memorial-muted-soft)]">
                 {content.reading_time_minutes} min read
               </p>
             ) : null}
@@ -498,7 +498,7 @@ function ScriptureReferences({
     return (
       <div className={`mt-3 flex flex-wrap gap-2 ${centered ? "justify-center" : ""}`}>
         {references.map((reference) => (
-          <span className="text-sm font-semibold text-[#4f4840]" key={reference.id}>
+          <span className="text-sm font-semibold text-[var(--memorial-muted-strong)]" key={reference.id}>
             {reference.display_text}
           </span>
         ))}
@@ -510,7 +510,7 @@ function ScriptureReferences({
     <div className={`mt-6 flex flex-wrap gap-2 ${centered ? "justify-center" : ""}`}>
       {references.map((reference) => (
         <span
-          className="rounded-full border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.72)] px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-[var(--memorial-burgundy-dark)]"
+          className="rounded-full border border-[var(--memorial-line)] bg-[var(--memorial-chip)] px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-[var(--memorial-burgundy-dark)]"
           key={reference.id}
         >
           {reference.display_text}
@@ -581,7 +581,7 @@ function MediaEmbeds({ embeds, preferredSize = "medium" }: { embeds: MemorialMed
             preferredSize={preferredSize}
           />
           {embed.caption_override || embed.media_asset.caption ? (
-            <figcaption className="px-4 py-3 text-sm leading-6 text-[#625b52]">
+            <figcaption className="px-4 py-3 text-sm leading-6 text-[var(--memorial-muted)]">
               {embed.caption_override || embed.media_asset.caption}
             </figcaption>
           ) : null}
@@ -614,7 +614,7 @@ function RecordingsSection({
             {section.content?.title || section.label || friendlySectionLabels.recordings}
           </h2>
           {section.content?.subtitle ? (
-            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[#625b52]">{section.content.subtitle}</p>
+            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[var(--memorial-muted)]">{section.content.subtitle}</p>
           ) : null}
           <span className="memorial-rule mt-6" aria-hidden="true" />
         </div>
@@ -660,7 +660,7 @@ function RecordingGroup({
   });
 
   return (
-    <article className="rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] p-5 shadow-sm shadow-black/5 sm:p-6">
+    <article className="rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] p-5 shadow-sm shadow-black/5 sm:p-6">
       <div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)]">
         {hasSeriesCover ? (
           <PublicImage
@@ -683,7 +683,7 @@ function RecordingGroup({
           {group.content?.content_html ? (
             <RichTextBlock className="mt-4 text-base" html={group.content.content_html} />
           ) : group.series?.description ? (
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-[#625b52]">{group.series.description}</p>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--memorial-muted)]">{group.series.description}</p>
           ) : null}
         </div>
       </div>
@@ -746,10 +746,10 @@ function RecordingCard({
       <div className="p-5">
         <h4 className="text-xl font-black leading-tight text-[var(--memorial-ink)]">{item.title}</h4>
         {item.description_excerpt || item.description ? (
-          <p className="mt-3 text-sm leading-6 text-[#625b52]">{item.description_excerpt || item.description}</p>
+          <p className="mt-3 text-sm leading-6 text-[var(--memorial-muted)]">{item.description_excerpt || item.description}</p>
         ) : null}
 
-        <div className="mt-4 grid gap-2 text-sm leading-6 text-[#5f584f]">
+        <div className="mt-4 grid gap-2 text-sm leading-6 text-[var(--memorial-muted)]">
           {item.speaker ? (
             <p className="flex gap-2">
               <UserRound className="mt-0.5 shrink-0" size={16} aria-hidden="true" />
@@ -757,17 +757,17 @@ function RecordingCard({
             </p>
           ) : null}
           {item.scripture_reference ? (
-            <p className="memorial-serif italic text-[#443e37]">{item.scripture_reference}</p>
+            <p className="memorial-serif italic text-[var(--memorial-muted-strong)]">{item.scripture_reference}</p>
           ) : null}
           {metadata.length > 0 ? (
-            <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs font-bold uppercase tracking-[0.12em] text-[#7a7066]">
+            <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs font-bold uppercase tracking-[0.12em] text-[var(--memorial-muted-soft)]">
               {metadata.map((label) => (
                 <span key={label}>{label}</span>
               ))}
             </p>
           ) : null}
           {item.language ? (
-            <p className="flex gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#7a7066]">
+            <p className="flex gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[var(--memorial-muted-soft)]">
               <Languages size={14} aria-hidden="true" />
               {item.language}
             </p>
@@ -826,7 +826,7 @@ function MinistryLegacySection({
 
             return (
               <article
-                className="flex min-h-full flex-col overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] shadow-sm shadow-black/5"
+                className="flex min-h-full flex-col overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] shadow-sm shadow-black/5"
                 key={item.id}
               >
                 {hasPhoto ? (
@@ -837,7 +837,7 @@ function MinistryLegacySection({
                     preferredSize="medium"
                   />
                 ) : (
-                  <div className="grid aspect-[16/10] place-items-center bg-[#e4ded4] text-[#6d655c]">
+                  <div className="grid aspect-[16/10] place-items-center bg-[var(--memorial-placeholder-bg)] text-[var(--memorial-placeholder-ink)]">
                     <span className="memorial-serif text-4xl">{getInitials(item.display_ministry_name)}</span>
                   </div>
                 )}
@@ -851,8 +851,8 @@ function MinistryLegacySection({
                   {item.content?.content_html ? (
                     <RichTextBlock className="mt-4 text-base" html={item.content.content_html} />
                   ) : null}
-                  <div className="mt-5 border-t border-[var(--memorial-line)] pt-4 text-sm leading-6 text-[#625b52]">
-                    {item.speaker_name ? <p className="font-black text-[#29251f]">{item.speaker_name}</p> : null}
+                  <div className="mt-5 border-t border-[var(--memorial-line)] pt-4 text-sm leading-6 text-[var(--memorial-muted)]">
+                    {item.speaker_name ? <p className="font-black text-[var(--memorial-ink)]">{item.speaker_name}</p> : null}
                     {item.speaker_office ? <p>{item.speaker_office}</p> : null}
                   </div>
                 </div>
@@ -883,7 +883,7 @@ function PersonalTributesSection({
 
             return (
               <article
-                className="rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] p-6 shadow-sm shadow-black/5"
+                className="rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] p-6 shadow-sm shadow-black/5"
                 key={item.id}
               >
                 <div className="flex items-center gap-4">
@@ -901,7 +901,7 @@ function PersonalTributesSection({
                   )}
                   <div className="min-w-0">
                     <h3 className="text-lg font-black leading-tight text-[var(--memorial-ink)]">{item.author_name}</h3>
-                    {item.author_role ? <p className="mt-1 text-sm text-[#625b52]">{item.author_role}</p> : null}
+                    {item.author_role ? <p className="mt-1 text-sm text-[var(--memorial-muted)]">{item.author_role}</p> : null}
                   </div>
                 </div>
                 {item.relationship_to_deceased ? (
@@ -941,7 +941,7 @@ function LeadershipTimelineSection({
             return (
               <article className="relative grid gap-4 md:grid-cols-[2rem_minmax(0,1fr)]" key={item.id}>
                 <span className="relative z-10 hidden size-8 rounded-full border-4 border-[var(--memorial-paper)] bg-[var(--memorial-burgundy)] shadow-sm md:block" aria-hidden="true" />
-                <div className="grid overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] shadow-sm shadow-black/5 lg:grid-cols-[16rem_minmax(0,1fr)]">
+                <div className="grid overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] shadow-sm shadow-black/5 lg:grid-cols-[16rem_minmax(0,1fr)]">
                   {hasImage ? (
                     <PublicImage alt={item.title} asset={item.image} className="h-full min-h-52 w-full object-cover" preferredSize="medium" />
                   ) : null}
@@ -986,7 +986,7 @@ function GallerySection({
 
             return (
               <figure
-                className={`overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] shadow-sm shadow-black/5 ${itemIndex === 0 ? "sm:col-span-2 sm:row-span-2" : ""}`}
+                className={`overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] shadow-sm shadow-black/5 ${itemIndex === 0 ? "sm:col-span-2 sm:row-span-2" : ""}`}
                 key={item.id}
               >
                 <PublicImage
@@ -996,11 +996,11 @@ function GallerySection({
                   className={`${itemIndex === 0 ? "aspect-[4/3]" : "aspect-square"} w-full object-cover`}
                   preferredSize={imageSize}
                 />
-                <figcaption className="p-4 text-sm leading-6 text-[#625b52]">
+                <figcaption className="p-4 text-sm leading-6 text-[var(--memorial-muted)]">
                   {item.category_label ? (
                     <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--memorial-burgundy)]">{item.category_label}</p>
                   ) : null}
-                  {item.caption ? <p className="mt-2 text-[#332f2a]">{item.caption}</p> : null}
+                  {item.caption ? <p className="mt-2 text-[var(--memorial-muted-strong)]">{item.caption}</p> : null}
                   {item.credit ? <p className="mt-2 text-xs">Credit: {item.credit}</p> : null}
                 </figcaption>
               </figure>
@@ -1043,7 +1043,7 @@ function ArrangementsSection({
 
             return (
               <article
-                className={`rounded-sm border p-6 shadow-sm shadow-black/5 ${item.is_prominent ? "border-[var(--memorial-burgundy)] bg-[rgba(255,253,247,0.9)]" : "border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)]"}`}
+                className={`rounded-sm border p-6 shadow-sm shadow-black/5 ${item.is_prominent ? "border-[var(--memorial-burgundy)] bg-[var(--memorial-card-strong)]" : "border-[var(--memorial-line)] bg-[var(--memorial-card)]"}`}
                 key={item.id}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -1054,7 +1054,7 @@ function ArrangementsSection({
                   <CalendarDays className="mt-1 shrink-0 text-[var(--memorial-burgundy)]" size={24} strokeWidth={1.8} aria-hidden="true" />
                 </div>
 
-                <div className="mt-5 space-y-3 text-sm leading-6 text-[#5f584f]">
+                <div className="mt-5 space-y-3 text-sm leading-6 text-[var(--memorial-muted)]">
                   {item.starts_at ? (
                     <p className="flex gap-3">
                       <CalendarDays className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
@@ -1131,7 +1131,7 @@ function RepeatableSectionGrid({
           {content?.title || section.label || friendlySectionLabels[sectionKey]}
         </h2>
         {content?.subtitle ? (
-          <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[#625b52]">{content.subtitle}</p>
+          <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[var(--memorial-muted)]">{content.subtitle}</p>
         ) : null}
         <span className="memorial-rule mt-6" aria-hidden="true" />
       </div>
@@ -1181,12 +1181,12 @@ function MemorialSectionFrame({
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-start">
           <div>
             {content?.subtitle ? (
-              <p className="mb-4 text-base font-bold text-[#4b443d]">{content.subtitle}</p>
+              <p className="mb-4 text-base font-bold text-[var(--memorial-muted-strong)]">{content.subtitle}</p>
             ) : null}
             {content?.content_html ? <RichTextBlock html={content.content_html} /> : null}
             {content ? <MediaEmbeds embeds={content.media_embeds} /> : null}
           </div>
-          <aside className="text-sm leading-6 text-[#625b52]">
+          <aside className="text-sm leading-6 text-[var(--memorial-muted)]">
             {items.length > 0 ? (
               <p>
                 {items.length} {items.length === 1 ? "entry" : "entries"} prepared for this section.
@@ -1355,8 +1355,12 @@ function getInitials(name: string) {
     .join("");
 }
 
-function MemorialContentShell({ children }: { children: ReactNode }) {
-  return <div className="memorial-page text-[var(--memorial-ink)]">{children}</div>;
+function MemorialContentShell({ children, darkMode }: { children: ReactNode; darkMode: boolean }) {
+  return (
+    <div className="memorial-page text-[var(--memorial-ink)]" data-memorial-theme={darkMode ? "dark" : "light"}>
+      {children}
+    </div>
+  );
 }
 
 function MemorialStatusCard({
@@ -1377,7 +1381,7 @@ function MemorialStatusCard({
         <h1 className="mt-4 text-3xl font-black text-[var(--memorial-ink)]">{title}</h1>
         <p className="mt-4 leading-7 text-[var(--memorial-muted)]">{message}</p>
         {detail ? (
-          <p className="mt-5 rounded-md bg-[#f3eee5] px-4 py-3 text-xs font-bold text-[#4c453d]">
+          <p className="mt-5 rounded-md bg-[var(--memorial-detail-bg)] px-4 py-3 text-xs font-bold text-[var(--memorial-muted)]">
             {detail}
           </p>
         ) : null}

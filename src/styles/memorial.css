@@ -3,10 +3,21 @@
   --memorial-paper: #fffdf7;
   --memorial-wash: #eee7dc;
   --memorial-ink: #111111;
+  --memorial-ink-soft: #26211d;
+  --memorial-muted-strong: #4f4840;
   --memorial-muted: #5f5850;
+  --memorial-muted-soft: #716960;
   --memorial-line: rgba(17, 17, 17, 0.13);
   --memorial-burgundy: #9f0d18;
   --memorial-burgundy-dark: #790711;
+  --memorial-card: rgba(255, 253, 247, 0.78);
+  --memorial-card-strong: rgba(255, 253, 247, 0.9);
+  --memorial-chip: rgba(255, 253, 247, 0.72);
+  --memorial-detail-bg: #f3eee5;
+  --memorial-hero-overlay: rgba(255, 253, 247, 0.86);
+  --memorial-nav: rgba(255, 253, 247, 0.95);
+  --memorial-placeholder-bg: #e4ded4;
+  --memorial-placeholder-ink: #6d655c;
   background:
     linear-gradient(180deg, rgba(255, 253, 247, 0.92), rgba(248, 243, 233, 0.96)),
     radial-gradient(circle at 18% 10%, rgba(159, 13, 24, 0.05), transparent 30%),
@@ -15,12 +26,46 @@
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+.memorial-page[data-memorial-theme="dark"] {
+  --memorial-ivory: #0f0e0c;
+  --memorial-paper: #141210;
+  --memorial-wash: #1c1815;
+  --memorial-ink: #f7efe3;
+  --memorial-ink-soft: #f2e4d3;
+  --memorial-muted-strong: #e1d2c0;
+  --memorial-muted: #c3b5a4;
+  --memorial-muted-soft: #9f907f;
+  --memorial-line: rgba(247, 239, 227, 0.15);
+  --memorial-burgundy: #dc5863;
+  --memorial-burgundy-dark: #ff8a92;
+  --memorial-card: rgba(29, 26, 23, 0.82);
+  --memorial-card-strong: rgba(37, 32, 28, 0.92);
+  --memorial-chip: rgba(37, 32, 28, 0.82);
+  --memorial-detail-bg: #211d19;
+  --memorial-hero-overlay: rgba(20, 18, 16, 0.86);
+  --memorial-nav: rgba(20, 18, 16, 0.95);
+  --memorial-placeholder-bg: #2d2924;
+  --memorial-placeholder-ink: #b9ab9a;
+  background:
+    linear-gradient(180deg, rgba(20, 18, 16, 0.96), rgba(15, 14, 12, 0.98)),
+    radial-gradient(circle at 18% 10%, rgba(220, 88, 99, 0.13), transparent 30%),
+    var(--memorial-ivory);
+}
+
+.memorial-page[data-memorial-theme="dark"] img {
+  filter: saturate(0.92) brightness(0.86);
+}
+
+.memorial-page[data-memorial-theme="dark"] .memorial-nav-select {
+  color-scheme: dark;
+}
+
 .memorial-serif {
   font-family: Georgia, "Times New Roman", Times, serif;
 }
 
 .memorial-scripture {
-  color: #26211d;
+  color: var(--memorial-ink-soft);
   font-family: Georgia, "Times New Roman", Times, serif;
   font-style: italic;
   line-height: 1.2;
@@ -34,7 +79,7 @@
 }
 
 .memorial-rich-text {
-  color: #3f3932;
+  color: var(--memorial-muted-strong);
   font-family: Georgia, "Times New Roman", Times, serif;
   font-size: 1.0625rem;
   line-height: 1.68;
