@@ -9,6 +9,7 @@ import type { MediaWatchContext } from './mediaWatchContext';
 type MediaCardProps = {
   darkMode: boolean;
   item: AudioVisualItem;
+  messageLabel?: string;
   relatedContext?: MediaWatchContext;
   variant?: 'landscape' | 'portrait' | 'compact';
 };
@@ -19,7 +20,7 @@ const imageClass = {
   portrait: 'h-full',
 };
 
-const MediaCard = ({ darkMode, item, relatedContext, variant = 'landscape' }: MediaCardProps) => {
+const MediaCard = ({ darkMode, item, messageLabel, relatedContext, variant = 'landscape' }: MediaCardProps) => {
   const location = useLocation();
   const duration = formatDuration(item.durationSeconds);
   const date = formatMediaDate(item.publishedAt);
@@ -33,7 +34,10 @@ const MediaCard = ({ darkMode, item, relatedContext, variant = 'landscape' }: Me
     <Link
       to={href}
       state={state}
-      className="group block min-w-0"
+      aria-label={messageLabel ? `Watch ${item.title}` : undefined}
+      className={messageLabel
+        ? `group block min-w-0 rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-4 ${darkMode ? 'focus-visible:ring-offset-[#080808]' : 'focus-visible:ring-offset-[#f8f5ef]'}`
+        : 'group block min-w-0'}
     >
       <article className="grid gap-3">
         <div
@@ -72,6 +76,9 @@ const MediaCard = ({ darkMode, item, relatedContext, variant = 'landscape' }: Me
 
         {variant !== 'portrait' && (
           <div>
+            {messageLabel && (
+              <p className={`mb-1 text-[11px] font-black uppercase tracking-[0.12em] ${darkMode ? 'text-red-200' : 'text-red-800'}`}>{messageLabel}</p>
+            )}
             <h3 className={`line-clamp-2 text-base font-black leading-snug ${darkMode ? 'text-white' : 'text-zinc-950'}`}>{item.title}</h3>
             <p className={`mt-1 truncate text-sm ${darkMode ? 'text-stone-400' : 'text-zinc-600'}`}>
               {[item.speaker, date].filter(Boolean).join(' • ')}

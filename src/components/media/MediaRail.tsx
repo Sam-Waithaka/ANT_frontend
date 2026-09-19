@@ -7,6 +7,7 @@ import type { MediaWatchContext } from './mediaWatchContext';
 type MediaRailProps = {
   canLoadMore?: boolean;
   darkMode: boolean;
+  getItemMessageLabel?: (item: AudioVisualItem, index: number) => string | undefined;
   initialVisibleItems?: number;
   items: AudioVisualItem[];
   loadingMore?: boolean;
@@ -23,6 +24,7 @@ const INITIAL_VISIBLE_ITEMS = 10;
 const MediaRail = ({
   canLoadMore = false,
   darkMode,
+  getItemMessageLabel,
   initialVisibleItems = INITIAL_VISIBLE_ITEMS,
   items,
   loadingMore = false,
@@ -51,9 +53,15 @@ const MediaRail = ({
         </div>
       )}
       <div className={gridClass}>
-        {visibleItems.map((item) => (
+        {visibleItems.map((item, index) => (
           <div key={`${title}-${item.slug}`} className="min-w-0">
-            <MediaCard darkMode={darkMode} item={item} relatedContext={relatedContext} variant={variant} />
+            <MediaCard
+              darkMode={darkMode}
+              item={item}
+              messageLabel={getItemMessageLabel?.(item, index)}
+              relatedContext={relatedContext}
+              variant={variant}
+            />
           </div>
         ))}
       </div>

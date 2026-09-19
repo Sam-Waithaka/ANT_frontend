@@ -60,6 +60,7 @@ test('media landing page consumes curated media endpoints and renders core secti
   await expect(page.getByRole('heading', { name: 'Music' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Livestreams' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Shorts & Highlights' })).toBeVisible();
+  await expect(page.getByText(/^Message \d+$/i)).toHaveCount(0);
 
   expect(mediaRequests).toEqual(expect.arrayContaining([
     '/v1/audio-visual/home/',
@@ -122,23 +123,65 @@ test('media tabs show filtered content, series detail, explore tab, and load mor
   await expect.poll(() => pagedRequests.some((url) => url.includes('type=sermon') && url.includes('page=2'))).toBe(true);
 
   await page.getByRole('button', { name: /Series/i }).click();
-  await page.getByRole('link', { name: /Dying Well/i }).first().click();
+  await page.locator('a[href="/media/series/dying-well"]').first().click();
   await expect(page).toHaveURL(/\/media\/series\/dying-well$/);
   await expect(page.getByRole('heading', { name: 'Dying Well' }).first()).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Dying Well Messages' })).toBeVisible();
-  await expect(page.getByText('Purpose Proceeds without permission')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Messages in this series' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Watch Purpose Proceeds without permission' })).toHaveCount(2);
+  await expect(page.getByRole('link', { name: 'Watch Purpose Proceeds without permission' }).first()).toContainText('Message 1');
+  await expect(page.getByRole('link', { name: 'Watch Dying Well' })).toHaveCount(0);
   await page.getByRole('button', { name: /Load more/i }).click();
-  await expect(page.getByText('Purpose Proceeds without permission')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Watch Dying Well' })).toContainText('Message 2');
   await expect.poll(() => pagedRequests.some((url) => url.includes('series=dying-well') && url.includes('page=2'))).toBe(true);
 
   await page.reload();
   await expect(page).toHaveURL(/\/media\/series\/dying-well$/);
-  await expect(page.getByRole('heading', { name: 'Dying Well Messages' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Messages in this series' })).toBeVisible();
 
   await page.getByRole('link', { name: /Back to Media/i }).click();
   await page.getByRole('button', { name: /Explore/i }).click();
   await expect(page.getByRole('heading', { name: 'Explore Media' })).toBeVisible();
   await expect(page.getByText('Church Family Update')).toBeVisible();
+});
+
+test('series detail remains readable, keyboard operable, themed, and overflow-free', async ({ page }, testInfo) => {
+  for (const viewport of [
+    { height: 900, label: 'mobile-320', width: 320 },
+    { height: 900, label: 'mobile-375', width: 375 },
+    { height: 1024, label: 'tablet', width: 768 },
+    { height: 1100, label: 'desktop', width: 1440 },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto('/media/series/dying-well');
+
+    await expect(page.getByRole('heading', { name: 'Dying Well' }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Messages in this series' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Watch Purpose Proceeds without permission' })).toHaveCount(2);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+    const messageGrid = page.locator('section[aria-labelledby="series-messages-heading"] > section > div.grid').first();
+    const columnCount = await messageGrid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length);
+    expect(columnCount).toBe(viewport.width >= 1280 ? 4 : viewport.width >= 640 ? 2 : 1);
+
+    await testInfo.attach(`series-${viewport.label}`, {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: 'image/png',
+    });
+  }
+
+  const featuredMessage = page.getByRole('link', { name: 'Watch Purpose Proceeds without permission' }).first();
+  await expect(featuredMessage.locator('a, button')).toHaveCount(0);
+  await featuredMessage.focus();
+  await expect(featuredMessage).toBeFocused();
+
+  const themeToggle = page.getByRole('button', { name: 'Switch to dark theme' });
+  await themeToggle.click();
+  await expect(page.getByRole('button', { name: 'Switch to light theme' })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+  await featuredMessage.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/media\/watch\/purpose-proceeds-without-permission$/);
 });
 
 test('media watch page plays selected content, previews scripture, and preserves return navigation', async ({ page }) => {

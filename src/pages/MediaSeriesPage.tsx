@@ -1,7 +1,6 @@
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import PageContainer from '../components/layout/PageContainer';
 import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import SiteFooter from '../components/navigation/SiteFooter';
 import SiteHeader from '../components/navigation/SiteHeader';
@@ -56,7 +55,7 @@ const MediaSeriesPage = () => {
     <div className={`flex min-h-screen w-full max-w-full min-w-0 flex-col transition-colors duration-500 ${darkMode ? 'bg-[#080808] text-stone-100' : 'bg-[#f8f5ef] text-zinc-950'}`}>
       <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
       <main className={`flex-1 py-8 sm:py-10 lg:py-12 ${darkMode ? 'bg-[#080808]' : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)]'}`}>
-        <PageContainer className="grid gap-7">
+        <div className="box-border grid w-full max-w-full min-w-0 gap-6 px-4 sm:px-6 lg:px-8 xl:px-12">
           <Link
             className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full text-sm font-black text-red-800 transition hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:text-red-100"
             state={{ mediaTab: mediaReturnTab === 'series' ? 'series' : 'all' }}
@@ -76,7 +75,7 @@ const MediaSeriesPage = () => {
             series={currentState.series}
             status={pageStatus}
           />
-        </PageContainer>
+        </div>
       </main>
       <SiteFooter darkMode={darkMode} />
     </div>

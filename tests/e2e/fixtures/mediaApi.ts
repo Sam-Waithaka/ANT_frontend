@@ -194,7 +194,7 @@ const itemsForQuery = (url: URL) => {
 
   if (series === 'dying-well') {
     if (pageSize === 12) {
-      return page > 1 ? [purposeProceeds] : [dyingWell];
+      return page > 1 ? [dyingWell] : [purposeProceeds];
     }
     return [dyingWell, purposeProceeds];
   }

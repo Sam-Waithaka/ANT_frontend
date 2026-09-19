@@ -4,6 +4,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import MediaRail from '../../src/components/media/MediaRail';
 import MediaSeriesRail from '../../src/components/media/MediaSeriesRail';
 import MediaSeriesPage from '../../src/pages/MediaSeriesPage';
 
@@ -37,10 +38,15 @@ const series = {
       collections: [],
       description: 'A sermon in the series.',
       descriptionExcerpt: 'A sermon in the series.',
+      durationSeconds: 1800,
+      id: 1,
       mediaType: 'sermon',
       mediaTypeLabel: 'Sermon',
+      publishedAt: '2026-01-07T09:00:00Z',
       series: { name: 'Dying Well', slug: 'dying-well' },
       slug: 'dying-well-part-one',
+      speaker: 'Rev. First Speaker',
+      scriptureReference: '2 Timothy 4:7',
       thumbnailUrl: '',
       title: 'Dying Well Part One',
     },
@@ -51,7 +57,10 @@ const series = {
 
 const secondItem = {
   ...series.items[0],
+  id: 2,
+  publishedAt: '2026-01-14T09:00:00Z',
   slug: 'dying-well-part-two',
+  speaker: 'Rev. Second Speaker',
   title: 'Dying Well Part Two',
 };
 
@@ -103,9 +112,20 @@ describe('MediaSeriesPage', () => {
       expect.any(AbortSignal),
     );
     expect(container.querySelector('h1')?.textContent).toBe('Dying Well');
-    expect(container.textContent).toContain('2 messages in this series');
+    expect(container.textContent).toContain('2 messages');
+    expect(container.textContent).toContain('Messages in this series');
     expect(container.querySelector('a[href="/media"]')?.textContent).toContain('Back to Media');
-    expect(container.querySelector('a[href="/media/watch/dying-well-part-one"]')).not.toBeNull();
+    expect(container.querySelectorAll('a[href="/media/watch/dying-well-part-one"]')).toHaveLength(2);
+    expect(container.textContent).toContain('Rev. First Speaker');
+    expect(container.textContent).toContain('2 Timothy 4:7');
+    expect(container.textContent?.match(/Message 1/g)).toHaveLength(2);
+    const h1 = container.querySelector('h1');
+    const h2 = container.querySelector('#series-messages-heading');
+    expect(h1?.compareDocumentPosition(h2 as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    container.querySelectorAll<HTMLAnchorElement>('a[aria-label^="Watch "]').forEach((link) => {
+      expect(link.querySelector('a, button')).toBeNull();
+      expect(link.className).toContain('focus-visible:ring-2');
+    });
   });
 
   it('links series cards to their canonical route', async () => {
@@ -148,12 +168,122 @@ describe('MediaSeriesPage', () => {
     await act(async () => loadMore.click());
 
     await vi.waitFor(() => expect(container.textContent).toContain('Dying Well Part Two'));
-    expect(container.textContent?.match(/Dying Well Part One/g)).toHaveLength(1);
+    expect(container.querySelectorAll('a[href="/media/watch/dying-well-part-one"]')).toHaveLength(2);
+    expect(container.querySelectorAll('a[href="/media/watch/dying-well-part-two"]')).toHaveLength(1);
+    expect(container.querySelector('a[href="/media/watch/dying-well-part-two"]')?.textContent).toContain('Message 2');
+    expect(container.querySelectorAll('a[href="/media/watch/dying-well-part-one"]')[1]?.textContent).toContain('Message 1');
     expect(mocks.fetchAudioVisualItemPage).toHaveBeenLastCalledWith(
       { ordering: 'oldest', page: 2, pageSize: 12, series: 'dying-well' },
       expect.any(AbortSignal),
     );
     expect([...container.querySelectorAll('button')].some((item) => item.textContent?.includes('Load more'))).toBe(false);
+  });
+
+  it('preserves backend canonical order for equal dates and numbers that complete sequence', async () => {
+    const canonicalFirst = {
+      ...secondItem,
+      publishedAt: series.items[0].publishedAt,
+    };
+    mocks.fetchAudioVisualItemPage.mockResolvedValueOnce({
+      count: 2,
+      items: [canonicalFirst, series.items[0]],
+      next: null,
+      previous: null,
+    });
+    await renderPage();
+
+    const messageLinks = await vi.waitFor(() => {
+      const links = [...container.querySelectorAll<HTMLAnchorElement>('a[aria-label^="Watch "]')];
+      expect(links).toHaveLength(3);
+      return links;
+    });
+
+    expect(messageLinks.map((link) => link.getAttribute('aria-label'))).toEqual([
+      'Watch Dying Well Part Two',
+      'Watch Dying Well Part Two',
+      'Watch Dying Well Part One',
+    ]);
+    expect(messageLinks[0]?.textContent).toContain('Message 1');
+    expect(messageLinks[1]?.textContent).toContain('Message 1');
+    expect(messageLinks[2]?.textContent).toContain('Message 2');
+    expect(container.textContent).toContain('Rev. First Speaker');
+    expect(container.textContent).toContain('Rev. Second Speaker');
+  });
+
+  it('retains series information and renders a deliberate empty state', async () => {
+    mocks.fetchAudioVisualItemPage.mockResolvedValueOnce({
+      count: 0,
+      items: [],
+      next: null,
+      previous: null,
+    });
+    mocks.fetchAudioVisualSeriesDetail.mockResolvedValueOnce({ ...series, items: [] });
+    await renderPage();
+
+    await vi.waitFor(() => expect(container.textContent).toContain('There are no messages in this series yet.'));
+    expect(container.querySelector('h1')?.textContent).toBe('Dying Well');
+    expect(container.textContent).toContain('Messages about finishing faithfully.');
+    expect(container.textContent).toContain('0 messages');
+    expect(container.querySelector('a[aria-label^="Watch "]')).toBeNull();
+  });
+
+  it('handles a single-message series with missing optional card metadata', async () => {
+    const sparseItem = {
+      ...series.items[0],
+      description: '',
+      descriptionExcerpt: '',
+      durationSeconds: undefined,
+      publishedAt: undefined,
+      speaker: undefined,
+      scriptureReference: undefined,
+      thumbnailUrl: '',
+    };
+    mocks.fetchAudioVisualItemPage.mockResolvedValueOnce({
+      count: 1,
+      items: [sparseItem],
+      next: null,
+      previous: null,
+    });
+    mocks.fetchAudioVisualSeriesDetail.mockResolvedValueOnce({
+      ...series,
+      description: undefined,
+      items: [sparseItem],
+      name: 'A Single Message',
+      slug: 'dying-well',
+    });
+    await renderPage();
+
+    await vi.waitFor(() => expect(container.querySelector('h1')?.textContent).toBe('A Single Message'));
+    expect(container.textContent).toContain('1 message');
+    expect(container.textContent).not.toContain('1 messages');
+    expect(container.textContent).not.toContain('Messages about finishing faithfully.');
+    expect(container.querySelectorAll('a[aria-label="Watch Dying Well Part One"]')).toHaveLength(2);
+    expect(container.textContent?.match(/Message 1/g)).toHaveLength(2);
+    expect(container.textContent).not.toContain('Rev. First Speaker');
+    expect(container.textContent).not.toContain('2 Timothy 4:7');
+    expect(container.textContent).not.toContain('2026');
+    expect(container.querySelector('img')).toBeNull();
+  });
+
+  it('keeps the established Media grid and leaves ordinary Media cards unlabeled', async () => {
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/media']}>
+          <MediaRail darkMode={false} items={series.items} title="Latest Sermons" />
+        </MemoryRouter>,
+      );
+    });
+
+    const establishedGrid = [...container.querySelectorAll<HTMLDivElement>('div')].find((element) =>
+      element.className.includes('sm:grid-cols-2')
+      && element.className.includes('lg:grid-cols-3')
+      && element.className.includes('xl:grid-cols-4'));
+    expect(establishedGrid).toBeDefined();
+    expect(container.textContent).not.toContain('Message 1');
+    const ordinaryCard = container.querySelector<HTMLAnchorElement>('a[href="/media/watch/dying-well-part-one"]');
+    expect(ordinaryCard).not.toBeNull();
+    expect(ordinaryCard?.getAttribute('aria-label')).toBeNull();
+    expect(ordinaryCard?.className).toBe('group block min-w-0');
   });
 
   it('shows a stable route-level error state when the series request fails', async () => {
