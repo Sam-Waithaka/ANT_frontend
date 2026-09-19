@@ -34,6 +34,7 @@ const WritingLibraryPage = lazy(() => import("./pages/portal/writing/WritingLibr
 const WritingNewArticlePage = lazy(() => import("./pages/portal/writing/WritingNewArticlePage"));
 const WritingStudioPage = lazy(() => import("./pages/portal/writing/WritingStudioPage"));
 const MemorialPortalPage = lazy(() => import("./pages/portal/memorials/MemorialPortalPage"));
+const MemorialEditorPlaceholderPage = lazy(() => import("./pages/portal/memorials/MemorialEditorPlaceholderPage"));
 
 const ProtectedRouteLoadingState = ({ label }: { label: string }) => (
   <div
@@ -105,6 +106,14 @@ function App() {
                   element={
                     <PortalRoute>
                       <MemorialPortalPage />
+                    </PortalRoute>
+                  }
+                />
+                <Route
+                  path="/portal/memorials/:id"
+                  element={
+                    <PortalRoute>
+                      <MemorialEditorPlaceholderPage />
                     </PortalRoute>
                   }
                 />

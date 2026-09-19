@@ -6,7 +6,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MemorialPortalShell from '../../src/components/portal/memorials/MemorialPortalShell';
-import MemorialPortalPage from '../../src/pages/portal/memorials/MemorialPortalPage';
 
 vi.mock('../../src/hooks/useTheme', () => ({
   useTheme: () => ({ darkMode: false, toggleTheme: vi.fn() }),
@@ -20,10 +19,10 @@ vi.mock('../../src/components/navigation/SiteFooter', () => ({
   default: () => <footer>Site footer</footer>,
 }));
 
-const render = async (root: Root, element: React.ReactNode) => {
+const render = async (root: Root, element: React.ReactNode, path = '/portal/memorials') => {
   await act(async () => {
     root.render(
-      <MemoryRouter initialEntries={['/portal/memorials']}>
+      <MemoryRouter initialEntries={[path]}>
         {element}
       </MemoryRouter>,
     );
@@ -59,13 +58,10 @@ describe('MemorialPortalShell', () => {
     expect(container.querySelector('a[href="/portal/memorials"]')).not.toBeNull();
   });
 
-  it('renders the initial memorial portal landing surface', async () => {
-    await render(root, <MemorialPortalPage />);
+  it('keeps its primary navigation active on nested memorial routes', async () => {
+    await render(root, <MemorialPortalShell><p>Nested memorial</p></MemorialPortalShell>, '/portal/memorials/12');
 
-    expect(container.textContent).toContain('Memorial workspace');
-    expect(container.textContent).toContain('Page shell');
-    expect(container.textContent).toContain('Written content');
-    expect(container.textContent).toContain('Structured records');
-    expect(container.textContent).toContain('Recordings');
+    const active = container.querySelector('[aria-current="page"]');
+    expect(active?.textContent).toContain('Overview');
   });
 });

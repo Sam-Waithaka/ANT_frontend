@@ -15,7 +15,7 @@ type MemorialPortalShellProps = {
 
 const navItems = [
   {
-    end: true,
+    end: false,
     href: '/portal/memorials',
     icon: LayoutDashboard,
     label: 'Overview',
