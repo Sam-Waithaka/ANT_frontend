@@ -1,12 +1,16 @@
 import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
+import ReactPlayer from "react-player";
 import {
   ArrowDown,
   ArrowRight,
   CalendarDays,
   ExternalLink,
   FileText,
+  Languages,
   MapPin,
+  PlayCircle,
   Radio,
+  UserRound,
 } from "lucide-react";
 import {
   ELDER_GEOFFREY_MEMORIAL_API_SLUG,
@@ -225,6 +229,10 @@ function MemorialReadyState({ payload }: { payload: MemorialPublicPayload }) {
 
           if (isRepeatableSectionKey(sectionKey)) {
             return renderRepeatableSection(sectionKey, index, sections);
+          }
+
+          if (sectionKey === "recordings") {
+            return <RecordingsSection index={index} key={sectionKey} section={sections.recordings} />;
           }
 
           return (
@@ -527,6 +535,203 @@ function InlineMediaEmbeds({ embeds }: { embeds: MemorialMediaEmbed[] }) {
         );
       })}
     </div>
+  );
+}
+function RecordingsSection({
+  index,
+  section,
+}: {
+  index: number;
+  section: MemorialPublicPayload["sections"]["recordings"];
+}) {
+  const groups = sortByOrder(section.items).filter((group) => group.content || group.series || group.items.length > 0);
+
+  if (!section.content && !groups.length) {
+    return null;
+  }
+
+  return (
+    <section className={getSectionBandClass(index)} id="recordings">
+      <div className="mx-auto grid w-full max-w-[88rem] gap-8 px-6 py-12 sm:px-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-16 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        <div className="border-[var(--memorial-line)] lg:border-r lg:pr-8">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
+            {sectionEyebrows.recordings}
+          </p>
+          <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
+            {section.content?.title || section.label || friendlySectionLabels.recordings}
+          </h2>
+          {section.content?.subtitle ? (
+            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[#625b52]">{section.content.subtitle}</p>
+          ) : null}
+          <span className="memorial-rule mt-6" aria-hidden="true" />
+        </div>
+
+        <div>
+          {section.content?.content_html ? (
+            <div className="mb-8">
+              <RichTextBlock html={section.content.content_html} />
+              <ScriptureReferences references={section.content.scripture_references} />
+            </div>
+          ) : null}
+
+          <div className="grid gap-8">
+            {groups.map((group) => (
+              <RecordingGroup group={group} key={group.id} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RecordingGroup({
+  group,
+}: {
+  group: MemorialPublicPayload["sections"]["recordings"]["items"][number];
+}) {
+  const seriesCoverUrl = getMediaUrl(group.series?.cover_image ?? null, "medium");
+  const recordings = [...group.items].sort((first, second) => {
+    const firstPriority = first.priority ?? 0;
+    const secondPriority = second.priority ?? 0;
+
+    if (firstPriority !== secondPriority) {
+      return secondPriority - firstPriority;
+    }
+
+    const firstDate = first.published_at ? new Date(first.published_at).getTime() : 0;
+    const secondDate = second.published_at ? new Date(second.published_at).getTime() : 0;
+
+    return secondDate - firstDate;
+  });
+
+  return (
+    <article className="rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] p-5 shadow-sm shadow-black/5 sm:p-6">
+      <div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)]">
+        {seriesCoverUrl ? (
+          <img
+            alt={group.series?.title || group.title}
+            className="aspect-square w-full rounded-sm object-cover"
+            src={seriesCoverUrl}
+          />
+        ) : (
+          <div className="grid aspect-square w-full place-items-center rounded-sm bg-[#211f1d] text-stone-200">
+            <PlayCircle size={42} strokeWidth={1.5} aria-hidden="true" />
+          </div>
+        )}
+
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--memorial-burgundy)]">
+            {group.series?.title || "Memorial recordings"}
+          </p>
+          <h3 className="mt-3 text-2xl font-black leading-tight text-[var(--memorial-ink)]">{group.title}</h3>
+          {group.content?.content_html ? (
+            <RichTextBlock className="mt-4 text-base" html={group.content.content_html} />
+          ) : group.series?.description ? (
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-[#625b52]">{group.series.description}</p>
+          ) : null}
+        </div>
+      </div>
+
+      {recordings.length > 0 ? (
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          {recordings.map((recording) => (
+            <RecordingCard item={recording} key={recording.id} />
+          ))}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function RecordingCard({
+  item,
+}: {
+  item: MemorialPublicPayload["sections"]["recordings"]["items"][number]["items"][number];
+}) {
+  const canEmbed = Boolean(item.embed_url);
+  const fallbackUrl = item.external_url || item.embed_url;
+  const metadata = [
+    item.provider,
+    item.media_type,
+    formatDuration(item.duration_seconds),
+    item.published_at ? formatDate(item.published_at) : "",
+  ].filter(Boolean);
+
+  return (
+    <article className="overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-paper)] shadow-sm shadow-black/5">
+      {canEmbed ? (
+        <div className="aspect-video bg-[#141312]">
+          <ReactPlayer
+            controls
+            height="100%"
+            light={item.thumbnail_url || false}
+            src={item.embed_url}
+            width="100%"
+          />
+        </div>
+      ) : (
+        <a
+          className="group relative block aspect-video overflow-hidden bg-[#141312] text-stone-100"
+          href={fallbackUrl || undefined}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {item.thumbnail_url ? (
+            <img alt="" className="h-full w-full object-cover opacity-80 transition group-hover:scale-105" src={item.thumbnail_url} />
+          ) : null}
+          <span className="absolute inset-0 grid place-items-center bg-black/25">
+            <span className="grid size-16 place-items-center rounded-full bg-white/90 text-[var(--memorial-ink)] shadow-lg">
+              <PlayCircle size={32} strokeWidth={1.7} aria-hidden="true" />
+            </span>
+          </span>
+        </a>
+      )}
+
+      <div className="p-5">
+        <h4 className="text-xl font-black leading-tight text-[var(--memorial-ink)]">{item.title}</h4>
+        {item.description_excerpt || item.description ? (
+          <p className="mt-3 text-sm leading-6 text-[#625b52]">{item.description_excerpt || item.description}</p>
+        ) : null}
+
+        <div className="mt-4 grid gap-2 text-sm leading-6 text-[#5f584f]">
+          {item.speaker ? (
+            <p className="flex gap-2">
+              <UserRound className="mt-0.5 shrink-0" size={16} aria-hidden="true" />
+              <span>{item.speaker}</span>
+            </p>
+          ) : null}
+          {item.scripture_reference ? (
+            <p className="memorial-serif italic text-[#443e37]">{item.scripture_reference}</p>
+          ) : null}
+          {metadata.length > 0 ? (
+            <p className="flex flex-wrap gap-x-2 gap-y-1 text-xs font-bold uppercase tracking-[0.12em] text-[#7a7066]">
+              {metadata.map((label) => (
+                <span key={label}>{label}</span>
+              ))}
+            </p>
+          ) : null}
+          {item.language ? (
+            <p className="flex gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#7a7066]">
+              <Languages size={14} aria-hidden="true" />
+              {item.language}
+            </p>
+          ) : null}
+        </div>
+
+        {fallbackUrl ? (
+          <a
+            className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[var(--memorial-line)] px-4 text-sm font-black text-[var(--memorial-ink)] transition hover:border-[var(--memorial-burgundy)] hover:text-[var(--memorial-burgundy)]"
+            href={fallbackUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {canEmbed ? "Open recording" : "Watch or listen"}
+            <ExternalLink size={15} aria-hidden="true" />
+          </a>
+        ) : null}
+      </div>
+    </article>
   );
 }
 function renderRepeatableSection(
@@ -998,6 +1203,21 @@ function formatArrangementDateTime(startsAt: string, endsAt: string | null) {
   return `${date} - ${endTime}`;
 }
 
+function formatDuration(durationSeconds: number | null) {
+  if (!durationSeconds) {
+    return "";
+  }
+
+  const hours = Math.floor(durationSeconds / 3600);
+  const minutes = Math.floor((durationSeconds % 3600) / 60);
+  const seconds = durationSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
 function formatDate(value: string) {
   return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(value));
 }
