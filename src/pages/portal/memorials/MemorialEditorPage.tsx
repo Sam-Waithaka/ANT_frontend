@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import MemorialPortalShell, { MemorialPortalEmptyState } from '../../../components/portal/memorials/MemorialPortalShell';
+import MemorialPageSettingsPanel from '../../../components/portal/memorials/MemorialPageSettingsPanel';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -660,6 +661,10 @@ const MemorialEditorPage = () => {
       {model?.page ? (
         <div className="grid gap-6">
           <PageOverview darkMode={darkMode} model={model} />
+          <MemorialPageSettingsPanel
+            onPageUpdated={(updatedPage) => setEditorState((current) => current ? { ...current, page: updatedPage } : current)}
+            page={model.page}
+          />
           <RichTextSections darkMode={darkMode} model={model} />
           <section className="grid gap-5">
             <div>
@@ -684,3 +689,4 @@ const MemorialEditorPage = () => {
 };
 
 export default MemorialEditorPage;
+

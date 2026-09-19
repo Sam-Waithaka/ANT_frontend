@@ -10,6 +10,7 @@ import type { MemorialEditorState } from '../../src/types/memorial';
 
 const mocks = vi.hoisted(() => ({
   fetchMemorialEditorState: vi.fn(),
+  updateMemorialPage: vi.fn(),
 }));
 
 vi.mock('../../src/hooks/useTheme', () => ({
@@ -17,7 +18,7 @@ vi.mock('../../src/hooks/useTheme', () => ({
 }));
 
 vi.mock('../../src/hooks/useAuth', () => ({
-  useAuth: () => ({ accessToken: 'access-token' }),
+  useAuth: () => ({ accessToken: 'access-token', permissions: [] }),
 }));
 
 vi.mock('../../src/components/navigation/SiteHeader', () => ({
@@ -30,6 +31,7 @@ vi.mock('../../src/components/navigation/SiteFooter', () => ({
 
 vi.mock('../../src/services/memorialApi', () => ({
   fetchMemorialEditorState: mocks.fetchMemorialEditorState,
+  updateMemorialPage: mocks.updateMemorialPage,
 }));
 
 const workflow = {
@@ -198,6 +200,25 @@ const renderPage = async (root: Root) => {
   });
 };
 
+const changeInput = async (input: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+  await act(async () => {
+    const prototype = input instanceof HTMLTextAreaElement
+      ? window.HTMLTextAreaElement.prototype
+      : window.HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+    setter?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+};
+
+const changeSelect = async (select: HTMLSelectElement, value: string) => {
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')?.set;
+    setter?.call(select, value);
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+};
+
 describe('MemorialEditorPage', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -206,6 +227,10 @@ describe('MemorialEditorPage', () => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     mocks.fetchMemorialEditorState.mockReset();
     mocks.fetchMemorialEditorState.mockResolvedValue(editorState());
+    mocks.updateMemorialPage.mockReset();
+    mocks.updateMemorialPage.mockImplementation((_, __, payload) =>
+      Promise.resolve({ ...editorState().page, ...payload }),
+    );
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -235,5 +260,27 @@ describe('MemorialEditorPage', () => {
     expect(container.textContent).toContain('Legacy sermon series');
     expect(container.textContent).toContain('Funeral service');
   });
-});
 
+  it('saves changed memorial page shell settings', async () => {
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Rev. Jane Doe'));
+
+    const fullNameInput = Array.from(container.querySelectorAll('input')).find((input) =>
+      input.value === 'Rev. Jane Doe',
+    ) as HTMLInputElement;
+    await changeInput(fullNameInput, 'Rev. Jane Updated');
+    await changeSelect(container.querySelector('select') as HTMLSelectElement, 'ARCHIVED');
+
+    const saveButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Save shell'),
+    ) as HTMLButtonElement;
+    await act(async () => saveButton.click());
+
+    await vi.waitFor(() => expect(mocks.updateMemorialPage).toHaveBeenCalled());
+    expect(mocks.updateMemorialPage).toHaveBeenCalledWith('access-token', 42, {
+      full_name: 'Rev. Jane Updated',
+      status: 'ARCHIVED',
+    });
+    await vi.waitFor(() => expect(container.textContent).toContain('Rev. Jane Updated'));
+  });
+});

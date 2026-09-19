@@ -8,9 +8,12 @@ type CoverImagePickerProps = {
   canUpload: boolean;
   darkMode: boolean;
   disabled?: boolean;
+  emptyText?: string;
+  label?: string;
   onChange: (asset: MediaAsset | null) => void;
   selectedAsset: MediaAsset | null;
   selectedAssetId?: string;
+  selectedText?: string;
 };
 
 const CoverImagePicker = ({
@@ -18,9 +21,12 @@ const CoverImagePicker = ({
   canUpload,
   darkMode,
   disabled = false,
+  emptyText = 'Choose an existing image or upload a new cover.',
+  label = 'Cover Image',
   onChange,
   selectedAsset,
   selectedAssetId = '',
+  selectedText = 'A cover image is selected for this article.',
 }: CoverImagePickerProps) => {
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [error, setError] = useState('');
@@ -72,15 +78,15 @@ const CoverImagePicker = ({
 
   return (
     <div className={'border-t pt-5 ' + (darkMode ? 'border-white/10' : 'border-black/10')}>
-      <p className="text-xs font-black uppercase tracking-[0.16em] text-red-800">Cover Image</p>
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-red-800">{label}</p>
       {selectedAsset && selectedImageUrl ? (
         <div className="mt-3 overflow-hidden rounded-2xl border border-black/10">
-          <ResponsiveImage alt={selectedAsset?.alt_text || selectedAsset?.title || 'Selected cover image'} asset={selectedAsset} className="aspect-video w-full object-cover" onRefreshAsset={refreshAsset(selectedAsset.id)} preset="card" />
+          <ResponsiveImage alt={selectedAsset?.alt_text || selectedAsset?.title || 'Selected image'} asset={selectedAsset} className="aspect-video w-full object-cover" onRefreshAsset={refreshAsset(selectedAsset.id)} preset="card" />
         </div>
       ) : selectedAssetId ? (
-        <p className={'mt-3 text-sm leading-6 ' + mutedTextClass}>A cover image is selected for this article.</p>
+        <p className={'mt-3 text-sm leading-6 ' + mutedTextClass}>{selectedText}</p>
       ) : (
-        <p className={'mt-3 text-sm leading-6 ' + mutedTextClass}>Choose an existing image or upload a new cover.</p>
+        <p className={'mt-3 text-sm leading-6 ' + mutedTextClass}>{emptyText}</p>
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -126,7 +132,3 @@ const CoverImagePicker = ({
 };
 
 export default CoverImagePicker;
-
-
-
-
