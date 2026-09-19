@@ -88,6 +88,15 @@ const repeatableSectionKeys = [
 
 type CoreRichSectionKey = (typeof coreRichSectionKeys)[number];
 type RepeatableSectionKey = (typeof repeatableSectionKeys)[number];
+type PublicImageSize = "thumb" | "small" | "medium" | "large";
+
+type PublicImageVariant = {
+  format: string;
+  height: number | null;
+  sizeName: string;
+  url: string;
+  width: number | null;
+};
 
 function MemorialPublicPage() {
   const { darkMode, toggleTheme } = useTheme();
@@ -252,20 +261,21 @@ function MemorialReadyState({ payload }: { payload: MemorialPublicPayload }) {
 function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
   const { page, sections } = payload;
   const heroContent = sections.hero.content;
-  const heroBackgroundUrl = getMediaUrl(page.hero_image, "large");
-  const portraitUrl = getMediaUrl(page.portrait_image, "large");
+  const hasHeroBackground = Boolean(getBestImageVariant(page.hero_image, "large"));
+  const hasPortrait = Boolean(getBestImageVariant(page.portrait_image, "large"));
   const initials = getInitials(page.full_name);
   const scriptureReferences = heroContent?.scripture_references ?? [];
 
   return (
     <header className="relative isolate overflow-hidden border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]">
-      {heroBackgroundUrl ? (
+      {hasHeroBackground ? (
         <>
-          <img
-            alt=""
-            aria-hidden="true"
+          <PublicImage
+            asset={page.hero_image}
             className="absolute inset-0 -z-20 h-full w-full object-cover opacity-15"
-            src={heroBackgroundUrl}
+            decorative
+            loading="eager"
+            preferredSize="large"
           />
           <div className="absolute inset-0 -z-10 bg-[rgba(255,253,247,0.86)]" aria-hidden="true" />
         </>
@@ -283,20 +293,12 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
           </div>
           <span className="memorial-rule mt-7" aria-hidden="true" />
           {heroContent?.content_html ? (
-            <div
+            <RichTextBlock
               className="memorial-hero-rich-text memorial-scripture mt-7 max-w-2xl text-2xl sm:text-3xl"
-              dangerouslySetInnerHTML={{ __html: heroContent.content_html }}
+              html={heroContent.content_html}
             />
           ) : null}
-          {scriptureReferences.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {scriptureReferences.map((reference) => (
-                <span className="text-sm font-semibold text-[#4f4840]" key={reference.id}>
-                  {reference.display_text}
-                </span>
-              ))}
-            </div>
-          ) : null}
+          <ScriptureReferences references={scriptureReferences} variant="inline" />
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-[var(--memorial-burgundy)] px-7 text-sm font-black text-[var(--memorial-ink)] transition hover:bg-[var(--memorial-burgundy)] hover:text-white"
@@ -316,11 +318,13 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
         </div>
 
         <figure className="order-1 relative aspect-[4/5] w-full overflow-hidden rounded-sm border border-black/10 bg-[#191817] shadow-2xl shadow-black/10 lg:order-none lg:self-center">
-          {portraitUrl ? (
-            <img
-              alt={page.portrait_image?.alt_text || page.full_name}
+          {hasPortrait ? (
+            <PublicImage
+              alt={page.full_name}
+              asset={page.portrait_image}
               className="h-full w-full object-cover"
-              src={portraitUrl}
+              loading="eager"
+              preferredSize="large"
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#343331,#171615_62%)] text-stone-200">
@@ -423,7 +427,7 @@ function CoreMemorialSection({
           <span className="memorial-rule mx-auto mt-7" aria-hidden="true" />
           <RichTextBlock className="mx-auto mt-8 max-w-3xl text-xl sm:text-2xl" html={content.content_html} />
           <ScriptureReferences centered references={content.scripture_references} />
-          <InlineMediaEmbeds embeds={content.media_embeds} />
+          <MediaEmbeds embeds={content.media_embeds} />
         </div>
       </section>
     );
@@ -448,7 +452,7 @@ function CoreMemorialSection({
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
           <div>
             <RichTextBlock html={content.content_html} />
-            <InlineMediaEmbeds embeds={content.media_embeds} />
+            <MediaEmbeds embeds={content.media_embeds} />
           </div>
           <aside className="space-y-5 border-[var(--memorial-line)] text-sm leading-6 text-[#625b52] xl:border-l xl:pl-8">
             <ScriptureReferences references={content.scripture_references} />
@@ -480,12 +484,26 @@ function RichTextBlock({ className = "", html }: { className?: string; html: str
 function ScriptureReferences({
   centered,
   references,
+  variant = "chips",
 }: {
   centered?: boolean;
   references: MemorialScriptureReference[];
+  variant?: "chips" | "inline";
 }) {
   if (!references.length) {
     return null;
+  }
+
+  if (variant === "inline") {
+    return (
+      <div className={`mt-3 flex flex-wrap gap-2 ${centered ? "justify-center" : ""}`}>
+        {references.map((reference) => (
+          <span className="text-sm font-semibold text-[#4f4840]" key={reference.id}>
+            {reference.display_text}
+          </span>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -502,38 +520,73 @@ function ScriptureReferences({
   );
 }
 
-function InlineMediaEmbeds({ embeds }: { embeds: MemorialMediaEmbed[] }) {
-  if (!embeds.length) {
+function PublicImage({
+  alt,
+  altTextOverride,
+  asset,
+  className = "",
+  decorative,
+  loading = "lazy",
+  preferredSize,
+}: {
+  alt?: string;
+  altTextOverride?: string;
+  asset: MemorialMediaAsset | null;
+  className?: string;
+  decorative?: boolean;
+  loading?: "eager" | "lazy";
+  preferredSize: PublicImageSize;
+}) {
+  const variant = getBestImageVariant(asset, preferredSize);
+
+  if (!asset || !variant) {
+    return null;
+  }
+
+  const resolvedAlt = decorative ? "" : altTextOverride || asset.alt_text || alt || asset.title || "";
+
+  return (
+    <img
+      alt={resolvedAlt}
+      aria-hidden={decorative ? true : undefined}
+      className={className}
+      decoding="async"
+      height={variant.height ?? undefined}
+      loading={loading}
+      src={variant.url}
+      width={variant.width ?? undefined}
+    />
+  );
+}
+
+function MediaEmbeds({ embeds, preferredSize = "medium" }: { embeds: MemorialMediaEmbed[]; preferredSize?: PublicImageSize }) {
+  const visibleEmbeds = sortByOrder(embeds).filter((embed) => getBestImageVariant(embed.media_asset, preferredSize));
+
+  if (!visibleEmbeds.length) {
     return null;
   }
 
   return (
     <div className="mt-8 grid gap-4 sm:grid-cols-2">
-      {embeds.map((embed) => {
-        const imageUrl = getMediaUrl(embed.media_asset, "medium");
-
-        if (!imageUrl) {
-          return null;
-        }
-
-        return (
-          <figure
-            className="overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-paper)] shadow-sm shadow-black/5"
-            key={embed.embed_id || embed.id}
-          >
-            <img
-              alt={embed.alt_text_override || embed.media_asset.alt_text || embed.media_asset.title}
-              className="aspect-[4/3] w-full object-cover"
-              src={imageUrl}
-            />
-            {embed.caption_override || embed.media_asset.caption ? (
-              <figcaption className="px-4 py-3 text-sm leading-6 text-[#625b52]">
-                {embed.caption_override || embed.media_asset.caption}
-              </figcaption>
-            ) : null}
-          </figure>
-        );
-      })}
+      {visibleEmbeds.map((embed) => (
+        <figure
+          className="overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-paper)] shadow-sm shadow-black/5"
+          key={embed.embed_id || embed.id}
+        >
+          <PublicImage
+            alt={embed.media_asset.title}
+            altTextOverride={embed.alt_text_override}
+            asset={embed.media_asset}
+            className="aspect-[4/3] w-full object-cover"
+            preferredSize={preferredSize}
+          />
+          {embed.caption_override || embed.media_asset.caption ? (
+            <figcaption className="px-4 py-3 text-sm leading-6 text-[#625b52]">
+              {embed.caption_override || embed.media_asset.caption}
+            </figcaption>
+          ) : null}
+        </figure>
+      ))}
     </div>
   );
 }
@@ -571,6 +624,7 @@ function RecordingsSection({
             <div className="mb-8">
               <RichTextBlock html={section.content.content_html} />
               <ScriptureReferences references={section.content.scripture_references} />
+              <MediaEmbeds embeds={section.content.media_embeds} />
             </div>
           ) : null}
 
@@ -590,7 +644,7 @@ function RecordingGroup({
 }: {
   group: MemorialPublicPayload["sections"]["recordings"]["items"][number];
 }) {
-  const seriesCoverUrl = getMediaUrl(group.series?.cover_image ?? null, "medium");
+  const hasSeriesCover = Boolean(getBestImageVariant(group.series?.cover_image ?? null, "medium"));
   const recordings = [...group.items].sort((first, second) => {
     const firstPriority = first.priority ?? 0;
     const secondPriority = second.priority ?? 0;
@@ -608,11 +662,12 @@ function RecordingGroup({
   return (
     <article className="rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] p-5 shadow-sm shadow-black/5 sm:p-6">
       <div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)]">
-        {seriesCoverUrl ? (
-          <img
-            alt={group.series?.title || group.title}
+        {hasSeriesCover ? (
+          <PublicImage
+            alt={group.title}
+            asset={group.series?.cover_image ?? null}
             className="aspect-square w-full rounded-sm object-cover"
-            src={seriesCoverUrl}
+            preferredSize="medium"
           />
         ) : (
           <div className="grid aspect-square w-full place-items-center rounded-sm bg-[#211f1d] text-stone-200">
@@ -655,7 +710,7 @@ function RecordingCard({
     item.provider,
     item.media_type,
     formatDuration(item.duration_seconds),
-    item.published_at ? formatDate(item.published_at) : "",
+    formatDateTime(item.published_at, null, "date"),
   ].filter(Boolean);
 
   return (
@@ -767,18 +822,19 @@ function MinistryLegacySection({
       <RepeatableSectionGrid section={section} sectionKey="ministry_legacy">
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
-            const photoUrl = getMediaUrl(item.representative_photo, "medium");
+            const hasPhoto = Boolean(getBestImageVariant(item.representative_photo, "medium"));
 
             return (
               <article
                 className="flex min-h-full flex-col overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] shadow-sm shadow-black/5"
                 key={item.id}
               >
-                {photoUrl ? (
-                  <img
-                    alt={item.representative_photo?.alt_text || item.display_ministry_name}
+                {hasPhoto ? (
+                  <PublicImage
+                    alt={item.display_ministry_name}
+                    asset={item.representative_photo}
                     className="aspect-[16/10] w-full object-cover"
-                    src={photoUrl}
+                    preferredSize="medium"
                   />
                 ) : (
                   <div className="grid aspect-[16/10] place-items-center bg-[#e4ded4] text-[#6d655c]">
@@ -823,7 +879,7 @@ function PersonalTributesSection({
       <RepeatableSectionGrid section={section} sectionKey="personal_tributes">
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
-            const photoUrl = getMediaUrl(item.author_photo, "small");
+            const hasPhoto = Boolean(getBestImageVariant(item.author_photo, "thumb"));
 
             return (
               <article
@@ -831,11 +887,12 @@ function PersonalTributesSection({
                 key={item.id}
               >
                 <div className="flex items-center gap-4">
-                  {photoUrl ? (
-                    <img
-                      alt={item.author_photo?.alt_text || item.author_name}
+                  {hasPhoto ? (
+                    <PublicImage
+                      alt={item.author_name}
+                      asset={item.author_photo}
                       className="size-16 rounded-full object-cover"
-                      src={photoUrl}
+                      preferredSize="thumb"
                     />
                   ) : (
                     <div className="grid size-16 place-items-center rounded-full bg-[#211f1d] text-stone-200">
@@ -878,15 +935,15 @@ function LeadershipTimelineSection({
       <RepeatableSectionGrid section={section} sectionKey="leadership_timeline">
         <div className="relative grid gap-6 before:absolute before:left-4 before:top-2 before:hidden before:h-[calc(100%-1rem)] before:w-px before:bg-[var(--memorial-line)] md:before:block">
           {items.map((item) => {
-            const imageUrl = getMediaUrl(item.image, "medium");
+            const hasImage = Boolean(getBestImageVariant(item.image, "medium"));
             const dateLabel = formatTimelineDate(item);
 
             return (
               <article className="relative grid gap-4 md:grid-cols-[2rem_minmax(0,1fr)]" key={item.id}>
                 <span className="relative z-10 hidden size-8 rounded-full border-4 border-[var(--memorial-paper)] bg-[var(--memorial-burgundy)] shadow-sm md:block" aria-hidden="true" />
                 <div className="grid overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] shadow-sm shadow-black/5 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                  {imageUrl ? (
-                    <img alt={item.title} className="h-full min-h-52 w-full object-cover" src={imageUrl} />
+                  {hasImage ? (
+                    <PublicImage alt={item.title} asset={item.image} className="h-full min-h-52 w-full object-cover" preferredSize="medium" />
                   ) : null}
                   <div className="p-6">
                     {dateLabel ? (
@@ -921,9 +978,9 @@ function GallerySection({
       <RepeatableSectionGrid section={section} sectionKey="gallery">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {items.map((item, itemIndex) => {
-            const imageUrl = getMediaUrl(item.media_asset, itemIndex === 0 ? "large" : "medium");
+            const imageSize: PublicImageSize = itemIndex === 0 ? "large" : "medium";
 
-            if (!imageUrl) {
+            if (!getBestImageVariant(item.media_asset, imageSize)) {
               return null;
             }
 
@@ -932,10 +989,12 @@ function GallerySection({
                 className={`overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.78)] shadow-sm shadow-black/5 ${itemIndex === 0 ? "sm:col-span-2 sm:row-span-2" : ""}`}
                 key={item.id}
               >
-                <img
-                  alt={item.alt_text_override || item.media_asset.alt_text || item.caption || item.media_asset.title}
+                <PublicImage
+                  alt={item.caption || item.media_asset.title}
+                  altTextOverride={item.alt_text_override}
+                  asset={item.media_asset}
                   className={`${itemIndex === 0 ? "aspect-[4/3]" : "aspect-square"} w-full object-cover`}
-                  src={imageUrl}
+                  preferredSize={imageSize}
                 />
                 <figcaption className="p-4 text-sm leading-6 text-[#625b52]">
                   {item.category_label ? (
@@ -980,7 +1039,7 @@ function ArrangementsSection({
       <RepeatableSectionGrid section={section} sectionKey="arrangements">
         <div className="grid gap-5 lg:grid-cols-3">
           {items.map((item) => {
-            const programmeUrl = getMediaUrl(item.programme_asset, "large");
+            const programmeUrl = getBestImageVariant(item.programme_asset, "large")?.url || "";
 
             return (
               <article
@@ -999,7 +1058,7 @@ function ArrangementsSection({
                   {item.starts_at ? (
                     <p className="flex gap-3">
                       <CalendarDays className="mt-0.5 shrink-0" size={17} aria-hidden="true" />
-                      <span>{formatArrangementDateTime(item.starts_at, item.ends_at)}</span>
+                      <span>{formatDateTime(item.starts_at, item.ends_at)}</span>
                     </p>
                   ) : null}
                   {item.location_name || item.address ? (
@@ -1082,6 +1141,7 @@ function RepeatableSectionGrid({
           <div className="mb-8">
             <RichTextBlock html={content.content_html} />
             <ScriptureReferences references={content.scripture_references} />
+            <MediaEmbeds embeds={content.media_embeds} />
           </div>
         ) : null}
         {children}
@@ -1123,12 +1183,8 @@ function MemorialSectionFrame({
             {content?.subtitle ? (
               <p className="mb-4 text-base font-bold text-[#4b443d]">{content.subtitle}</p>
             ) : null}
-            {content?.content_html ? (
-              <div
-                className="memorial-rich-text max-w-3xl"
-                dangerouslySetInnerHTML={{ __html: content.content_html }}
-              />
-            ) : null}
+            {content?.content_html ? <RichTextBlock html={content.content_html} /> : null}
+            {content ? <MediaEmbeds embeds={content.media_embeds} /> : null}
           </div>
           <aside className="text-sm leading-6 text-[#625b52]">
             {items.length > 0 ? (
@@ -1176,22 +1232,31 @@ function formatTimelineDate(item: MemorialPublicPayload["sections"]["leadership_
     return `${item.start_year}`;
   }
 
-  if (item.event_date) {
-    return formatDate(item.event_date);
-  }
-
-  return "";
+  return formatDateTime(item.event_date, null, "date");
 }
 
-function formatArrangementDateTime(startsAt: string, endsAt: string | null) {
-  const start = new Date(startsAt);
-  const end = endsAt ? new Date(endsAt) : null;
+function formatDateTime(value: string | null, endsAt: string | null = null, mode: "date" | "dateTime" = "dateTime") {
+  if (!value) {
+    return "";
+  }
+
+  const start = new Date(value);
+
+  if (Number.isNaN(start.getTime())) {
+    return "";
+  }
+
+  if (mode === "date") {
+    return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(start);
+  }
+
   const date = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(start);
+  const end = endsAt ? new Date(endsAt) : null;
 
-  if (!end) {
+  if (!end || Number.isNaN(end.getTime())) {
     return date;
   }
 
@@ -1218,9 +1283,7 @@ function formatDuration(durationSeconds: number | null) {
 
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(value));
-}
+
 function isCoreRichSectionKey(sectionKey: MemorialNavSectionKey): sectionKey is CoreRichSectionKey {
   return coreRichSectionKeys.includes(sectionKey as CoreRichSectionKey);
 }
@@ -1229,29 +1292,59 @@ function shouldRenderSection(section: MemorialPublicPayload["sections"][Memorial
   return Boolean(section.content || items.length > 0);
 }
 
-function getMediaUrl(asset: MemorialMediaAsset | null, preferredSize: "thumb" | "small" | "medium" | "large") {
+function getBestImageVariant(asset: MemorialMediaAsset | null, preferredSize: PublicImageSize): PublicImageVariant | null {
   if (!asset) {
-    return "";
+    return null;
   }
 
   const formatPreference = ["avif", "webp", "jpeg"];
-  const sizePreference = preferredSize === "large"
-    ? ["large", "medium", "small", "thumb"]
-    : [preferredSize, "medium", "small", "thumb", "large"];
+  const sizePreference = getImageSizePreference(preferredSize);
 
   for (const format of formatPreference) {
     const variants = asset.variant_map?.[format];
 
     for (const size of sizePreference) {
-      const url = variants?.[size]?.url;
+      const variant = variants?.[size];
 
-      if (url) {
-        return url;
+      if (variant?.url) {
+        return {
+          format: variant.format || format,
+          height: variant.height,
+          sizeName: variant.size_name || size,
+          url: variant.url,
+          width: variant.width,
+        };
       }
     }
   }
 
-  return asset.original_url;
+  if (!asset.original_url) {
+    return null;
+  }
+
+  return {
+    format: "original",
+    height: asset.height,
+    sizeName: "original",
+    url: asset.original_url,
+    width: asset.width,
+  };
+}
+
+function getImageSizePreference(preferredSize: PublicImageSize) {
+  if (preferredSize === "large") {
+    return ["large", "medium", "small", "thumb"];
+  }
+
+  if (preferredSize === "medium") {
+    return ["medium", "large", "small", "thumb"];
+  }
+
+  if (preferredSize === "small") {
+    return ["small", "thumb", "medium", "large"];
+  }
+
+  return ["thumb", "small", "medium", "large"];
 }
 function getInitials(name: string) {
   return name
