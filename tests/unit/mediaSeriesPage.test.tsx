@@ -130,10 +130,12 @@ describe('MediaSeriesPage', () => {
     const h1 = container.querySelector('h1');
     const h2 = container.querySelector('#series-messages-heading');
     expect(h1?.compareDocumentPosition(h2 as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    container.querySelectorAll<HTMLAnchorElement>('a[aria-label^="Watch "]').forEach((link) => {
+    const watchLinks = container.querySelectorAll<HTMLAnchorElement>('a[aria-label^="Watch "]');
+    watchLinks.forEach((link) => {
       expect(link.querySelector('a, button')).toBeNull();
-      expect(link.className).toContain('focus-visible:ring-2');
     });
+    expect(watchLinks[0]?.className).toContain('shadow-2xl');
+    expect(watchLinks[1]?.className).toContain('focus-visible:ring-2');
   });
 
   it('shares the canonical series route with series metadata', async () => {
@@ -286,8 +288,9 @@ describe('MediaSeriesPage', () => {
     expect(container.textContent?.match(/Message 1/g)).toHaveLength(2);
     expect(container.textContent).not.toContain('Rev. First Speaker');
     expect(container.textContent).not.toContain('2 Timothy 4:7');
+    expect(container.textContent).not.toContain('The newest message from A.I.C Njoro Town Church');
     expect(container.textContent).not.toContain('2026');
-    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('/images/church-front-left-1920.jpg');
   });
 
   it('keeps the established Media grid and leaves ordinary Media cards unlabeled', async () => {

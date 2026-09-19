@@ -1,6 +1,6 @@
 import { Video } from 'lucide-react';
 import type { AudioVisualGroupDetail, AudioVisualItem } from '../../types/audioVisual';
-import MediaCard from './MediaCard';
+import MediaHeroTile from './MediaHeroTile';
 import MediaRail from './MediaRail';
 
 type MediaSeriesDetailProps = {
@@ -85,11 +85,13 @@ const MediaSeriesDetail = ({
 
         {featuredItem ? (
           <div className="w-full min-w-0 max-w-3xl justify-self-end">
-            <MediaCard
+            <MediaHeroTile
+              badgeLabel="Message 1"
               darkMode={darkMode}
+              eyebrowLabel={series.name}
+              fallbackDescription=""
               item={featuredItem}
-              messageLabel="Message 1"
-              relatedContext={relatedContext}
+              linkAriaLabel={`Watch ${featuredItem.title}`}
             />
           </div>
         ) : null}
