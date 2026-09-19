@@ -8,7 +8,12 @@ import {
 import SiteFooter from "../components/navigation/SiteFooter";
 import SiteHeader from "../components/navigation/SiteHeader";
 import { useTheme } from "../hooks/useTheme";
-import type { MemorialMediaAsset, MemorialPublicPayload } from "../types/memorialPublic";
+import type {
+  MemorialMediaAsset,
+  MemorialMediaEmbed,
+  MemorialPublicPayload,
+  MemorialScriptureReference,
+} from "../types/memorialPublic";
 import "../styles/memorial.css";
 
 const memorialEndpointPath = `/v1/memorial/public/pages/${ELDER_GEOFFREY_MEMORIAL_API_SLUG}/`;
@@ -53,6 +58,15 @@ const sectionEyebrows: Record<MemorialSectionKey, string> = {
 const navSectionKeys = memorialSectionKeys.filter(
   (sectionKey): sectionKey is MemorialNavSectionKey => sectionKey !== "hero",
 );
+
+const coreRichSectionKeys = [
+  "official_statement",
+  "life_service",
+  "family",
+  "closing_hope",
+] as const satisfies readonly MemorialNavSectionKey[];
+
+type CoreRichSectionKey = (typeof coreRichSectionKeys)[number];
 
 function MemorialPublicPage() {
   const { darkMode, toggleTheme } = useTheme();
@@ -180,7 +194,14 @@ function MemorialReadyState({ payload }: { payload: MemorialPublicPayload }) {
       <MemorialSectionNav sectionKeys={renderedNavSections} />
 
       <div>
-        {renderedNavSections.map((sectionKey, index) => (
+        {renderedNavSections.map((sectionKey, index) => isCoreRichSectionKey(sectionKey) ? (
+          <CoreMemorialSection
+            index={index}
+            key={sectionKey}
+            section={sections[sectionKey]}
+            sectionKey={sectionKey}
+          />
+        ) : (
           <MemorialSectionFrame
             index={index}
             key={sectionKey}
@@ -329,6 +350,158 @@ function MemorialSectionNav({ sectionKeys }: { sectionKeys: MemorialNavSectionKe
   );
 }
 
+function CoreMemorialSection({
+  index,
+  section,
+  sectionKey,
+}: {
+  index: number;
+  section: MemorialPublicPayload["sections"][CoreRichSectionKey];
+  sectionKey: CoreRichSectionKey;
+}) {
+  const content = section.content;
+
+  if (!content) {
+    return null;
+  }
+
+  const mutedBand = index % 2 === 1;
+  const isClosingHope = sectionKey === "closing_hope";
+  const sectionClass = mutedBand
+    ? "scroll-mt-36 border-b border-[var(--memorial-line)] bg-[var(--memorial-wash)]"
+    : "scroll-mt-36 border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]";
+
+  if (isClosingHope) {
+    return (
+      <section className={sectionClass} id={sectionKey}>
+        <div className="mx-auto max-w-5xl px-6 py-16 text-center sm:px-8 lg:px-12 lg:py-20">
+          <p className="text-4xl font-light text-[var(--memorial-burgundy)]" aria-hidden="true">+</p>
+          <p className="mt-5 text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
+            {sectionEyebrows[sectionKey]}
+          </p>
+          <h2 className="mx-auto mt-4 max-w-3xl text-4xl font-black leading-none text-[var(--memorial-ink)] sm:text-5xl">
+            {content.title || section.label || friendlySectionLabels[sectionKey]}
+          </h2>
+          {content.subtitle ? (
+            <p className="mx-auto mt-4 max-w-2xl text-base font-bold text-[#4b443d]">{content.subtitle}</p>
+          ) : null}
+          <span className="memorial-rule mx-auto mt-7" aria-hidden="true" />
+          <RichTextBlock className="mx-auto mt-8 max-w-3xl text-xl sm:text-2xl" html={content.content_html} />
+          <ScriptureReferences centered references={content.scripture_references} />
+          <InlineMediaEmbeds embeds={content.media_embeds} />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className={sectionClass} id={sectionKey}>
+      <div className="mx-auto grid w-full max-w-[88rem] gap-8 px-6 py-12 sm:px-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-16 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        <div className="border-[var(--memorial-line)] lg:border-r lg:pr-8">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
+            {sectionEyebrows[sectionKey]}
+          </p>
+          <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
+            {content.title || section.label || friendlySectionLabels[sectionKey]}
+          </h2>
+          {content.subtitle ? (
+            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[#625b52]">{content.subtitle}</p>
+          ) : null}
+          <span className="memorial-rule mt-6" aria-hidden="true" />
+        </div>
+
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
+          <div>
+            <RichTextBlock html={content.content_html} />
+            <InlineMediaEmbeds embeds={content.media_embeds} />
+          </div>
+          <aside className="space-y-5 border-[var(--memorial-line)] text-sm leading-6 text-[#625b52] xl:border-l xl:pl-8">
+            <ScriptureReferences references={content.scripture_references} />
+            {content.reading_time_minutes ? (
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#7a7066]">
+                {content.reading_time_minutes} min read
+              </p>
+            ) : null}
+          </aside>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RichTextBlock({ className = "", html }: { className?: string; html: string }) {
+  if (!html) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`memorial-rich-text max-w-3xl ${className}`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
+
+function ScriptureReferences({
+  centered,
+  references,
+}: {
+  centered?: boolean;
+  references: MemorialScriptureReference[];
+}) {
+  if (!references.length) {
+    return null;
+  }
+
+  return (
+    <div className={`mt-6 flex flex-wrap gap-2 ${centered ? "justify-center" : ""}`}>
+      {references.map((reference) => (
+        <span
+          className="rounded-full border border-[var(--memorial-line)] bg-[rgba(255,253,247,0.72)] px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-[var(--memorial-burgundy-dark)]"
+          key={reference.id}
+        >
+          {reference.display_text}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function InlineMediaEmbeds({ embeds }: { embeds: MemorialMediaEmbed[] }) {
+  if (!embeds.length) {
+    return null;
+  }
+
+  return (
+    <div className="mt-8 grid gap-4 sm:grid-cols-2">
+      {embeds.map((embed) => {
+        const imageUrl = getMediaUrl(embed.media_asset, "medium");
+
+        if (!imageUrl) {
+          return null;
+        }
+
+        return (
+          <figure
+            className="overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-paper)] shadow-sm shadow-black/5"
+            key={embed.embed_id || embed.id}
+          >
+            <img
+              alt={embed.alt_text_override || embed.media_asset.alt_text || embed.media_asset.title}
+              className="aspect-[4/3] w-full object-cover"
+              src={imageUrl}
+            />
+            {embed.caption_override || embed.media_asset.caption ? (
+              <figcaption className="px-4 py-3 text-sm leading-6 text-[#625b52]">
+                {embed.caption_override || embed.media_asset.caption}
+              </figcaption>
+            ) : null}
+          </figure>
+        );
+      })}
+    </div>
+  );
+}
 function MemorialSectionFrame({
   index,
   section,
@@ -389,6 +562,9 @@ function MemorialSectionFrame({
   );
 }
 
+function isCoreRichSectionKey(sectionKey: MemorialNavSectionKey): sectionKey is CoreRichSectionKey {
+  return coreRichSectionKeys.includes(sectionKey as CoreRichSectionKey);
+}
 function shouldRenderSection(section: MemorialPublicPayload["sections"][MemorialNavSectionKey]) {
   const items = "items" in section ? section.items : [];
   return Boolean(section.content || items.length > 0);
