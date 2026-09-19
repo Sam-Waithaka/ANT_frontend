@@ -435,6 +435,30 @@ describe('MemorialEditorPage', () => {
     await vi.waitFor(() => expect(container.textContent).toContain('Hero remembrance'));
   });
 
+  it('runs workflow actions through the shared memorial workflow endpoint', async () => {
+    mocks.runMemorialWorkflowAction.mockImplementation((_, __, ___, action) =>
+      Promise.resolve({
+        ...editorState().rich_text_blocks[0],
+        status: action === 'approve' ? 'APPROVED' : 'DRAFT',
+      }),
+    );
+
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Hero welcome'));
+
+    const approveButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Approve'),
+    ) as HTMLButtonElement;
+    await act(async () => approveButton.click());
+
+    await vi.waitFor(() => expect(mocks.runMemorialWorkflowAction).toHaveBeenCalled());
+    expect(mocks.runMemorialWorkflowAction).toHaveBeenCalledWith(
+      'access-token',
+      'rich-text-blocks',
+      10,
+      'approve',
+    );
+  });
   it('saves specialist child records through their memorial endpoints', async () => {
     await renderPage(root);
     await vi.waitFor(() => expect(container.textContent).toContain('Ministry Board'));

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FileText, GalleryHorizontal, Plus, Save } from 'lucide-react';
 import ArticleEditor from '../writing/editor/ArticleEditor';
+import MemorialWorkflowControls from './MemorialWorkflowControls';
 import WritingMediaEmbedPicker from '../writing/media/WritingMediaEmbedPicker';
 import { portalSurface } from '../portalSurface';
 import { useAuth } from '../../../hooks/useAuth';
@@ -162,6 +163,11 @@ const MemorialRichTextBlockEditor = ({
       rich_text_blocks: replaceRecord(current.rich_text_blocks, updated),
     }));
   }, [onEditorStateChange]);
+
+  const handleWorkflowUpdated = useCallback((updated: MemorialRichTextBlock) => {
+    patchBlockState(updated);
+    setDraft(createBlockDraft(updated));
+  }, [patchBlockState]);
 
   const patchMediaState = useCallback((
     updater: (items: MemorialRichTextMediaEmbed[]) => MemorialRichTextMediaEmbed[],
@@ -369,14 +375,23 @@ const MemorialRichTextBlockEditor = ({
             Visible when published
           </label>
         </div>
-        <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
-          onClick={() => void saveNow()}
-          type="button"
-        >
-          <Save size={16} aria-hidden="true" />
-          Save block
-        </button>
+        <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
+          <button
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
+            onClick={() => void saveNow()}
+            type="button"
+          >
+            <Save size={16} aria-hidden="true" />
+            Save block
+          </button>
+          <MemorialWorkflowControls
+            darkMode={darkMode}
+            onRecordUpdated={handleWorkflowUpdated}
+            record={block}
+            resource="rich-text-blocks"
+            showStatus={false}
+          />
+        </div>
       </div>
 
       <div className={`mt-4 rounded-2xl border border-red-900/10 bg-red-950/[0.03] p-4 text-sm dark:border-red-200/10 dark:bg-white/[0.04]`}>

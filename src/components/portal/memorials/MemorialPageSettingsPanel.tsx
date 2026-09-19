@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Save } from 'lucide-react';
 import CoverImagePicker from '../writing/media/CoverImagePicker';
+import MemorialWorkflowControls from './MemorialWorkflowControls';
 import { usePortalToast } from '../PortalToast';
 import { portalSurface } from '../portalSurface';
 import { useAuth } from '../../../hooks/useAuth';
@@ -186,15 +187,27 @@ const MemorialPageSettingsPanel = ({
             Maintain the memorial page shell before section-level editing begins.
           </p>
         </div>
-        <button
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={saving}
-          onClick={() => void savePageShell()}
-          type="button"
-        >
-          <Save size={16} aria-hidden="true" />
-          {saving ? 'Saving...' : 'Save shell'}
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <MemorialWorkflowControls
+            darkMode={darkMode}
+            disabled={saving}
+            onRecordUpdated={(updated) => {
+              onPageUpdated(updated);
+              setForm(formFromPage(updated));
+            }}
+            record={page}
+            resource="pages"
+          />
+          <button
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={saving}
+            onClick={() => void savePageShell()}
+            type="button"
+          >
+            <Save size={16} aria-hidden="true" />
+            {saving ? 'Saving...' : 'Save shell'}
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">

@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import ResponsiveImage from '../../media/ResponsiveImage';
 import { formatDuration, formatMediaDate } from '../../media/mediaFormat';
 import { getMediaWatchPath } from '../../media/mediaLinks';
+import MemorialWorkflowControls, { MemorialWorkflowStatusBadge } from './MemorialWorkflowControls';
 import PortalModal from '../PortalModal';
 import { usePortalToast } from '../PortalToast';
 import { portalSurface } from '../portalSurface';
@@ -36,7 +37,6 @@ import {
   deleteMemorialPersonalTribute,
   deleteMemorialRecordingSection,
   deleteMemorialTimelineEvent,
-  runMemorialWorkflowAction,
   updateMemorialArrangement,
   updateMemorialGalleryItem,
   updateMemorialMinistryTribute,
@@ -68,9 +68,7 @@ import {
 } from '../../../utils/memorialEditorState';
 import {
   MEMORIAL_WORKFLOW_STATUSES,
-  getAvailableMemorialWorkflowActions,
   getMemorialStatusLabel,
-  getMemorialWorkflowActionLabel,
 } from '../../../utils/memorialWorkflow';
 
 type MemorialEditorStateUpdater = (
@@ -901,19 +899,16 @@ const SpecialistRecordCard = ({
   darkMode,
   onDelete,
   onEdit,
-  onWorkflow,
+  onWorkflowUpdated,
   record,
 }: {
   config: PanelConfig;
   darkMode: boolean;
   onDelete: (config: PanelConfig, record: SpecialistRecord) => void;
   onEdit: (config: PanelConfig, record: SpecialistRecord) => void;
-  onWorkflow: (config: PanelConfig, record: SpecialistRecord, action: Parameters<typeof runMemorialWorkflowAction>[3]) => void;
+  onWorkflowUpdated: (config: PanelConfig, record: SpecialistRecord) => void;
   record: SpecialistRecord;
-}) => {
-  const workflowActions = getAvailableMemorialWorkflowActions(record.status);
-
-  return (
+}) => (
     <article className={`rounded-2xl border p-4 ${portalSurface.card(darkMode)}`}>
       <div className="flex items-start gap-3">
         {recordImage(record, config)}
@@ -925,9 +920,7 @@ const SpecialistRecordCard = ({
                 {config.descriptionFor(record)}
               </p>
             </div>
-            <span className="rounded-full border border-red-900/15 bg-red-950/[0.04] px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:border-red-200/20 dark:bg-red-950/25 dark:text-red-100">
-              {getMemorialStatusLabel(record.status)}
-            </span>
+            <MemorialWorkflowStatusBadge darkMode={darkMode} status={record.status} />
           </div>
           <p className={`mt-2 text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>
             Order {record.order || 0} · {record.is_visible ? 'Visible' : 'Hidden'}
@@ -945,16 +938,13 @@ const SpecialistRecordCard = ({
               <Pencil size={14} aria-hidden="true" />
               Edit
             </button>
-            {workflowActions.map((action) => (
-              <button
-                className="inline-flex min-h-9 items-center rounded-full border border-red-900/20 px-3 text-xs font-black text-red-800 transition hover:bg-red-950/5 dark:border-red-200/20 dark:text-red-100"
-                key={action}
-                onClick={() => onWorkflow(config, record, action)}
-                type="button"
-              >
-                {getMemorialWorkflowActionLabel(action)}
-              </button>
-            ))}
+            <MemorialWorkflowControls
+              darkMode={darkMode}
+              onRecordUpdated={(updated) => onWorkflowUpdated(config, updated)}
+              record={record}
+              resource={config.resource}
+              showStatus={false}
+            />
             <button
               className="inline-flex min-h-9 items-center gap-2 rounded-full border border-red-900/20 px-3 text-xs font-black text-red-800 transition hover:bg-red-950/5"
               onClick={() => onDelete(config, record)}
@@ -967,8 +957,7 @@ const SpecialistRecordCard = ({
         </div>
       </div>
     </article>
-  );
-};
+);
 
 const MemorialSpecialistPanelsEditor = ({
   darkMode,
@@ -1033,24 +1022,6 @@ const MemorialSpecialistPanelsEditor = ({
     }
   };
 
-  const runWorkflow = async (
-    config: PanelConfig,
-    record: SpecialistRecord,
-    action: Parameters<typeof runMemorialWorkflowAction>[3],
-  ) => {
-    try {
-      const updated = await runMemorialWorkflowAction<SpecialistRecord>(
-        auth.accessToken,
-        config.resource,
-        record.id,
-        action,
-      );
-      updateCollection(config, (records) => replaceRecord(records, updated));
-      toast.success(`${getMemorialWorkflowActionLabel(action)} complete.`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Workflow action failed.');
-    }
-  };
 
   return (
     <section className="grid gap-5 xl:grid-cols-2">
@@ -1092,8 +1063,8 @@ const MemorialSpecialistPanelsEditor = ({
                     void deleteRecord(nextConfig, nextRecord);
                   }}
                   onEdit={openModal}
-                  onWorkflow={(nextConfig, nextRecord, action) => {
-                    void runWorkflow(nextConfig, nextRecord, action);
+                  onWorkflowUpdated={(nextConfig, nextRecord) => {
+                    updateCollection(nextConfig, (records) => replaceRecord(records, nextRecord));
                   }}
                   record={record}
                 />
