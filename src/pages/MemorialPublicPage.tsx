@@ -1,12 +1,14 @@
-import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import ReactPlayer from "react-player";
 import {
   ArrowDown,
   ArrowRight,
   CalendarDays,
+  Check,
   ExternalLink,
   FileText,
   Languages,
+  List,
   MapPin,
   PlayCircle,
   Radio,
@@ -14,9 +16,11 @@ import {
 } from "lucide-react";
 import {
   ELDER_GEOFFREY_MEMORIAL_API_SLUG,
+  createMemorialPublicPageUrl,
   getMemorialPage,
   memorialSectionKeys,
 } from "../api/memorialPublic";
+import FloatingBrowseControl from "../components/navigation/FloatingBrowseControl";
 import SiteFooter from "../components/navigation/SiteFooter";
 import SiteHeader from "../components/navigation/SiteHeader";
 import { useTheme } from "../hooks/useTheme";
@@ -28,7 +32,7 @@ import type {
 } from "../types/memorialPublic";
 import "../styles/memorial.css";
 
-const memorialEndpointPath = `/v1/memorial/public/pages/${ELDER_GEOFFREY_MEMORIAL_API_SLUG}/`;
+const memorialEndpointPath = createMemorialPublicPageUrl(ELDER_GEOFFREY_MEMORIAL_API_SLUG);
 
 type MemorialSectionKey = (typeof memorialSectionKeys)[number];
 type MemorialNavSectionKey = Exclude<MemorialSectionKey, "hero">;
@@ -216,12 +220,15 @@ function SitePageShell({
 
 function MemorialReadyState({ darkMode, payload }: { darkMode: boolean; payload: MemorialPublicPayload }) {
   const { sections } = payload;
-  const renderedNavSections = navSectionKeys.filter((sectionKey) => shouldRenderSection(sections[sectionKey]));
+  const renderedNavSections = useMemo(
+    () => navSectionKeys.filter((sectionKey) => shouldRenderSection(sections[sectionKey])),
+    [sections],
+  );
 
   return (
     <MemorialContentShell darkMode={darkMode}>
       <MemorialHero payload={payload} />
-      <MemorialSectionNav sectionKeys={renderedNavSections} />
+      <MemorialSectionNav darkMode={darkMode} sectionKeys={renderedNavSections} />
 
       <div>
         {renderedNavSections.map((sectionKey, index) => {
@@ -281,10 +288,10 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
         </>
       ) : null}
 
-      <div className="grid w-full gap-8 px-6 py-8 sm:px-8 lg:min-h-[calc(100vh-5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(20rem,30rem)_10rem] lg:items-center lg:gap-10 lg:px-[clamp(3rem,5vw,6rem)] lg:py-14 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,36rem)_minmax(12rem,15rem)] xl:gap-12">
-        <div className="order-2 flex min-w-0 flex-col justify-center lg:order-none lg:pb-10">
+      <div className="grid w-full gap-8 px-6 py-8 sm:px-8 md:px-10 xl:min-h-[calc(100vh-5rem)] xl:grid-cols-[minmax(26rem,0.95fr)_minmax(24rem,0.9fr)] xl:items-center xl:gap-10 xl:px-[clamp(3rem,5vw,6rem)] xl:py-14 2xl:grid-cols-[minmax(0,1fr)_minmax(28rem,36rem)_minmax(12rem,15rem)] 2xl:gap-12">
+        <div className="order-2 flex min-w-0 flex-col justify-center xl:order-none xl:pb-10">
           <p className="text-sm font-black text-[var(--memorial-burgundy)]">In loving memory</p>
-          <h1 className="mt-4 max-w-5xl text-[clamp(3.35rem,8.2vw,8.4rem)] font-black leading-[0.88] text-[var(--memorial-ink)]">
+          <h1 className="mt-4 max-w-5xl text-[clamp(3.25rem,12vw,5.6rem)] font-black leading-[0.9] text-[var(--memorial-ink)] md:text-[clamp(4.25rem,9vw,6.5rem)] xl:text-[clamp(4.75rem,6.4vw,7.2rem)] 2xl:text-[clamp(5.5rem,6.8vw,8.4rem)]">
             {page.full_name}
           </h1>
           <div className="mt-5 space-y-1 text-lg text-[var(--memorial-ink)] sm:text-xl">
@@ -294,7 +301,7 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
           <span className="memorial-rule mt-7" aria-hidden="true" />
           {heroContent?.content_html ? (
             <RichTextBlock
-              className="memorial-hero-rich-text memorial-scripture mt-7 max-w-2xl text-2xl sm:text-3xl"
+              className="memorial-hero-rich-text memorial-scripture mt-7 max-w-2xl text-xl sm:text-2xl xl:text-3xl"
               html={heroContent.content_html}
             />
           ) : null}
@@ -317,7 +324,7 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
           </div>
         </div>
 
-        <figure className="order-1 relative aspect-[4/5] w-full overflow-hidden rounded-sm border border-black/10 bg-[#191817] shadow-2xl shadow-black/10 lg:order-none lg:self-center">
+        <figure className="order-1 relative mx-auto aspect-[4/5] w-full max-w-[34rem] overflow-hidden rounded-sm border border-black/10 bg-[#191817] shadow-2xl shadow-black/10 xl:order-none xl:max-w-none xl:self-center">
           {hasPortrait ? (
             <PublicImage
               alt={page.full_name}
@@ -337,8 +344,8 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
           )}
         </figure>
 
-        <aside className="hidden h-full min-h-[24rem] flex-col justify-center border-l border-[var(--memorial-line)] pl-7 lg:flex xl:pl-9">
-          <p className="memorial-scripture text-3xl xl:text-4xl">Faith.<br />Service.<br />Lasting impact.</p>
+        <aside className="hidden h-full min-h-[24rem] flex-col justify-center border-l border-[var(--memorial-line)] pl-7 2xl:flex 2xl:pl-9">
+          <p className="memorial-scripture text-3xl 2xl:text-4xl">Faith.<br />Service.<br />Lasting impact.</p>
           <span className="memorial-rule mt-7" aria-hidden="true" />
           <p className="mt-6 max-w-44 text-xs font-bold uppercase leading-6 tracking-[0.34em] text-[var(--memorial-muted-soft)]">
             A beloved chairman. A cherished brother.
@@ -348,44 +355,84 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
     </header>
   );
 }
-function MemorialSectionNav({ sectionKeys }: { sectionKeys: MemorialNavSectionKey[] }) {
-  const handleMobileNavChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    const target = document.getElementById(event.currentTarget.value);
-    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+function MemorialSectionNav({ darkMode, sectionKeys }: { darkMode: boolean; sectionKeys: MemorialNavSectionKey[] }) {
+  const [activeSectionKey, setActiveSectionKey] = useState<MemorialNavSectionKey | null>(null);
+  const activeLabel = activeSectionKey ? friendlySectionLabels[activeSectionKey] : "On this page";
+
+  useEffect(() => {
+    const syncActiveSectionFromHash = () => {
+      const hashSectionKey = window.location.hash.replace("#", "") as MemorialNavSectionKey;
+      setActiveSectionKey(sectionKeys.includes(hashSectionKey) ? hashSectionKey : null);
+    };
+
+    syncActiveSectionFromHash();
+    window.addEventListener("hashchange", syncActiveSectionFromHash);
+
+    return () => window.removeEventListener("hashchange", syncActiveSectionFromHash);
+  }, [sectionKeys]);
+
+  const scrollToSection = (sectionKey: MemorialNavSectionKey, close?: () => void) => {
+    setActiveSectionKey(sectionKey);
+    document.getElementById(sectionKey)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.replaceState(null, "", `#${sectionKey}`);
+    close?.();
   };
 
   return (
-    <nav className="sticky top-[4.75rem] z-20 border-b border-[var(--memorial-line)] bg-[var(--memorial-nav)] backdrop-blur lg:top-[5rem]" aria-label="Memorial sections">
-      <div className="mx-auto w-full max-w-[88rem] px-6 sm:px-8 lg:px-12">
-        <div className="hidden items-center justify-center gap-1 lg:flex">
-          {sectionKeys.map((sectionKey) => (
-            <a
-              className="px-5 py-5 text-sm font-semibold text-[var(--memorial-muted-strong)] transition hover:text-[var(--memorial-burgundy)]"
-              href={`#${sectionKey}`}
-              key={sectionKey}
-            >
-              {friendlySectionLabels[sectionKey]}
-            </a>
-          ))}
+    <>
+      <nav className="sticky top-[4.75rem] z-20 hidden border-b border-[var(--memorial-line)] bg-[var(--memorial-nav)] backdrop-blur xl:block xl:top-[5rem]" aria-label="Memorial sections">
+        <div className="mx-auto w-full max-w-[88rem] px-6 sm:px-8 lg:px-12">
+          <div className="flex items-center justify-center gap-1">
+            {sectionKeys.map((sectionKey) => {
+              const isActive = activeSectionKey === sectionKey;
+
+              return (
+                <a
+                  aria-current={isActive ? "page" : undefined}
+                  className={`px-5 py-5 text-sm font-semibold transition ${isActive ? "text-[var(--memorial-burgundy)]" : "text-[var(--memorial-muted-strong)] hover:text-[var(--memorial-burgundy)]"}`}
+                  href={`#${sectionKey}`}
+                  key={sectionKey}
+                  onClick={() => setActiveSectionKey(sectionKey)}
+                >
+                  {friendlySectionLabels[sectionKey]}
+                </a>
+              );
+            })}
+          </div>
         </div>
-        <div className="py-4 lg:hidden">
-          <label className="sr-only" htmlFor="memorial-section-nav">On this page</label>
-          <select
-            className="memorial-nav-select w-full rounded-md border border-[var(--memorial-line)] px-4 py-3 pr-12 text-sm font-bold text-[var(--memorial-ink)] shadow-sm"
-            defaultValue=""
-            id="memorial-section-nav"
-            onChange={handleMobileNavChange}
-          >
-            <option disabled value="">On this page</option>
-            {sectionKeys.map((sectionKey) => (
-              <option key={sectionKey} value={sectionKey}>
-                {friendlySectionLabels[sectionKey]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </nav>
+      </nav>
+
+      <FloatingBrowseControl
+        darkMode={darkMode}
+        dialogLabel="memorial sections"
+        eyebrow="Memorial"
+        icon={List}
+        title="On This Page"
+        triggerAriaLabel={`Memorial sections: ${activeLabel}`}
+        triggerLabel={activeLabel}
+      >
+        {(close) => (
+          <nav aria-label="Browse memorial sections" className="grid gap-1">
+            {sectionKeys.map((sectionKey) => {
+              const isActive = activeSectionKey === sectionKey;
+
+              return (
+                <button
+                  aria-pressed={isActive}
+                  className={`flex min-h-14 box-border w-full max-w-full min-w-0 items-center gap-3 rounded-xl px-3 text-left text-base font-bold transition focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-700 ${isActive ? "bg-red-800 text-white" : darkMode ? "text-stone-200 hover:bg-white/10" : "text-zinc-800 hover:bg-white"}`}
+                  key={sectionKey}
+                  onClick={() => scrollToSection(sectionKey, close)}
+                  type="button"
+                >
+                  <span className="min-w-0 flex-1">{friendlySectionLabels[sectionKey]}</span>
+                  {isActive ? <Check size={18} aria-label="Selected" /> : null}
+                </button>
+              );
+            })}
+          </nav>
+        )}
+      </FloatingBrowseControl>
+    </>
   );
 }
 

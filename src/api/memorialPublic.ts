@@ -1,3 +1,4 @@
+import { createApiUrl } from "../services/apiClient";
 import type {
   MemorialPublicPayload,
   MemorialPublicSections,
@@ -25,6 +26,10 @@ export const memorialSectionKeys = [
 
 type MemorialSectionKey = (typeof memorialSectionKeys)[number];
 
+const createMemorialPublicPagePath = (slug: string) => `/v1/memorial/public/pages/${slug}/`;
+
+export const createMemorialPublicPageUrl = (slug: string) => createApiUrl(createMemorialPublicPagePath(slug));
+
 type MemorialSectionShapeSummary = {
   content: "present" | "null";
   content_fields: string[];
@@ -39,19 +44,25 @@ export type MemorialPayloadShapeSummary = {
 };
 
 export async function getMemorialPage(slug: string): Promise<MemorialPublicPayload | null> {
-  const response = await fetch(`/v1/memorial/public/pages/${slug}/`, {
+  const endpoint = createMemorialPublicPageUrl(slug);
+  const response = await fetch(endpoint, {
     headers: { Accept: "application/json" },
   });
+  const responseText = await response.text();
 
   if (response.status === 404) {
     return null;
   }
 
   if (!response.ok) {
-    throw new Error("Unable to load memorial page");
+    throw new Error(`Unable to load memorial page from ${endpoint}`);
   }
 
-  return response.json() as Promise<MemorialPublicPayload>;
+  try {
+    return JSON.parse(responseText) as MemorialPublicPayload;
+  } catch (error) {
+    throw new Error(`Memorial endpoint returned a non-JSON response from ${endpoint}`, { cause: error });
+  }
 }
 
 export function summarizeMemorialPayloadShape(
