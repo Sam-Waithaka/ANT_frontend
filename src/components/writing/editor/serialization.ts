@@ -41,7 +41,7 @@ export const normalizeLexicalContent = (value: unknown): LexicalContentJson => {
 
   return {
     root: {
-      children: record.children,
+      children: record.children.length ? record.children : emptyRoot().children,
       direction: record.direction === 'ltr' || record.direction === 'rtl' ? record.direction : null,
       format: typeof record.format === 'number' || record.format === '' ? record.format : '',
       indent: typeof record.indent === 'number' ? record.indent : 0,
@@ -64,3 +64,4 @@ export const lexicalContentToText = (content: LexicalContentJson) => {
 };
 
 export const countLexicalWords = (text: string) => text.trim() ? text.trim().split(/\s+/).length : 0;
+

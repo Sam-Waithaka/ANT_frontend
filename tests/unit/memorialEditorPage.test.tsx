@@ -11,6 +11,7 @@ import type { MemorialEditorState } from '../../src/types/memorial';
 const mocks = vi.hoisted(() => ({
   fetchMemorialEditorState: vi.fn(),
   updateMemorialPage: vi.fn(),
+  updateMemorialRichTextBlock: vi.fn(),
 }));
 
 vi.mock('../../src/hooks/useTheme', () => ({
@@ -32,6 +33,7 @@ vi.mock('../../src/components/navigation/SiteFooter', () => ({
 vi.mock('../../src/services/memorialApi', () => ({
   fetchMemorialEditorState: mocks.fetchMemorialEditorState,
   updateMemorialPage: mocks.updateMemorialPage,
+  updateMemorialRichTextBlock: mocks.updateMemorialRichTextBlock,
 }));
 
 const workflow = {
@@ -231,6 +233,10 @@ describe('MemorialEditorPage', () => {
     mocks.updateMemorialPage.mockImplementation((_, __, payload) =>
       Promise.resolve({ ...editorState().page, ...payload }),
     );
+    mocks.updateMemorialRichTextBlock.mockReset();
+    mocks.updateMemorialRichTextBlock.mockImplementation((_, __, payload) =>
+      Promise.resolve({ ...editorState().rich_text_blocks[0], ...payload }),
+    );
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -282,5 +288,28 @@ describe('MemorialEditorPage', () => {
       status: 'ARCHIVED',
     });
     await vi.waitFor(() => expect(container.textContent).toContain('Rev. Jane Updated'));
+  });
+  it('saves changed memorial rich text block settings through memorial endpoints', async () => {
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Hero welcome'));
+
+    const sectionTitleInput = Array.from(container.querySelectorAll('input')).find((input) =>
+      input.value === 'Hero welcome',
+    ) as HTMLInputElement;
+    await changeInput(sectionTitleInput, 'Hero remembrance');
+
+    const saveBlockButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Save block'),
+    ) as HTMLButtonElement;
+    await act(async () => saveBlockButton.click());
+
+    await vi.waitFor(() => expect(mocks.updateMemorialRichTextBlock).toHaveBeenCalled());
+    expect(mocks.updateMemorialRichTextBlock).toHaveBeenCalledWith('access-token', 10, expect.objectContaining({
+      is_visible: false,
+      status: 'DRAFT',
+      subtitle: '',
+      title: 'Hero remembrance',
+    }));
+    await vi.waitFor(() => expect(container.textContent).toContain('Hero remembrance'));
   });
 });

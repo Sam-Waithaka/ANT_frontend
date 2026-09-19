@@ -5,7 +5,6 @@ import {
   BookOpen,
   CalendarDays,
   FileImage,
-  GalleryHorizontal,
   Layers3,
   Mic2,
   PlayCircle,
@@ -15,6 +14,7 @@ import {
 import { Link, useParams } from 'react-router-dom';
 import MemorialPortalShell, { MemorialPortalEmptyState } from '../../../components/portal/memorials/MemorialPortalShell';
 import MemorialPageSettingsPanel from '../../../components/portal/memorials/MemorialPageSettingsPanel';
+import MemorialRichTextSectionsEditor from '../../../components/portal/memorials/MemorialRichTextSectionsEditor';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -33,7 +33,6 @@ import {
   getMemorialSectionLabel,
   memorialArrangementTypeLabels,
   memorialGalleryCategoryLabels,
-  type MemorialEditorBlockModel,
   type MemorialEditorModel,
 } from '../../../utils/memorialEditorState';
 import { getMemorialStatusLabel } from '../../../utils/memorialWorkflow';
@@ -267,78 +266,6 @@ const StructureCollectionPanel = ({
   </section>
 );
 
-const RichTextBlockCard = ({
-  darkMode,
-  model,
-}: {
-  darkMode: boolean;
-  model: MemorialEditorBlockModel;
-}) => {
-  const { block, mediaEmbeds, plainText, scriptureReferences } = model;
-
-  return (
-    <article className={`rounded-3xl border p-5 ${portalSurface.card(darkMode)}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="font-serif text-2xl leading-tight">
-            {block.title || getMemorialSectionLabel(block.section_key)}
-          </h3>
-          {block.subtitle ? (
-            <p className={`mt-1 text-sm font-bold ${portalSurface.softMutedText(darkMode)}`}>
-              {block.subtitle}
-            </p>
-          ) : null}
-        </div>
-        <StatusPill darkMode={darkMode} status={block.status} />
-      </div>
-      <p className={`mt-4 line-clamp-4 text-sm leading-6 ${portalSurface.softMutedText(darkMode)}`}>
-        {plainText || 'No rich text content has been added yet.'}
-      </p>
-      <div className={`mt-4 flex flex-wrap gap-2 text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>
-        <span>{block.reading_time_minutes || 0} min read</span>
-        <span>{mediaEmbeds.length} media</span>
-        <span>{scriptureReferences.length} scripture</span>
-      </div>
-      {mediaEmbeds.length ? (
-        <div className="mt-4">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">
-            Inline media
-          </p>
-          <ul className={`mt-2 grid gap-2 text-sm ${portalSurface.softMutedText(darkMode)}`}>
-            {mediaEmbeds.map((embed) => (
-              <li key={embed.id} className="flex items-center gap-3 rounded-2xl border border-red-900/10 bg-red-950/[0.03] p-3 dark:border-red-200/10 dark:bg-white/[0.04]">
-                <MediaThumb
-                  alt={embed.alt_text_override || embed.media_asset_detail?.alt_text || embed.media_asset_detail?.title || 'Memorial media'}
-                  asset={embed.media_asset_detail}
-                />
-                <span>
-                  {embed.caption_override || embed.media_asset_detail?.title || `Media asset ${embed.media_asset}`}
-                  {embed.position_hint ? <span className="block text-xs">Position: {embed.position_hint}</span> : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      {scriptureReferences.length ? (
-        <div className="mt-4">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">
-            Scripture
-          </p>
-          <ul className={`mt-2 grid gap-2 text-sm ${portalSurface.softMutedText(darkMode)}`}>
-            {scriptureReferences.map((reference) => (
-              <li key={reference.id} className="rounded-2xl border border-red-900/10 bg-red-950/[0.03] px-3 py-2 dark:border-red-200/10 dark:bg-white/[0.04]">
-                {reference.passage_label || reference.display_text}
-                {reference.version ? <span className="ml-2 text-xs font-bold">({reference.version})</span> : null}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </article>
-  );
-};
-
 const PageOverview = ({
   darkMode,
   model,
@@ -397,69 +324,6 @@ const PageOverview = ({
     </section>
   );
 };
-
-const RichTextSections = ({
-  darkMode,
-  model,
-}: {
-  darkMode: boolean;
-  model: MemorialEditorModel;
-}) => (
-  <section className="grid gap-5">
-    <div>
-      <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-100">
-        <GalleryHorizontal size={15} aria-hidden="true" />
-        Section structure
-      </p>
-      <h2 className="mt-2 font-serif text-3xl leading-tight">Rich text sections</h2>
-    </div>
-    <nav
-      aria-label="Memorial editor sections"
-      className={`rounded-3xl border p-3 shadow-lg ${portalSurface.panel(darkMode)}`}
-    >
-      <div className="flex gap-2 overflow-x-auto">
-        {model.sections.map((section) => (
-          <a
-            className={`inline-flex min-h-10 min-w-max items-center gap-2 rounded-2xl px-3 text-xs font-black transition hover:bg-red-950/5 dark:hover:bg-white/10 ${portalSurface.softMutedText(darkMode)}`}
-            href={`#memorial-section-${section.key}`}
-            key={section.key}
-          >
-            {section.label}
-            <span className="rounded-full bg-red-950/[0.08] px-2 py-0.5 text-red-800 dark:bg-white/10 dark:text-red-100">
-              {section.blocks.length}
-            </span>
-          </a>
-        ))}
-      </div>
-    </nav>
-    {model.sections.map((section) => (
-      <article
-        className={`scroll-mt-24 rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}
-        id={`memorial-section-${section.key}`}
-        key={section.key}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">
-              {section.key}
-            </p>
-            <h3 className="mt-1 font-serif text-2xl leading-tight">{section.label}</h3>
-          </div>
-          <span className={`text-sm font-bold ${portalSurface.softMutedText(darkMode)}`}>
-            {section.blocks.length} block{section.blocks.length === 1 ? '' : 's'}
-          </span>
-        </div>
-        <div className="mt-5 grid gap-4">
-          {section.blocks.length ? section.blocks.map((blockModel) => (
-            <RichTextBlockCard darkMode={darkMode} key={blockModel.block.id} model={blockModel} />
-          )) : (
-            <EmptyPanel darkMode={darkMode}>No rich text block has been created for this section yet.</EmptyPanel>
-          )}
-        </div>
-      </article>
-    ))}
-  </section>
-);
 
 const timelineLabel = (event: { date_label?: string; end_year?: number | null; event_date?: string | null; start_year?: number | null }) =>
   event.date_label || joinPresent([event.start_year, event.end_year], ' - ') || formatDate(event.event_date) || 'Undated';
@@ -614,6 +478,9 @@ const MemorialEditorPage = () => {
     () => editorState ? createMemorialEditorModel(editorState) : null,
     [editorState],
   );
+  const updateEditorState = (updater: (current: MemorialEditorState) => MemorialEditorState) => {
+    setEditorState((current) => current ? updater(current) : current);
+  };
 
   return (
     <MemorialPortalShell compact>
@@ -665,7 +532,11 @@ const MemorialEditorPage = () => {
             onPageUpdated={(updatedPage) => setEditorState((current) => current ? { ...current, page: updatedPage } : current)}
             page={model.page}
           />
-          <RichTextSections darkMode={darkMode} model={model} />
+          <MemorialRichTextSectionsEditor
+            darkMode={darkMode}
+            model={model}
+            onEditorStateChange={updateEditorState}
+          />
           <section className="grid gap-5">
             <div>
               <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-100">
@@ -689,4 +560,5 @@ const MemorialEditorPage = () => {
 };
 
 export default MemorialEditorPage;
+
 
