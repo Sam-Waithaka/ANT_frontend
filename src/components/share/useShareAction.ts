@@ -9,6 +9,21 @@ export type SharePayload = {
   url: string;
 };
 
+export const truncateShareText = (
+  value: string | null | undefined,
+  maxCharacters = 200,
+) => {
+  const normalized = value?.trim() || '';
+
+  if (!normalized || maxCharacters <= 0) return undefined;
+
+  const characters = Array.from(normalized);
+  if (characters.length <= maxCharacters) return normalized;
+  if (maxCharacters === 1) return '…';
+
+  return `${characters.slice(0, maxCharacters - 1).join('').trimEnd()}…`;
+};
+
 export const buildWhatsAppShareHref = ({ title, url }: SharePayload) =>
   `https://wa.me/?text=${encodeURIComponent(title)}%20${encodeURIComponent(url)}`;
 
@@ -17,18 +32,19 @@ export const buildEmailShareHref = ({ title, url }: SharePayload) =>
 
 export const useShareAction = (payload: SharePayload | null | undefined, resetMs = 2200) => {
   const [shareStatus, setShareStatus] = useState<ShareStatus>('idle');
+  const shareUrl = payload?.url;
 
   const copyShareUrl = useCallback(async () => {
-    if (!payload?.url) return false;
+    if (!shareUrl) return false;
 
-    const copied = await copyToClipboard(payload.url);
+    const copied = await copyToClipboard(shareUrl);
     if (copied) {
       setShareStatus('copied');
       window.setTimeout(() => setShareStatus('idle'), resetMs);
     }
 
     return copied;
-  }, [payload?.url, resetMs]);
+  }, [resetMs, shareUrl]);
 
   const share = useCallback(async () => {
     if (!payload?.url) return false;

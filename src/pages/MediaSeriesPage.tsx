@@ -5,7 +5,7 @@ import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import SiteFooter from '../components/navigation/SiteFooter';
 import SiteHeader from '../components/navigation/SiteHeader';
 import ShareButton from '../components/share/ShareButton';
-import { useShareAction, type SharePayload } from '../components/share/useShareAction';
+import { truncateShareText, useShareAction, type SharePayload } from '../components/share/useShareAction';
 import { usePaginatedMediaItems } from '../hooks/usePaginatedMediaItems';
 import { useTheme } from '../hooks/useTheme';
 import { fetchAudioVisualSeriesDetail } from '../services/audioVisualApi';
@@ -44,7 +44,7 @@ const MediaSeriesPage = () => {
 
     return {
       title: currentState.series.name,
-      text: currentState.series.description || undefined,
+      text: truncateShareText(currentState.series.description),
       url: `${origin}${seriesPath}`,
     };
   }, [currentState.series, pageStatus, slug]);

@@ -156,6 +156,30 @@ describe('MediaSeriesPage', () => {
     });
   });
 
+  it('limits a long series share description to at most 200 characters including an ellipsis', async () => {
+    const longDescription = 'Chairman Geoffrey Gicharu Kirungu was known for his deep love for God, his devotion to His Word and his unwavering faith in Christ. Time and again, he stood in the pulpit, teaching the Word, pointing people to Christ and encouraging us to live lives rooted in God’s truth.';
+    mocks.fetchAudioVisualSeriesDetail.mockResolvedValueOnce({
+      ...series,
+      description: longDescription,
+    });
+    await renderPage();
+
+    const shareButton = await vi.waitFor(() => {
+      const button = [...container.querySelectorAll('button')].find((item) => item.textContent === 'Share');
+      expect(button).toBeDefined();
+      return button as HTMLButtonElement;
+    });
+    await act(async () => shareButton.click());
+
+    const sharedText = mocks.share.mock.calls[0]?.[0]?.text as string;
+    expect(Array.from(sharedText).length).toBeLessThanOrEqual(200);
+    expect(sharedText.endsWith('…')).toBe(true);
+    expect(sharedText).toBe(`${Array.from(longDescription).slice(0, 199).join('').trimEnd()}…`);
+    expect(mocks.share).toHaveBeenCalledWith(expect.objectContaining({
+      url: `${window.location.origin}/media/series/dying-well`,
+    }));
+  });
+
   it('returns to Media through the shared back button', async () => {
     await renderPage();
 
