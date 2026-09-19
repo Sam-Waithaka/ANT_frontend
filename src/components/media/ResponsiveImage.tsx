@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { isReadyMediaStatus, normalizeMediaAssetForDisplay, readyMediaVariants, type MediaAsset, type MediaVariant } from '../../services/mediaAssetsApi';
+import type { WritingMediaAsset } from '../../types/writing';
 
 export type ResponsiveImagePreset = 'articleCover' | 'card' | 'hero' | 'thumbnail';
 
@@ -22,7 +23,7 @@ const firstReadyVariant = (asset: MediaAsset) =>
 
 type ResponsiveImageProps = {
   alt?: string;
-  asset: MediaAsset | null | undefined;
+  asset: MediaAsset | WritingMediaAsset | null | undefined;
   className?: string;
   fetchPriority?: 'high' | 'low' | 'auto';
   loading?: 'eager' | 'lazy';

@@ -1,20 +1,10 @@
-import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowLeft,
-  BookOpen,
-  CalendarDays,
-  FileImage,
-  Layers3,
-  Mic2,
-  PlayCircle,
-  ScrollText,
-  UsersRound,
-} from 'lucide-react';
+import { ArrowLeft, Layers3, ScrollText, UsersRound } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import MemorialPortalShell, { MemorialPortalEmptyState } from '../../../components/portal/memorials/MemorialPortalShell';
 import MemorialPageSettingsPanel from '../../../components/portal/memorials/MemorialPageSettingsPanel';
 import MemorialRichTextSectionsEditor from '../../../components/portal/memorials/MemorialRichTextSectionsEditor';
+import MemorialSpecialistPanelsEditor from '../../../components/portal/memorials/MemorialSpecialistPanelsEditor';
 import { portalSurface } from '../../../components/portal/portalSurface';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
@@ -23,16 +13,10 @@ import { fetchMemorialEditorState } from '../../../services/memorialApi';
 import type {
   MemorialEditorState,
   MemorialPage,
-  MemorialRichTextBlock,
   MemorialWorkflowStatus,
 } from '../../../types/memorial';
-import type { WritingMediaAsset } from '../../../types/writing';
-import { memorialBlockPlainText } from '../../../utils/memorialAdapters';
 import {
   createMemorialEditorModel,
-  getMemorialSectionLabel,
-  memorialArrangementTypeLabels,
-  memorialGalleryCategoryLabels,
   type MemorialEditorModel,
 } from '../../../utils/memorialEditorState';
 import { getMemorialStatusLabel } from '../../../utils/memorialWorkflow';
@@ -103,26 +87,6 @@ const StatusPill = ({
   );
 };
 
-const MediaThumb = ({
-  alt,
-  asset,
-}: {
-  alt: string;
-  asset?: WritingMediaAsset | null;
-}) => {
-  const imageUrl = mediaAssetImageUrl(asset, 'thumb');
-  if (!imageUrl) return null;
-
-  return (
-    <img
-      alt={alt}
-      className="h-20 w-20 rounded-2xl object-cover ring-1 ring-black/10 dark:ring-white/10"
-      loading="lazy"
-      src={imageUrl}
-    />
-  );
-};
-
 const CountCard = ({
   label,
   value,
@@ -138,134 +102,6 @@ const CountCard = ({
   </div>
 );
 
-const EmptyPanel = ({
-  children,
-  darkMode,
-}: {
-  children: ReactNode;
-  darkMode: boolean;
-}) => (
-  <p className={`rounded-2xl border border-dashed p-4 text-sm ${darkMode ? 'border-white/10 text-stone-400' : 'border-[#eaded0] text-[#786f66]'}`}>
-    {children}
-  </p>
-);
-
-const ContentBlockPreview = ({
-  block,
-  darkMode,
-}: {
-  block?: MemorialRichTextBlock | null;
-  darkMode: boolean;
-}) => {
-  if (!block) return null;
-  const plainText = memorialBlockPlainText(block);
-
-  return (
-    <div className={`mt-3 rounded-2xl border p-3 text-sm ${portalSurface.mutedSurface(darkMode)}`}>
-      <p className="font-bold">{block.title || getMemorialSectionLabel(block.section_key)}</p>
-      {plainText ? (
-        <p className={`mt-1 line-clamp-2 ${portalSurface.softMutedText(darkMode)}`}>
-          {plainText}
-        </p>
-      ) : null}
-    </div>
-  );
-};
-
-type StructureItem = {
-  asset?: WritingMediaAsset | null;
-  contentBlock?: MemorialRichTextBlock | null;
-  description?: string;
-  eyebrow?: string;
-  href?: string;
-  id: string | number;
-  meta?: string;
-  status?: MemorialWorkflowStatus;
-  title: string;
-};
-
-type StructurePanel = {
-  empty: string;
-  icon: ReactNode;
-  items: StructureItem[];
-  title: string;
-};
-
-const StructureRecordCard = ({
-  darkMode,
-  item,
-}: {
-  darkMode: boolean;
-  item: StructureItem;
-}) => (
-  <article className={`rounded-2xl border p-4 ${portalSurface.card(darkMode)}`}>
-    <div className="flex items-start gap-3">
-      <MediaThumb alt={item.title} asset={item.asset} />
-      <div className="min-w-0 flex-1">
-        {item.eyebrow ? (
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">
-            {item.eyebrow}
-          </p>
-        ) : null}
-        <h3 className="mt-1 font-serif text-xl leading-tight">{item.title}</h3>
-        {item.description ? (
-          <p className={`mt-1 text-sm ${portalSurface.softMutedText(darkMode)}`}>
-            {item.description}
-          </p>
-        ) : null}
-        {item.meta ? (
-          <p className={`mt-1 text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>
-            {item.meta}
-          </p>
-        ) : null}
-        {item.href ? (
-          <a
-            className="mt-2 inline-flex text-sm font-bold text-red-800 underline-offset-4 hover:underline dark:text-red-100"
-            href={item.href}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Open link
-          </a>
-        ) : null}
-        <div className="mt-2">
-          <StatusPill darkMode={darkMode} status={item.status} />
-        </div>
-      </div>
-    </div>
-    <ContentBlockPreview block={item.contentBlock} darkMode={darkMode} />
-  </article>
-);
-
-const StructureCollectionPanel = ({
-  darkMode,
-  panel,
-}: {
-  darkMode: boolean;
-  panel: StructurePanel;
-}) => (
-  <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
-    <div className="flex items-center gap-3">
-      <span className={`grid size-11 place-items-center rounded-2xl ${portalSurface.iconBadge(darkMode)}`}>
-        {panel.icon}
-      </span>
-      <div>
-        <h2 className="font-serif text-2xl leading-tight">{panel.title}</h2>
-        <p className={`text-xs font-bold ${portalSurface.softMutedText(darkMode)}`}>
-          {panel.items.length} record{panel.items.length === 1 ? '' : 's'}
-        </p>
-      </div>
-    </div>
-    <div className="mt-5 grid gap-3">
-      {panel.items.length ? panel.items.map((item) => (
-        <StructureRecordCard darkMode={darkMode} item={item} key={item.id} />
-      )) : (
-        <EmptyPanel darkMode={darkMode}>{panel.empty}</EmptyPanel>
-      )}
-    </div>
-  </section>
-);
-
 const PageOverview = ({
   darkMode,
   model,
@@ -277,6 +113,13 @@ const PageOverview = ({
   const portraitUrl = mediaAssetImageUrl(page.portrait_image_detail || page.hero_image_detail, 'small');
   const lifeDates = joinPresent([formatDate(page.birth_date), formatDate(page.death_date)], ' - ');
   const populatedSections = model.sections.filter((section) => section.blocks.length).length;
+  const structuredRecordCount =
+    model.totals.ministryTributes
+    + model.totals.personalTributes
+    + model.totals.timelineEvents
+    + model.totals.galleryItems
+    + model.totals.recordingSections
+    + model.totals.arrangements;
 
   return (
     <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
@@ -319,129 +162,8 @@ const PageOverview = ({
         <CountCard label="Sections with blocks" value={`${populatedSections}/${model.sections.length}`} />
         <CountCard label="Rich text blocks" value={model.totals.richTextBlocks} />
         <CountCard label="Media assets" value={model.totals.mediaEmbeds + model.totals.galleryItems} />
-        <CountCard label="Structured records" value={model.totals.ministryTributes + model.totals.personalTributes + model.totals.timelineEvents + model.totals.recordingSections + model.totals.arrangements} />
+        <CountCard label="Structured records" value={structuredRecordCount} />
       </div>
-    </section>
-  );
-};
-
-const timelineLabel = (event: { date_label?: string; end_year?: number | null; event_date?: string | null; start_year?: number | null }) =>
-  event.date_label || joinPresent([event.start_year, event.end_year], ' - ') || formatDate(event.event_date) || 'Undated';
-
-const arrangementSchedule = (arrangement: { ends_at?: string | null; starts_at?: string | null }) =>
-  joinPresent([formatDateTime(arrangement.starts_at), formatDateTime(arrangement.ends_at)], ' - ');
-
-const buildStructurePanels = (model: MemorialEditorModel): StructurePanel[] => ([
-  {
-    empty: 'No ministry tributes have been linked yet.',
-    icon: <UsersRound size={20} aria-hidden="true" />,
-    items: model.ministryTributes.map((tribute) => ({
-      asset: tribute.representative_photo_detail,
-      contentBlock: tribute.content_block_detail,
-      description: joinPresent([tribute.speaker_name, tribute.speaker_office]) || 'No speaker assigned',
-      eyebrow: 'Ministry tribute',
-      id: tribute.id,
-      meta: tribute.ministry_detail?.name || tribute.ministry_name,
-      status: tribute.status,
-      title: tribute.display_ministry_name || tribute.ministry_detail?.name || tribute.ministry_name || 'Ministry tribute',
-    })),
-    title: 'Ministry tributes',
-  },
-  {
-    empty: 'No personal tributes have been added yet.',
-    icon: <BookOpen size={20} aria-hidden="true" />,
-    items: model.personalTributes.map((tribute) => ({
-      asset: tribute.author_photo_detail,
-      contentBlock: tribute.content_block_detail,
-      description: joinPresent([tribute.relationship_to_deceased, tribute.author_role]),
-      eyebrow: 'Personal tribute',
-      id: tribute.id,
-      meta: tribute.related_ministry_detail?.name || tribute.related_ministry_name,
-      status: tribute.status,
-      title: tribute.author_name,
-    })),
-    title: 'Personal tributes',
-  },
-  {
-    empty: 'No timeline events have been created yet.',
-    icon: <CalendarDays size={20} aria-hidden="true" />,
-    items: model.timelineEvents.map((event) => ({
-      asset: event.image_detail,
-      contentBlock: event.content_block_detail,
-      description: timelineLabel(event),
-      eyebrow: 'Timeline event',
-      id: event.id,
-      status: event.status,
-      title: event.title,
-    })),
-    title: 'Leadership timeline',
-  },
-  {
-    empty: 'No gallery items have been attached yet.',
-    icon: <FileImage size={20} aria-hidden="true" />,
-    items: model.galleryItems.map((item) => ({
-      asset: item.media_asset_detail,
-      description: joinPresent([formatDate(item.taken_at), item.credit]) || `Media asset ${item.media_asset}`,
-      eyebrow: memorialGalleryCategoryLabels[item.category],
-      id: item.id,
-      status: item.status,
-      title: item.caption || item.media_asset_detail?.title || `Gallery item ${item.id}`,
-    })),
-    title: 'Gallery',
-  },
-  {
-    empty: 'No recording sections have been connected yet.',
-    icon: <Mic2 size={20} aria-hidden="true" />,
-    items: model.recordingSections.map((recording) => {
-      const series = recording.audio_visual_series_detail;
-      const seriesTitle = series?.name || series?.title || series?.slug || 'No series linked';
-      return {
-        asset: series?.cover_image_detail || series?.cover_image,
-        contentBlock: recording.content_block_detail,
-        description: joinPresent([seriesTitle, recording.max_items ? `${recording.max_items} max items` : undefined]),
-        eyebrow: 'Recording section',
-        id: recording.id,
-        status: recording.status,
-        title: recording.title,
-      };
-    }),
-    title: 'Recordings',
-  },
-  {
-    empty: 'No arrangements have been added yet.',
-    icon: <PlayCircle size={20} aria-hidden="true" />,
-    items: model.arrangements.map((arrangement) => ({
-      asset: arrangement.programme_asset_detail,
-      contentBlock: arrangement.content_block_detail,
-      description: joinPresent([
-        arrangementSchedule(arrangement),
-        arrangement.location_name,
-        arrangement.address,
-      ]) || 'No schedule details',
-      eyebrow: memorialArrangementTypeLabels[arrangement.arrangement_type],
-      href: arrangement.livestream_url,
-      id: arrangement.id,
-      status: arrangement.status,
-      title: arrangement.title,
-    })),
-    title: 'Arrangements',
-  },
-]);
-
-const SpecialistPanels = ({
-  darkMode,
-  model,
-}: {
-  darkMode: boolean;
-  model: MemorialEditorModel;
-}) => {
-  const panels = buildStructurePanels(model);
-
-  return (
-    <section className="grid gap-5 xl:grid-cols-2">
-      {panels.map((panel) => (
-        <StructureCollectionPanel darkMode={darkMode} key={panel.title} panel={panel} />
-      ))}
     </section>
   );
 };
@@ -495,14 +217,14 @@ const MemorialEditorPage = () => {
           </Link>
           <p className="mt-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-100">
             <Layers3 size={15} aria-hidden="true" />
-            Editor state hydration
+            Memorial editor
           </p>
           <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">
             Memorial structure
           </h1>
           <p className={`mt-3 max-w-3xl text-sm leading-6 ${portalSurface.mutedText(darkMode)}`}>
-            Read-only view of the bundled editor payload. This confirms the page, sections,
-            block children, media, scripture, and specialist records before edit controls are added.
+            Bundled editor payload for the page shell, rich text sections, media, scripture,
+            and specialist records that make up this memorial.
           </p>
         </div>
       </header>
@@ -525,7 +247,7 @@ const MemorialEditorPage = () => {
         </MemorialPortalEmptyState>
       ) : null}
 
-      {model?.page ? (
+      {model?.page && editorState ? (
         <div className="grid gap-6">
           <PageOverview darkMode={darkMode} model={model} />
           <MemorialPageSettingsPanel
@@ -547,11 +269,15 @@ const MemorialEditorPage = () => {
                 Structured memorial records
               </h2>
               <p className={`mt-2 max-w-3xl text-sm leading-6 ${portalSurface.mutedText(darkMode)}`}>
-                These records are loaded with the page bundle and grouped separately from the
-                rich text sections they may reference.
+                Create, order, publish, hide, and remove the specialist child records without
+                coupling them to Writing Studio internals.
               </p>
             </div>
-            <SpecialistPanels darkMode={darkMode} model={model} />
+            <MemorialSpecialistPanelsEditor
+              darkMode={darkMode}
+              editorState={editorState}
+              onEditorStateChange={updateEditorState}
+            />
           </section>
         </div>
       ) : null}
@@ -560,5 +286,3 @@ const MemorialEditorPage = () => {
 };
 
 export default MemorialEditorPage;
-
-

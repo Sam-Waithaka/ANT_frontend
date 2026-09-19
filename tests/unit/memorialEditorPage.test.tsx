@@ -9,9 +9,38 @@ import MemorialEditorPage from '../../src/pages/portal/memorials/MemorialEditorP
 import type { MemorialEditorState } from '../../src/types/memorial';
 
 const mocks = vi.hoisted(() => ({
+  createMemorialArrangement: vi.fn(),
+  createMemorialGalleryItem: vi.fn(),
+  createMemorialMinistryTribute: vi.fn(),
+  createMemorialPersonalTribute: vi.fn(),
+  createMemorialRecordingSection: vi.fn(),
+  createMemorialRichTextBlock: vi.fn(),
+  createMemorialRichTextMediaEmbed: vi.fn(),
+  createMemorialRichTextScriptureReference: vi.fn(),
+  createMemorialTimelineEvent: vi.fn(),
+  deleteMemorialArrangement: vi.fn(),
+  deleteMemorialGalleryItem: vi.fn(),
+  deleteMemorialMinistryTribute: vi.fn(),
+  deleteMemorialPersonalTribute: vi.fn(),
+  deleteMemorialRecordingSection: vi.fn(),
+  deleteMemorialRichTextMediaEmbed: vi.fn(),
+  deleteMemorialRichTextScriptureReference: vi.fn(),
+  deleteMemorialTimelineEvent: vi.fn(),
+  fetchAudioVisualItemPage: vi.fn(),
+  fetchAudioVisualSeries: vi.fn(),
+  fetchAudioVisualSeriesDetail: vi.fn(),
   fetchMemorialEditorState: vi.fn(),
-  updateMemorialPage: vi.fn(),
+  runMemorialWorkflowAction: vi.fn(),
+  updateMemorialArrangement: vi.fn(),
+  updateMemorialGalleryItem: vi.fn(),
+  updateMemorialMinistryTribute: vi.fn(),
+  updateMemorialPersonalTribute: vi.fn(),
+  updateMemorialRecordingSection: vi.fn(),
   updateMemorialRichTextBlock: vi.fn(),
+  updateMemorialRichTextMediaEmbed: vi.fn(),
+  updateMemorialRichTextScriptureReference: vi.fn(),
+  updateMemorialTimelineEvent: vi.fn(),
+  updateMemorialPage: vi.fn(),
 }));
 
 vi.mock('../../src/hooks/useTheme', () => ({
@@ -30,10 +59,41 @@ vi.mock('../../src/components/navigation/SiteFooter', () => ({
   default: () => <footer>Site footer</footer>,
 }));
 
+vi.mock('../../src/services/audioVisualApi', () => ({
+  fetchAudioVisualItemPage: mocks.fetchAudioVisualItemPage,
+  fetchAudioVisualSeries: mocks.fetchAudioVisualSeries,
+  fetchAudioVisualSeriesDetail: mocks.fetchAudioVisualSeriesDetail,
+}));
 vi.mock('../../src/services/memorialApi', () => ({
+  createMemorialArrangement: mocks.createMemorialArrangement,
+  createMemorialGalleryItem: mocks.createMemorialGalleryItem,
+  createMemorialMinistryTribute: mocks.createMemorialMinistryTribute,
+  createMemorialPersonalTribute: mocks.createMemorialPersonalTribute,
+  createMemorialRecordingSection: mocks.createMemorialRecordingSection,
+  createMemorialRichTextBlock: mocks.createMemorialRichTextBlock,
+  createMemorialRichTextMediaEmbed: mocks.createMemorialRichTextMediaEmbed,
+  createMemorialRichTextScriptureReference: mocks.createMemorialRichTextScriptureReference,
+  createMemorialTimelineEvent: mocks.createMemorialTimelineEvent,
+  deleteMemorialArrangement: mocks.deleteMemorialArrangement,
+  deleteMemorialGalleryItem: mocks.deleteMemorialGalleryItem,
+  deleteMemorialMinistryTribute: mocks.deleteMemorialMinistryTribute,
+  deleteMemorialPersonalTribute: mocks.deleteMemorialPersonalTribute,
+  deleteMemorialRecordingSection: mocks.deleteMemorialRecordingSection,
+  deleteMemorialRichTextMediaEmbed: mocks.deleteMemorialRichTextMediaEmbed,
+  deleteMemorialRichTextScriptureReference: mocks.deleteMemorialRichTextScriptureReference,
+  deleteMemorialTimelineEvent: mocks.deleteMemorialTimelineEvent,
   fetchMemorialEditorState: mocks.fetchMemorialEditorState,
-  updateMemorialPage: mocks.updateMemorialPage,
+  runMemorialWorkflowAction: mocks.runMemorialWorkflowAction,
+  updateMemorialArrangement: mocks.updateMemorialArrangement,
+  updateMemorialGalleryItem: mocks.updateMemorialGalleryItem,
+  updateMemorialMinistryTribute: mocks.updateMemorialMinistryTribute,
+  updateMemorialPersonalTribute: mocks.updateMemorialPersonalTribute,
+  updateMemorialRecordingSection: mocks.updateMemorialRecordingSection,
   updateMemorialRichTextBlock: mocks.updateMemorialRichTextBlock,
+  updateMemorialRichTextMediaEmbed: mocks.updateMemorialRichTextMediaEmbed,
+  updateMemorialRichTextScriptureReference: mocks.updateMemorialRichTextScriptureReference,
+  updateMemorialTimelineEvent: mocks.updateMemorialTimelineEvent,
+  updateMemorialPage: mocks.updateMemorialPage,
 }));
 
 const workflow = {
@@ -227,15 +287,70 @@ describe('MemorialEditorPage', () => {
 
   beforeEach(() => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-    mocks.fetchMemorialEditorState.mockReset();
+    Object.values(mocks).forEach((mock) => mock.mockReset());
     mocks.fetchMemorialEditorState.mockResolvedValue(editorState());
-    mocks.updateMemorialPage.mockReset();
+    mocks.fetchAudioVisualSeries.mockResolvedValue([
+      { id: 9, itemCount: 1, name: 'Legacy sermon series', slug: 'legacy-sermons' },
+    ]);
+    mocks.fetchAudioVisualSeriesDetail.mockResolvedValue({
+      id: 9,
+      itemCount: 1,
+      items: [
+        {
+          categories: [],
+          collections: [],
+          description: 'A recording from the memorial series.',
+          descriptionExcerpt: 'A recording from the memorial series.',
+          durationSeconds: 600,
+          id: 901,
+          mediaType: 'sermon',
+          mediaTypeLabel: 'Sermon',
+          publishedAt: '2026-09-18T10:00:00Z',
+          series: { id: 9, name: 'Legacy sermon series', slug: 'legacy-sermons' },
+          slug: 'legacy-preview-sermon',
+          speaker: 'Rev. Jane Doe',
+          thumbnailUrl: '/recording.jpg',
+          title: 'Legacy preview sermon',
+        },
+      ],
+      name: 'Legacy sermon series',
+      slug: 'legacy-sermons',
+    });
+    mocks.fetchAudioVisualItemPage.mockResolvedValue({
+      count: 1,
+      items: [
+        {
+          categories: [],
+          collections: [],
+          description: 'A recording from the memorial series.',
+          descriptionExcerpt: 'A recording from the memorial series.',
+          durationSeconds: 600,
+          id: 901,
+          mediaType: 'sermon',
+          mediaTypeLabel: 'Sermon',
+          publishedAt: '2026-09-18T10:00:00Z',
+          series: { id: 9, name: 'Legacy sermon series', slug: 'legacy-sermons' },
+          slug: 'legacy-preview-sermon',
+          speaker: 'Rev. Jane Doe',
+          thumbnailUrl: '/recording.jpg',
+          title: 'Legacy preview sermon',
+        },
+      ],
+      next: null,
+      previous: null,
+    });
     mocks.updateMemorialPage.mockImplementation((_, __, payload) =>
       Promise.resolve({ ...editorState().page, ...payload }),
     );
-    mocks.updateMemorialRichTextBlock.mockReset();
     mocks.updateMemorialRichTextBlock.mockImplementation((_, __, payload) =>
       Promise.resolve({ ...editorState().rich_text_blocks[0], ...payload }),
+    );
+    mocks.updateMemorialMinistryTribute.mockImplementation((_, __, payload) =>
+      Promise.resolve({
+        ...editorState().ministry_tributes[0],
+        ...payload,
+        display_ministry_name: payload.ministry_name,
+      }),
     );
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -244,6 +359,7 @@ describe('MemorialEditorPage', () => {
 
   afterEach(() => {
     act(() => root.unmount());
+    document.body.querySelectorAll('[role="dialog"]').forEach((dialog) => dialog.remove());
     container.remove();
   });
 
@@ -264,6 +380,11 @@ describe('MemorialEditorPage', () => {
     expect(container.textContent).toContain('Joined leadership');
     expect(container.textContent).toContain('Family photo');
     expect(container.textContent).toContain('Legacy sermon series');
+    await vi.waitFor(() => expect(container.textContent).toContain('Legacy preview sermon'));
+    expect(mocks.fetchAudioVisualItemPage).toHaveBeenCalledWith(
+      { ordering: 'oldest', pageSize: 3, series: 'legacy-sermons' },
+      expect.any(AbortSignal),
+    );
     expect(container.textContent).toContain('Funeral service');
   });
 
@@ -289,6 +410,7 @@ describe('MemorialEditorPage', () => {
     });
     await vi.waitFor(() => expect(container.textContent).toContain('Rev. Jane Updated'));
   });
+
   it('saves changed memorial rich text block settings through memorial endpoints', async () => {
     await renderPage(root);
     await vi.waitFor(() => expect(container.textContent).toContain('Hero welcome'));
@@ -311,5 +433,41 @@ describe('MemorialEditorPage', () => {
       title: 'Hero remembrance',
     }));
     await vi.waitFor(() => expect(container.textContent).toContain('Hero remembrance'));
+  });
+
+  it('saves specialist child records through their memorial endpoints', async () => {
+    await renderPage(root);
+    await vi.waitFor(() => expect(container.textContent).toContain('Ministry Board'));
+
+    const firstEditButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Edit'),
+    ) as HTMLButtonElement;
+    await act(async () => firstEditButton.click());
+
+    const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.textContent).toContain('Ministry tributes');
+
+    const ministryInput = Array.from(dialog.querySelectorAll('input')).find((input) =>
+      input.value === 'Ministry Board',
+    ) as HTMLInputElement;
+    await changeInput(ministryInput, 'Ministry Council');
+
+    const saveButton = Array.from(dialog.querySelectorAll('button')).find((button) =>
+      button.textContent?.trim() === 'Save',
+    ) as HTMLButtonElement;
+    await act(async () => saveButton.click());
+
+    await vi.waitFor(() => expect(mocks.updateMemorialMinistryTribute).toHaveBeenCalled());
+    expect(mocks.updateMemorialMinistryTribute).toHaveBeenCalledWith('access-token', 30, expect.objectContaining({
+      content_block: '11',
+      is_visible: false,
+      ministry: null,
+      ministry_name: 'Ministry Council',
+      order: 1,
+      representative_photo: null,
+      speaker_name: 'Elder Mary',
+      status: 'DRAFT',
+    }));
+    await vi.waitFor(() => expect(container.textContent).toContain('Ministry Council'));
   });
 });
