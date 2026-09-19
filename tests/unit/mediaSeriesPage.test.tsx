@@ -11,6 +11,7 @@ import MediaSeriesPage from '../../src/pages/MediaSeriesPage';
 const mocks = vi.hoisted(() => ({
   fetchAudioVisualItemPage: vi.fn(),
   fetchAudioVisualSeriesDetail: vi.fn(),
+  share: vi.fn(),
 }));
 
 vi.mock('../../src/hooks/useTheme', () => ({
@@ -72,6 +73,12 @@ describe('MediaSeriesPage', () => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true;
     mocks.fetchAudioVisualItemPage.mockReset();
     mocks.fetchAudioVisualSeriesDetail.mockReset();
+    mocks.share.mockReset();
+    mocks.share.mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: mocks.share,
+    });
     mocks.fetchAudioVisualItemPage.mockResolvedValue({
       count: 2,
       items: series.items,
@@ -115,6 +122,7 @@ describe('MediaSeriesPage', () => {
     expect(container.textContent).toContain('2 messages');
     expect(container.textContent).toContain('Messages in this series');
     expect(container.querySelector('a[href="/media"]')?.textContent).toContain('Back to Media');
+    expect([...container.querySelectorAll('button')].some((button) => button.textContent === 'Share')).toBe(true);
     expect(container.querySelectorAll('a[href="/media/watch/dying-well-part-one"]')).toHaveLength(2);
     expect(container.textContent).toContain('Rev. First Speaker');
     expect(container.textContent).toContain('2 Timothy 4:7');
@@ -125,6 +133,23 @@ describe('MediaSeriesPage', () => {
     container.querySelectorAll<HTMLAnchorElement>('a[aria-label^="Watch "]').forEach((link) => {
       expect(link.querySelector('a, button')).toBeNull();
       expect(link.className).toContain('focus-visible:ring-2');
+    });
+  });
+
+  it('shares the canonical series route with series metadata', async () => {
+    await renderPage();
+
+    const shareButton = await vi.waitFor(() => {
+      const button = [...container.querySelectorAll('button')].find((item) => item.textContent === 'Share');
+      expect(button).toBeDefined();
+      return button as HTMLButtonElement;
+    });
+    await act(async () => shareButton.click());
+
+    expect(mocks.share).toHaveBeenCalledWith({
+      text: series.description,
+      title: series.name,
+      url: `${window.location.origin}/media/series/dying-well`,
     });
   });
 

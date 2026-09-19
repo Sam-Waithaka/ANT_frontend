@@ -4,6 +4,8 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import MediaSeriesDetail from '../components/media/MediaSeriesDetail';
 import SiteFooter from '../components/navigation/SiteFooter';
 import SiteHeader from '../components/navigation/SiteHeader';
+import ShareButton from '../components/share/ShareButton';
+import { useShareAction, type SharePayload } from '../components/share/useShareAction';
 import { usePaginatedMediaItems } from '../hooks/usePaginatedMediaItems';
 import { useTheme } from '../hooks/useTheme';
 import { fetchAudioVisualSeriesDetail } from '../services/audioVisualApi';
@@ -33,6 +35,19 @@ const MediaSeriesPage = () => {
     : currentState.status === 'loading' || media.status === 'loading'
       ? 'loading'
       : 'ready';
+  const sharePayload = useMemo<SharePayload | null>(() => {
+    if (pageStatus !== 'ready' || !currentState.series) return null;
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const seriesPath = `/media/series/${encodeURIComponent(currentState.series.slug || slug)}`;
+
+    return {
+      title: currentState.series.name,
+      text: currentState.series.description || undefined,
+      url: `${origin}${seriesPath}`,
+    };
+  }, [currentState.series, pageStatus, slug]);
+  const { share, shareStatus } = useShareAction(sharePayload);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -56,14 +71,24 @@ const MediaSeriesPage = () => {
       <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
       <main className={`flex-1 py-8 sm:py-10 lg:py-12 ${darkMode ? 'bg-[#080808]' : 'bg-[linear-gradient(180deg,#f8f5ef,#fffaf0_42%,#f8f5ef)]'}`}>
         <div className="box-border grid w-full max-w-full min-w-0 gap-6 px-4 sm:px-6 lg:px-8 xl:px-12">
-          <Link
-            className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full text-sm font-black text-red-800 transition hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:text-red-100"
-            state={{ mediaTab: mediaReturnTab === 'series' ? 'series' : 'all' }}
-            to="/media"
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to Media
-          </Link>
+          <div className="flex min-w-0 items-center justify-between gap-4">
+            <Link
+              className="inline-flex min-h-11 w-fit items-center gap-2 rounded-full text-sm font-black text-red-800 transition hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 dark:text-red-100"
+              state={{ mediaTab: mediaReturnTab === 'series' ? 'series' : 'all' }}
+              to="/media"
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Back to Media
+            </Link>
+            {sharePayload ? (
+              <ShareButton
+                darkMode={darkMode}
+                onShare={() => { void share(); }}
+                shareStatus={shareStatus}
+                variant="primary"
+              />
+            ) : null}
+          </div>
           <MediaSeriesDetail
             canLoadMore={media.canLoadMore}
             darkMode={darkMode}
