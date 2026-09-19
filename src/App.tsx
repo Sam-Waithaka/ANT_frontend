@@ -33,6 +33,9 @@ const WritingEditorialPage = lazy(() => import("./pages/portal/writing/WritingEd
 const WritingLibraryPage = lazy(() => import("./pages/portal/writing/WritingLibraryPage"));
 const WritingNewArticlePage = lazy(() => import("./pages/portal/writing/WritingNewArticlePage"));
 const WritingStudioPage = lazy(() => import("./pages/portal/writing/WritingStudioPage"));
+const PublicMemorialPage = lazy(() => import("./features/memorial/public"));
+const MemorialPortalPage = lazy(() => import("./features/memorial/portal"));
+const MemorialDiscoveryPage = lazy(() => import("./features/memorial/portal/MemorialDiscoveryPage"));
 
 const ProtectedRouteLoadingState = ({ label }: { label: string }) => (
   <div
@@ -79,6 +82,7 @@ function App() {
                 <Route path="/media" element={<MediaPage />} />
                 <Route path="/media/series/:slug" element={<MediaSeriesPage />} />
                 <Route path="/media/watch/:slug" element={<MediaWatchPage />} />
+                <Route path="/in-memory/:memorialSlug" element={<PublicMemorialPage />} />
                 <Route path="/ministries" element={<MinistriesPage />} />
                 <Route path="/settings" element={<PlannedDestinationPage eyebrow="Preferences" icon={Settings} title="Settings" description="Site preferences, accessibility options, notifications, and personal defaults will be managed here." />} />
                 <Route path="/account" element={<AccountRoute><AccountPage /></AccountRoute>} />
@@ -136,6 +140,22 @@ function App() {
                   element={
                     <PortalRoute>
                       <WritingEditorPage />
+                    </PortalRoute>
+                  }
+                />
+                <Route
+                  path="/portal/memorials"
+                  element={
+                    <PortalRoute>
+                      <MemorialDiscoveryPage />
+                    </PortalRoute>
+                  }
+                />
+                <Route
+                  path="/portal/memorials/:memorialSlug/*"
+                  element={
+                    <PortalRoute>
+                      <MemorialPortalPage />
                     </PortalRoute>
                   }
                 />

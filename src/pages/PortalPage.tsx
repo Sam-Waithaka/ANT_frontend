@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ClipboardList,
   FileText,
+  HeartHandshake,
   Library,
   Megaphone,
   PenLine,
@@ -119,6 +120,12 @@ const buildQuickActions = (
         },
       ]
     : []),
+  {
+    description: "Choose and prepare an available memorial.",
+    href: "/portal/memorials",
+    icon: HeartHandshake,
+    title: "Memorial",
+  },
   ...(capabilities.canManageTaxonomy
     ? [
         {
@@ -279,6 +286,12 @@ const buildAvailableModules = (
         },
       ]
     : []),
+  {
+    description: "Write, review, approve, and publish the memorial.",
+    href: "/portal/memorials",
+    icon: HeartHandshake,
+    title: "Memorial",
+  },
   ...(capabilities.canReviewWriting ||
   capabilities.canPublishWriting ||
   capabilities.canViewAnyDrafts

@@ -41,6 +41,15 @@ const portalNavigationSections: PortalNavigationSection[] = [
         match: 'prefix',
         type: 'route',
       },
+      {
+        href: '/portal/memorials',
+        icon: siteIcons.resources,
+        id: 'portal-memorial',
+        isVisible: ({ hasPortalAccess }) => hasPortalAccess,
+        label: 'Memorial',
+        match: 'prefix',
+        type: 'route',
+      },
     ],
   },
 ];
@@ -60,4 +69,3 @@ export const getActivePortalNavigationItem = (
 ) => getVisiblePortalNavigationSections(capabilities)
   .flatMap((section) => section.items)
   .find((item) => isNavigationItemActive(item, pathname)) ?? null;
-
