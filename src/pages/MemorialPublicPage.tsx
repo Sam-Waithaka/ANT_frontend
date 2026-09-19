@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type ReactNode } from "react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import {
   ELDER_GEOFFREY_MEMORIAL_API_SLUG,
   getMemorialPage,
@@ -7,7 +8,7 @@ import {
 import SiteFooter from "../components/navigation/SiteFooter";
 import SiteHeader from "../components/navigation/SiteHeader";
 import { useTheme } from "../hooks/useTheme";
-import type { MemorialPublicPayload } from "../types/memorialPublic";
+import type { MemorialMediaAsset, MemorialPublicPayload } from "../types/memorialPublic";
 import "../styles/memorial.css";
 
 const memorialEndpointPath = `/v1/memorial/public/pages/${ELDER_GEOFFREY_MEMORIAL_API_SLUG}/`;
@@ -170,63 +171,12 @@ function SitePageShell({
 }
 
 function MemorialReadyState({ payload }: { payload: MemorialPublicPayload }) {
-  const { page, sections } = payload;
+  const { sections } = payload;
   const renderedNavSections = navSectionKeys.filter((sectionKey) => shouldRenderSection(sections[sectionKey]));
-  const heroReference = sections.hero.content?.scripture_references[0];
-  const initials = getInitials(page.full_name);
 
   return (
     <MemorialContentShell>
-      <header className="border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]">
-        <div className="grid w-full gap-10 px-6 py-10 sm:px-8 lg:min-h-[calc(100vh-5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(20rem,30rem)_10rem] lg:items-center lg:gap-10 lg:px-[clamp(3rem,5vw,6rem)] lg:py-14 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,36rem)_minmax(12rem,15rem)] xl:gap-12">
-          <div className="flex min-w-0 flex-col justify-center lg:pb-10">
-            <p className="text-sm font-black text-[var(--memorial-burgundy)]">In loving memory</p>
-            <h1 className="mt-4 max-w-5xl text-[clamp(3.75rem,8.2vw,8.4rem)] font-black leading-[0.88] text-[var(--memorial-ink)]">
-              {page.full_name}
-            </h1>
-            <div className="mt-5 space-y-1 text-lg text-[#222] sm:text-xl">
-              <p className="font-extrabold">{page.role_title}</p>
-              <p className="text-[#35302b]">{page.years_of_service}</p>
-            </div>
-            <span className="memorial-rule mt-7" aria-hidden="true" />
-            {sections.hero.content?.content_text ? (
-              <blockquote className="memorial-scripture mt-7 max-w-2xl text-2xl sm:text-3xl">
-                {sections.hero.content.content_text}
-              </blockquote>
-            ) : null}
-            {heroReference ? (
-              <p className="mt-3 text-sm font-semibold text-[#4f4840]">{heroReference.display_text}</p>
-            ) : null}
-          </div>
-
-          <figure className="relative aspect-[4/5] w-full overflow-hidden rounded-sm border border-black/10 bg-[#191817] shadow-2xl shadow-black/10 lg:self-center">
-            {page.portrait_image?.original_url ? (
-              <img
-                alt={page.portrait_image.alt_text || page.full_name}
-                className="h-full w-full object-cover"
-                src={page.portrait_image.original_url}
-              />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#343331,#171615_62%)] text-stone-200">
-                <p className="memorial-serif text-6xl tracking-wide">{initials}</p>
-                <span className="mt-5 h-px w-20 bg-stone-400/60" aria-hidden="true" />
-                <p className="mt-5 text-center text-xs uppercase tracking-[0.22em] text-stone-300/80">
-                  Faithful service
-                </p>
-              </div>
-            )}
-          </figure>
-
-          <aside className="hidden h-full min-h-[24rem] flex-col justify-center border-l border-[var(--memorial-line)] pl-7 lg:flex xl:pl-9">
-            <p className="memorial-scripture text-3xl xl:text-4xl">Faith.<br />Service.<br />Lasting impact.</p>
-            <span className="memorial-rule mt-7" aria-hidden="true" />
-            <p className="mt-6 max-w-44 text-xs font-bold uppercase leading-6 tracking-[0.34em] text-[#716960]">
-              A beloved chairman. A cherished brother.
-            </p>
-          </aside>
-        </div>
-      </header>
-
+      <MemorialHero payload={payload} />
       <MemorialSectionNav sectionKeys={renderedNavSections} />
 
       <div>
@@ -243,6 +193,101 @@ function MemorialReadyState({ payload }: { payload: MemorialPublicPayload }) {
   );
 }
 
+function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
+  const { page, sections } = payload;
+  const heroContent = sections.hero.content;
+  const heroBackgroundUrl = getMediaUrl(page.hero_image, "large");
+  const portraitUrl = getMediaUrl(page.portrait_image, "large");
+  const initials = getInitials(page.full_name);
+  const scriptureReferences = heroContent?.scripture_references ?? [];
+
+  return (
+    <header className="relative isolate overflow-hidden border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]">
+      {heroBackgroundUrl ? (
+        <>
+          <img
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 -z-20 h-full w-full object-cover opacity-15"
+            src={heroBackgroundUrl}
+          />
+          <div className="absolute inset-0 -z-10 bg-[rgba(255,253,247,0.86)]" aria-hidden="true" />
+        </>
+      ) : null}
+
+      <div className="grid w-full gap-8 px-6 py-8 sm:px-8 lg:min-h-[calc(100vh-5rem)] lg:grid-cols-[minmax(0,1fr)_minmax(20rem,30rem)_10rem] lg:items-center lg:gap-10 lg:px-[clamp(3rem,5vw,6rem)] lg:py-14 xl:grid-cols-[minmax(0,1fr)_minmax(28rem,36rem)_minmax(12rem,15rem)] xl:gap-12">
+        <div className="order-2 flex min-w-0 flex-col justify-center lg:order-none lg:pb-10">
+          <p className="text-sm font-black text-[var(--memorial-burgundy)]">In loving memory</p>
+          <h1 className="mt-4 max-w-5xl text-[clamp(3.35rem,8.2vw,8.4rem)] font-black leading-[0.88] text-[var(--memorial-ink)]">
+            {page.full_name}
+          </h1>
+          <div className="mt-5 space-y-1 text-lg text-[#222] sm:text-xl">
+            <p className="font-extrabold">{page.role_title}</p>
+            <p className="text-[#35302b]">{page.years_of_service}</p>
+          </div>
+          <span className="memorial-rule mt-7" aria-hidden="true" />
+          {heroContent?.content_html ? (
+            <div
+              className="memorial-hero-rich-text memorial-scripture mt-7 max-w-2xl text-2xl sm:text-3xl"
+              dangerouslySetInnerHTML={{ __html: heroContent.content_html }}
+            />
+          ) : null}
+          {scriptureReferences.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {scriptureReferences.map((reference) => (
+                <span className="text-sm font-semibold text-[#4f4840]" key={reference.id}>
+                  {reference.display_text}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <a
+              className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-[var(--memorial-burgundy)] px-7 text-sm font-black text-[var(--memorial-ink)] transition hover:bg-[var(--memorial-burgundy)] hover:text-white"
+              href="#life_service"
+            >
+              His life & legacy
+              <ArrowRight aria-hidden="true" size={18} strokeWidth={2} />
+            </a>
+            <a
+              className="inline-flex min-h-12 items-center justify-center gap-2 px-2 text-sm font-bold text-[#514a42] underline decoration-[var(--memorial-line)] underline-offset-8 transition hover:text-[var(--memorial-burgundy)]"
+              href="#arrangements"
+            >
+              Service arrangements
+              <ArrowDown aria-hidden="true" size={17} strokeWidth={2} />
+            </a>
+          </div>
+        </div>
+
+        <figure className="order-1 relative aspect-[4/5] w-full overflow-hidden rounded-sm border border-black/10 bg-[#191817] shadow-2xl shadow-black/10 lg:order-none lg:self-center">
+          {portraitUrl ? (
+            <img
+              alt={page.portrait_image?.alt_text || page.full_name}
+              className="h-full w-full object-cover"
+              src={portraitUrl}
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#343331,#171615_62%)] text-stone-200">
+              <p className="memorial-serif text-6xl tracking-wide">{initials}</p>
+              <span className="mt-5 h-px w-20 bg-stone-400/60" aria-hidden="true" />
+              <p className="mt-5 text-center text-xs uppercase tracking-[0.22em] text-stone-300/80">
+                Faithful service
+              </p>
+            </div>
+          )}
+        </figure>
+
+        <aside className="hidden h-full min-h-[24rem] flex-col justify-center border-l border-[var(--memorial-line)] pl-7 lg:flex xl:pl-9">
+          <p className="memorial-scripture text-3xl xl:text-4xl">Faith.<br />Service.<br />Lasting impact.</p>
+          <span className="memorial-rule mt-7" aria-hidden="true" />
+          <p className="mt-6 max-w-44 text-xs font-bold uppercase leading-6 tracking-[0.34em] text-[#716960]">
+            A beloved chairman. A cherished brother.
+          </p>
+        </aside>
+      </div>
+    </header>
+  );
+}
 function MemorialSectionNav({ sectionKeys }: { sectionKeys: MemorialNavSectionKey[] }) {
   const handleMobileNavChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const target = document.getElementById(event.currentTarget.value);
@@ -349,6 +394,30 @@ function shouldRenderSection(section: MemorialPublicPayload["sections"][Memorial
   return Boolean(section.content || items.length > 0);
 }
 
+function getMediaUrl(asset: MemorialMediaAsset | null, preferredSize: "thumb" | "small" | "medium" | "large") {
+  if (!asset) {
+    return "";
+  }
+
+  const formatPreference = ["avif", "webp", "jpeg"];
+  const sizePreference = preferredSize === "large"
+    ? ["large", "medium", "small", "thumb"]
+    : [preferredSize, "medium", "small", "thumb", "large"];
+
+  for (const format of formatPreference) {
+    const variants = asset.variant_map?.[format];
+
+    for (const size of sizePreference) {
+      const url = variants?.[size]?.url;
+
+      if (url) {
+        return url;
+      }
+    }
+  }
+
+  return asset.original_url;
+}
 function getInitials(name: string) {
   return name
     .split(" ")

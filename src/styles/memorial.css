@@ -55,3 +55,11 @@
     linear-gradient(135deg, var(--memorial-ink) 50%, transparent 50%) calc(100% - 0.85rem) 50% / 0.45rem 0.45rem no-repeat,
     var(--memorial-paper);
 }
+
+.memorial-hero-rich-text p {
+  margin: 0;
+}
+
+.memorial-hero-rich-text p + p {
+  margin-top: 0.75rem;
+}
