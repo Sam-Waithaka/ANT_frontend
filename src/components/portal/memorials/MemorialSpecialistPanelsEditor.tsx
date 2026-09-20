@@ -262,7 +262,7 @@ const recordImage = (record: SpecialistRecord, config: PanelConfig) => {
     <ResponsiveImage
       alt={config.titleFor(record)}
       asset={asset}
-      className="h-20 w-20 rounded-2xl object-cover ring-1 ring-black/10 dark:ring-white/10"
+      className="h-16 w-16 rounded-2xl object-cover ring-1 ring-black/10 dark:ring-white/10 sm:h-20 sm:w-20"
       preset="thumbnail"
     />
   );
@@ -956,13 +956,13 @@ const SpecialistRecordCard = ({
   onWorkflowUpdated: (config: PanelConfig, record: SpecialistRecord) => void;
   record: SpecialistRecord;
 }) => (
-    <article className={`rounded-2xl border p-4 ${portalSurface.card(darkMode)}`}>
-      <div className="flex items-start gap-3">
+    <article className={`rounded-2xl border p-3 sm:p-4 ${portalSurface.card(darkMode)}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
         {recordImage(record, config)}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="font-serif text-xl leading-tight">{config.titleFor(record)}</h3>
+              <h3 className="font-serif text-lg leading-tight sm:text-xl">{config.titleFor(record)}</h3>
               <p className={`mt-1 text-sm ${portalSurface.softMutedText(darkMode)}`}>
                 {config.descriptionFor(record)}
               </p>
@@ -976,7 +976,7 @@ const SpecialistRecordCard = ({
           {config.id === 'recording_sections' ? (
             <RecordingSeriesPreview darkMode={darkMode} record={record} />
           ) : null}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
             <button
               className="inline-flex min-h-9 items-center gap-2 rounded-full border border-red-900/20 px-3 text-xs font-black text-red-800 transition hover:bg-red-950/5 dark:border-red-200/20 dark:text-red-100"
               onClick={() => onEdit(config, record)}
@@ -1072,15 +1072,15 @@ const MemorialSpecialistPanelsEditor = ({
 
 
   return (
-    <section className="grid gap-5 xl:grid-cols-2">
+    <section className="grid gap-4 sm:gap-5 xl:grid-cols-2">
       {configs.map((config) => {
         const items = config.items(editorState);
         return (
           <section
-            className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}
+            className={`rounded-[1.5rem] border p-4 shadow-lg sm:rounded-3xl sm:p-5 ${portalSurface.panel(darkMode)}`}
             key={config.id}
           >
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
               <div className="flex items-center gap-3">
                 <span className={`grid size-11 place-items-center rounded-2xl ${portalSurface.iconBadge(darkMode)}`}>
                   {config.icon}
@@ -1093,7 +1093,7 @@ const MemorialSpecialistPanelsEditor = ({
                 </div>
               </div>
               <button
-                className="inline-flex min-h-10 items-center gap-2 rounded-full bg-red-800 px-4 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700"
+                className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full bg-red-800 px-4 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700"
                 onClick={() => openModal(config)}
                 type="button"
               >
@@ -1132,9 +1132,9 @@ const MemorialSpecialistPanelsEditor = ({
           description="Manage order, workflow status, visibility, and the key fields for this memorial child record."
           eyebrow={activeModal.record ? 'Edit record' : 'Create record'}
           footer={
-            <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
               <button
-                className={darkMode ? 'rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-stone-200 transition hover:bg-white/10' : 'rounded-full border border-[#eaded0] bg-white px-5 py-3 text-sm font-bold text-zinc-700 transition hover:bg-[#fffaf0]'}
+                className={darkMode ? 'w-full rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-stone-200 transition hover:bg-white/10 sm:w-auto' : 'w-full rounded-full border border-[#eaded0] bg-white px-5 py-3 text-sm font-bold text-zinc-700 transition hover:bg-[#fffaf0] sm:w-auto'}
                 disabled={saving}
                 onClick={() => setActiveModal(null)}
                 type="button"
@@ -1142,7 +1142,7 @@ const MemorialSpecialistPanelsEditor = ({
                 Cancel
               </button>
               <button
-                className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-6 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-red-800 px-6 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                 disabled={saving}
                 onClick={() => void saveRecord()}
                 type="button"

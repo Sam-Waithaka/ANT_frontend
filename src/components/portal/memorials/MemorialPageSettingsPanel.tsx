@@ -175,19 +175,19 @@ const MemorialPageSettingsPanel = ({
   return (
     <section
       aria-label="Memorial page settings"
-      className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}
+      className={`rounded-[1.5rem] border p-4 shadow-lg sm:rounded-3xl sm:p-5 ${portalSurface.panel(darkMode)}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-red-800 dark:text-red-100">
             Page shell CRUD
           </p>
-          <h2 className="mt-2 font-serif text-3xl leading-tight">Memorial identity</h2>
+          <h2 className="mt-2 font-serif text-2xl leading-tight sm:text-3xl">Memorial identity</h2>
           <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
             Maintain the memorial page shell before section-level editing begins.
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
           <MemorialWorkflowControls
             darkMode={darkMode}
             disabled={saving}
@@ -199,7 +199,7 @@ const MemorialPageSettingsPanel = ({
             resource="pages"
           />
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             disabled={saving}
             onClick={() => void savePageShell()}
             type="button"
@@ -210,7 +210,7 @@ const MemorialPageSettingsPanel = ({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         <label className="grid gap-2 text-sm font-bold">
           Full name
           <input
@@ -281,7 +281,7 @@ const MemorialPageSettingsPanel = ({
         </span>
       </label>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         <CoverImagePicker
           accessToken={auth.accessToken}
           canUpload={canUpload}
@@ -314,7 +314,7 @@ const MemorialPageSettingsPanel = ({
         />
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
+      <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-2">
         <label className="grid gap-2 text-sm font-bold">
           SEO title
           <input
@@ -335,7 +335,7 @@ const MemorialPageSettingsPanel = ({
         </label>
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+      <div className="mt-5 grid gap-4 sm:mt-6 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <label className="grid gap-2 text-sm font-bold">
           Status
           <select

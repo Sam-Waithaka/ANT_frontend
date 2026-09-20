@@ -94,7 +94,7 @@ const CountCard = ({
   label: string;
   value: number | string;
 }) => (
-  <div className="rounded-2xl border border-red-900/10 bg-red-950/[0.03] p-4 dark:border-red-200/10 dark:bg-white/[0.04]">
+  <div className="rounded-2xl border border-red-900/10 bg-red-950/[0.03] p-3 dark:border-red-200/10 dark:bg-white/[0.04] sm:p-4">
     <p className="font-serif text-3xl leading-none">{value}</p>
     <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">
       {label}
@@ -122,16 +122,16 @@ const PageOverview = ({
     + model.totals.arrangements;
 
   return (
-    <section className={`rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}>
-      <div className="grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)]">
+    <section className={`rounded-[1.5rem] border p-4 shadow-lg sm:rounded-3xl sm:p-5 ${portalSurface.panel(darkMode)}`}>
+      <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-6">
         {portraitUrl ? (
           <img
             alt={page.portrait_image_detail?.alt_text || page.hero_image_detail?.alt_text || page.full_name}
-            className="h-40 w-40 rounded-[2rem] object-cover shadow-lg shadow-zinc-900/10"
+            className="h-28 w-28 rounded-[1.5rem] object-cover shadow-lg shadow-zinc-900/10 sm:h-32 sm:w-32 lg:h-40 lg:w-40 lg:rounded-[2rem]"
             src={portraitUrl}
           />
         ) : (
-          <span className={`grid h-40 w-40 place-items-center rounded-[2rem] ${portalSurface.iconBadge(darkMode)}`}>
+          <span className={`grid h-28 w-28 place-items-center rounded-[1.5rem] sm:h-32 sm:w-32 lg:h-40 lg:w-40 lg:rounded-[2rem] ${portalSurface.iconBadge(darkMode)}`}>
             <UsersRound size={36} aria-hidden="true" />
           </span>
         )}
@@ -144,17 +144,17 @@ const PageOverview = ({
               </span>
             ) : null}
           </div>
-          <h1 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">{page.full_name}</h1>
+          <h1 className="mt-4 font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">{page.full_name}</h1>
           {page.summary ? (
             <p className={`mt-4 max-w-3xl text-base leading-7 ${portalSurface.mutedText(darkMode)}`}>
               {page.summary}
             </p>
           ) : null}
           <dl className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Role</dt><dd className="mt-1 text-sm font-bold">{page.role_title || 'Not set'}</dd></div>
-            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Years</dt><dd className="mt-1 text-sm font-bold">{page.years_of_service || lifeDates || 'Not set'}</dd></div>
-            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Slug</dt><dd className="mt-1 text-sm font-bold">{page.slug}</dd></div>
-            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Updated</dt><dd className="mt-1 text-sm font-bold">{formatDateTime(page.updated_at) || 'Not available'}</dd></div>
+            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Role</dt><dd className="mt-1 break-words text-sm font-bold">{page.role_title || 'Not set'}</dd></div>
+            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Years</dt><dd className="mt-1 break-words text-sm font-bold">{page.years_of_service || lifeDates || 'Not set'}</dd></div>
+            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Slug</dt><dd className="mt-1 break-words text-sm font-bold">{page.slug}</dd></div>
+            <div><dt className="text-xs font-black uppercase tracking-[0.14em] text-red-800 dark:text-red-100">Updated</dt><dd className="mt-1 break-words text-sm font-bold">{formatDateTime(page.updated_at) || 'Not available'}</dd></div>
           </dl>
         </div>
       </div>
@@ -206,7 +206,7 @@ const MemorialEditorPage = () => {
 
   return (
     <MemorialPortalShell compact>
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-5">
+      <header className="mb-5 flex flex-wrap items-start justify-between gap-5 sm:mb-6">
         <div>
           <Link
             className={darkMode ? 'inline-flex items-center gap-2 text-xs font-bold text-stone-400 transition hover:text-stone-100' : 'inline-flex items-center gap-2 text-xs font-bold text-[#786f66] transition hover:text-zinc-950'}
@@ -219,7 +219,7 @@ const MemorialEditorPage = () => {
             <Layers3 size={15} aria-hidden="true" />
             Memorial editor
           </p>
-          <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">
+          <h1 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">
             Memorial structure
           </h1>
           <p className={`mt-3 max-w-3xl text-sm leading-6 ${portalSurface.mutedText(darkMode)}`}>
@@ -248,7 +248,7 @@ const MemorialEditorPage = () => {
       ) : null}
 
       {model?.page && editorState ? (
-        <div className="grid gap-6">
+        <div className="grid gap-5 sm:gap-6">
           <PageOverview darkMode={darkMode} model={model} />
           <MemorialPageSettingsPanel
             onPageUpdated={(updatedPage) => setEditorState((current) => current ? { ...current, page: updatedPage } : current)}

@@ -89,12 +89,12 @@ const CoverImagePicker = ({
         <p className={'mt-3 text-sm leading-6 ' + mutedTextClass}>{emptyText}</p>
       )}
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button className={darkMode ? 'inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-black text-stone-100 hover:bg-[#171717] disabled:opacity-60' : 'inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-black text-zinc-950 hover:bg-[#fffaf0] disabled:opacity-60'} disabled={disabled} onClick={() => setIsOpen((current) => !current)} type="button">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <button className={darkMode ? 'inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-black text-stone-100 hover:bg-[#171717] disabled:opacity-60' : 'inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-black text-zinc-950 hover:bg-[#fffaf0] disabled:opacity-60'} disabled={disabled} onClick={() => setIsOpen((current) => !current)} type="button">
           <ImagePlus size={15} /> {selectedAssetId ? 'Change image' : 'Choose image'}
         </button>
         {selectedAssetId ? (
-          <button className="inline-flex items-center gap-2 rounded-full border border-red-900/20 px-4 py-2 text-sm font-black text-red-800 disabled:opacity-60" disabled={disabled} onClick={() => onChange(null)} type="button">
+          <button className="inline-flex items-center justify-center gap-2 rounded-full border border-red-900/20 px-4 py-2 text-sm font-black text-red-800 disabled:opacity-60" disabled={disabled} onClick={() => onChange(null)} type="button">
             <X size={15} /> Remove
           </button>
         ) : null}
@@ -105,7 +105,7 @@ const CoverImagePicker = ({
           {canUpload ? (
             <div>
               <input accept="image/*" className="sr-only" disabled={disabled || uploading} onChange={handleUpload} ref={fileInput} type="file" />
-              <button className="inline-flex items-center gap-2 rounded-full border border-red-900/20 px-4 py-2 text-sm font-black text-red-800 disabled:opacity-60" disabled={disabled || uploading} onClick={() => fileInput.current?.click()} type="button">
+              <button className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-red-900/20 px-4 py-2 text-sm font-black text-red-800 disabled:opacity-60 sm:w-auto" disabled={disabled || uploading} onClick={() => fileInput.current?.click()} type="button">
                 <ImagePlus size={15} /> {uploading ? 'Uploading...' : 'Upload image'}
               </button>
             </div>
@@ -114,7 +114,7 @@ const CoverImagePicker = ({
           {loading ? <p className={'text-sm ' + mutedTextClass}>Loading images...</p> : null}
           {error ? <p className="rounded-2xl bg-red-950/5 p-3 text-sm font-bold text-red-800">{error}</p> : null}
           {!loading && assets.length ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {assets.map((asset) => {
                 const imageUrl = mediaAssetImageUrl(asset);
                 return (

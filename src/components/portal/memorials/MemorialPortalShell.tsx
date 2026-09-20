@@ -38,7 +38,7 @@ const MemorialPortalShell = ({
       className={`flex min-h-screen flex-col overflow-x-clip transition-colors duration-500 ${portalSurface.page(darkMode)}`}
     >
       <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
-      <main className={`flex-1 px-4 sm:px-6 lg:px-8 ${compact ? 'py-6 sm:py-8' : 'py-10'}`}>
+      <main className={`flex-1 px-3 sm:px-6 lg:px-8 ${compact ? 'py-4 sm:py-8' : 'py-6 sm:py-10'}`}>
         <section className="w-full">
           {!compact && (intro ?? (
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
@@ -47,10 +47,10 @@ const MemorialPortalShell = ({
                   <Heart size={15} aria-hidden="true" />
                   Memorial Portal
                 </p>
-                <h1 className="mt-5 font-serif text-5xl leading-tight sm:text-6xl">
+                <h1 className="mt-5 font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl">
                   Honor. Curate. Publish.
                 </h1>
-                <p className={`mt-5 max-w-2xl text-lg leading-8 ${portalSurface.mutedText(darkMode)}`}>
+                <p className={`mt-5 max-w-2xl text-base leading-7 sm:text-lg sm:leading-8 ${portalSurface.mutedText(darkMode)}`}>
                   A dedicated workspace for memorial pages, tributes, recordings, arrangements, and the stories entrusted to the church.
                 </p>
               </div>
@@ -60,7 +60,7 @@ const MemorialPortalShell = ({
 
           <nav
             aria-label="Memorial Portal sections"
-            className={`${compact ? '' : 'mt-10'} overflow-x-auto`}
+            className={`${compact ? '' : 'mt-8 sm:mt-10'} -mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0`}
           >
             <div className={`inline-flex min-w-max items-center gap-1 rounded-2xl border p-1.5 shadow-lg ${navSurfaceClass}`}>
               {navItems.map(({ end, href, icon: Icon, label }) => (
@@ -83,7 +83,7 @@ const MemorialPortalShell = ({
             </div>
           </nav>
 
-          <div className={compact ? 'mt-6' : 'mt-8'}>{children}</div>
+          <div className={compact ? 'mt-5 sm:mt-6' : 'mt-6 sm:mt-8'}>{children}</div>
         </section>
       </main>
       <SiteFooter darkMode={darkMode} />
@@ -102,7 +102,7 @@ export const MemorialPortalEmptyState = ({
 
   return (
     <section
-      className={`rounded-3xl border p-8 text-center shadow-lg ${portalSurface.panel(darkMode)}`}
+      className={`rounded-[1.5rem] border p-5 text-center shadow-lg sm:rounded-3xl sm:p-8 ${portalSurface.panel(darkMode)}`}
     >
       <span className={`mx-auto grid size-14 place-items-center rounded-2xl ${portalSurface.iconBadge(darkMode)}`}>
         <Archive size={22} aria-hidden="true" />

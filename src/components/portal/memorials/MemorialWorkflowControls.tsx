@@ -122,13 +122,13 @@ function MemorialWorkflowControls<TRecord extends MemorialWorkflowRecord>({
   };
 
   return (
-    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+    <div className={`flex min-w-0 flex-wrap items-center gap-2 ${className}`}>
       {showStatus ? (
         <MemorialWorkflowStatusBadge darkMode={darkMode} status={record.status} />
       ) : null}
       {actions.map((action) => (
         <button
-          className={`inline-flex min-h-9 items-center rounded-full border px-3 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${actionClass(darkMode, isDestructiveAction(action))}`}
+          className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 text-xs font-black transition disabled:cursor-not-allowed disabled:opacity-60 ${actionClass(darkMode, isDestructiveAction(action))}`}
           disabled={disabled || pendingAction !== null}
           key={action}
           onClick={() => void runAction(action)}

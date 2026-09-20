@@ -325,7 +325,7 @@ const MemorialRichTextBlockEditor = ({
   );
 
   return (
-    <article className={`rounded-3xl border p-5 ${portalSurface.card(darkMode)}`}>
+    <article className={`rounded-[1.5rem] border p-4 sm:rounded-3xl sm:p-5 ${portalSurface.card(darkMode)}`}>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-2 text-sm font-bold">
@@ -375,9 +375,9 @@ const MemorialRichTextBlockEditor = ({
             Visible when published
           </label>
         </div>
-        <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
+        <div className="grid gap-2 sm:flex sm:flex-wrap sm:justify-start lg:justify-end">
           <button
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 sm:w-auto"
             onClick={() => void saveNow()}
             type="button"
           >
@@ -394,7 +394,7 @@ const MemorialRichTextBlockEditor = ({
         </div>
       </div>
 
-      <div className={`mt-4 rounded-2xl border border-red-900/10 bg-red-950/[0.03] p-4 text-sm dark:border-red-200/10 dark:bg-white/[0.04]`}>
+      <div className={`mt-4 rounded-2xl border border-red-900/10 bg-red-950/[0.03] p-3 text-sm dark:border-red-200/10 dark:bg-white/[0.04] sm:p-4`}>
         <h4 className="font-serif text-xl leading-tight">
           {draft.title || getMemorialSectionLabel(block.section_key)}
         </h4>
@@ -497,7 +497,7 @@ const MemorialRichTextSectionsEditor = ({
           <GalleryHorizontal size={15} aria-hidden="true" />
           Writing Studio engine
         </p>
-        <h2 className="mt-2 font-serif text-3xl leading-tight">Rich text sections</h2>
+        <h2 className="mt-2 font-serif text-2xl leading-tight sm:text-3xl">Rich text sections</h2>
         <p className={`mt-2 max-w-3xl text-sm leading-6 ${portalSurface.mutedText(darkMode)}`}>
           Each memorial section uses the shared article editor, while images and scripture
           references save through memorial-specific endpoints.
@@ -506,7 +506,7 @@ const MemorialRichTextSectionsEditor = ({
 
       <nav
         aria-label="Memorial editor sections"
-        className={`rounded-3xl border p-3 shadow-lg ${portalSurface.panel(darkMode)}`}
+        className={`rounded-[1.5rem] border p-2 shadow-lg sm:rounded-3xl sm:p-3 ${portalSurface.panel(darkMode)}`}
       >
         <div className="flex gap-2 overflow-x-auto">
           {model.sections.map((section) => (
@@ -526,7 +526,7 @@ const MemorialRichTextSectionsEditor = ({
 
       {model.sections.map((section) => (
         <section
-          className={`scroll-mt-24 rounded-3xl border p-5 shadow-lg ${portalSurface.panel(darkMode)}`}
+          className={`scroll-mt-24 rounded-[1.5rem] border p-4 shadow-lg sm:rounded-3xl sm:p-5 ${portalSurface.panel(darkMode)}`}
           id={`memorial-section-${section.key}`}
           key={section.key}
         >
@@ -538,7 +538,7 @@ const MemorialRichTextSectionsEditor = ({
               <h3 className="mt-1 font-serif text-2xl leading-tight">{section.label}</h3>
             </div>
             <button
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-red-900/20 px-4 text-sm font-black text-red-800 transition hover:-translate-y-0.5 hover:bg-red-950/5 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-200/20 dark:text-red-100"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border border-red-900/20 px-4 text-sm font-black text-red-800 transition hover:-translate-y-0.5 hover:bg-red-950/5 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-200/20 dark:text-red-100 sm:w-auto"
               disabled={creatingSection === section.key}
               onClick={() => void createSectionBlock(section.key, section.blocks.length)}
               type="button"

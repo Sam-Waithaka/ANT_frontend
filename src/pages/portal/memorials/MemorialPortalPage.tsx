@@ -97,7 +97,7 @@ const MemorialPageCard = ({
     .join(' - ');
 
   return (
-    <article className={`rounded-3xl border p-5 shadow-lg ${portalSurface.card(darkMode)}`}>
+    <article className={`rounded-[1.5rem] border p-4 shadow-lg sm:rounded-3xl sm:p-5 ${portalSurface.card(darkMode)}`}>
       <div className="flex items-start justify-between gap-4">
         <MemorialStatusPill darkMode={darkMode} status={memorial.status} />
         {memorial.is_visible ? (
@@ -106,7 +106,7 @@ const MemorialPageCard = ({
           </span>
         ) : null}
       </div>
-      <h3 className="mt-5 font-serif text-2xl leading-tight">
+      <h3 className="mt-5 font-serif text-xl leading-tight sm:text-2xl">
         {memorial.full_name || 'Untitled memorial'}
       </h3>
       {memorial.role_title ? (
@@ -124,13 +124,13 @@ const MemorialPageCard = ({
             {dateRange}
           </span>
         ) : null}
-        <span className="inline-flex items-center gap-2">
+        <span className="inline-flex min-w-0 items-center gap-2 break-all">
           <UserRound size={14} aria-hidden="true" />
           {memorial.slug}
         </span>
       </div>
       <Link
-        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700"
+        className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 sm:w-auto"
         to={`/portal/memorials/${memorial.id}`}
       >
         Open editor
@@ -202,9 +202,9 @@ const CreateMemorialModal = ({
       description="Start with the page identity. Rich sections, tributes, gallery, recordings, and arrangements come next."
       eyebrow="New memorial"
       footer={
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           <button
-            className={darkMode ? 'rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-stone-200 transition hover:bg-white/10' : 'rounded-full border border-[#eaded0] bg-white px-5 py-3 text-sm font-bold text-zinc-700 transition hover:bg-[#fffaf0]'}
+            className={darkMode ? 'w-full rounded-full border border-white/10 px-5 py-3 text-sm font-bold text-stone-200 transition hover:bg-white/10 sm:w-auto' : 'w-full rounded-full border border-[#eaded0] bg-white px-5 py-3 text-sm font-bold text-zinc-700 transition hover:bg-[#fffaf0] sm:w-auto'}
             disabled={saving}
             onClick={onClose}
             type="button"
@@ -212,7 +212,7 @@ const CreateMemorialModal = ({
             Cancel
           </button>
           <button
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-red-800 px-6 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-red-800 px-6 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             disabled={saving}
             onClick={() => void createShell()}
             type="button"
@@ -352,7 +352,7 @@ const MemorialPortalPage = () => {
 
   return (
     <MemorialPortalShell actions={actions}>
-      <section className={`rounded-3xl border p-4 shadow-lg ${portalSurface.panel(darkMode)}`}>
+      <section className={`rounded-[1.5rem] border p-3 shadow-lg sm:rounded-3xl sm:p-4 ${portalSurface.panel(darkMode)}`}>
         <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
           <label className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${darkMode ? 'border-white/10 bg-white/5' : 'border-[#eaded0] bg-white'}`}>
             <Search size={18} aria-hidden="true" />
@@ -365,7 +365,7 @@ const MemorialPortalPage = () => {
           </label>
           <select
             aria-label="Memorial status"
-            className={`rounded-2xl border px-4 py-3 text-sm font-bold outline-none ${darkMode ? 'border-white/10 bg-zinc-950 text-stone-100' : 'border-[#eaded0] bg-white text-zinc-900'}`}
+            className={`min-h-12 rounded-2xl border px-4 py-3 text-sm font-bold outline-none ${darkMode ? 'border-white/10 bg-zinc-950 text-stone-100' : 'border-[#eaded0] bg-white text-zinc-900'}`}
             onChange={(event) =>
               updateFilters({ status: event.target.value as MemorialWorkflowStatus | 'ALL' })
             }
