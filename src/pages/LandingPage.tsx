@@ -1,5 +1,6 @@
 import DailyVerseSection from '../components/landing/DailyVerseSection';
 import LandingHero from '../components/landing/LandingHero';
+import HomeMemorialBanner from '../features/memorial/public/components/HomeMemorialBanner';
 import HomeResourcesHighlight from '../components/landing/HomeResourcesHighlight';
 import LandingMediaHighlight from '../components/landing/LandingMediaHighlight';
 import Project52LandingSection from '../components/landing/Project52LandingSection';
@@ -15,6 +16,7 @@ const LandingPage = () => {
       <SiteHeader darkMode={darkMode} onToggleTheme={toggleTheme} />
 
       <main className="flex-1">
+        <HomeMemorialBanner darkMode={darkMode} />
         <LandingHero darkMode={darkMode} />
         <DailyVerseSection darkMode={darkMode} />
         <Project52LandingSection darkMode={darkMode} />
