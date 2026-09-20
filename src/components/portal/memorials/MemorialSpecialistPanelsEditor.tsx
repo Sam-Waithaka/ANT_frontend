@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ResponsiveImage from '../../media/ResponsiveImage';
+import CoverImagePicker from '../writing/media/CoverImagePicker';
 import { formatDuration, formatMediaDate } from '../../media/mediaFormat';
 import { getMediaWatchPath } from '../../media/mediaLinks';
 import MemorialWorkflowControls, { MemorialWorkflowStatusBadge } from './MemorialWorkflowControls';
@@ -24,6 +25,10 @@ import {
   fetchAudioVisualSeries,
   fetchAudioVisualSeriesDetail,
 } from '../../../services/audioVisualApi';
+import {
+  normalizeMediaAssetForDisplay,
+  type MediaAsset,
+} from '../../../services/mediaAssetsApi';
 import {
   createMemorialArrangement,
   createMemorialGalleryItem,
@@ -70,6 +75,7 @@ import {
   MEMORIAL_WORKFLOW_STATUSES,
   getMemorialStatusLabel,
 } from '../../../utils/memorialWorkflow';
+import { canUploadMedia } from '../../../utils/permissions';
 
 type MemorialEditorStateUpdater = (
   updater: (current: MemorialEditorState) => MemorialEditorState,
@@ -90,7 +96,7 @@ type CollectionKey =
   | 'recording_sections'
   | 'timeline_events';
 
-type FormValue = boolean | string;
+type FormValue = boolean | string | MediaAsset | null;
 type FormValues = Record<string, FormValue>;
 
 type FieldOption = {
@@ -99,12 +105,15 @@ type FieldOption = {
 };
 
 type FieldConfig = {
+  detailName?: string;
+  emptyText?: string;
   helpText?: string;
-  kind?: 'audio-series' | 'checkbox' | 'date' | 'datetime-local' | 'number' | 'select' | 'text' | 'textarea';
+  kind?: 'audio-series' | 'checkbox' | 'date' | 'datetime-local' | 'media-asset' | 'number' | 'select' | 'text' | 'textarea';
   label: string;
   name: string;
   options?: FieldOption[];
   required?: boolean;
+  selectedText?: string;
 };
 
 type PanelConfig = {
@@ -428,7 +437,10 @@ const fieldClass = (darkMode: boolean) =>
     : 'w-full rounded-2xl border border-[#eaded0] bg-white px-4 py-3 text-sm text-zinc-950 outline-none focus:ring-2 focus:ring-red-800/30';
 
 const fieldValue = (value: FormValue | undefined) =>
-  typeof value === 'boolean' ? value : value ?? '';
+  typeof value === 'boolean' || typeof value === 'string' ? value : '';
+
+const mediaFormAsset = (value: FormValue | undefined) =>
+  value && typeof value === 'object' ? value as MediaAsset : null;
 
 const AudioVisualSeriesSelect = ({
   darkMode,
@@ -511,14 +523,22 @@ const AudioVisualSeriesSelect = ({
 };
 
 const SpecialistField = ({
+  accessToken,
+  canUpload,
   darkMode,
   field,
   onChange,
+  onSelectedAssetChange,
+  selectedAsset,
   value,
 }: {
+  accessToken: string;
+  canUpload: boolean;
   darkMode: boolean;
   field: FieldConfig;
   onChange: (value: FormValue) => void;
+  onSelectedAssetChange?: (asset: MediaAsset | null) => void;
+  selectedAsset?: MediaAsset | null;
   value: FormValue | undefined;
 }) => {
   const kind = field.kind || 'text';
@@ -548,6 +568,24 @@ const SpecialistField = ({
     );
   }
 
+  if (kind === 'media-asset') {
+    return (
+      <CoverImagePicker
+        accessToken={accessToken}
+        canUpload={canUpload}
+        darkMode={darkMode}
+        emptyText={field.emptyText || 'Choose an existing image from the media library.'}
+        label={field.label}
+        onChange={(asset) => {
+          onChange(asset ? String(asset.id) : '');
+          onSelectedAssetChange?.(asset);
+        }}
+        selectedAsset={selectedAsset || null}
+        selectedAssetId={textValue(fieldValue(value))}
+        selectedText={field.selectedText || 'An image is selected.'}
+      />
+    );
+  }
   if (kind === 'textarea') {
     return (
       <label className="grid gap-2 text-sm font-bold">
@@ -753,7 +791,15 @@ const makeConfigs = (): PanelConfig[] => [
       [textValue(record.taken_at), textValue(record.credit)].filter(Boolean).join(' · ') || `Media asset ${textValue(record.media_asset)}`,
     empty: 'No gallery items have been attached yet.',
     fields: [
-      { label: 'Media asset id', name: 'media_asset', required: true },
+      {
+        detailName: 'media_asset_detail',
+        emptyText: 'Choose the image that should appear in the public memorial gallery.',
+        kind: 'media-asset',
+        label: 'Gallery image',
+        name: 'media_asset',
+        required: true,
+        selectedText: 'A gallery image is selected.',
+      },
       { label: 'Caption', name: 'caption' },
       { label: 'Alt text override', name: 'alt_text_override' },
       { kind: 'select', label: 'Category', name: 'category', options: galleryCategoryOptions },
@@ -774,6 +820,7 @@ const makeConfigs = (): PanelConfig[] => [
       category: textValue(record?.category) || 'OTHER',
       credit: textValue(record?.credit),
       media_asset: idValue(record?.media_asset),
+      media_asset_detail: normalizeMediaAssetForDisplay(record?.media_asset_detail as WritingMediaAsset | null | undefined),
       taken_at: textValue(record?.taken_at).slice(0, 10),
     }),
     toPayload: (values, memorialId, mode) => ({
@@ -970,6 +1017,7 @@ const MemorialSpecialistPanelsEditor = ({
   const [activeModal, setActiveModal] = useState<ActiveModal | null>(null);
   const [formValues, setFormValues] = useState<FormValues>({});
   const [saving, setSaving] = useState(false);
+  const canUpload = useMemo(() => canUploadMedia(auth.permissions), [auth.permissions]);
 
   const openModal = (config: PanelConfig, record?: SpecialistRecord) => {
     setActiveModal({ config, record });
@@ -1109,12 +1157,18 @@ const MemorialSpecialistPanelsEditor = ({
           <div className="grid gap-4">
             {activeModal.config.fields.map((field) => (
               <SpecialistField
+                accessToken={auth.accessToken}
+                canUpload={canUpload}
                 darkMode={darkMode}
                 field={field}
                 key={field.name}
                 onChange={(value) =>
                   setFormValues((current) => ({ ...current, [field.name]: value }))
                 }
+                onSelectedAssetChange={field.detailName
+                  ? (asset) => setFormValues((current) => ({ ...current, [field.detailName as string]: asset }))
+                  : undefined}
+                selectedAsset={field.detailName ? mediaFormAsset(formValues[field.detailName]) : null}
                 value={formValues[field.name]}
               />
             ))}
