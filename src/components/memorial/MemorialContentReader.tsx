@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 
 export type MemorialContentReaderEntry = {
@@ -84,15 +83,10 @@ export function MemorialContentReaderModal({
   onClose: () => void;
   open: boolean;
 }) {
-  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
   const dialogRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
   const subtitleId = useId();
   const describedBy = entry?.subtitle ? subtitleId : undefined;
-
-  useEffect(() => {
-    setPortalRoot(document.body);
-  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -131,11 +125,11 @@ export function MemorialContentReaderModal({
     window.setTimeout(() => dialogRef.current?.focus(), 0);
   }, [open]);
 
-  if (!open || !entry || !portalRoot) {
+  if (!open || !entry) {
     return null;
   }
 
-  return createPortal(
+  return (
     <div
       className="memorial-reader-backdrop"
       onMouseDown={(event) => {
@@ -176,7 +170,6 @@ export function MemorialContentReaderModal({
           <div className="memorial-reader-body">{entry.fullContent}</div>
         </div>
       </section>
-    </div>,
-    portalRoot,
+    </div>
   );
 }

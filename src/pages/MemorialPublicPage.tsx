@@ -20,11 +20,23 @@ import {
   getMemorialPage,
   memorialSectionKeys,
 } from "../api/memorialPublic";
+import {
+  MemorialContentPreviewCard,
+  MemorialContentReaderModal,
+  type MemorialContentReaderEntry,
+  useMemorialContentReader,
+} from "../components/memorial/MemorialContentReader";
 import FloatingBrowseControl from "../components/navigation/FloatingBrowseControl";
 import WritingContentRenderer from "../components/writing/WritingContentRenderer";
 import SiteFooter from "../components/navigation/SiteFooter";
 import SiteHeader from "../components/navigation/SiteHeader";
 import { useTheme } from "../hooks/useTheme";
+import {
+  getMemorialBlockExcerpt,
+  getPrimaryBlockImage,
+  shouldCollapseMemorialContent,
+  type MemorialViewportSize,
+} from "../utils/memorialContentPreview";
 import { canRenderMemorialLexicalContent } from "../utils/memorialLexicalContent";
 import { filterItemOwnedMemorialBlocks } from "../utils/memorialPublicBlocks";
 import type { WritingMediaEmbedLike } from "../components/writing/editor/nodes/ChurchBlockMediaContext";
@@ -109,9 +121,14 @@ type PublicImageVariant = {
 };
 
 const MemorialThemeContext = createContext(false);
+const MemorialViewportContext = createContext<MemorialViewportSize>("desktop");
 
 function useMemorialDarkMode() {
   return useContext(MemorialThemeContext);
+}
+
+function useMemorialViewportSize() {
+  return useContext(MemorialViewportContext);
 }
 
 function MemorialPublicPage() {
@@ -232,6 +249,7 @@ function SitePageShell({
 
 function MemorialReadyState({ darkMode, payload }: { darkMode: boolean; payload: MemorialPublicPayload }) {
   const { sections } = payload;
+  const viewportSize = useMemorialViewportState();
   const renderedNavSections = useMemo(
     () => navSectionKeys.filter((sectionKey) => shouldRenderSection(sectionKey, sections)),
     [sections],
@@ -239,40 +257,42 @@ function MemorialReadyState({ darkMode, payload }: { darkMode: boolean; payload:
 
   return (
     <MemorialContentShell darkMode={darkMode}>
-      <MemorialHero payload={payload} visibleSectionKeys={renderedNavSections} />
-      <MemorialSectionNav darkMode={darkMode} sectionKeys={renderedNavSections} />
+      <MemorialViewportContext.Provider value={viewportSize}>
+        <MemorialHero payload={payload} visibleSectionKeys={renderedNavSections} />
+        <MemorialSectionNav darkMode={darkMode} sectionKeys={renderedNavSections} />
 
-      <div>
-        {renderedNavSections.map((sectionKey, index) => {
-          if (isCoreRichSectionKey(sectionKey)) {
+        <div>
+          {renderedNavSections.map((sectionKey, index) => {
+            if (isCoreRichSectionKey(sectionKey)) {
+              return (
+                <CoreMemorialSection
+                  index={index}
+                  key={sectionKey}
+                  section={sections[sectionKey]}
+                  sectionKey={sectionKey}
+                />
+              );
+            }
+
+            if (isRepeatableSectionKey(sectionKey)) {
+              return renderRepeatableSection(sectionKey, index, sections);
+            }
+
+            if (sectionKey === "recordings") {
+              return <RecordingsSection index={index} key={sectionKey} section={sections.recordings} />;
+            }
+
             return (
-              <CoreMemorialSection
+              <MemorialSectionFrame
                 index={index}
                 key={sectionKey}
-                section={sections[sectionKey]}
                 sectionKey={sectionKey}
+                section={sections[sectionKey]}
               />
             );
-          }
-
-          if (isRepeatableSectionKey(sectionKey)) {
-            return renderRepeatableSection(sectionKey, index, sections);
-          }
-
-          if (sectionKey === "recordings") {
-            return <RecordingsSection index={index} key={sectionKey} section={sections.recordings} />;
-          }
-
-          return (
-            <MemorialSectionFrame
-              index={index}
-              key={sectionKey}
-              sectionKey={sectionKey}
-              section={sections[sectionKey]}
-            />
-          );
-        })}
-      </div>
+          })}
+        </div>
+      </MemorialViewportContext.Provider>
     </MemorialContentShell>
   );
 }
@@ -669,8 +689,13 @@ type SectionBlocksProps = {
   titleLevel?: 2 | 3 | 4;
 };
 
-type SectionBlockProps = Omit<SectionBlocksProps, "blocks" | "className"> & {
+type SectionBlockRenderProps = Omit<SectionBlocksProps, "blocks" | "className"> & {
   block: MemorialRichText;
+};
+
+type SectionBlockProps = SectionBlockRenderProps & {
+  onOpenContentReader: (entry: MemorialContentReaderEntry, trigger: HTMLElement) => void;
+  viewportSize: MemorialViewportSize;
 };
 
 export function SectionBlocks({
@@ -685,27 +710,34 @@ export function SectionBlocks({
   titleLevel = 3,
 }: SectionBlocksProps) {
   const renderableBlocks = blocks.filter(hasRenderableBlock);
+  const viewportSize = useMemorialViewportSize();
+  const { activeEntry, closeReader, isReaderOpen, openReader } = useMemorialContentReader();
 
   if (!renderableBlocks.length) {
     return null;
   }
 
   return (
-    <div className={"grid gap-8 " + className}>
-      {renderableBlocks.map((block) => (
-        <SectionBlock
-          block={block}
-          blockClassName={blockClassName}
-          centered={centered}
-          contentClassName={contentClassName}
-          hideBlockTitles={hideBlockTitles}
-          key={block.id}
-          mediaSize={mediaSize}
-          showReadingTime={showReadingTime}
-          titleLevel={titleLevel}
-        />
-      ))}
-    </div>
+    <>
+      <div className={"grid gap-8 " + className}>
+        {renderableBlocks.map((block) => (
+          <SectionBlock
+            block={block}
+            blockClassName={blockClassName}
+            centered={centered}
+            contentClassName={contentClassName}
+            hideBlockTitles={hideBlockTitles}
+            key={block.id}
+            mediaSize={mediaSize}
+            onOpenContentReader={openReader}
+            showReadingTime={showReadingTime}
+            titleLevel={titleLevel}
+            viewportSize={viewportSize}
+          />
+        ))}
+      </div>
+      <MemorialContentReaderModal entry={activeEntry} onClose={closeReader} open={isReaderOpen} />
+    </>
   );
 }
 
@@ -716,9 +748,73 @@ export function SectionBlock({
   contentClassName = "",
   hideBlockTitles = false,
   mediaSize = "medium",
+  onOpenContentReader,
   showReadingTime = true,
   titleLevel = 3,
+  viewportSize,
 }: SectionBlockProps) {
+  if (!shouldCollapseMemorialContent(block, viewportSize)) {
+    return (
+      <SectionBlockFullContent
+        block={block}
+        blockClassName={blockClassName}
+        centered={centered}
+        contentClassName={contentClassName}
+        hideBlockTitles={hideBlockTitles}
+        mediaSize={mediaSize}
+        showReadingTime={showReadingTime}
+        titleLevel={titleLevel}
+      />
+    );
+  }
+
+  const readerTitle = getMemorialReaderTitle(block);
+  const readerSubtitle = block.subtitle || undefined;
+  const readingMeta = getReadingMeta(block);
+  const entry: MemorialContentReaderEntry = {
+    actionLabel: "Read full reflection",
+    eyebrow: block.section_key ? formatMemorialSectionKey(block.section_key) : undefined,
+    fullContent: (
+      <SectionBlockFullContent
+        block={block}
+        blockClassName=""
+        centered={false}
+        contentClassName={contentClassName}
+        hideBlockTitles
+        mediaSize={mediaSize}
+        showReadingTime={false}
+        titleLevel={titleLevel}
+      />
+    ),
+    id: block.id,
+    image: getReaderImage(block, readerTitle, mediaSize),
+    preview: getMemorialBlockExcerpt(block, viewportSize),
+    readingMeta,
+    subtitle: readerSubtitle,
+    title: readerTitle,
+  };
+
+  return (
+    <article className={"memorial-section-block " + (centered ? "mx-auto" : "") + " " + blockClassName}>
+      <MemorialContentPreviewCard
+        className={centered ? "mx-auto max-w-3xl" : "max-w-[48rem]"}
+        entry={entry}
+        onOpen={onOpenContentReader}
+      />
+    </article>
+  );
+}
+
+function SectionBlockFullContent({
+  block,
+  blockClassName = "",
+  centered = false,
+  contentClassName = "",
+  hideBlockTitles = false,
+  mediaSize = "medium",
+  showReadingTime = true,
+  titleLevel = 3,
+}: SectionBlockRenderProps) {
   const usesLexicalContent = richTextUsesLexicalContent(block);
   const hasHeading = !hideBlockTitles && Boolean(block.title || block.subtitle);
   const hasBody = Boolean(
@@ -759,6 +855,35 @@ export function SectionBlock({
         </p>
       ) : null}
     </article>
+  );
+}
+
+function getMemorialReaderTitle(block: MemorialRichText) {
+  return block.title || block.subtitle || "Memorial reading";
+}
+
+function getReadingMeta(block: MemorialRichText) {
+  return block.reading_time_minutes ? block.reading_time_minutes + " min read" : undefined;
+}
+
+function formatMemorialSectionKey(sectionKey: string) {
+  return sectionKey.toLowerCase().replace(/_/g, " ");
+}
+
+function getReaderImage(block: MemorialRichText, alt: string, preferredSize: PublicImageSize) {
+  const image = getPrimaryBlockImage(block);
+
+  if (!getBestImageVariant(image, preferredSize)) {
+    return undefined;
+  }
+
+  return (
+    <PublicImage
+      alt={alt}
+      asset={image}
+      className="h-full w-full object-cover"
+      preferredSize={preferredSize}
+    />
   );
 }
 
@@ -1498,6 +1623,37 @@ function MemorialSectionFrame({
       </div>
     </section>
   );
+}
+
+function getCurrentMemorialViewportSize(): MemorialViewportSize {
+  if (typeof window === "undefined") {
+    return "desktop";
+  }
+
+  if (window.innerWidth < 768) {
+    return "mobile";
+  }
+
+  if (window.innerWidth < 1024) {
+    return "tablet";
+  }
+
+  return "desktop";
+}
+
+function useMemorialViewportState() {
+  const [viewportSize, setViewportSize] = useState<MemorialViewportSize>(() => getCurrentMemorialViewportSize());
+
+  useEffect(() => {
+    const handleResize = () => setViewportSize(getCurrentMemorialViewportSize());
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return viewportSize;
 }
 
 function isRepeatableSectionKey(sectionKey: MemorialNavSectionKey): sectionKey is RepeatableSectionKey {
