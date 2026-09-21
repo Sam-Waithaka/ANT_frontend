@@ -268,11 +268,13 @@ function MemorialReadyState({ darkMode, payload }: { darkMode: boolean; payload:
 
 function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
   const { page, sections } = payload;
-  const heroContent = sections.hero.content;
+  const heroBlocks = sections.hero.blocks;
+  const primaryHeroBlock = heroBlocks[0] ?? null;
+  const supplementalHeroBlocks = heroBlocks.slice(1);
   const hasHeroBackground = Boolean(getBestImageVariant(page.hero_image, "large"));
   const hasPortrait = Boolean(getBestImageVariant(page.portrait_image, "large"));
   const initials = getInitials(page.full_name);
-  const scriptureReferences = heroContent?.scripture_references ?? [];
+  const scriptureReferences = primaryHeroBlock?.scripture_references ?? [];
 
   return (
     <header className="relative isolate overflow-hidden border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]">
@@ -300,13 +302,27 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
             <p className="text-[var(--memorial-muted-strong)]">{page.years_of_service}</p>
           </div>
           <span className="memorial-rule mt-7" aria-hidden="true" />
-          {heroContent?.content_html ? (
+          {primaryHeroBlock?.content_html ? (
             <RichTextBlock
               className="memorial-hero-rich-text memorial-scripture mt-7 max-w-2xl text-xl sm:text-2xl xl:text-3xl"
-              html={heroContent.content_html}
+              html={primaryHeroBlock.content_html}
             />
           ) : null}
           <ScriptureReferences references={scriptureReferences} variant="inline" />
+          {primaryHeroBlock?.media_embeds.length ? (
+            <MediaEmbeds embeds={primaryHeroBlock.media_embeds} preferredSize="medium" />
+          ) : null}
+          {supplementalHeroBlocks.length ? (
+            <SectionBlocks
+              blockClassName="border-t border-[var(--memorial-line)] pt-5"
+              blocks={supplementalHeroBlocks}
+              className="mt-6 max-w-2xl gap-5"
+              contentClassName="text-base sm:text-lg"
+              mediaSize="medium"
+              showReadingTime={false}
+              titleLevel={3}
+            />
+          ) : null}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <a
               className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-[var(--memorial-burgundy)] px-7 text-sm font-black text-[var(--memorial-ink)] transition hover:bg-[var(--memorial-burgundy)] hover:text-white"
