@@ -8,7 +8,7 @@ import type {
 export const ELDER_GEOFFREY_MEMORIAL_ROUTE_SLUG =
   "in-loving-memory-of-elder-geoffrey-kirungu-gicharu";
 
-export const ELDER_GEOFFREY_MEMORIAL_API_SLUG = "elder-geoffrey-kirungu";
+export const ELDER_GEOFFREY_MEMORIAL_API_SLUG = ELDER_GEOFFREY_MEMORIAL_ROUTE_SLUG;
 
 export const memorialSectionKeys = [
   "hero",
