@@ -858,8 +858,100 @@ function SectionBlockFullContent({
   );
 }
 
-function getMemorialReaderTitle(block: MemorialRichText) {
-  return block.title || block.subtitle || "Memorial reading";
+type MemorialItemContentProps = {
+  actionLabel?: string;
+  className?: string;
+  content: MemorialRichText | null;
+  contentClassName?: string;
+  fallbackTitle: string;
+  mediaSize?: PublicImageSize;
+  previewClassName?: string;
+  readerEyebrow?: string;
+  readerImage?: ReactNode;
+  readerSubtitle?: string;
+  titleLevel?: 2 | 3 | 4;
+};
+
+function MemorialItemContent({
+  actionLabel = "Read full reflection",
+  className = "",
+  content,
+  contentClassName = "text-base",
+  fallbackTitle,
+  mediaSize = "medium",
+  previewClassName = "",
+  readerEyebrow,
+  readerImage,
+  readerSubtitle,
+  titleLevel = 4,
+}: MemorialItemContentProps) {
+  const viewportSize = useMemorialViewportSize();
+  const { activeEntry, closeReader, isReaderOpen, openReader } = useMemorialContentReader();
+
+  if (!content || !hasRenderableItemContent(content)) {
+    return null;
+  }
+
+  const title = getMemorialReaderTitle(content, fallbackTitle);
+  const fullContent = (
+    <SectionBlockFullContent
+      block={content}
+      blockClassName=""
+      centered={false}
+      contentClassName={contentClassName}
+      hideBlockTitles
+      mediaSize={mediaSize}
+      showReadingTime={false}
+      titleLevel={titleLevel}
+    />
+  );
+
+  if (!shouldCollapseMemorialContent(content, viewportSize)) {
+    return <div className={className}>{fullContent}</div>;
+  }
+
+  const entry: MemorialContentReaderEntry = {
+    actionLabel,
+    eyebrow: readerEyebrow || (content.section_key ? formatMemorialSectionKey(content.section_key) : undefined),
+    fullContent,
+    id: "item-" + content.id,
+    image: readerImage ?? getReaderImage(content, title, mediaSize),
+    preview: getMemorialBlockExcerpt(content, viewportSize),
+    readingMeta: getReadingMeta(content),
+    subtitle: content.subtitle || readerSubtitle || undefined,
+    title,
+  };
+
+  return (
+    <>
+      <div className={"grid gap-3 " + className}>
+        <p className={"memorial-serif text-base leading-7 text-[var(--memorial-muted-strong)] " + previewClassName}>
+          {entry.preview}
+        </p>
+        <button
+          className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--memorial-line)] px-4 py-2 text-sm font-black text-[var(--memorial-ink)] transition hover:border-[var(--memorial-burgundy)] hover:text-[var(--memorial-burgundy)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--memorial-burgundy)]"
+          onClick={(event) => openReader(entry, event.currentTarget)}
+          type="button"
+        >
+          {actionLabel}
+          <ArrowRight size={15} aria-hidden="true" />
+        </button>
+      </div>
+      <MemorialContentReaderModal entry={activeEntry} onClose={closeReader} open={isReaderOpen} />
+    </>
+  );
+}
+
+function getMemorialReaderTitle(block: MemorialRichText, fallbackTitle = "Memorial reading") {
+  return block.title || block.subtitle || fallbackTitle || "Memorial reading";
+}
+
+function hasRenderableItemContent(content: MemorialRichText) {
+  return Boolean(
+    hasRenderableRichTextBody(content) ||
+      hasRenderableMediaEmbeds(content.media_embeds) ||
+      content.scripture_references.length > 0,
+  );
 }
 
 function getReadingMeta(block: MemorialRichText) {
@@ -871,16 +963,18 @@ function formatMemorialSectionKey(sectionKey: string) {
 }
 
 function getReaderImage(block: MemorialRichText, alt: string, preferredSize: PublicImageSize) {
-  const image = getPrimaryBlockImage(block);
+  return getReaderImageFromAsset(getPrimaryBlockImage(block), alt, preferredSize);
+}
 
-  if (!getBestImageVariant(image, preferredSize)) {
+function getReaderImageFromAsset(asset: MemorialMediaAsset | null, alt: string, preferredSize: PublicImageSize) {
+  if (!getBestImageVariant(asset, preferredSize)) {
     return undefined;
   }
 
   return (
     <PublicImage
       alt={alt}
-      asset={image}
+      asset={asset}
       className="h-full w-full object-cover"
       preferredSize={preferredSize}
     />
@@ -1089,8 +1183,15 @@ function RecordingGroup({
             {group.series?.title || "Memorial recordings"}
           </p>
           <h3 className="mt-3 text-2xl font-black leading-tight text-[var(--memorial-ink)]">{group.title}</h3>
-          {hasRenderableRichTextBody(group.content) ? (
-            <RichTextBlock className="mt-4 text-base" content={group.content} />
+          {group.content && hasRenderableItemContent(group.content) ? (
+            <MemorialItemContent
+              actionLabel="Read recording notes"
+              className="mt-4"
+              content={group.content}
+              fallbackTitle={group.content?.title || group.title}
+              readerEyebrow={group.series?.title || "Memorial recordings"}
+              readerImage={getReaderImageFromAsset(group.series?.cover_image ?? null, group.title, "medium")}
+            />
           ) : group.series?.description ? (
             <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--memorial-muted)]">{group.series.description}</p>
           ) : null}
@@ -1264,9 +1365,14 @@ function MinistryLegacySection({
                   <h3 className="mt-3 text-xl font-black leading-tight text-[var(--memorial-ink)]">
                     {item.content?.title || `${item.display_ministry_name} tribute`}
                   </h3>
-                  {hasRenderableRichTextBody(item.content) ? (
-                    <RichTextBlock className="mt-4 text-base" content={item.content} />
-                  ) : null}
+                  <MemorialItemContent
+                    actionLabel="Read full tribute"
+                    className="mt-4"
+                    content={item.content}
+                    fallbackTitle={item.content?.title || item.display_ministry_name + " tribute"}
+                    readerEyebrow={item.display_ministry_name || item.ministry_name || "Ministry tribute"}
+                    readerImage={getReaderImageFromAsset(item.representative_photo, item.display_ministry_name, "medium")}
+                  />
                   <div className="mt-5 border-t border-[var(--memorial-line)] pt-4 text-sm leading-6 text-[var(--memorial-muted)]">
                     {item.speaker_name ? <p className="font-black text-[var(--memorial-ink)]">{item.speaker_name}</p> : null}
                     {item.speaker_office ? <p>{item.speaker_office}</p> : null}
@@ -1333,9 +1439,14 @@ function PersonalTributesSection({
                     {item.relationship_to_deceased}
                   </p>
                 ) : null}
-                {hasRenderableRichTextBody(item.content) ? (
-                  <RichTextBlock className="mt-5 text-base" content={item.content} />
-                ) : null}
+                <MemorialItemContent
+                  actionLabel="Read full reflection"
+                  className="mt-5"
+                  content={item.content}
+                  fallbackTitle={item.content?.title || item.author_name + " reflection"}
+                  readerEyebrow={item.relationship_to_deceased || item.author_role || "Personal tribute"}
+                  readerImage={getReaderImageFromAsset(item.author_photo, item.author_name, "medium")}
+                />
               </article>
             );
           })}
@@ -1382,9 +1493,14 @@ function LeadershipTimelineSection({
                       <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--memorial-burgundy)]">{dateLabel}</p>
                     ) : null}
                     <h3 className="mt-3 text-2xl font-black leading-tight text-[var(--memorial-ink)]">{item.title}</h3>
-                    {hasRenderableRichTextBody(item.content) ? (
-                      <RichTextBlock className="mt-4 text-base" content={item.content} />
-                    ) : null}
+                    <MemorialItemContent
+                      actionLabel="Read milestone details"
+                      className="mt-4"
+                      content={item.content}
+                      fallbackTitle={item.title}
+                      readerEyebrow={dateLabel || "Leadership milestone"}
+                      readerImage={getReaderImageFromAsset(item.image, item.title, "medium")}
+                    />
                   </div>
                 </div>
               </article>
@@ -1504,9 +1620,13 @@ function ArrangementsSection({
                   ) : null}
                 </div>
 
-                {hasRenderableRichTextBody(item.content) ? (
-                  <RichTextBlock className="mt-5 text-base" content={item.content} />
-                ) : null}
+                <MemorialItemContent
+                  actionLabel="Read arrangement details"
+                  className="mt-5"
+                  content={item.content}
+                  fallbackTitle={item.content?.title || item.title}
+                  readerEyebrow={item.arrangement_type_label || "Arrangement"}
+                />
 
                 {item.livestream_url || programmeUrl ? (
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
