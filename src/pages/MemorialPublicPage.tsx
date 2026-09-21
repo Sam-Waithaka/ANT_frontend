@@ -462,14 +462,15 @@ function CoreMemorialSection({
   section: MemorialPublicPayload["sections"][CoreRichSectionKey];
   sectionKey: CoreRichSectionKey;
 }) {
-  const content = section.content;
+  const { blocks } = section;
 
-  if (!content) {
+  if (!blocks.length) {
     return null;
   }
 
   const mutedBand = index % 2 === 1;
   const isClosingHope = sectionKey === "closing_hope";
+  const sectionTitle = section.label || friendlySectionLabels[sectionKey];
   const sectionClass = mutedBand
     ? "scroll-mt-36 border-b border-[var(--memorial-line)] bg-[var(--memorial-wash)]"
     : "scroll-mt-36 border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]";
@@ -483,15 +484,17 @@ function CoreMemorialSection({
             {sectionEyebrows[sectionKey]}
           </p>
           <h2 className="mx-auto mt-4 max-w-3xl text-4xl font-black leading-none text-[var(--memorial-ink)] sm:text-5xl">
-            {content.title || section.label || friendlySectionLabels[sectionKey]}
+            {sectionTitle}
           </h2>
-          {content.subtitle ? (
-            <p className="mx-auto mt-4 max-w-2xl text-base font-bold text-[var(--memorial-muted-strong)]">{content.subtitle}</p>
-          ) : null}
           <span className="memorial-rule mx-auto mt-7" aria-hidden="true" />
-          <RichTextBlock className="mx-auto mt-8 max-w-3xl text-xl sm:text-2xl" html={content.content_html} />
-          <ScriptureReferences centered references={content.scripture_references} />
-          <MediaEmbeds embeds={content.media_embeds} />
+          <SectionBlocks
+            blocks={blocks}
+            centered
+            className="mx-auto mt-8 max-w-3xl"
+            contentClassName="text-xl sm:text-2xl"
+            mediaSize="medium"
+            titleLevel={3}
+          />
         </div>
       </section>
     );
@@ -505,28 +508,12 @@ function CoreMemorialSection({
             {sectionEyebrows[sectionKey]}
           </p>
           <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
-            {content.title || section.label || friendlySectionLabels[sectionKey]}
+            {sectionTitle}
           </h2>
-          {content.subtitle ? (
-            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[var(--memorial-muted)]">{content.subtitle}</p>
-          ) : null}
           <span className="memorial-rule mt-6" aria-hidden="true" />
         </div>
 
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
-          <div>
-            <RichTextBlock html={content.content_html} />
-            <MediaEmbeds embeds={content.media_embeds} />
-          </div>
-          <aside className="space-y-5 border-[var(--memorial-line)] text-sm leading-6 text-[var(--memorial-muted)] xl:border-l xl:pl-8">
-            <ScriptureReferences references={content.scripture_references} />
-            {content.reading_time_minutes ? (
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--memorial-muted-soft)]">
-                {content.reading_time_minutes} min read
-              </p>
-            ) : null}
-          </aside>
-        </div>
+        <SectionBlocks blocks={blocks} className="min-w-0 gap-10" titleLevel={3} />
       </div>
     </section>
   );
@@ -780,7 +767,7 @@ function RecordingsSection({
 }) {
   const groups = sortByOrder(section.items).filter((group) => group.content || group.series || group.items.length > 0);
 
-  if (!section.content && !groups.length) {
+  if (!section.blocks.length && !groups.length) {
     return null;
   }
 
@@ -792,28 +779,21 @@ function RecordingsSection({
             {sectionEyebrows.recordings}
           </p>
           <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
-            {section.content?.title || section.label || friendlySectionLabels.recordings}
+            {section.label || friendlySectionLabels.recordings}
           </h2>
-          {section.content?.subtitle ? (
-            <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[var(--memorial-muted)]">{section.content.subtitle}</p>
-          ) : null}
           <span className="memorial-rule mt-6" aria-hidden="true" />
         </div>
 
         <div>
-          {section.content?.content_html ? (
-            <div className="mb-8">
-              <RichTextBlock html={section.content.content_html} />
-              <ScriptureReferences references={section.content.scripture_references} />
-              <MediaEmbeds embeds={section.content.media_embeds} />
+          <SectionBlocks blocks={section.blocks} className="mb-8" contentClassName="text-base" titleLevel={3} />
+
+          {groups.length ? (
+            <div className="grid gap-8">
+              {groups.map((group) => (
+                <RecordingGroup group={group} key={group.id} />
+              ))}
             </div>
           ) : null}
-
-          <div className="grid gap-8">
-            {groups.map((group) => (
-              <RecordingGroup group={group} key={group.id} />
-            ))}
-          </div>
         </div>
       </div>
     </section>
@@ -1300,8 +1280,6 @@ function RepeatableSectionGrid({
   section: MemorialPublicPayload["sections"][RepeatableSectionKey];
   sectionKey: RepeatableSectionKey;
 }) {
-  const content = section.content;
-
   return (
     <div className="mx-auto grid w-full max-w-[88rem] gap-8 px-6 py-12 sm:px-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-16 xl:grid-cols-[22rem_minmax(0,1fr)]">
       <div className="border-[var(--memorial-line)] lg:border-r lg:pr-8">
@@ -1309,22 +1287,13 @@ function RepeatableSectionGrid({
           {sectionEyebrows[sectionKey]}
         </p>
         <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
-          {content?.title || section.label || friendlySectionLabels[sectionKey]}
+          {section.label || friendlySectionLabels[sectionKey]}
         </h2>
-        {content?.subtitle ? (
-          <p className="mt-4 max-w-sm text-sm font-bold leading-6 text-[var(--memorial-muted)]">{content.subtitle}</p>
-        ) : null}
         <span className="memorial-rule mt-6" aria-hidden="true" />
       </div>
 
       <div>
-        {content?.content_html ? (
-          <div className="mb-8">
-            <RichTextBlock html={content.content_html} />
-            <ScriptureReferences references={content.scripture_references} />
-            <MediaEmbeds embeds={content.media_embeds} />
-          </div>
-        ) : null}
+        <SectionBlocks blocks={section.blocks} className="mb-8" contentClassName="text-base" titleLevel={3} />
         {children}
       </div>
     </div>
@@ -1339,9 +1308,12 @@ function MemorialSectionFrame({
   section: MemorialPublicPayload["sections"][MemorialNavSectionKey];
   sectionKey: MemorialNavSectionKey;
 }) {
-  const content = section.content;
   const items = "items" in section ? section.items : [];
   const mutedBand = index % 2 === 1;
+
+  if (!section.blocks.length && !items.length) {
+    return null;
+  }
 
   return (
     <section
@@ -1354,27 +1326,17 @@ function MemorialSectionFrame({
             {sectionEyebrows[sectionKey]}
           </p>
           <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
-            {content?.title || section.label || friendlySectionLabels[sectionKey]}
+            {section.label || friendlySectionLabels[sectionKey]}
           </h2>
           <span className="memorial-rule mt-6" aria-hidden="true" />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_15rem] lg:items-start">
-          <div>
-            {content?.subtitle ? (
-              <p className="mb-4 text-base font-bold text-[var(--memorial-muted-strong)]">{content.subtitle}</p>
-            ) : null}
-            {content?.content_html ? <RichTextBlock html={content.content_html} /> : null}
-            {content ? <MediaEmbeds embeds={content.media_embeds} /> : null}
-          </div>
+          <SectionBlocks blocks={section.blocks} titleLevel={3} />
           <aside className="text-sm leading-6 text-[var(--memorial-muted)]">
             {items.length > 0 ? (
               <p>
                 {items.length} {items.length === 1 ? "entry" : "entries"} prepared for this section.
-              </p>
-            ) : content?.scripture_references.length ? (
-              <p className="memorial-serif italic">
-                {content.scripture_references.map((reference) => reference.display_text).join(" · ")}
               </p>
             ) : (
               <p>{section.label || friendlySectionLabels[sectionKey]}</p>
@@ -1470,7 +1432,7 @@ function isCoreRichSectionKey(sectionKey: MemorialNavSectionKey): sectionKey is 
 }
 function shouldRenderSection(section: MemorialPublicPayload["sections"][MemorialNavSectionKey]) {
   const items = "items" in section ? section.items : [];
-  return Boolean(section.content || items.length > 0);
+  return Boolean(section.blocks.length || items.length > 0);
 }
 
 function getBestImageVariant(asset: MemorialMediaAsset | null, preferredSize: PublicImageSize): PublicImageVariant | null {
