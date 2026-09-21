@@ -222,13 +222,13 @@ function SitePageShell({
 function MemorialReadyState({ darkMode, payload }: { darkMode: boolean; payload: MemorialPublicPayload }) {
   const { sections } = payload;
   const renderedNavSections = useMemo(
-    () => navSectionKeys.filter((sectionKey) => shouldRenderSection(sections[sectionKey])),
+    () => navSectionKeys.filter((sectionKey) => shouldRenderSection(sectionKey, sections)),
     [sections],
   );
 
   return (
     <MemorialContentShell darkMode={darkMode}>
-      <MemorialHero payload={payload} />
+      <MemorialHero payload={payload} visibleSectionKeys={renderedNavSections} />
       <MemorialSectionNav darkMode={darkMode} sectionKeys={renderedNavSections} />
 
       <div>
@@ -266,15 +266,24 @@ function MemorialReadyState({ darkMode, payload }: { darkMode: boolean; payload:
   );
 }
 
-function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
+function MemorialHero({
+  payload,
+  visibleSectionKeys,
+}: {
+  payload: MemorialPublicPayload;
+  visibleSectionKeys: MemorialNavSectionKey[];
+}) {
   const { page, sections } = payload;
   const heroBlocks = sections.hero.blocks;
-  const primaryHeroBlock = heroBlocks[0] ?? null;
-  const supplementalHeroBlocks = heroBlocks.slice(1);
+  const renderableHeroBlocks = heroBlocks.filter(hasRenderableBlock);
+  const primaryHeroBlock = renderableHeroBlocks[0] ?? null;
+  const supplementalHeroBlocks = renderableHeroBlocks.slice(1);
   const hasHeroBackground = Boolean(getBestImageVariant(page.hero_image, "large"));
   const hasPortrait = Boolean(getBestImageVariant(page.portrait_image, "large"));
   const initials = getInitials(page.full_name);
   const scriptureReferences = primaryHeroBlock?.scripture_references ?? [];
+  const showLifeLegacyCta = visibleSectionKeys.includes("life_service");
+  const showArrangementsCta = visibleSectionKeys.includes("arrangements");
 
   return (
     <header className="relative isolate overflow-hidden border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]">
@@ -323,22 +332,28 @@ function MemorialHero({ payload }: { payload: MemorialPublicPayload }) {
               titleLevel={3}
             />
           ) : null}
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
-              className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-[var(--memorial-burgundy)] px-7 text-sm font-black text-[var(--memorial-ink)] transition hover:bg-[var(--memorial-burgundy)] hover:text-white"
-              href="#life_service"
-            >
-              His life & legacy
-              <ArrowRight aria-hidden="true" size={18} strokeWidth={2} />
-            </a>
-            <a
-              className="inline-flex min-h-12 items-center justify-center gap-2 px-2 text-sm font-bold text-[var(--memorial-muted-strong)] underline decoration-[var(--memorial-line)] underline-offset-8 transition hover:text-[var(--memorial-burgundy)]"
-              href="#arrangements"
-            >
-              Service arrangements
-              <ArrowDown aria-hidden="true" size={17} strokeWidth={2} />
-            </a>
-          </div>
+          {showLifeLegacyCta || showArrangementsCta ? (
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              {showLifeLegacyCta ? (
+                <a
+                  className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-[var(--memorial-burgundy)] px-7 text-sm font-black text-[var(--memorial-ink)] transition hover:bg-[var(--memorial-burgundy)] hover:text-white"
+                  href="#life_service"
+                >
+                  His life & legacy
+                  <ArrowRight aria-hidden="true" size={18} strokeWidth={2} />
+                </a>
+              ) : null}
+              {showArrangementsCta ? (
+                <a
+                  className="inline-flex min-h-12 items-center justify-center gap-2 px-2 text-sm font-bold text-[var(--memorial-muted-strong)] underline decoration-[var(--memorial-line)] underline-offset-8 transition hover:text-[var(--memorial-burgundy)]"
+                  href="#arrangements"
+                >
+                  Service arrangements
+                  <ArrowDown aria-hidden="true" size={17} strokeWidth={2} />
+                </a>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <figure className="order-1 relative mx-auto aspect-[4/5] w-full max-w-[34rem] overflow-hidden rounded-sm border border-black/10 bg-[#191817] shadow-2xl shadow-black/10 xl:order-none xl:max-w-none xl:self-center">
@@ -394,6 +409,10 @@ function MemorialSectionNav({ darkMode, sectionKeys }: { darkMode: boolean; sect
     window.history.replaceState(null, "", `#${sectionKey}`);
     close?.();
   };
+
+  if (!sectionKeys.length) {
+    return null;
+  }
 
   return (
     <>
@@ -464,7 +483,7 @@ function CoreMemorialSection({
 }) {
   const { blocks } = section;
 
-  if (!blocks.length) {
+  if (!hasRenderableBlocks(blocks)) {
     return null;
   }
 
@@ -559,13 +578,15 @@ export function SectionBlocks({
   showReadingTime = true,
   titleLevel = 3,
 }: SectionBlocksProps) {
-  if (!blocks.length) {
+  const renderableBlocks = blocks.filter(hasRenderableBlock);
+
+  if (!renderableBlocks.length) {
     return null;
   }
 
   return (
     <div className={`grid gap-8 ${className}`}>
-      {blocks.map((block) => (
+      {renderableBlocks.map((block) => (
         <SectionBlock
           block={block}
           blockClassName={blockClassName}
@@ -765,9 +786,10 @@ function RecordingsSection({
   index: number;
   section: MemorialPublicPayload["sections"]["recordings"];
 }) {
-  const groups = sortByOrder(section.items).filter((group) => group.content || group.series || group.items.length > 0);
+  const groups = getRenderableRecordingGroups(section.items);
+  const hasIntro = hasRenderableBlocks(section.blocks);
 
-  if (!section.blocks.length && !groups.length) {
+  if (!hasIntro && !groups.length) {
     return null;
   }
 
@@ -806,19 +828,7 @@ function RecordingGroup({
   group: MemorialPublicPayload["sections"]["recordings"]["items"][number];
 }) {
   const hasSeriesCover = Boolean(getBestImageVariant(group.series?.cover_image ?? null, "medium"));
-  const recordings = [...group.items].sort((first, second) => {
-    const firstPriority = first.priority ?? 0;
-    const secondPriority = second.priority ?? 0;
-
-    if (firstPriority !== secondPriority) {
-      return secondPriority - firstPriority;
-    }
-
-    const firstDate = first.published_at ? new Date(first.published_at).getTime() : 0;
-    const secondDate = second.published_at ? new Date(second.published_at).getTime() : 0;
-
-    return secondDate - firstDate;
-  });
+  const recordings = getRenderableRecordingItems(group.items);
 
   return (
     <article className="rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] p-5 shadow-sm shadow-black/5 sm:p-6">
@@ -976,12 +986,18 @@ function MinistryLegacySection({
   index: number;
   section: MemorialPublicPayload["sections"]["ministry_legacy"];
 }) {
-  const items = sortByOrder(section.items);
+  const items = getRenderableMinistryLegacyItems(section.items);
+  const hasIntro = hasRenderableBlocks(section.blocks);
+
+  if (!hasIntro && !items.length) {
+    return null;
+  }
 
   return (
     <section className={getSectionBandClass(index)} id="ministry_legacy">
       <RepeatableSectionGrid section={section} sectionKey="ministry_legacy">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {items.length ? (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
             const hasPhoto = Boolean(getBestImageVariant(item.representative_photo, "medium"));
 
@@ -1020,7 +1036,8 @@ function MinistryLegacySection({
               </article>
             );
           })}
-        </div>
+          </div>
+        ) : null}
       </RepeatableSectionGrid>
     </section>
   );
@@ -1033,12 +1050,18 @@ function PersonalTributesSection({
   index: number;
   section: MemorialPublicPayload["sections"]["personal_tributes"];
 }) {
-  const items = sortByOrder(section.items);
+  const items = getRenderablePersonalTributeItems(section.items);
+  const hasIntro = hasRenderableBlocks(section.blocks);
+
+  if (!hasIntro && !items.length) {
+    return null;
+  }
 
   return (
     <section className={getSectionBandClass(index)} id="personal_tributes">
       <RepeatableSectionGrid section={section} sectionKey="personal_tributes">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {items.length ? (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
             const hasPhoto = Boolean(getBestImageVariant(item.author_photo, "thumb"));
 
@@ -1076,7 +1099,8 @@ function PersonalTributesSection({
               </article>
             );
           })}
-        </div>
+          </div>
+        ) : null}
       </RepeatableSectionGrid>
     </section>
   );
@@ -1089,12 +1113,18 @@ function LeadershipTimelineSection({
   index: number;
   section: MemorialPublicPayload["sections"]["leadership_timeline"];
 }) {
-  const items = sortByOrder(section.items);
+  const items = getRenderableTimelineItems(section.items);
+  const hasIntro = hasRenderableBlocks(section.blocks);
+
+  if (!hasIntro && !items.length) {
+    return null;
+  }
 
   return (
     <section className={getSectionBandClass(index)} id="leadership_timeline">
       <RepeatableSectionGrid section={section} sectionKey="leadership_timeline">
-        <div className="relative grid gap-6 before:absolute before:left-4 before:top-2 before:hidden before:h-[calc(100%-1rem)] before:w-px before:bg-[var(--memorial-line)] md:before:block">
+        {items.length ? (
+          <div className="relative grid gap-6 before:absolute before:left-4 before:top-2 before:hidden before:h-[calc(100%-1rem)] before:w-px before:bg-[var(--memorial-line)] md:before:block">
           {items.map((item) => {
             const hasImage = Boolean(getBestImageVariant(item.image, "medium"));
             const dateLabel = formatTimelineDate(item);
@@ -1119,7 +1149,8 @@ function LeadershipTimelineSection({
               </article>
             );
           })}
-        </div>
+          </div>
+        ) : null}
       </RepeatableSectionGrid>
     </section>
   );
@@ -1132,12 +1163,18 @@ function GallerySection({
   index: number;
   section: MemorialPublicPayload["sections"]["gallery"];
 }) {
-  const items = sortByOrder(section.items);
+  const items = getRenderableGalleryItems(section.items);
+  const hasIntro = hasRenderableBlocks(section.blocks);
+
+  if (!hasIntro && !items.length) {
+    return null;
+  }
 
   return (
     <section className={getSectionBandClass(index)} id="gallery">
       <RepeatableSectionGrid section={section} sectionKey="gallery">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {items.length ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {items.map((item, itemIndex) => {
             const imageSize: PublicImageSize = itemIndex === 0 ? "large" : "medium";
 
@@ -1167,7 +1204,8 @@ function GallerySection({
               </figure>
             );
           })}
-        </div>
+          </div>
+        ) : null}
       </RepeatableSectionGrid>
     </section>
   );
@@ -1180,25 +1218,18 @@ function ArrangementsSection({
   index: number;
   section: MemorialPublicPayload["sections"]["arrangements"];
 }) {
-  const items = [...section.items].sort((first, second) => {
-    if (first.is_prominent !== second.is_prominent) {
-      return first.is_prominent ? -1 : 1;
-    }
+  const items = getRenderableArrangementItems(section.items);
+  const hasIntro = hasRenderableBlocks(section.blocks);
 
-    const firstTime = first.starts_at ? new Date(first.starts_at).getTime() : Number.MAX_SAFE_INTEGER;
-    const secondTime = second.starts_at ? new Date(second.starts_at).getTime() : Number.MAX_SAFE_INTEGER;
-
-    if (firstTime !== secondTime) {
-      return firstTime - secondTime;
-    }
-
-    return first.order - second.order;
-  });
+  if (!hasIntro && !items.length) {
+    return null;
+  }
 
   return (
     <section className={getSectionBandClass(index)} id="arrangements">
       <RepeatableSectionGrid section={section} sectionKey="arrangements">
-        <div className="grid gap-5 lg:grid-cols-3">
+        {items.length ? (
+          <div className="grid gap-5 lg:grid-cols-3">
           {items.map((item) => {
             const programmeUrl = getBestImageVariant(item.programme_asset, "large")?.url || "";
 
@@ -1265,7 +1296,8 @@ function ArrangementsSection({
               </article>
             );
           })}
-        </div>
+          </div>
+        ) : null}
       </RepeatableSectionGrid>
     </section>
   );
@@ -1311,7 +1343,7 @@ function MemorialSectionFrame({
   const items = "items" in section ? section.items : [];
   const mutedBand = index % 2 === 1;
 
-  if (!section.blocks.length && !items.length) {
+  if (!hasRenderableBlocks(section.blocks) && !items.length) {
     return null;
   }
 
@@ -1430,9 +1462,168 @@ function formatDuration(durationSeconds: number | null) {
 function isCoreRichSectionKey(sectionKey: MemorialNavSectionKey): sectionKey is CoreRichSectionKey {
   return coreRichSectionKeys.includes(sectionKey as CoreRichSectionKey);
 }
-function shouldRenderSection(section: MemorialPublicPayload["sections"][MemorialNavSectionKey]) {
-  const items = "items" in section ? section.items : [];
-  return Boolean(section.blocks.length || items.length > 0);
+function shouldRenderSection(sectionKey: MemorialNavSectionKey, sections: MemorialPublicPayload["sections"]) {
+  switch (sectionKey) {
+    case "official_statement":
+    case "life_service":
+    case "family":
+    case "closing_hope":
+      return hasRenderableBlocks(sections[sectionKey].blocks);
+    case "ministry_legacy":
+      return hasRenderableBlocks(sections.ministry_legacy.blocks) || getRenderableMinistryLegacyItems(sections.ministry_legacy.items).length > 0;
+    case "personal_tributes":
+      return hasRenderableBlocks(sections.personal_tributes.blocks) || getRenderablePersonalTributeItems(sections.personal_tributes.items).length > 0;
+    case "leadership_timeline":
+      return hasRenderableBlocks(sections.leadership_timeline.blocks) || getRenderableTimelineItems(sections.leadership_timeline.items).length > 0;
+    case "gallery":
+      return hasRenderableBlocks(sections.gallery.blocks) || getRenderableGalleryItems(sections.gallery.items).length > 0;
+    case "recordings":
+      return hasRenderableBlocks(sections.recordings.blocks) || getRenderableRecordingGroups(sections.recordings.items).length > 0;
+    case "arrangements":
+      return hasRenderableBlocks(sections.arrangements.blocks) || getRenderableArrangementItems(sections.arrangements.items).length > 0;
+  }
+}
+
+function hasRenderableBlocks(blocks: MemorialRichText[]) {
+  return blocks.some(hasRenderableBlock);
+}
+
+function hasRenderableBlock(block: MemorialRichText) {
+  return Boolean(
+    hasRenderableText(block.title) ||
+      hasRenderableText(block.subtitle) ||
+      hasRenderableText(block.content_html) ||
+      hasRenderableMediaEmbeds(block.media_embeds) ||
+      block.scripture_references.length > 0 ||
+      (block.reading_time_minutes ?? 0) > 0,
+  );
+}
+
+function hasRenderableRichTextContent(content: MemorialRichText | null) {
+  return content ? hasRenderableBlock(content) : false;
+}
+
+function hasRenderableMediaEmbeds(embeds: MemorialMediaEmbed[]) {
+  return embeds.some((embed) => Boolean(getBestImageVariant(embed.media_asset, "medium")));
+}
+
+function hasRenderableText(value: string | null | undefined) {
+  return Boolean(value?.trim());
+}
+
+function getRenderableMinistryLegacyItems(items: MemorialPublicPayload["sections"]["ministry_legacy"]["items"]) {
+  return sortByOrder(items).filter((item) =>
+    Boolean(
+      hasRenderableText(item.display_ministry_name) ||
+        hasRenderableText(item.ministry_name) ||
+        hasRenderableText(item.speaker_name) ||
+        hasRenderableText(item.speaker_office) ||
+        Boolean(getBestImageVariant(item.representative_photo, "medium")) ||
+        hasRenderableRichTextContent(item.content),
+    ),
+  );
+}
+
+function getRenderablePersonalTributeItems(items: MemorialPublicPayload["sections"]["personal_tributes"]["items"]) {
+  return sortByOrder(items).filter((item) =>
+    Boolean(
+      hasRenderableText(item.author_name) ||
+        hasRenderableText(item.author_role) ||
+        hasRenderableText(item.related_ministry_name) ||
+        hasRenderableText(item.relationship_to_deceased) ||
+        Boolean(getBestImageVariant(item.author_photo, "thumb")) ||
+        hasRenderableRichTextContent(item.content),
+    ),
+  );
+}
+
+function getRenderableTimelineItems(items: MemorialPublicPayload["sections"]["leadership_timeline"]["items"]) {
+  return sortByOrder(items).filter((item) =>
+    Boolean(
+      hasRenderableText(item.title) ||
+        hasRenderableText(formatTimelineDate(item)) ||
+        Boolean(getBestImageVariant(item.image, "medium")) ||
+        hasRenderableRichTextContent(item.content),
+    ),
+  );
+}
+
+function getRenderableGalleryItems(items: MemorialPublicPayload["sections"]["gallery"]["items"]) {
+  return sortByOrder(items).filter((item) => Boolean(getBestImageVariant(item.media_asset, "medium")));
+}
+
+function getRenderableRecordingGroups(items: MemorialPublicPayload["sections"]["recordings"]["items"]) {
+  return sortByOrder(items).filter((group) =>
+    Boolean(
+      hasRenderableText(group.title) ||
+        hasRenderableRichTextContent(group.content) ||
+        hasRenderableText(group.series?.title) ||
+        hasRenderableText(group.series?.description) ||
+        Boolean(getBestImageVariant(group.series?.cover_image ?? null, "medium")) ||
+        getRenderableRecordingItems(group.items).length > 0,
+    ),
+  );
+}
+
+function getRenderableRecordingItems(items: MemorialPublicPayload["sections"]["recordings"]["items"][number]["items"]) {
+  return [...items]
+    .filter((item) =>
+      Boolean(
+        hasRenderableText(item.title) ||
+          hasRenderableText(item.description_excerpt) ||
+          hasRenderableText(item.description) ||
+          hasRenderableText(item.thumbnail_url) ||
+          hasRenderableText(item.embed_url) ||
+          hasRenderableText(item.external_url) ||
+          hasRenderableText(item.speaker) ||
+          hasRenderableText(item.scripture_reference) ||
+          hasRenderableText(formatDuration(item.duration_seconds)) ||
+          hasRenderableText(formatDateTime(item.published_at, null, "date")),
+      ),
+    )
+    .sort((first, second) => {
+      const firstPriority = first.priority ?? 0;
+      const secondPriority = second.priority ?? 0;
+
+      if (firstPriority !== secondPriority) {
+        return secondPriority - firstPriority;
+      }
+
+      const firstDate = first.published_at ? new Date(first.published_at).getTime() : 0;
+      const secondDate = second.published_at ? new Date(second.published_at).getTime() : 0;
+
+      return secondDate - firstDate;
+    });
+}
+
+function getRenderableArrangementItems(items: MemorialPublicPayload["sections"]["arrangements"]["items"]) {
+  return [...items]
+    .filter((item) =>
+      Boolean(
+        hasRenderableText(item.arrangement_type_label) ||
+          hasRenderableText(item.title) ||
+          hasRenderableText(formatDateTime(item.starts_at, item.ends_at)) ||
+          hasRenderableText(item.location_name) ||
+          hasRenderableText(item.address) ||
+          hasRenderableText(item.livestream_url) ||
+          Boolean(getBestImageVariant(item.programme_asset, "large")) ||
+          hasRenderableRichTextContent(item.content),
+      ),
+    )
+    .sort((first, second) => {
+      if (first.is_prominent !== second.is_prominent) {
+        return first.is_prominent ? -1 : 1;
+      }
+
+      const firstTime = first.starts_at ? new Date(first.starts_at).getTime() : Number.MAX_SAFE_INTEGER;
+      const secondTime = second.starts_at ? new Date(second.starts_at).getTime() : Number.MAX_SAFE_INTEGER;
+
+      if (firstTime !== secondTime) {
+        return firstTime - secondTime;
+      }
+
+      return first.order - second.order;
+    });
 }
 
 function getBestImageVariant(asset: MemorialMediaAsset | null, preferredSize: PublicImageSize): PublicImageVariant | null {
