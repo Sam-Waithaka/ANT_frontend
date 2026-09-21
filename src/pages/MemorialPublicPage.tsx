@@ -869,6 +869,7 @@ type MemorialItemContentProps = {
   contentClassName?: string;
   fallbackTitle: string;
   explicitImage?: MemorialMediaAsset | null;
+  forceReader?: boolean;
   fallbackVisual?: ReactNode;
   imageAlt?: string;
   mediaSize?: PublicImageSize;
@@ -886,6 +887,7 @@ function MemorialItemContent({
   explicitImage = null,
   fallbackTitle,
   fallbackVisual,
+  forceReader = false,
   imageAlt,
   mediaSize = "medium",
   previewClassName = "",
@@ -914,7 +916,9 @@ function MemorialItemContent({
     />
   );
 
-  if (!shouldCollapseMemorialContent(content, viewportSize)) {
+  const shouldUseReader = forceReader || shouldCollapseMemorialContent(content, viewportSize);
+
+  if (!shouldUseReader) {
     return <div className={className}>{fullContent}</div>;
   }
 
@@ -1505,6 +1509,7 @@ function PersonalTributesSection({
                   fallbackTitle={item.content?.title || item.author_name + " reflection"}
                   explicitImage={item.author_photo}
                   fallbackVisual={getInitialsPreviewFallback(item.author_name || "Personal tribute")}
+                  forceReader
                   imageAlt={item.author_name || "Personal tribute"}
                   readerEyebrow={item.relationship_to_deceased || item.author_role || "Personal tribute"}
                 />
