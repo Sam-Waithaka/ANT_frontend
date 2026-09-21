@@ -23,9 +23,8 @@ import {
 import {
   MemorialContentPreviewCard,
   MemorialContentReaderModal,
-  type MemorialContentReaderEntry,
-  useMemorialContentReader,
 } from "../components/memorial/MemorialContentReader";
+import { useMemorialContentReader, type MemorialContentReaderEntry } from "../components/memorial/useMemorialContentReader";
 import FloatingBrowseControl from "../components/navigation/FloatingBrowseControl";
 import WritingContentRenderer from "../components/writing/WritingContentRenderer";
 import SiteFooter from "../components/navigation/SiteFooter";
@@ -946,7 +945,7 @@ function MemorialItemContent({
         <button
           aria-haspopup="dialog"
           aria-label={`${actionLabel}: ${title}`}
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--memorial-line)] px-4 py-2 text-sm font-black text-[var(--memorial-ink)] transition hover:border-[var(--memorial-burgundy)] hover:text-[var(--memorial-burgundy)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--memorial-burgundy)]"
+          className="memorial-reader-inline-action"
           onClick={(event) => openReader(entry, event.currentTarget)}
           type="button"
         >
@@ -1086,7 +1085,7 @@ function ScriptureReferences({
     <div className={`mt-6 flex flex-wrap gap-2 ${centered ? "justify-center" : ""}`}>
       {references.map((reference) => (
         <span
-          className="rounded-full border border-[var(--memorial-line)] bg-[var(--memorial-chip)] px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-[var(--memorial-burgundy-dark)]"
+          className="memorial-pill"
           key={reference.id}
         >
           {reference.display_text}
@@ -1146,14 +1145,14 @@ function MediaEmbeds({ embeds, preferredSize = "medium" }: { embeds: MemorialMed
     <div className="mt-8 grid gap-5 sm:grid-cols-2">
       {visibleEmbeds.map((embed) => (
         <figure
-          className="overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-paper)] shadow-sm shadow-black/5"
+          className="memorial-card memorial-card--flush"
           key={embed.embed_id || embed.id}
         >
           <PublicImage
             alt={embed.media_asset.title}
             altTextOverride={embed.alt_text_override}
             asset={embed.media_asset}
-            className="aspect-[4/3] w-full object-cover"
+            className="memorial-card-image memorial-card-image--wide"
             preferredSize={preferredSize}
           />
           {embed.caption_override || embed.media_asset.caption ? (
@@ -1219,17 +1218,17 @@ function RecordingGroup({
   const recordings = getRenderableRecordingItems(group.items);
 
   return (
-    <article className="rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] p-5 shadow-sm shadow-black/5 sm:p-6">
+    <article className="memorial-card memorial-card--padded">
       <div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)]">
         {hasSeriesCover ? (
           <PublicImage
             alt={group.title}
             asset={group.series?.cover_image ?? null}
-            className="aspect-square w-full rounded-sm object-cover"
+            className="memorial-card-image memorial-card-image--square"
             preferredSize="medium"
           />
         ) : (
-          <div className="grid aspect-square w-full place-items-center rounded-sm bg-[#211f1d] text-stone-200">
+          <div className="memorial-card-media memorial-card-media--square memorial-card-media--dark">
             <PlayCircle size={42} strokeWidth={1.5} aria-hidden="true" />
           </div>
         )}
@@ -1282,7 +1281,7 @@ function RecordingCard({
   ].filter(Boolean);
 
   return (
-    <article className="overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-paper)] shadow-sm shadow-black/5">
+    <article className="memorial-card memorial-card--flush">
       {canEmbed ? (
         <div className="aspect-video bg-[#141312]">
           <ReactPlayer
@@ -1344,7 +1343,7 @@ function RecordingCard({
 
         {fallbackUrl ? (
           <a
-            className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[var(--memorial-line)] px-4 text-sm font-black text-[var(--memorial-ink)] transition hover:border-[var(--memorial-burgundy)] hover:text-[var(--memorial-burgundy)]"
+            className="memorial-action-link mt-5"
             href={fallbackUrl}
             rel="noreferrer"
             target="_blank"
@@ -1401,18 +1400,18 @@ function MinistryLegacySection({
 
             return (
               <article
-                className="flex min-h-full flex-col overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] shadow-sm shadow-black/5"
+                className="memorial-card memorial-card--flush flex min-h-full flex-col"
                 key={item.id}
               >
                 {hasPhoto ? (
                   <PublicImage
                     alt={item.display_ministry_name}
                     asset={item.representative_photo}
-                    className="aspect-[16/10] w-full object-cover"
+                    className="memorial-card-image memorial-card-image--wide"
                     preferredSize="medium"
                   />
                 ) : (
-                  <div className="grid aspect-[16/10] place-items-center bg-[var(--memorial-placeholder-bg)] text-[var(--memorial-placeholder-ink)]">
+                  <div className="memorial-card-media memorial-card-media--wide">
                     <span className="memorial-serif text-4xl">{getInitials(item.display_ministry_name)}</span>
                   </div>
                 )}
@@ -1473,7 +1472,7 @@ function PersonalTributesSection({
 
             return (
               <article
-                className="rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] p-6 shadow-sm shadow-black/5"
+                className="memorial-card memorial-card--padded"
                 key={item.id}
               >
                 <div className="flex items-center gap-4">
@@ -1481,11 +1480,11 @@ function PersonalTributesSection({
                     <PublicImage
                       alt={item.author_name}
                       asset={item.author_photo}
-                      className="size-16 rounded-full object-cover"
+                      className="memorial-avatar"
                       preferredSize="thumb"
                     />
                   ) : (
-                    <div className="grid size-16 place-items-center rounded-full bg-[#211f1d] text-stone-200">
+                    <div className="memorial-avatar memorial-avatar--fallback">
                       <span className="memorial-serif text-xl">{getInitials(item.author_name)}</span>
                     </div>
                   )}
@@ -1495,7 +1494,7 @@ function PersonalTributesSection({
                   </div>
                 </div>
                 {item.relationship_to_deceased ? (
-                  <p className="mt-5 inline-flex rounded-full border border-[var(--memorial-line)] px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-[var(--memorial-burgundy-dark)]">
+                  <p className="memorial-pill mt-5">
                     {item.relationship_to_deceased}
                   </p>
                 ) : null}
@@ -1546,9 +1545,9 @@ function LeadershipTimelineSection({
             return (
               <article className="relative grid gap-4 md:grid-cols-[2rem_minmax(0,1fr)]" key={item.id}>
                 <span className="relative z-10 hidden size-8 rounded-full border-4 border-[var(--memorial-paper)] bg-[var(--memorial-burgundy)] shadow-sm md:block" aria-hidden="true" />
-                <div className="grid overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] shadow-sm shadow-black/5 lg:grid-cols-[16rem_minmax(0,1fr)]">
+                <div className="memorial-card memorial-card--flush grid lg:grid-cols-[16rem_minmax(0,1fr)]">
                   {hasImage ? (
-                    <PublicImage alt={item.title} asset={item.image} className="h-full min-h-52 w-full object-cover" preferredSize="medium" />
+                    <PublicImage alt={item.title} asset={item.image} className="memorial-card-image memorial-card-image--timeline" preferredSize="medium" />
                   ) : null}
                   <div className="p-6">
                     {dateLabel ? (
@@ -1606,14 +1605,14 @@ function GallerySection({
 
             return (
               <figure
-                className={`overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-card)] shadow-sm shadow-black/5 ${itemIndex === 0 ? "sm:col-span-2 sm:row-span-2" : ""}`}
+                className={`memorial-card memorial-card--flush ${itemIndex === 0 ? "sm:col-span-2 sm:row-span-2" : ""}`}
                 key={item.id}
               >
                 <PublicImage
                   alt={item.caption || item.media_asset.title}
                   altTextOverride={item.alt_text_override}
                   asset={item.media_asset}
-                  className={`${itemIndex === 0 ? "aspect-[4/3]" : "aspect-square"} w-full object-cover`}
+                  className={`${itemIndex === 0 ? "aspect-[4/3]" : "aspect-square"} memorial-card-image`}
                   preferredSize={imageSize}
                 />
                 <figcaption className="p-4 text-sm leading-6 text-[var(--memorial-muted)]">
@@ -1658,7 +1657,7 @@ function ArrangementsSection({
 
             return (
               <article
-                className={`rounded-sm border p-6 shadow-sm shadow-black/5 ${item.is_prominent ? "border-[var(--memorial-burgundy)] bg-[var(--memorial-card-strong)]" : "border-[var(--memorial-line)] bg-[var(--memorial-card)]"}`}
+                className={`memorial-card memorial-card--padded ${item.is_prominent ? "memorial-card--prominent" : ""}`}
                 key={item.id}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -1699,7 +1698,7 @@ function ArrangementsSection({
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
                     {item.livestream_url ? (
                       <a
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--memorial-ink)] px-5 text-sm font-black text-white transition hover:bg-[var(--memorial-burgundy)]"
+                        className="memorial-action-link memorial-action-link--primary"
                         href={item.livestream_url}
                         rel="noreferrer"
                         target="_blank"
@@ -1711,7 +1710,7 @@ function ArrangementsSection({
                     ) : null}
                     {programmeUrl ? (
                       <a
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--memorial-line)] px-5 text-sm font-black text-[var(--memorial-ink)] transition hover:border-[var(--memorial-burgundy)] hover:text-[var(--memorial-burgundy)]"
+                        className="memorial-action-link"
                         href={programmeUrl}
                         rel="noreferrer"
                         target="_blank"

@@ -172,6 +172,150 @@
   max-width: 56rem;
 }
 
+.memorial-card,
+.memorial-content-preview-card {
+  background: var(--memorial-card);
+  border: 1px solid var(--memorial-line);
+  border-radius: 0.25rem;
+  box-shadow: 0 0.8rem 2rem rgba(17, 17, 17, 0.055);
+  color: inherit;
+  min-width: 0;
+}
+
+.memorial-card {
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.memorial-card--flush {
+  overflow: hidden;
+}
+
+.memorial-card--padded {
+  padding: clamp(1.25rem, 2vw, 1.6rem);
+}
+
+.memorial-card--prominent {
+  background: var(--memorial-card-strong);
+  border-color: color-mix(in srgb, var(--memorial-burgundy) 70%, var(--memorial-line));
+}
+
+.memorial-card-image {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.memorial-card-image--wide {
+  aspect-ratio: 16 / 10;
+}
+
+.memorial-card-image--square {
+  aspect-ratio: 1;
+}
+
+.memorial-card-image--timeline {
+  min-height: 13rem;
+}
+
+.memorial-card-media {
+  align-items: center;
+  background: var(--memorial-placeholder-bg);
+  color: var(--memorial-placeholder-ink);
+  display: grid;
+  justify-items: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.memorial-card-media--wide {
+  aspect-ratio: 16 / 10;
+}
+
+.memorial-card-media--square {
+  aspect-ratio: 1;
+}
+
+.memorial-card-media--dark {
+  background: color-mix(in srgb, var(--memorial-ink) 90%, var(--memorial-burgundy) 10%);
+  color: var(--memorial-paper);
+}
+
+.memorial-avatar {
+  border-radius: 999px;
+  display: block;
+  height: 4rem;
+  object-fit: cover;
+  width: 4rem;
+}
+
+.memorial-avatar--fallback {
+  align-items: center;
+  background: color-mix(in srgb, var(--memorial-ink) 90%, var(--memorial-burgundy) 10%);
+  color: var(--memorial-paper);
+  display: grid;
+  justify-items: center;
+}
+
+.memorial-pill {
+  align-items: center;
+  border: 1px solid var(--memorial-line);
+  border-radius: 999px;
+  color: var(--memorial-burgundy-dark);
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  padding: 0.35rem 0.75rem;
+  text-transform: uppercase;
+}
+
+.memorial-action-link,
+.memorial-reader-inline-action {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--memorial-line);
+  border-radius: 999px;
+  color: var(--memorial-ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 900;
+  gap: 0.5rem;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 1rem;
+  text-decoration: none;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+  width: fit-content;
+}
+
+.memorial-action-link:hover,
+.memorial-reader-inline-action:hover {
+  border-color: var(--memorial-burgundy);
+  color: var(--memorial-burgundy-dark);
+}
+
+.memorial-action-link:focus-visible,
+.memorial-reader-inline-action:focus-visible {
+  outline: 2px solid var(--memorial-burgundy);
+  outline-offset: 3px;
+}
+
+.memorial-action-link--primary {
+  background: var(--memorial-ink);
+  border-color: var(--memorial-ink);
+  color: var(--memorial-paper);
+}
+
+.memorial-action-link--primary:hover {
+  background: var(--memorial-burgundy);
+  border-color: var(--memorial-burgundy);
+  color: var(--memorial-paper);
+}
+
 @media (min-width: 768px) {
   .memorial-section-block + .memorial-section-block {
     padding-top: 2.5rem;
@@ -199,7 +343,7 @@
   background: var(--memorial-card);
   border: 1px solid var(--memorial-line);
   border-radius: 0.25rem;
-  box-shadow: 0 1rem 2.5rem rgba(17, 17, 17, 0.06);
+  box-shadow: 0 0.8rem 2rem rgba(17, 17, 17, 0.055);
   appearance: none;
   color: inherit;
   cursor: pointer;
@@ -216,7 +360,7 @@
 
 .memorial-content-preview-card:hover {
   border-color: color-mix(in srgb, var(--memorial-burgundy) 48%, var(--memorial-line));
-  box-shadow: 0 1.25rem 3rem rgba(17, 17, 17, 0.1);
+  box-shadow: 0 0.9rem 2.2rem rgba(17, 17, 17, 0.08);
   transform: translateY(-1px);
 }
 

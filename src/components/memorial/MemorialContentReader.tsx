@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef } from "react";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import type { MemorialContentReaderEntry } from "./useMemorialContentReader";
 
 const focusableReaderSelector = [
   "a[href]",
@@ -9,46 +10,6 @@ const focusableReaderSelector = [
   "select:not([disabled])",
   "[tabindex]:not([tabindex='-1'])",
 ].join(", ");
-
-export type MemorialContentReaderEntry = {
-  actionLabel?: string;
-  eyebrow?: string;
-  fullContent: ReactNode;
-  id: number | string;
-  image?: ReactNode;
-  preview: ReactNode;
-  readingMeta?: string;
-  subtitle?: string;
-  title: string;
-};
-
-export function useMemorialContentReader<TEntry extends MemorialContentReaderEntry = MemorialContentReaderEntry>() {
-  const [activeEntry, setActiveEntry] = useState<TEntry | null>(null);
-  const returnFocusRef = useRef<HTMLElement | null>(null);
-
-  const openReader = useCallback((entry: TEntry, trigger?: HTMLElement | null) => {
-    returnFocusRef.current = trigger ?? null;
-    setActiveEntry(entry);
-  }, []);
-
-  const closeReader = useCallback(() => {
-    setActiveEntry(null);
-
-    window.setTimeout(() => {
-      if (returnFocusRef.current?.isConnected) {
-        returnFocusRef.current.focus();
-      }
-      returnFocusRef.current = null;
-    }, 0);
-  }, []);
-
-  return {
-    activeEntry,
-    closeReader,
-    isReaderOpen: Boolean(activeEntry),
-    openReader,
-  };
-}
 
 export function MemorialContentPreviewCard({
   className = "",
