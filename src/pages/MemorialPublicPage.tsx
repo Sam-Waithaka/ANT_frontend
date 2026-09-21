@@ -787,7 +787,12 @@ export function SectionBlock({
       />
     ),
     id: block.id,
-    image: getReaderImage(block, readerTitle, mediaSize),
+    image: resolveMemorialPreviewImage({
+      alt: readerTitle,
+      content: block,
+      fallbackVisual: getSectionPreviewFallbackVisual(block, readerTitle),
+      preferredSize: mediaSize,
+    }),
     preview: getMemorialBlockExcerpt(block, viewportSize),
     readingMeta,
     subtitle: readerSubtitle,
@@ -864,10 +869,12 @@ type MemorialItemContentProps = {
   content: MemorialRichText | null;
   contentClassName?: string;
   fallbackTitle: string;
+  explicitImage?: MemorialMediaAsset | null;
+  fallbackVisual?: ReactNode;
+  imageAlt?: string;
   mediaSize?: PublicImageSize;
   previewClassName?: string;
   readerEyebrow?: string;
-  readerImage?: ReactNode;
   readerSubtitle?: string;
   titleLevel?: 2 | 3 | 4;
 };
@@ -877,11 +884,13 @@ function MemorialItemContent({
   className = "",
   content,
   contentClassName = "text-base",
+  explicitImage = null,
   fallbackTitle,
+  fallbackVisual,
+  imageAlt,
   mediaSize = "medium",
   previewClassName = "",
   readerEyebrow,
-  readerImage,
   readerSubtitle,
   titleLevel = 4,
 }: MemorialItemContentProps) {
@@ -915,7 +924,13 @@ function MemorialItemContent({
     eyebrow: readerEyebrow || (content.section_key ? formatMemorialSectionKey(content.section_key) : undefined),
     fullContent,
     id: "item-" + content.id,
-    image: readerImage ?? getReaderImage(content, title, mediaSize),
+    image: resolveMemorialPreviewImage({
+      alt: imageAlt || title,
+      content,
+      explicitImage,
+      fallbackVisual,
+      preferredSize: mediaSize,
+    }),
     preview: getMemorialBlockExcerpt(content, viewportSize),
     readingMeta: getReadingMeta(content),
     subtitle: content.subtitle || readerSubtitle || undefined,
@@ -962,11 +977,29 @@ function formatMemorialSectionKey(sectionKey: string) {
   return sectionKey.toLowerCase().replace(/_/g, " ");
 }
 
-function getReaderImage(block: MemorialRichText, alt: string, preferredSize: PublicImageSize) {
-  return getReaderImageFromAsset(getPrimaryBlockImage(block), alt, preferredSize);
+type MemorialPreviewImageOptions = {
+  alt: string;
+  content?: MemorialRichText | null;
+  explicitImage?: MemorialMediaAsset | null;
+  fallbackVisual?: ReactNode;
+  preferredSize: PublicImageSize;
+};
+
+function resolveMemorialPreviewImage({
+  alt,
+  content = null,
+  explicitImage = null,
+  fallbackVisual,
+  preferredSize,
+}: MemorialPreviewImageOptions) {
+  return (
+    getPreviewImageFromAsset(explicitImage, alt, preferredSize) ??
+    getPreviewImageFromAsset(getPrimaryBlockImage(content), alt, preferredSize) ??
+    fallbackVisual
+  );
 }
 
-function getReaderImageFromAsset(asset: MemorialMediaAsset | null, alt: string, preferredSize: PublicImageSize) {
+function getPreviewImageFromAsset(asset: MemorialMediaAsset | null, alt: string, preferredSize: PublicImageSize) {
   if (!getBestImageVariant(asset, preferredSize)) {
     return undefined;
   }
@@ -978,6 +1011,27 @@ function getReaderImageFromAsset(asset: MemorialMediaAsset | null, alt: string, 
       className="h-full w-full object-cover"
       preferredSize={preferredSize}
     />
+  );
+}
+
+function getSectionPreviewFallbackVisual(block: MemorialRichText, title: string) {
+  return getInitialsPreviewFallback(block.section_key ? formatMemorialSectionKey(block.section_key) : title);
+}
+
+function getInitialsPreviewFallback(label: string) {
+  return <MemorialPreviewFallbackVisual label={label}>{getInitials(label) || "AIC"}</MemorialPreviewFallbackVisual>;
+}
+
+function getIconPreviewFallback(icon: ReactNode, label: string) {
+  return <MemorialPreviewFallbackVisual label={label}>{icon}</MemorialPreviewFallbackVisual>;
+}
+
+function MemorialPreviewFallbackVisual({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <div aria-hidden="true" className="memorial-content-preview-card__fallback">
+      <span className="memorial-content-preview-card__fallback-mark">{children}</span>
+      <span className="memorial-content-preview-card__fallback-label">{label}</span>
+    </div>
   );
 }
 
@@ -1189,8 +1243,10 @@ function RecordingGroup({
               className="mt-4"
               content={group.content}
               fallbackTitle={group.content?.title || group.title}
+              explicitImage={group.series?.cover_image ?? null}
+              fallbackVisual={getIconPreviewFallback(<PlayCircle size={42} strokeWidth={1.5} aria-hidden="true" />, "Recording")}
+              imageAlt={group.title || group.series?.title || "Memorial recordings"}
               readerEyebrow={group.series?.title || "Memorial recordings"}
-              readerImage={getReaderImageFromAsset(group.series?.cover_image ?? null, group.title, "medium")}
             />
           ) : group.series?.description ? (
             <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--memorial-muted)]">{group.series.description}</p>
@@ -1370,8 +1426,10 @@ function MinistryLegacySection({
                     className="mt-4"
                     content={item.content}
                     fallbackTitle={item.content?.title || item.display_ministry_name + " tribute"}
+                    explicitImage={item.representative_photo}
+                    fallbackVisual={getInitialsPreviewFallback(item.display_ministry_name || item.ministry_name || "Ministry tribute")}
+                    imageAlt={item.display_ministry_name || item.ministry_name || "Ministry tribute"}
                     readerEyebrow={item.display_ministry_name || item.ministry_name || "Ministry tribute"}
-                    readerImage={getReaderImageFromAsset(item.representative_photo, item.display_ministry_name, "medium")}
                   />
                   <div className="mt-5 border-t border-[var(--memorial-line)] pt-4 text-sm leading-6 text-[var(--memorial-muted)]">
                     {item.speaker_name ? <p className="font-black text-[var(--memorial-ink)]">{item.speaker_name}</p> : null}
@@ -1444,8 +1502,10 @@ function PersonalTributesSection({
                   className="mt-5"
                   content={item.content}
                   fallbackTitle={item.content?.title || item.author_name + " reflection"}
+                  explicitImage={item.author_photo}
+                  fallbackVisual={getInitialsPreviewFallback(item.author_name || "Personal tribute")}
+                  imageAlt={item.author_name || "Personal tribute"}
                   readerEyebrow={item.relationship_to_deceased || item.author_role || "Personal tribute"}
-                  readerImage={getReaderImageFromAsset(item.author_photo, item.author_name, "medium")}
                 />
               </article>
             );
@@ -1498,8 +1558,10 @@ function LeadershipTimelineSection({
                       className="mt-4"
                       content={item.content}
                       fallbackTitle={item.title}
+                      explicitImage={item.image}
+                      fallbackVisual={getInitialsPreviewFallback(dateLabel || item.title || "Leadership milestone")}
+                      imageAlt={item.title || "Leadership milestone"}
                       readerEyebrow={dateLabel || "Leadership milestone"}
-                      readerImage={getReaderImageFromAsset(item.image, item.title, "medium")}
                     />
                   </div>
                 </div>
@@ -1624,7 +1686,10 @@ function ArrangementsSection({
                   actionLabel="Read arrangement details"
                   className="mt-5"
                   content={item.content}
+                  explicitImage={null}
                   fallbackTitle={item.content?.title || item.title}
+                  fallbackVisual={getIconPreviewFallback(<CalendarDays size={40} strokeWidth={1.7} aria-hidden="true" />, item.arrangement_type_label || "Arrangement")}
+                  imageAlt={item.title || item.arrangement_type_label || "Arrangement"}
                   readerEyebrow={item.arrangement_type_label || "Arrangement"}
                 />
 
