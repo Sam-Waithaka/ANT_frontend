@@ -944,6 +944,8 @@ function MemorialItemContent({
           {entry.preview}
         </p>
         <button
+          aria-haspopup="dialog"
+          aria-label={`${actionLabel}: ${title}`}
           className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--memorial-line)] px-4 py-2 text-sm font-black text-[var(--memorial-ink)] transition hover:border-[var(--memorial-burgundy)] hover:text-[var(--memorial-burgundy)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--memorial-burgundy)]"
           onClick={(event) => openReader(entry, event.currentTarget)}
           type="button"

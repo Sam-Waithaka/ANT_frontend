@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 
+const focusableReaderSelector = [
+  "a[href]",
+  "button:not([disabled])",
+  "textarea:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(", ");
+
 export type MemorialContentReaderEntry = {
   actionLabel?: string;
   eyebrow?: string;
@@ -26,7 +35,9 @@ export function useMemorialContentReader<TEntry extends MemorialContentReaderEnt
     setActiveEntry(null);
 
     window.setTimeout(() => {
-      returnFocusRef.current?.focus();
+      if (returnFocusRef.current?.isConnected) {
+        returnFocusRef.current.focus();
+      }
       returnFocusRef.current = null;
     }, 0);
   }, []);
@@ -52,6 +63,8 @@ export function MemorialContentPreviewCard({
 
   return (
     <button
+      aria-haspopup="dialog"
+      aria-label={`${actionLabel}: ${entry.title}`}
       className={`memorial-content-preview-card group ${className}`}
       onClick={(event) => onOpen(entry, event.currentTarget)}
       type="button"
@@ -84,6 +97,7 @@ export function MemorialContentReaderModal({
   open: boolean;
 }) {
   const dialogRef = useRef<HTMLElement | null>(null);
+  const backdropPointerStartedOnBackdropRef = useRef(false);
   const titleId = useId();
   const subtitleId = useId();
   const describedBy = entry?.subtitle ? subtitleId : undefined;
@@ -94,10 +108,17 @@ export function MemorialContentReaderModal({
     }
 
     const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
     document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
     };
   }, [open]);
 
@@ -108,7 +129,46 @@ export function MemorialContentReaderModal({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.preventDefault();
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const dialog = dialogRef.current;
+      if (!dialog) {
+        return;
+      }
+
+      const focusableElements = getReaderFocusableElements(dialog);
+      if (!focusableElements.length) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstFocusable = focusableElements[0];
+      const lastFocusable = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+
+      if (!dialog.contains(activeElement)) {
+        event.preventDefault();
+        firstFocusable.focus();
+        return;
+      }
+
+      if (event.shiftKey && activeElement === firstFocusable) {
+        event.preventDefault();
+        lastFocusable.focus();
+        return;
+      }
+
+      if (!event.shiftKey && activeElement === lastFocusable) {
+        event.preventDefault();
+        firstFocusable.focus();
       }
     };
 
@@ -132,8 +192,17 @@ export function MemorialContentReaderModal({
   return (
     <div
       className="memorial-reader-backdrop"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
+      onPointerDown={(event) => {
+        backdropPointerStartedOnBackdropRef.current = event.target === event.currentTarget;
+      }}
+      onPointerCancel={() => {
+        backdropPointerStartedOnBackdropRef.current = false;
+      }}
+      onPointerUp={(event) => {
+        const shouldClose = backdropPointerStartedOnBackdropRef.current && event.target === event.currentTarget;
+        backdropPointerStartedOnBackdropRef.current = false;
+
+        if (shouldClose) {
           onClose();
         }
       }}
@@ -148,7 +217,7 @@ export function MemorialContentReaderModal({
         tabIndex={-1}
       >
         <div className="memorial-reader-mobile-bar">
-          <button className="memorial-reader-back-button" onClick={onClose} type="button">
+          <button aria-label="Back to memorial page" className="memorial-reader-back-button" onClick={onClose} type="button">
             <ArrowLeft aria-hidden="true" size={20} strokeWidth={2} />
             Back
           </button>
@@ -172,4 +241,18 @@ export function MemorialContentReaderModal({
       </section>
     </div>
   );
+}
+
+function getReaderFocusableElements(dialog: HTMLElement) {
+  return Array.from(dialog.querySelectorAll<HTMLElement>(focusableReaderSelector)).filter((element) => {
+    const style = window.getComputedStyle(element);
+
+    return (
+      !element.hasAttribute("disabled") &&
+      element.getAttribute("aria-hidden") !== "true" &&
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      element.getClientRects().length > 0
+    );
+  });
 }
