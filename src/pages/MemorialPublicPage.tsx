@@ -24,6 +24,7 @@ import FloatingBrowseControl from "../components/navigation/FloatingBrowseContro
 import SiteFooter from "../components/navigation/SiteFooter";
 import SiteHeader from "../components/navigation/SiteHeader";
 import { useTheme } from "../hooks/useTheme";
+import { filterItemOwnedMemorialBlocks } from "../utils/memorialPublicBlocks";
 import type {
   MemorialMediaAsset,
   MemorialMediaEmbed,
@@ -497,7 +498,7 @@ function CoreMemorialSection({
   if (isClosingHope) {
     return (
       <section className={sectionClass} id={sectionKey}>
-        <div className="mx-auto max-w-5xl px-6 py-16 text-center sm:px-8 lg:px-12 lg:py-20">
+        <div className="mx-auto max-w-5xl px-6 py-16 text-center sm:px-8 md:py-20 lg:px-12 lg:py-24">
           <p className="text-4xl font-light text-[var(--memorial-burgundy)]" aria-hidden="true">+</p>
           <p className="mt-5 text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
             {sectionEyebrows[sectionKey]}
@@ -509,7 +510,7 @@ function CoreMemorialSection({
           <SectionBlocks
             blocks={blocks}
             centered
-            className="mx-auto mt-8 max-w-3xl"
+            className="mx-auto mt-10 max-w-3xl gap-9"
             contentClassName="text-xl sm:text-2xl"
             mediaSize="medium"
             titleLevel={3}
@@ -521,18 +522,18 @@ function CoreMemorialSection({
 
   return (
     <section className={sectionClass} id={sectionKey}>
-      <div className="mx-auto grid w-full max-w-[88rem] gap-8 px-6 py-12 sm:px-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-16 xl:grid-cols-[22rem_minmax(0,1fr)]">
-        <div className="border-[var(--memorial-line)] lg:border-r lg:pr-8">
+      <div className="mx-auto grid w-full max-w-[88rem] gap-10 px-6 py-14 sm:px-8 md:px-10 md:py-16 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-20 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        <div className="memorial-section-rail border-[var(--memorial-line)] lg:border-r lg:pr-8">
           <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
             {sectionEyebrows[sectionKey]}
           </p>
-          <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
+          <h2 className="memorial-section-heading mt-4 max-w-lg text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
             {sectionTitle}
           </h2>
           <span className="memorial-rule mt-6" aria-hidden="true" />
         </div>
 
-        <SectionBlocks blocks={blocks} className="min-w-0 gap-10" titleLevel={3} />
+        <SectionBlocks blocks={blocks} className="min-w-0 gap-12" titleLevel={3} />
       </div>
     </section>
   );
@@ -545,7 +546,7 @@ function RichTextBlock({ className = "", html }: { className?: string; html: str
 
   return (
     <div
-      className={`memorial-rich-text max-w-3xl ${className}`}
+      className={`memorial-rich-text max-w-[48rem] ${className}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -614,14 +615,14 @@ export function SectionBlock({
   titleLevel = 3,
 }: SectionBlockProps) {
   const hasHeading = !hideBlockTitles && Boolean(block.title || block.subtitle);
-  const hasBody = Boolean(block.content_html || block.media_embeds.length || block.scripture_references.length || block.reading_time_minutes);
+  const hasBody = Boolean(block.content_html || block.media_embeds.length || block.scripture_references.length || (block.reading_time_minutes ?? 0) > 0);
 
   if (!hasHeading && !hasBody) {
     return null;
   }
 
   return (
-    <article className={`${centered ? "mx-auto text-center" : ""} ${blockClassName}`}>
+    <article className={`memorial-section-block ${centered ? "mx-auto text-center" : ""} ${blockClassName}`}>
       {hasHeading ? (
         <div className={centered ? "mx-auto max-w-3xl" : "max-w-3xl"}>
           {block.title ? <SectionBlockTitle level={titleLevel}>{block.title}</SectionBlockTitle> : null}
@@ -657,7 +658,7 @@ function SectionBlockTitle({
   children: ReactNode;
   level: 2 | 3 | 4;
 }) {
-  const className = "font-serif text-2xl font-black leading-tight text-[var(--memorial-ink)] sm:text-3xl";
+  const className = "memorial-block-title font-serif text-2xl font-black leading-tight text-[var(--memorial-ink)] sm:text-3xl";
 
   if (level === 2) {
     return <h2 className={className}>{children}</h2>;
@@ -756,7 +757,7 @@ function MediaEmbeds({ embeds, preferredSize = "medium" }: { embeds: MemorialMed
   }
 
   return (
-    <div className="mt-8 grid gap-4 sm:grid-cols-2">
+    <div className="mt-8 grid gap-5 sm:grid-cols-2">
       {visibleEmbeds.map((embed) => (
         <figure
           className="overflow-hidden rounded-sm border border-[var(--memorial-line)] bg-[var(--memorial-paper)] shadow-sm shadow-black/5"
@@ -787,7 +788,8 @@ function RecordingsSection({
   section: MemorialPublicPayload["sections"]["recordings"];
 }) {
   const groups = getRenderableRecordingGroups(section.items);
-  const hasIntro = hasRenderableBlocks(section.blocks);
+  const editorialBlocks = getRepeatableSectionEditorialBlocks(section);
+  const hasIntro = hasRenderableBlocks(editorialBlocks);
 
   if (!hasIntro && !groups.length) {
     return null;
@@ -795,22 +797,22 @@ function RecordingsSection({
 
   return (
     <section className={getSectionBandClass(index)} id="recordings">
-      <div className="mx-auto grid w-full max-w-[88rem] gap-8 px-6 py-12 sm:px-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-16 xl:grid-cols-[22rem_minmax(0,1fr)]">
-        <div className="border-[var(--memorial-line)] lg:border-r lg:pr-8">
+      <div className="mx-auto grid w-full max-w-[88rem] gap-10 px-6 py-14 sm:px-8 md:px-10 md:py-16 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-20 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        <div className="memorial-section-rail border-[var(--memorial-line)] lg:border-r lg:pr-8">
           <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
             {sectionEyebrows.recordings}
           </p>
-          <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
+          <h2 className="memorial-section-heading mt-4 max-w-lg text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
             {section.label || friendlySectionLabels.recordings}
           </h2>
           <span className="memorial-rule mt-6" aria-hidden="true" />
         </div>
 
         <div>
-          <SectionBlocks blocks={section.blocks} className="mb-8" contentClassName="text-base" titleLevel={3} />
+          <SectionBlocks blocks={editorialBlocks} className="memorial-section-intro mb-10 gap-7" contentClassName="text-[1.05rem]" titleLevel={3} />
 
           {groups.length ? (
-            <div className="grid gap-8">
+            <div className="grid gap-10">
               {groups.map((group) => (
                 <RecordingGroup group={group} key={group.id} />
               ))}
@@ -860,7 +862,7 @@ function RecordingGroup({
       </div>
 
       {recordings.length > 0 ? (
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-7 grid gap-6 lg:grid-cols-2">
           {recordings.map((recording) => (
             <RecordingCard item={recording} key={recording.id} />
           ))}
@@ -987,7 +989,8 @@ function MinistryLegacySection({
   section: MemorialPublicPayload["sections"]["ministry_legacy"];
 }) {
   const items = getRenderableMinistryLegacyItems(section.items);
-  const hasIntro = hasRenderableBlocks(section.blocks);
+  const editorialBlocks = getRepeatableSectionEditorialBlocks(section);
+  const hasIntro = hasRenderableBlocks(editorialBlocks);
 
   if (!hasIntro && !items.length) {
     return null;
@@ -995,9 +998,9 @@ function MinistryLegacySection({
 
   return (
     <section className={getSectionBandClass(index)} id="ministry_legacy">
-      <RepeatableSectionGrid section={section} sectionKey="ministry_legacy">
+      <RepeatableSectionGrid editorialBlocks={editorialBlocks} section={section} sectionKey="ministry_legacy">
         {items.length ? (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
             const hasPhoto = Boolean(getBestImageVariant(item.representative_photo, "medium"));
 
@@ -1051,7 +1054,8 @@ function PersonalTributesSection({
   section: MemorialPublicPayload["sections"]["personal_tributes"];
 }) {
   const items = getRenderablePersonalTributeItems(section.items);
-  const hasIntro = hasRenderableBlocks(section.blocks);
+  const editorialBlocks = getRepeatableSectionEditorialBlocks(section);
+  const hasIntro = hasRenderableBlocks(editorialBlocks);
 
   if (!hasIntro && !items.length) {
     return null;
@@ -1059,9 +1063,9 @@ function PersonalTributesSection({
 
   return (
     <section className={getSectionBandClass(index)} id="personal_tributes">
-      <RepeatableSectionGrid section={section} sectionKey="personal_tributes">
+      <RepeatableSectionGrid editorialBlocks={editorialBlocks} section={section} sectionKey="personal_tributes">
         {items.length ? (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
             const hasPhoto = Boolean(getBestImageVariant(item.author_photo, "thumb"));
 
@@ -1114,7 +1118,8 @@ function LeadershipTimelineSection({
   section: MemorialPublicPayload["sections"]["leadership_timeline"];
 }) {
   const items = getRenderableTimelineItems(section.items);
-  const hasIntro = hasRenderableBlocks(section.blocks);
+  const editorialBlocks = getRepeatableSectionEditorialBlocks(section);
+  const hasIntro = hasRenderableBlocks(editorialBlocks);
 
   if (!hasIntro && !items.length) {
     return null;
@@ -1122,7 +1127,7 @@ function LeadershipTimelineSection({
 
   return (
     <section className={getSectionBandClass(index)} id="leadership_timeline">
-      <RepeatableSectionGrid section={section} sectionKey="leadership_timeline">
+      <RepeatableSectionGrid editorialBlocks={editorialBlocks} section={section} sectionKey="leadership_timeline">
         {items.length ? (
           <div className="relative grid gap-6 before:absolute before:left-4 before:top-2 before:hidden before:h-[calc(100%-1rem)] before:w-px before:bg-[var(--memorial-line)] md:before:block">
           {items.map((item) => {
@@ -1164,7 +1169,8 @@ function GallerySection({
   section: MemorialPublicPayload["sections"]["gallery"];
 }) {
   const items = getRenderableGalleryItems(section.items);
-  const hasIntro = hasRenderableBlocks(section.blocks);
+  const editorialBlocks = getRepeatableSectionEditorialBlocks(section);
+  const hasIntro = hasRenderableBlocks(editorialBlocks);
 
   if (!hasIntro && !items.length) {
     return null;
@@ -1172,9 +1178,9 @@ function GallerySection({
 
   return (
     <section className={getSectionBandClass(index)} id="gallery">
-      <RepeatableSectionGrid section={section} sectionKey="gallery">
+      <RepeatableSectionGrid editorialBlocks={editorialBlocks} section={section} sectionKey="gallery">
         {items.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {items.map((item, itemIndex) => {
             const imageSize: PublicImageSize = itemIndex === 0 ? "large" : "medium";
 
@@ -1219,7 +1225,8 @@ function ArrangementsSection({
   section: MemorialPublicPayload["sections"]["arrangements"];
 }) {
   const items = getRenderableArrangementItems(section.items);
-  const hasIntro = hasRenderableBlocks(section.blocks);
+  const editorialBlocks = getRepeatableSectionEditorialBlocks(section);
+  const hasIntro = hasRenderableBlocks(editorialBlocks);
 
   if (!hasIntro && !items.length) {
     return null;
@@ -1227,7 +1234,7 @@ function ArrangementsSection({
 
   return (
     <section className={getSectionBandClass(index)} id="arrangements">
-      <RepeatableSectionGrid section={section} sectionKey="arrangements">
+      <RepeatableSectionGrid editorialBlocks={editorialBlocks} section={section} sectionKey="arrangements">
         {items.length ? (
           <div className="grid gap-5 lg:grid-cols-3">
           {items.map((item) => {
@@ -1305,27 +1312,29 @@ function ArrangementsSection({
 
 function RepeatableSectionGrid({
   children,
+  editorialBlocks,
   section,
   sectionKey,
 }: {
   children: ReactNode;
+  editorialBlocks: MemorialRichText[];
   section: MemorialPublicPayload["sections"][RepeatableSectionKey];
   sectionKey: RepeatableSectionKey;
 }) {
   return (
-    <div className="mx-auto grid w-full max-w-[88rem] gap-8 px-6 py-12 sm:px-8 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-16 xl:grid-cols-[22rem_minmax(0,1fr)]">
-      <div className="border-[var(--memorial-line)] lg:border-r lg:pr-8">
+    <div className="mx-auto grid w-full max-w-[88rem] gap-10 px-6 py-14 sm:px-8 md:px-10 md:py-16 lg:grid-cols-[20rem_minmax(0,1fr)] lg:px-12 lg:py-20 xl:grid-cols-[22rem_minmax(0,1fr)]">
+      <div className="memorial-section-rail border-[var(--memorial-line)] lg:border-r lg:pr-8">
         <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
           {sectionEyebrows[sectionKey]}
         </p>
-        <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
+        <h2 className="memorial-section-heading mt-4 max-w-lg text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
           {section.label || friendlySectionLabels[sectionKey]}
         </h2>
         <span className="memorial-rule mt-6" aria-hidden="true" />
       </div>
 
       <div>
-        <SectionBlocks blocks={section.blocks} className="mb-8" contentClassName="text-base" titleLevel={3} />
+        <SectionBlocks blocks={editorialBlocks} className="memorial-section-intro mb-10 gap-7" contentClassName="text-[1.05rem]" titleLevel={3} />
         {children}
       </div>
     </div>
@@ -1352,12 +1361,12 @@ function MemorialSectionFrame({
       className={mutedBand ? "scroll-mt-36 border-b border-[var(--memorial-line)] bg-[var(--memorial-wash)]" : "scroll-mt-36 border-b border-[var(--memorial-line)] bg-[var(--memorial-paper)]"}
       id={sectionKey}
     >
-      <div className="mx-auto grid w-full max-w-[88rem] gap-8 px-6 py-12 sm:px-8 lg:grid-cols-[18rem_minmax(0,1fr)] lg:px-12 lg:py-16 xl:grid-cols-[20rem_minmax(0,1fr)]">
-        <div className="border-[var(--memorial-line)] lg:border-r lg:pr-8">
+      <div className="mx-auto grid w-full max-w-[88rem] gap-10 px-6 py-14 sm:px-8 md:px-10 md:py-16 lg:grid-cols-[18rem_minmax(0,1fr)] lg:px-12 lg:py-20 xl:grid-cols-[20rem_minmax(0,1fr)]">
+        <div className="memorial-section-rail border-[var(--memorial-line)] lg:border-r lg:pr-8">
           <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--memorial-burgundy)]">
             {sectionEyebrows[sectionKey]}
           </p>
-          <h2 className="mt-4 max-w-sm text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
+          <h2 className="memorial-section-heading mt-4 max-w-lg text-3xl font-black leading-none text-[var(--memorial-ink)] sm:text-4xl">
             {section.label || friendlySectionLabels[sectionKey]}
           </h2>
           <span className="memorial-rule mt-6" aria-hidden="true" />
@@ -1470,18 +1479,32 @@ function shouldRenderSection(sectionKey: MemorialNavSectionKey, sections: Memori
     case "closing_hope":
       return hasRenderableBlocks(sections[sectionKey].blocks);
     case "ministry_legacy":
-      return hasRenderableBlocks(sections.ministry_legacy.blocks) || getRenderableMinistryLegacyItems(sections.ministry_legacy.items).length > 0;
+      return hasRenderableRepeatableSectionBlocks(sections.ministry_legacy) || getRenderableMinistryLegacyItems(sections.ministry_legacy.items).length > 0;
     case "personal_tributes":
-      return hasRenderableBlocks(sections.personal_tributes.blocks) || getRenderablePersonalTributeItems(sections.personal_tributes.items).length > 0;
+      return hasRenderableRepeatableSectionBlocks(sections.personal_tributes) || getRenderablePersonalTributeItems(sections.personal_tributes.items).length > 0;
     case "leadership_timeline":
-      return hasRenderableBlocks(sections.leadership_timeline.blocks) || getRenderableTimelineItems(sections.leadership_timeline.items).length > 0;
+      return hasRenderableRepeatableSectionBlocks(sections.leadership_timeline) || getRenderableTimelineItems(sections.leadership_timeline.items).length > 0;
     case "gallery":
-      return hasRenderableBlocks(sections.gallery.blocks) || getRenderableGalleryItems(sections.gallery.items).length > 0;
+      return hasRenderableRepeatableSectionBlocks(sections.gallery) || getRenderableGalleryItems(sections.gallery.items).length > 0;
     case "recordings":
-      return hasRenderableBlocks(sections.recordings.blocks) || getRenderableRecordingGroups(sections.recordings.items).length > 0;
+      return hasRenderableRepeatableSectionBlocks(sections.recordings) || getRenderableRecordingGroups(sections.recordings.items).length > 0;
     case "arrangements":
-      return hasRenderableBlocks(sections.arrangements.blocks) || getRenderableArrangementItems(sections.arrangements.items).length > 0;
+      return hasRenderableRepeatableSectionBlocks(sections.arrangements) || getRenderableArrangementItems(sections.arrangements.items).length > 0;
   }
+}
+
+function getRepeatableSectionEditorialBlocks<TItem extends { content?: MemorialRichText | null }>(section: {
+  blocks: MemorialRichText[];
+  items: TItem[];
+}) {
+  return filterItemOwnedMemorialBlocks(section.blocks, section.items);
+}
+
+function hasRenderableRepeatableSectionBlocks<TItem extends { content?: MemorialRichText | null }>(section: {
+  blocks: MemorialRichText[];
+  items: TItem[];
+}) {
+  return hasRenderableBlocks(getRepeatableSectionEditorialBlocks(section));
 }
 
 function hasRenderableBlocks(blocks: MemorialRichText[]) {

@@ -81,16 +81,49 @@
 .memorial-rich-text {
   color: var(--memorial-muted-strong);
   font-family: Georgia, "Times New Roman", Times, serif;
-  font-size: 1.0625rem;
-  line-height: 1.68;
+  font-size: clamp(1.0625rem, 0.28vw + 1rem, 1.1875rem);
+  line-height: 1.76;
+  overflow-wrap: break-word;
 }
 
-.memorial-rich-text p {
+.memorial-rich-text :where(p, ul, ol, blockquote) {
   margin: 0;
 }
 
-.memorial-rich-text p + p {
-  margin-top: 1rem;
+.memorial-rich-text :where(p, ul, ol, blockquote) + :where(p, ul, ol, blockquote) {
+  margin-top: 1.05rem;
+}
+
+.memorial-rich-text :where(ul, ol) {
+  padding-left: 1.35rem;
+}
+
+.memorial-rich-text li + li {
+  margin-top: 0.45rem;
+}
+
+.memorial-rich-text blockquote {
+  border-left: 2px solid var(--memorial-burgundy);
+  color: var(--memorial-ink-soft);
+  font-style: italic;
+  padding-left: 1rem;
+}
+
+.memorial-rich-text :where(h2, h3, h4) {
+  color: var(--memorial-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 900;
+  line-height: 1.08;
+  margin: 1.5rem 0 0;
+  text-wrap: balance;
+}
+
+.memorial-rich-text a {
+  color: var(--memorial-burgundy-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--memorial-line);
+  text-underline-offset: 0.22em;
 }
 
 .memorial-nav-select {
@@ -107,4 +140,48 @@
 
 .memorial-hero-rich-text p + p {
   margin-top: 0.75rem;
+}
+.memorial-section-rail {
+  max-width: 30rem;
+}
+
+.memorial-section-heading,
+.memorial-block-title {
+  text-wrap: balance;
+}
+
+.memorial-section-block {
+  min-width: 0;
+}
+
+.memorial-section-block + .memorial-section-block {
+  border-top: 1px solid var(--memorial-line);
+  padding-top: 2rem;
+}
+
+.memorial-section-intro {
+  max-width: 56rem;
+}
+
+@media (min-width: 768px) {
+  .memorial-section-block + .memorial-section-block {
+    padding-top: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .memorial-section-rail {
+    position: sticky;
+    top: 8rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .memorial-rich-text {
+    line-height: 1.7;
+  }
+
+  .memorial-section-block + .memorial-section-block {
+    padding-top: 1.75rem;
+  }
 }
