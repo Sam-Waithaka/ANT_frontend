@@ -194,3 +194,299 @@
     padding-top: 1.75rem;
   }
 }
+.memorial-content-preview-card {
+  align-items: stretch;
+  background: var(--memorial-card);
+  border: 1px solid var(--memorial-line);
+  border-radius: 0.25rem;
+  box-shadow: 0 1rem 2.5rem rgba(17, 17, 17, 0.06);
+  appearance: none;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+  text-align: left;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  width: 100%;
+}
+
+.memorial-content-preview-card:hover {
+  border-color: color-mix(in srgb, var(--memorial-burgundy) 48%, var(--memorial-line));
+  box-shadow: 0 1.25rem 3rem rgba(17, 17, 17, 0.1);
+  transform: translateY(-1px);
+}
+
+.memorial-content-preview-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--memorial-burgundy) 34%, transparent);
+  outline-offset: 3px;
+}
+
+.memorial-content-preview-card__image {
+  background: var(--memorial-placeholder-bg);
+  min-height: 11rem;
+  overflow: hidden;
+}
+
+.memorial-content-preview-card__image :where(img, picture) {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.memorial-content-preview-card__image img {
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.memorial-content-preview-card__body {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.35rem;
+}
+
+.memorial-content-preview-card__eyebrow,
+.memorial-reader-eyebrow {
+  color: var(--memorial-burgundy);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.memorial-content-preview-card__title {
+  color: var(--memorial-ink);
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: clamp(1.35rem, 0.5vw + 1.2rem, 1.75rem);
+  font-weight: 900;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.memorial-content-preview-card__subtitle {
+  color: var(--memorial-muted-strong);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.memorial-content-preview-card__preview {
+  color: var(--memorial-muted);
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.memorial-content-preview-card__footer {
+  align-items: center;
+  border-top: 1px solid var(--memorial-line);
+  color: var(--memorial-muted-soft);
+  display: flex;
+  font-size: 0.72rem;
+  font-weight: 900;
+  gap: 1rem;
+  justify-content: space-between;
+  letter-spacing: 0.14em;
+  margin-top: 0.15rem;
+  padding-top: 1rem;
+  text-transform: uppercase;
+}
+
+.memorial-content-preview-card__action {
+  align-items: center;
+  color: var(--memorial-burgundy-dark);
+  display: inline-flex;
+  gap: 0.5rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.memorial-reader-backdrop {
+  align-items: center;
+  background: rgba(14, 12, 10, 0.48);
+  backdrop-filter: blur(12px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  position: fixed;
+  z-index: 80;
+}
+
+.memorial-reader-dialog {
+  background: var(--memorial-paper);
+  border: 1px solid var(--memorial-line);
+  border-radius: 0.5rem;
+  box-shadow: 0 2rem 5rem rgba(0, 0, 0, 0.26);
+  color: var(--memorial-ink);
+  max-height: min(88vh, 58rem);
+  max-width: 58rem;
+  min-width: min(100%, 40rem);
+  outline: none;
+  overflow: hidden;
+  position: relative;
+  width: min(100%, 58rem);
+}
+
+.memorial-reader-mobile-bar {
+  display: none;
+}
+
+.memorial-reader-close-button {
+  align-items: center;
+  background: var(--memorial-chip);
+  border: 1px solid var(--memorial-line);
+  border-radius: 999px;
+  color: var(--memorial-ink);
+  cursor: pointer;
+  display: inline-flex;
+  height: 2.75rem;
+  justify-content: center;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  transition: border-color 180ms ease, color 180ms ease, transform 180ms ease;
+  width: 2.75rem;
+  z-index: 2;
+}
+
+.memorial-reader-close-button:hover {
+  border-color: var(--memorial-burgundy);
+  color: var(--memorial-burgundy-dark);
+  transform: scale(1.03);
+}
+
+.memorial-reader-hero-image {
+  max-height: 18rem;
+  overflow: hidden;
+}
+
+.memorial-reader-hero-image :where(img, picture) {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.memorial-reader-hero-image img {
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  width: 100%;
+}
+
+.memorial-reader-content {
+  max-height: min(88vh, 58rem);
+  overflow-y: auto;
+  padding: clamp(1.5rem, 3vw, 3rem);
+  scrollbar-gutter: stable;
+}
+
+.memorial-reader-hero-image + .memorial-reader-content {
+  max-height: calc(min(88vh, 58rem) - 12rem);
+}
+
+.memorial-reader-header {
+  border-bottom: 1px solid var(--memorial-line);
+  margin-bottom: 1.5rem;
+  padding-right: 3rem;
+  padding-bottom: 1.35rem;
+}
+
+.memorial-reader-title {
+  color: var(--memorial-ink);
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: clamp(2rem, 2vw + 1.25rem, 3.25rem);
+  font-weight: 900;
+  line-height: 1.02;
+  margin-top: 0.75rem;
+  text-wrap: balance;
+}
+
+.memorial-reader-subtitle {
+  color: var(--memorial-muted-strong);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.55;
+  margin-top: 0.85rem;
+}
+
+.memorial-reader-meta {
+  color: var(--memorial-muted-soft);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  margin-top: 1rem;
+  text-transform: uppercase;
+}
+
+.memorial-reader-body {
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .memorial-reader-backdrop {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .memorial-reader-dialog {
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    box-shadow: none;
+    height: 100dvh;
+    max-height: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .memorial-reader-mobile-bar {
+    align-items: center;
+    background: color-mix(in srgb, var(--memorial-paper) 94%, transparent);
+    border-bottom: 1px solid var(--memorial-line);
+    display: flex;
+    min-height: 3.75rem;
+    padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+
+  .memorial-reader-back-button {
+    align-items: center;
+    appearance: none;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--memorial-ink);
+    display: inline-flex;
+    font-size: 0.95rem;
+    font-weight: 900;
+    gap: 0.55rem;
+    min-height: 2.25rem;
+  }
+
+  .memorial-reader-close-button {
+    display: none;
+  }
+
+  .memorial-reader-content,
+  .memorial-reader-hero-image + .memorial-reader-content {
+    flex: 1 1 auto;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    padding: 1.25rem 1.25rem 2.5rem;
+  }
+
+  .memorial-reader-header {
+    padding-right: 0;
+  }
+
+  .memorial-reader-hero-image {
+    max-height: 14rem;
+  }
+}
