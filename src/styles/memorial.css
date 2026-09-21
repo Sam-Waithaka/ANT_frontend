@@ -89,7 +89,16 @@
 .memorial-rich-text :where(p, ul, ol, blockquote) {
   margin: 0;
 }
+.memorial-rich-text .memorial-lexical-content {
+  color: var(--memorial-muted-strong);
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: inherit;
+  line-height: inherit;
+}
 
+.memorial-rich-text .memorial-lexical-content :where(p, li, blockquote) {
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
 .memorial-rich-text :where(p, ul, ol, blockquote) + :where(p, ul, ol, blockquote) {
   margin-top: 1.05rem;
 }

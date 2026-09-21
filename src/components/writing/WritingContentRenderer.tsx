@@ -24,6 +24,8 @@ import {
 import { writingEditorTheme } from "./lexicalTheme";
 
 type WritingContentRendererProps = {
+  ariaLabel?: string;
+  contentEditableClassName?: string;
   contentJson?: unknown;
   darkMode: boolean;
   emptyMessage?: string;
@@ -31,6 +33,8 @@ type WritingContentRendererProps = {
 };
 
 const WritingContentRenderer = ({
+  ariaLabel = "Article preview content",
+  contentEditableClassName = "",
   contentJson,
   darkMode,
   emptyMessage = "This article does not have content yet.",
@@ -76,10 +80,11 @@ const WritingContentRenderer = ({
           ErrorBoundary={LexicalErrorBoundary}
           contentEditable={
             <ContentEditable
-              aria-label="Article preview content"
+              aria-label={ariaLabel}
               className={
                 "whitespace-pre-wrap break-words outline-none " +
-                (darkMode ? "text-stone-100" : "text-zinc-950")
+                (darkMode ? "text-stone-100" : "text-zinc-950") +
+                (contentEditableClassName ? " " + contentEditableClassName : "")
               }
               contentEditable={false}
             />

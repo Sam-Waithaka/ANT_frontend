@@ -4,23 +4,32 @@ export type MemorialItemWithContent = {
   content?: MemorialRichText | null;
 };
 
-export function itemOwnedMemorialBlockIds<TItem extends MemorialItemWithContent>(items: readonly TItem[]) {
+function itemContentBlockId(item: unknown) {
+  if (!item || typeof item !== "object" || !("content" in item)) {
+    return null;
+  }
+
+  const content = (item as MemorialItemWithContent).content;
+  return content?.id === undefined || content.id === null ? null : String(content.id);
+}
+
+export function itemOwnedMemorialBlockIds(items: readonly unknown[]) {
   const ownedIds = new Set<string>();
 
   for (const item of items) {
-    const contentId = item.content?.id;
+    const contentId = itemContentBlockId(item);
 
-    if (contentId !== undefined && contentId !== null) {
-      ownedIds.add(String(contentId));
+    if (contentId) {
+      ownedIds.add(contentId);
     }
   }
 
   return ownedIds;
 }
 
-export function filterItemOwnedMemorialBlocks<TItem extends MemorialItemWithContent>(
+export function filterItemOwnedMemorialBlocks(
   blocks: readonly MemorialRichText[],
-  items: readonly TItem[],
+  items: readonly unknown[],
 ) {
   const ownedIds = itemOwnedMemorialBlockIds(items);
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import ReactPlayer from "react-player";
 import {
   ArrowDown,
@@ -21,10 +21,14 @@ import {
   memorialSectionKeys,
 } from "../api/memorialPublic";
 import FloatingBrowseControl from "../components/navigation/FloatingBrowseControl";
+import WritingContentRenderer from "../components/writing/WritingContentRenderer";
 import SiteFooter from "../components/navigation/SiteFooter";
 import SiteHeader from "../components/navigation/SiteHeader";
 import { useTheme } from "../hooks/useTheme";
+import { canRenderMemorialLexicalContent } from "../utils/memorialLexicalContent";
 import { filterItemOwnedMemorialBlocks } from "../utils/memorialPublicBlocks";
+import type { WritingMediaEmbedLike } from "../components/writing/editor/nodes/ChurchBlockMediaContext";
+import type { MediaAsset, MediaVariant } from "../services/mediaAssetsApi";
 import type {
   MemorialMediaAsset,
   MemorialMediaEmbed,
@@ -103,6 +107,12 @@ type PublicImageVariant = {
   url: string;
   width: number | null;
 };
+
+const MemorialThemeContext = createContext(false);
+
+function useMemorialDarkMode() {
+  return useContext(MemorialThemeContext);
+}
 
 function MemorialPublicPage() {
   const { darkMode, toggleTheme } = useTheme();
@@ -283,6 +293,7 @@ function MemorialHero({
   const hasPortrait = Boolean(getBestImageVariant(page.portrait_image, "large"));
   const initials = getInitials(page.full_name);
   const scriptureReferences = primaryHeroBlock?.scripture_references ?? [];
+  const primaryHeroUsesLexicalContent = richTextUsesLexicalContent(primaryHeroBlock);
   const showLifeLegacyCta = visibleSectionKeys.includes("life_service");
   const showArrangementsCta = visibleSectionKeys.includes("arrangements");
 
@@ -312,14 +323,16 @@ function MemorialHero({
             <p className="text-[var(--memorial-muted-strong)]">{page.years_of_service}</p>
           </div>
           <span className="memorial-rule mt-7" aria-hidden="true" />
-          {primaryHeroBlock?.content_html ? (
+          {primaryHeroBlock && hasRenderableRichTextBody(primaryHeroBlock) ? (
             <RichTextBlock
               className="memorial-hero-rich-text memorial-scripture mt-7 max-w-2xl text-xl sm:text-2xl xl:text-3xl"
-              html={primaryHeroBlock.content_html}
+              content={primaryHeroBlock}
             />
           ) : null}
-          <ScriptureReferences references={scriptureReferences} variant="inline" />
-          {primaryHeroBlock?.media_embeds.length ? (
+          {primaryHeroUsesLexicalContent ? null : (
+            <ScriptureReferences references={scriptureReferences} variant="inline" />
+          )}
+          {!primaryHeroUsesLexicalContent && primaryHeroBlock?.media_embeds.length ? (
             <MediaEmbeds embeds={primaryHeroBlock.media_embeds} preferredSize="medium" />
           ) : null}
           {supplementalHeroBlocks.length ? (
@@ -539,15 +552,107 @@ function CoreMemorialSection({
   );
 }
 
-function RichTextBlock({ className = "", html }: { className?: string; html: string }) {
-  if (!html) {
+function memorialMediaAssetForLexical(asset: MemorialMediaAsset): MediaAsset {
+  const variantMap: MediaAsset["variant_map"] = {};
+  const variants: MediaVariant[] = [];
+  const sourceVariantMap = asset.variant_map ?? {};
+
+  for (const format of ["avif", "webp", "jpeg"] as const) {
+    const sourceBySize = sourceVariantMap[format];
+
+    if (!sourceBySize) {
+      continue;
+    }
+
+    const targetBySize = {} as NonNullable<MediaAsset["variant_map"][typeof format]>;
+
+    for (const size of ["thumb", "small", "medium", "large"] as const) {
+      const variant = sourceBySize[size];
+
+      if (!variant?.url) {
+        continue;
+      }
+
+      const mediaVariant: MediaVariant = {
+        file_size: variant.file_size,
+        format,
+        generated_at: null,
+        height: variant.height,
+        id: variant.id,
+        quality: variant.quality,
+        size_name: variant.size_name || size,
+        status: "ready",
+        url: variant.url,
+        width: variant.width,
+      };
+
+      targetBySize[size] = mediaVariant;
+      variants.push(mediaVariant);
+    }
+
+    variantMap[format] = targetBySize;
+  }
+
+  return {
+    ...asset,
+    alt_text: asset.alt_text || "",
+    caption: asset.caption || "",
+    height: asset.height ?? null,
+    original_url: asset.original_url || null,
+    status: "ready",
+    uuid: asset.uuid || String(asset.id),
+    variant_map: variantMap,
+    variants,
+    width: asset.width ?? null,
+  };
+}
+
+function memorialMediaEmbedsForLexical(embeds: MemorialMediaEmbed[]): WritingMediaEmbedLike[] {
+  return embeds.map((embed) => ({
+    alt_text_override: embed.alt_text_override,
+    caption_override: embed.caption_override,
+    embed_id: embed.embed_id,
+    id: embed.id,
+    media_asset: embed.media_asset.id,
+    media_asset_detail: memorialMediaAssetForLexical(embed.media_asset),
+  }));
+}
+
+function RichTextBlock({ className = "", content }: { className?: string; content: MemorialRichText | null }) {
+  const darkMode = useMemorialDarkMode();
+  const usesLexicalContent = richTextUsesLexicalContent(content);
+  const mediaEmbeds = useMemo(
+    () => memorialMediaEmbedsForLexical(content?.media_embeds ?? []),
+    [content],
+  );
+
+  if (!content) {
+    return null;
+  }
+
+  if (usesLexicalContent) {
+    return (
+      <div className={"memorial-rich-text max-w-[48rem] " + className}>
+        <WritingContentRenderer
+          ariaLabel="Memorial content"
+          contentEditableClassName="memorial-lexical-content"
+          contentJson={content.content_json}
+          darkMode={darkMode}
+          emptyMessage=""
+          mediaEmbeds={mediaEmbeds}
+        />
+      </div>
+    );
+  }
+
+  if (!content.content_html) {
     return null;
   }
 
   return (
     <div
-      className={`memorial-rich-text max-w-[48rem] ${className}`}
-      dangerouslySetInnerHTML={{ __html: html }}
+      className={"memorial-rich-text max-w-[48rem] " + className}
+      dangerouslySetInnerHTML={{ __html: content.content_html }}
     />
   );
 }
@@ -586,7 +691,7 @@ export function SectionBlocks({
   }
 
   return (
-    <div className={`grid gap-8 ${className}`}>
+    <div className={"grid gap-8 " + className}>
       {renderableBlocks.map((block) => (
         <SectionBlock
           block={block}
@@ -614,15 +719,21 @@ export function SectionBlock({
   showReadingTime = true,
   titleLevel = 3,
 }: SectionBlockProps) {
+  const usesLexicalContent = richTextUsesLexicalContent(block);
   const hasHeading = !hideBlockTitles && Boolean(block.title || block.subtitle);
-  const hasBody = Boolean(block.content_html || block.media_embeds.length || block.scripture_references.length || (block.reading_time_minutes ?? 0) > 0);
+  const hasBody = Boolean(
+    hasRenderableRichTextBody(block) ||
+      block.media_embeds.length ||
+      block.scripture_references.length ||
+      (block.reading_time_minutes ?? 0) > 0,
+  );
 
   if (!hasHeading && !hasBody) {
     return null;
   }
 
   return (
-    <article className={`memorial-section-block ${centered ? "mx-auto text-center" : ""} ${blockClassName}`}>
+    <article className={"memorial-section-block " + (centered ? "mx-auto text-center " : "") + blockClassName}>
       {hasHeading ? (
         <div className={centered ? "mx-auto max-w-3xl" : "max-w-3xl"}>
           {block.title ? <SectionBlockTitle level={titleLevel}>{block.title}</SectionBlockTitle> : null}
@@ -634,16 +745,16 @@ export function SectionBlock({
         </div>
       ) : null}
 
-      {block.content_html ? (
+      {hasRenderableRichTextBody(block) ? (
         <RichTextBlock
-          className={`${hasHeading ? "mt-5" : ""} ${centered ? "mx-auto" : ""} ${contentClassName}`}
-          html={block.content_html}
+          className={(hasHeading ? "mt-5 " : "") + (centered ? "mx-auto " : "") + contentClassName}
+          content={block}
         />
       ) : null}
-      <ScriptureReferences centered={centered} references={block.scripture_references} />
-      <MediaEmbeds embeds={block.media_embeds} preferredSize={mediaSize} />
+      {usesLexicalContent ? null : <ScriptureReferences centered={centered} references={block.scripture_references} />}
+      {usesLexicalContent ? null : <MediaEmbeds embeds={block.media_embeds} preferredSize={mediaSize} />}
       {showReadingTime && block.reading_time_minutes ? (
-        <p className={`mt-5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--memorial-muted-soft)] ${centered ? "text-center" : ""}`}>
+        <p className={"mt-5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--memorial-muted-soft)] " + (centered ? "text-center" : "")}>
           {block.reading_time_minutes} min read
         </p>
       ) : null}
@@ -853,8 +964,8 @@ function RecordingGroup({
             {group.series?.title || "Memorial recordings"}
           </p>
           <h3 className="mt-3 text-2xl font-black leading-tight text-[var(--memorial-ink)]">{group.title}</h3>
-          {group.content?.content_html ? (
-            <RichTextBlock className="mt-4 text-base" html={group.content.content_html} />
+          {hasRenderableRichTextBody(group.content) ? (
+            <RichTextBlock className="mt-4 text-base" content={group.content} />
           ) : group.series?.description ? (
             <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--memorial-muted)]">{group.series.description}</p>
           ) : null}
@@ -1028,8 +1139,8 @@ function MinistryLegacySection({
                   <h3 className="mt-3 text-xl font-black leading-tight text-[var(--memorial-ink)]">
                     {item.content?.title || `${item.display_ministry_name} tribute`}
                   </h3>
-                  {item.content?.content_html ? (
-                    <RichTextBlock className="mt-4 text-base" html={item.content.content_html} />
+                  {hasRenderableRichTextBody(item.content) ? (
+                    <RichTextBlock className="mt-4 text-base" content={item.content} />
                   ) : null}
                   <div className="mt-5 border-t border-[var(--memorial-line)] pt-4 text-sm leading-6 text-[var(--memorial-muted)]">
                     {item.speaker_name ? <p className="font-black text-[var(--memorial-ink)]">{item.speaker_name}</p> : null}
@@ -1097,8 +1208,8 @@ function PersonalTributesSection({
                     {item.relationship_to_deceased}
                   </p>
                 ) : null}
-                {item.content?.content_html ? (
-                  <RichTextBlock className="mt-5 text-base" html={item.content.content_html} />
+                {hasRenderableRichTextBody(item.content) ? (
+                  <RichTextBlock className="mt-5 text-base" content={item.content} />
                 ) : null}
               </article>
             );
@@ -1146,8 +1257,8 @@ function LeadershipTimelineSection({
                       <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--memorial-burgundy)]">{dateLabel}</p>
                     ) : null}
                     <h3 className="mt-3 text-2xl font-black leading-tight text-[var(--memorial-ink)]">{item.title}</h3>
-                    {item.content?.content_html ? (
-                      <RichTextBlock className="mt-4 text-base" html={item.content.content_html} />
+                    {hasRenderableRichTextBody(item.content) ? (
+                      <RichTextBlock className="mt-4 text-base" content={item.content} />
                     ) : null}
                   </div>
                 </div>
@@ -1268,8 +1379,8 @@ function ArrangementsSection({
                   ) : null}
                 </div>
 
-                {item.content?.content_html ? (
-                  <RichTextBlock className="mt-5 text-base" html={item.content.content_html} />
+                {hasRenderableRichTextBody(item.content) ? (
+                  <RichTextBlock className="mt-5 text-base" content={item.content} />
                 ) : null}
 
                 {item.livestream_url || programmeUrl ? (
@@ -1493,16 +1604,16 @@ function shouldRenderSection(sectionKey: MemorialNavSectionKey, sections: Memori
   }
 }
 
-function getRepeatableSectionEditorialBlocks<TItem extends { content?: MemorialRichText | null }>(section: {
+function getRepeatableSectionEditorialBlocks(section: {
   blocks: MemorialRichText[];
-  items: TItem[];
+  items: unknown[];
 }) {
   return filterItemOwnedMemorialBlocks(section.blocks, section.items);
 }
 
-function hasRenderableRepeatableSectionBlocks<TItem extends { content?: MemorialRichText | null }>(section: {
+function hasRenderableRepeatableSectionBlocks(section: {
   blocks: MemorialRichText[];
-  items: TItem[];
+  items: unknown[];
 }) {
   return hasRenderableBlocks(getRepeatableSectionEditorialBlocks(section));
 }
@@ -1515,7 +1626,7 @@ function hasRenderableBlock(block: MemorialRichText) {
   return Boolean(
     hasRenderableText(block.title) ||
       hasRenderableText(block.subtitle) ||
-      hasRenderableText(block.content_html) ||
+      hasRenderableRichTextBody(block) ||
       hasRenderableMediaEmbeds(block.media_embeds) ||
       block.scripture_references.length > 0 ||
       (block.reading_time_minutes ?? 0) > 0,
@@ -1524,6 +1635,14 @@ function hasRenderableBlock(block: MemorialRichText) {
 
 function hasRenderableRichTextContent(content: MemorialRichText | null) {
   return content ? hasRenderableBlock(content) : false;
+}
+
+function hasRenderableRichTextBody(content: MemorialRichText | null | undefined) {
+  return Boolean(content && (richTextUsesLexicalContent(content) || hasRenderableText(content.content_html)));
+}
+
+function richTextUsesLexicalContent(content: MemorialRichText | null | undefined) {
+  return Boolean(content && canRenderMemorialLexicalContent(content.content_json));
 }
 
 function hasRenderableMediaEmbeds(embeds: MemorialMediaEmbed[]) {
@@ -1714,9 +1833,11 @@ function getInitials(name: string) {
 
 function MemorialContentShell({ children, darkMode }: { children: ReactNode; darkMode: boolean }) {
   return (
-    <div className="memorial-page text-[var(--memorial-ink)]" data-memorial-theme={darkMode ? "dark" : "light"}>
-      {children}
-    </div>
+    <MemorialThemeContext.Provider value={darkMode}>
+      <div className="memorial-page text-[var(--memorial-ink)]" data-memorial-theme={darkMode ? "dark" : "light"}>
+        {children}
+      </div>
+    </MemorialThemeContext.Provider>
   );
 }
 
