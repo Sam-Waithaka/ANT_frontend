@@ -28,6 +28,7 @@ import type {
   MemorialMediaAsset,
   MemorialMediaEmbed,
   MemorialPublicPayload,
+  MemorialRichText,
   MemorialScriptureReference,
 } from "../types/memorialPublic";
 import "../styles/memorial.css";
@@ -526,6 +527,123 @@ function RichTextBlock({ className = "", html }: { className?: string; html: str
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
+}
+
+type SectionBlocksProps = {
+  blockClassName?: string;
+  blocks: MemorialRichText[];
+  centered?: boolean;
+  className?: string;
+  contentClassName?: string;
+  hideBlockTitles?: boolean;
+  mediaSize?: PublicImageSize;
+  showReadingTime?: boolean;
+  titleLevel?: 2 | 3 | 4;
+};
+
+type SectionBlockProps = Omit<SectionBlocksProps, "blocks" | "className"> & {
+  block: MemorialRichText;
+};
+
+export function SectionBlocks({
+  blockClassName = "",
+  blocks,
+  centered = false,
+  className = "",
+  contentClassName = "",
+  hideBlockTitles = false,
+  mediaSize = "medium",
+  showReadingTime = true,
+  titleLevel = 3,
+}: SectionBlocksProps) {
+  if (!blocks.length) {
+    return null;
+  }
+
+  return (
+    <div className={`grid gap-8 ${className}`}>
+      {blocks.map((block) => (
+        <SectionBlock
+          block={block}
+          blockClassName={blockClassName}
+          centered={centered}
+          contentClassName={contentClassName}
+          hideBlockTitles={hideBlockTitles}
+          key={block.id}
+          mediaSize={mediaSize}
+          showReadingTime={showReadingTime}
+          titleLevel={titleLevel}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function SectionBlock({
+  block,
+  blockClassName = "",
+  centered = false,
+  contentClassName = "",
+  hideBlockTitles = false,
+  mediaSize = "medium",
+  showReadingTime = true,
+  titleLevel = 3,
+}: SectionBlockProps) {
+  const hasHeading = !hideBlockTitles && Boolean(block.title || block.subtitle);
+  const hasBody = Boolean(block.content_html || block.media_embeds.length || block.scripture_references.length || block.reading_time_minutes);
+
+  if (!hasHeading && !hasBody) {
+    return null;
+  }
+
+  return (
+    <article className={`${centered ? "mx-auto text-center" : ""} ${blockClassName}`}>
+      {hasHeading ? (
+        <div className={centered ? "mx-auto max-w-3xl" : "max-w-3xl"}>
+          {block.title ? <SectionBlockTitle level={titleLevel}>{block.title}</SectionBlockTitle> : null}
+          {block.subtitle ? (
+            <p className="mt-3 text-base font-bold leading-7 text-[var(--memorial-muted-strong)]">
+              {block.subtitle}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {block.content_html ? (
+        <RichTextBlock
+          className={`${hasHeading ? "mt-5" : ""} ${centered ? "mx-auto" : ""} ${contentClassName}`}
+          html={block.content_html}
+        />
+      ) : null}
+      <ScriptureReferences centered={centered} references={block.scripture_references} />
+      <MediaEmbeds embeds={block.media_embeds} preferredSize={mediaSize} />
+      {showReadingTime && block.reading_time_minutes ? (
+        <p className={`mt-5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--memorial-muted-soft)] ${centered ? "text-center" : ""}`}>
+          {block.reading_time_minutes} min read
+        </p>
+      ) : null}
+    </article>
+  );
+}
+
+function SectionBlockTitle({
+  children,
+  level,
+}: {
+  children: ReactNode;
+  level: 2 | 3 | 4;
+}) {
+  const className = "font-serif text-2xl font-black leading-tight text-[var(--memorial-ink)] sm:text-3xl";
+
+  if (level === 2) {
+    return <h2 className={className}>{children}</h2>;
+  }
+
+  if (level === 4) {
+    return <h4 className={className}>{children}</h4>;
+  }
+
+  return <h3 className={className}>{children}</h3>;
 }
 
 function ScriptureReferences({

@@ -8,7 +8,7 @@ import type {
 export const ELDER_GEOFFREY_MEMORIAL_ROUTE_SLUG =
   "in-loving-memory-of-elder-geoffrey-kirungu-gicharu";
 
-export const ELDER_GEOFFREY_MEMORIAL_API_SLUG = "elder-geoffrey-kirungu-gicharu";
+export const ELDER_GEOFFREY_MEMORIAL_API_SLUG = "elder-geoffrey-kirungu";
 
 export const memorialSectionKeys = [
   "hero",
@@ -31,8 +31,8 @@ const createMemorialPublicPagePath = (slug: string) => `/v1/memorial/public/page
 export const createMemorialPublicPageUrl = (slug: string) => createApiUrl(createMemorialPublicPagePath(slug));
 
 type MemorialSectionShapeSummary = {
-  content: "present" | "null";
-  content_fields: string[];
+  block_count: number;
+  block_fields: string[];
   item_count?: number;
   item_fields?: string[];
 };
@@ -71,12 +71,12 @@ export function summarizeMemorialPayloadShape(
   const sections = memorialSectionKeys.reduce(
     (summary, sectionKey) => {
       const section = payload.sections[sectionKey];
-      const content = section.content;
+      const blocks = section.blocks;
       const items = "items" in section ? section.items : undefined;
 
       summary[sectionKey] = {
-        content: content ? "present" : "null",
-        content_fields: content ? summarizeRichTextFields(content) : [],
+        block_count: blocks.length,
+        block_fields: summarizeFirstBlockFields(blocks),
         ...(Array.isArray(items)
           ? {
               item_count: items.length,
@@ -97,8 +97,14 @@ export function summarizeMemorialPayloadShape(
   };
 }
 
-function summarizeRichTextFields(content: MemorialRichText) {
-  return Object.keys(content);
+function summarizeFirstBlockFields(blocks: MemorialRichText[]) {
+  const firstBlock = blocks[0];
+
+  if (!firstBlock) {
+    return [];
+  }
+
+  return Object.keys(firstBlock);
 }
 
 function summarizeFirstItemFields(items: unknown[]) {

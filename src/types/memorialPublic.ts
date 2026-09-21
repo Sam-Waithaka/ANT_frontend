@@ -66,6 +66,7 @@ export type MemorialRichText = {
   section_key: string;
   title: string;
   subtitle: string;
+  content_json: unknown;
   content_html: string;
   content_text: string;
   reading_time_minutes: number | null;
@@ -96,7 +97,7 @@ export type MemorialBaseSection = {
 };
 
 export type MemorialSimpleSection = MemorialBaseSection & {
-  content: MemorialRichText | null;
+  blocks: MemorialRichText[];
 };
 
 export type MemorialMinistrySummary = {
@@ -213,7 +214,7 @@ export type ArrangementItem = {
 };
 
 export type MemorialSectionWithItems<TItem> = MemorialBaseSection & {
-  content: MemorialRichText | null;
+  blocks: MemorialRichText[];
   items: TItem[];
 };
 
@@ -226,7 +227,7 @@ export type MemorialPublicSections = {
   leadership_timeline: MemorialSectionWithItems<LeadershipTimelineItem>;
   gallery: MemorialSectionWithItems<GalleryItem>;
   recordings: MemorialBaseSection & {
-    content: MemorialRichText | null;
+    blocks: MemorialRichText[];
     items: RecordingSectionGroup[];
   };
   arrangements: MemorialSectionWithItems<ArrangementItem>;
