@@ -82,7 +82,7 @@ function App() {
                 <Route path="/media" element={<MediaPage />} />
                 <Route path="/media/series/:slug" element={<MediaSeriesPage />} />
                 <Route path="/media/watch/:slug" element={<MediaWatchPage />} />
-                <Route path="/in-loving-memory-of-elder-geoffrey-kirungu-gicharu" element={<MemorialPublicPage />} />
+                <Route path="/:memorialRouteSlug" element={<MemorialPublicPage />} />
                 <Route path="/ministries" element={<MinistriesPage />} />
                 <Route path="/settings" element={<PlannedDestinationPage eyebrow="Preferences" icon={Settings} title="Settings" description="Site preferences, accessibility options, notifications, and personal defaults will be managed here." />} />
                 <Route path="/account" element={<AccountRoute><AccountPage /></AccountRoute>} />

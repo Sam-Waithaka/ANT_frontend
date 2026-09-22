@@ -1,10 +1,11 @@
-import { CalendarDays, Plus, Search, UserRound } from 'lucide-react';
+import { CalendarDays, ExternalLink, Plus, Search, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import MemorialPortalShell, { MemorialPortalEmptyState } from '../../../components/portal/memorials/MemorialPortalShell';
 import PortalModal from '../../../components/portal/PortalModal';
 import { usePortalToast } from '../../../components/portal/PortalToast';
 import { portalSurface } from '../../../components/portal/portalSurface';
+import { createMemorialPublicRoute } from '../../../api/memorialPublic';
 import { useAuth } from '../../../hooks/useAuth';
 import { useTheme } from '../../../hooks/useTheme';
 import {
@@ -12,7 +13,7 @@ import {
   fetchMemorialPages,
 } from '../../../services/memorialApi';
 import type { MemorialPage, MemorialWorkflowStatus } from '../../../types/memorial';
-import { MEMORIAL_WORKFLOW_STATUSES, getMemorialStatusLabel } from '../../../utils/memorialWorkflow';
+import { MEMORIAL_WORKFLOW_STATUSES, getMemorialStatusLabel, isPubliclyVisibleMemorialRecord } from '../../../utils/memorialWorkflow';
 
 const PAGE_SIZE = 24;
 const statuses: Array<MemorialWorkflowStatus | 'ALL'> = ['ALL', ...MEMORIAL_WORKFLOW_STATUSES];
@@ -95,6 +96,8 @@ const MemorialPageCard = ({
   const dateRange = [formatDate(memorial.birth_date), formatDate(memorial.death_date)]
     .filter(Boolean)
     .join(' - ');
+  const canOpenPublicPage = isPubliclyVisibleMemorialRecord(memorial);
+  const publicMemorialHref = createMemorialPublicRoute(memorial.slug);
 
   return (
     <article className={`rounded-[1.5rem] border p-4 shadow-lg sm:rounded-3xl sm:p-5 ${portalSurface.card(darkMode)}`}>
@@ -129,12 +132,25 @@ const MemorialPageCard = ({
           {memorial.slug}
         </span>
       </div>
-      <Link
-        className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 sm:w-auto"
-        to={`/portal/memorials/${memorial.id}`}
-      >
-        Open editor
-      </Link>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <Link
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-red-800 px-5 text-sm font-black text-white shadow-lg shadow-red-950/20 transition hover:-translate-y-0.5 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-700 sm:w-auto"
+          to={`/portal/memorials/${memorial.id}`}
+        >
+          Open editor
+        </Link>
+        {canOpenPublicPage ? (
+          <Link
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-red-900/20 px-5 text-sm font-black text-red-800 transition hover:-translate-y-0.5 hover:bg-red-950/5 focus:outline-none focus:ring-2 focus:ring-red-700 dark:border-red-200/20 dark:text-red-100 dark:hover:bg-white/10 sm:w-auto"
+            rel="noreferrer"
+            target="_blank"
+            to={publicMemorialHref}
+          >
+            View public page
+            <ExternalLink size={15} aria-hidden="true" />
+          </Link>
+        ) : null}
+      </div>
     </article>
   );
 };

@@ -5,10 +5,30 @@ import type {
   MemorialRichText,
 } from "../types/memorialPublic";
 
-export const ELDER_GEOFFREY_MEMORIAL_ROUTE_SLUG =
-  "in-loving-memory-of-elder-geoffrey-kirungu-gicharu";
+export const MEMORIAL_PUBLIC_ROUTE_PREFIX = "in-loving-memory-of";
 
-export const ELDER_GEOFFREY_MEMORIAL_API_SLUG = "elder-geoffrey-kirungu";
+export const createMemorialPublicRouteSlug = (slug: string) =>
+  `${MEMORIAL_PUBLIC_ROUTE_PREFIX}-${slug}`;
+
+export const createMemorialPublicRoute = (slug: string) =>
+  `/${createMemorialPublicRouteSlug(slug)}`;
+
+export const getMemorialApiSlugFromRouteSlug = (routeSlug: string | undefined) => {
+  const normalizedRouteSlug = routeSlug?.trim().replace(/^\/+|\/+$/g, "");
+  const routePrefix = `${MEMORIAL_PUBLIC_ROUTE_PREFIX}-`;
+
+  if (!normalizedRouteSlug?.startsWith(routePrefix)) {
+    return null;
+  }
+
+  const apiSlug = normalizedRouteSlug.slice(routePrefix.length).trim();
+  return apiSlug || null;
+};
+
+export const ELDER_GEOFFREY_MEMORIAL_API_SLUG = "elder-geoffrey-kirungu-gicharu";
+export const ELDER_GEOFFREY_MEMORIAL_ROUTE_SLUG = createMemorialPublicRouteSlug(
+  ELDER_GEOFFREY_MEMORIAL_API_SLUG,
+);
 
 export const memorialSectionKeys = [
   "hero",
@@ -26,7 +46,7 @@ export const memorialSectionKeys = [
 
 type MemorialSectionKey = (typeof memorialSectionKeys)[number];
 
-const createMemorialPublicPagePath = (slug: string) => `/v1/memorial/public/pages/${slug}/`;
+const createMemorialPublicPagePath = (slug: string) => `/v1/memorial/public/pages/${encodeURIComponent(slug)}/`;
 
 export const createMemorialPublicPageUrl = (slug: string) => createApiUrl(createMemorialPublicPagePath(slug));
 

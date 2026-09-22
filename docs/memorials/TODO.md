@@ -121,3 +121,113 @@ Once the corrected backend response has been verified:
 * Repeatable content renders through its intended card, timeline, gallery, arrangement, tribute, or recording UI.
 * The temporary frontend workaround has been completely removed.
 * Backend and frontend tests document and enforce the ownership contract.
+
+## TODO: Unify memorial public route, API slug, and environment link contract
+
+### Background
+
+During the Elder Geoffrey Kirungu Gicharu memorial rollout, we repeatedly confused three different identifiers:
+
+```text
+Frontend public route slug:
+in-loving-memory-of-elder-geoffrey-kirungu-gicharu
+
+Production backend memorial page slug:
+elder-geoffrey-kirungu-gicharu
+
+Old/local debugging slug used earlier:
+elder-geoffrey-kirungu
+```
+
+The public frontend route is intentionally more human-readable and should remain:
+
+```text
+/in-loving-memory-of-elder-geoffrey-kirungu-gicharu
+```
+
+The public API endpoint that currently returns the production payload is:
+
+```text
+GET https://api.aicnjoro.org/v1/memorial/public/pages/elder-geoffrey-kirungu-gicharu/
+```
+
+The confirmed production response returned `200 application/json` for this slug and included:
+
+```json
+{
+  "page": {
+    "id": 1,
+    "full_name": "Elder Geoffrey Kirungu Gicharu",
+    "slug": "elder-geoffrey-kirungu-gicharu"
+  }
+}
+```
+
+### What went wrong
+
+We changed the frontend API slug several times while trying to reconcile local and production behavior:
+
+- `elder-geoffrey-kirungu`
+- `in-loving-memory-of-elder-geoffrey-kirungu-gicharu`
+- `elder-geoffrey-kirungu-gicharu`
+
+The first two returned `404` on production. The correct production DB slug is:
+
+```text
+elder-geoffrey-kirungu-gicharu
+```
+
+This caused the public memorial page to show a frontend 404/error state even though the route itself was valid.
+
+### Current frontend contract
+
+The frontend now deliberately separates the public page route from the backend API slug:
+
+```ts
+export const ELDER_GEOFFREY_MEMORIAL_ROUTE_SLUG =
+  "in-loving-memory-of-elder-geoffrey-kirungu-gicharu";
+
+export const ELDER_GEOFFREY_MEMORIAL_API_SLUG =
+  "elder-geoffrey-kirungu-gicharu";
+```
+
+The route slug is for browser navigation. The API slug is for the backend memorial record.
+
+### Cleanup work
+
+- Decide whether this hard-coded mapping should remain in the frontend or move into configuration/API discovery.
+- Confirm local backend data uses the same DB slug as production, or document a safe local override.
+- Avoid changing `ELDER_GEOFFREY_MEMORIAL_API_SLUG` without testing the exact target API URL first.
+- Add a small regression test or documented smoke check that verifies the frontend constructs:
+
+```text
+/v1/memorial/public/pages/elder-geoffrey-kirungu-gicharu/
+```
+
+- Confirm the homepage memorial banner and public memorial page use the same API slug source.
+- Confirm deployment environments set `VITE_API_BASE_URL` correctly:
+
+```text
+Production: https://api.aicnjoro.org
+Local dev: empty base through Vite proxy, or local backend URL when explicitly configured
+```
+
+### Related backend/data issue
+
+The public payload currently returns this under `sections.arrangements`:
+
+```text
+block_count = 4
+item_count = 1
+```
+
+This is a separate but related contract issue. Some arrangement content appears as section-level rich-text blocks when it may belong to arrangement items. Reconcile this with the temporary frontend deduplication TODO above.
+
+### Acceptance criteria
+
+- The public memorial page route remains stable and user-facing.
+- The frontend API slug matches the backend DB slug.
+- Local, staging, and production behavior are documented and reproducible.
+- Backend public endpoint tests confirm the live memorial slug returns `200`.
+- Frontend smoke checks confirm the memorial page fetches the correct API endpoint before deployment.
+- No future fix relies on guessing between route slug, DB slug, and display URL.

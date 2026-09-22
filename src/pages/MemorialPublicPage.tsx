@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import ReactPlayer from "react-player";
+import { useParams } from "react-router-dom";
 import {
   ArrowDown,
   ArrowRight,
@@ -15,8 +16,8 @@ import {
   UserRound,
 } from "lucide-react";
 import {
-  ELDER_GEOFFREY_MEMORIAL_API_SLUG,
   createMemorialPublicPageUrl,
+  getMemorialApiSlugFromRouteSlug,
   getMemorialPage,
   memorialSectionKeys,
 } from "../api/memorialPublic";
@@ -48,8 +49,6 @@ import type {
   MemorialScriptureReference,
 } from "../types/memorialPublic";
 import "../styles/memorial.css";
-
-const memorialEndpointPath = createMemorialPublicPageUrl(ELDER_GEOFFREY_MEMORIAL_API_SLUG);
 
 type MemorialSectionKey = (typeof memorialSectionKeys)[number];
 type MemorialNavSectionKey = Exclude<MemorialSectionKey, "hero">;
@@ -132,6 +131,17 @@ function useMemorialViewportSize() {
 
 function MemorialPublicPage() {
   const { darkMode, toggleTheme } = useTheme();
+  const { memorialRouteSlug } = useParams<{ memorialRouteSlug?: string }>();
+  const memorialApiSlug = useMemo(
+    () => getMemorialApiSlugFromRouteSlug(memorialRouteSlug),
+    [memorialRouteSlug],
+  );
+  const memorialEndpointPath = useMemo(
+    () => memorialApiSlug
+      ? createMemorialPublicPageUrl(memorialApiSlug)
+      : `/${memorialRouteSlug || ""}`,
+    [memorialApiSlug, memorialRouteSlug],
+  );
   const [requestState, setRequestState] = useState<MemorialRequestState>({ status: "loading" });
 
   useEffect(() => {
@@ -140,8 +150,13 @@ function MemorialPublicPage() {
     async function loadMemorialPage() {
       setRequestState({ status: "loading" });
 
+      if (!memorialApiSlug) {
+        setRequestState({ status: "not-found" });
+        return;
+      }
+
       try {
-        const payload = await getMemorialPage(ELDER_GEOFFREY_MEMORIAL_API_SLUG);
+        const payload = await getMemorialPage(memorialApiSlug);
 
         if (ignore) {
           return;
@@ -170,7 +185,7 @@ function MemorialPublicPage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [memorialApiSlug]);
 
   useEffect(() => {
     if (requestState.status !== "ready") {
