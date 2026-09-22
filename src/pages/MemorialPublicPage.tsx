@@ -804,7 +804,6 @@ export function SectionBlock({
     image: resolveMemorialPreviewImage({
       alt: readerTitle,
       content: block,
-      fallbackVisual: getSectionPreviewFallbackVisual(block, readerTitle),
       preferredSize: mediaSize,
     }),
     preview: getMemorialBlockExcerpt(block, viewportSize),
@@ -885,7 +884,6 @@ type MemorialItemContentProps = {
   fallbackTitle: string;
   explicitImage?: MemorialMediaAsset | null;
   forceReader?: boolean;
-  fallbackVisual?: ReactNode;
   imageAlt?: string;
   mediaSize?: PublicImageSize;
   previewClassName?: string;
@@ -901,7 +899,6 @@ function MemorialItemContent({
   contentClassName = "text-base",
   explicitImage = null,
   fallbackTitle,
-  fallbackVisual,
   forceReader = false,
   imageAlt,
   mediaSize = "medium",
@@ -946,7 +943,6 @@ function MemorialItemContent({
       alt: imageAlt || title,
       content,
       explicitImage,
-      fallbackVisual,
       preferredSize: mediaSize,
     }),
     preview: getMemorialBlockExcerpt(content, viewportSize),
@@ -1001,7 +997,6 @@ type MemorialPreviewImageOptions = {
   alt: string;
   content?: MemorialRichText | null;
   explicitImage?: MemorialMediaAsset | null;
-  fallbackVisual?: ReactNode;
   preferredSize: PublicImageSize;
 };
 
@@ -1009,14 +1004,9 @@ function resolveMemorialPreviewImage({
   alt,
   content = null,
   explicitImage = null,
-  fallbackVisual,
   preferredSize,
 }: MemorialPreviewImageOptions) {
-  return (
-    getPreviewImageFromAsset(explicitImage, alt, preferredSize) ??
-    getPreviewImageFromAsset(getPrimaryBlockImage(content), alt, preferredSize) ??
-    fallbackVisual
-  );
+  return getPreviewImageFromAsset(explicitImage, alt, preferredSize) ?? getPreviewImageFromAsset(getPrimaryBlockImage(content), alt, preferredSize);
 }
 
 function getPreviewImageFromAsset(asset: MemorialMediaAsset | null, alt: string, preferredSize: PublicImageSize) {
@@ -1034,26 +1024,6 @@ function getPreviewImageFromAsset(asset: MemorialMediaAsset | null, alt: string,
   );
 }
 
-function getSectionPreviewFallbackVisual(block: MemorialRichText, title: string) {
-  return getInitialsPreviewFallback(block.section_key ? formatMemorialSectionKey(block.section_key) : title);
-}
-
-function getInitialsPreviewFallback(label: string) {
-  return <MemorialPreviewFallbackVisual label={label}>{getInitials(label) || "AIC"}</MemorialPreviewFallbackVisual>;
-}
-
-function getIconPreviewFallback(icon: ReactNode, label: string) {
-  return <MemorialPreviewFallbackVisual label={label}>{icon}</MemorialPreviewFallbackVisual>;
-}
-
-function MemorialPreviewFallbackVisual({ children, label }: { children: ReactNode; label: string }) {
-  return (
-    <div aria-hidden="true" className="memorial-content-preview-card__fallback">
-      <span className="memorial-content-preview-card__fallback-mark">{children}</span>
-      <span className="memorial-content-preview-card__fallback-label">{label}</span>
-    </div>
-  );
-}
 
 function SectionBlockTitle({
   children,
@@ -1238,7 +1208,7 @@ function RecordingGroup({
 
   return (
     <article className="memorial-card memorial-card--padded">
-      <div className="grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)]">
+      <div className={hasSeriesCover ? "grid gap-5 lg:grid-cols-[12rem_minmax(0,1fr)]" : "grid gap-5"}>
         {hasSeriesCover ? (
           <PublicImage
             alt={group.title}
@@ -1246,11 +1216,7 @@ function RecordingGroup({
             className="memorial-card-image memorial-card-image--square"
             preferredSize="medium"
           />
-        ) : (
-          <div className="memorial-card-media memorial-card-media--square memorial-card-media--dark">
-            <PlayCircle size={42} strokeWidth={1.5} aria-hidden="true" />
-          </div>
-        )}
+        ) : null}
 
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--memorial-burgundy)]">
@@ -1264,7 +1230,6 @@ function RecordingGroup({
               content={group.content}
               fallbackTitle={group.content?.title || group.title}
               explicitImage={group.series?.cover_image ?? null}
-              fallbackVisual={getIconPreviewFallback(<PlayCircle size={42} strokeWidth={1.5} aria-hidden="true" />, "Recording")}
               imageAlt={group.title || group.series?.title || "Memorial recordings"}
               readerEyebrow={group.series?.title || "Memorial recordings"}
             />
@@ -1429,11 +1394,7 @@ function MinistryLegacySection({
                     className="memorial-card-image memorial-card-image--wide"
                     preferredSize="medium"
                   />
-                ) : (
-                  <div className="memorial-card-media memorial-card-media--wide">
-                    <span className="memorial-serif text-4xl">{getInitials(item.display_ministry_name)}</span>
-                  </div>
-                )}
+                ) : null}
                 <div className="flex flex-1 flex-col p-5">
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--memorial-burgundy)]">
                     {item.display_ministry_name || item.ministry_name}
@@ -1447,7 +1408,6 @@ function MinistryLegacySection({
                     content={item.content}
                     fallbackTitle={item.content?.title || item.display_ministry_name + " tribute"}
                     explicitImage={item.representative_photo}
-                    fallbackVisual={getInitialsPreviewFallback(item.display_ministry_name || item.ministry_name || "Ministry tribute")}
                     imageAlt={item.display_ministry_name || item.ministry_name || "Ministry tribute"}
                     readerEyebrow={item.display_ministry_name || item.ministry_name || "Ministry tribute"}
                   />
@@ -1502,11 +1462,7 @@ function PersonalTributesSection({
                       className="memorial-avatar"
                       preferredSize="thumb"
                     />
-                  ) : (
-                    <div className="memorial-avatar memorial-avatar--fallback">
-                      <span className="memorial-serif text-xl">{getInitials(item.author_name)}</span>
-                    </div>
-                  )}
+                  ) : null}
                   <div className="min-w-0">
                     <h3 className="text-lg font-black leading-tight text-[var(--memorial-ink)]">{item.author_name}</h3>
                     {item.author_role ? <p className="mt-1 text-sm text-[var(--memorial-muted)]">{item.author_role}</p> : null}
@@ -1523,7 +1479,6 @@ function PersonalTributesSection({
                   content={item.content}
                   fallbackTitle={item.content?.title || item.author_name + " reflection"}
                   explicitImage={item.author_photo}
-                  fallbackVisual={getInitialsPreviewFallback(item.author_name || "Personal tribute")}
                   forceReader
                   imageAlt={item.author_name || "Personal tribute"}
                   readerEyebrow={item.relationship_to_deceased || item.author_role || "Personal tribute"}
@@ -1565,7 +1520,7 @@ function LeadershipTimelineSection({
             return (
               <article className="relative grid gap-4 md:grid-cols-[2rem_minmax(0,1fr)]" key={item.id}>
                 <span className="relative z-10 hidden size-8 rounded-full border-4 border-[var(--memorial-paper)] bg-[var(--memorial-burgundy)] shadow-sm md:block" aria-hidden="true" />
-                <div className="memorial-card memorial-card--flush grid lg:grid-cols-[16rem_minmax(0,1fr)]">
+                <div className={`memorial-card memorial-card--flush grid ${hasImage ? "lg:grid-cols-[16rem_minmax(0,1fr)]" : ""}`}>
                   {hasImage ? (
                     <PublicImage alt={item.title} asset={item.image} className="memorial-card-image memorial-card-image--timeline" preferredSize="medium" />
                   ) : null}
@@ -1580,7 +1535,6 @@ function LeadershipTimelineSection({
                       content={item.content}
                       fallbackTitle={item.title}
                       explicitImage={item.image}
-                      fallbackVisual={getInitialsPreviewFallback(dateLabel || item.title || "Leadership milestone")}
                       imageAlt={item.title || "Leadership milestone"}
                       readerEyebrow={dateLabel || "Leadership milestone"}
                     />
@@ -1709,7 +1663,6 @@ function ArrangementsSection({
                   content={item.content}
                   explicitImage={null}
                   fallbackTitle={item.content?.title || item.title}
-                  fallbackVisual={getIconPreviewFallback(<CalendarDays size={40} strokeWidth={1.7} aria-hidden="true" />, item.arrangement_type_label || "Arrangement")}
                   imageAlt={item.title || item.arrangement_type_label || "Arrangement"}
                   readerEyebrow={item.arrangement_type_label || "Arrangement"}
                 />

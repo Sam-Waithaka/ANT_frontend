@@ -188,9 +188,8 @@ export function MemorialContentReaderModal({
           <X aria-hidden="true" size={20} strokeWidth={2} />
         </button>
 
-        {entry.image ? <div className="memorial-reader-hero-image">{entry.image}</div> : null}
-
         <div className="memorial-reader-content">
+          {entry.image ? <div className="memorial-reader-hero-image">{entry.image}</div> : null}
           <header className="memorial-reader-header">
             {entry.eyebrow ? <p className="memorial-reader-eyebrow">{entry.eyebrow}</p> : null}
             <h2 className="memorial-reader-title" id={titleId}>{entry.title}</h2>
