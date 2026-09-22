@@ -1,13 +1,17 @@
 # Memorial Feature Notes
 
-## Temporary Homepage Memorial Banner
+## Homepage Memorial Banners
 
-The homepage banner for Elder Geoffrey Kirungu lives in `src/features/memorial/public/components/HomeMemorialBanner.tsx` and is inserted once in `src/pages/LandingPage.tsx` above the existing homepage hero.
+The homepage banner system lives in `src/features/memorial/public/components/HomeMemorialBanner.tsx` and is inserted once in `src/pages/LandingPage.tsx` above the existing homepage hero.
 
-Removal later should require only:
+It fetches active public memorial banners from:
 
-1. Set or remove `HOME_MEMORIAL_BANNER_ENABLED` in `src/features/memorial/public/homeMemorialBannerConfig.ts`.
-2. Remove the `HomeMemorialBanner` import/render call from `src/pages/LandingPage.tsx`.
-3. Delete this memorial feature folder during the wider memorial teardown.
+```http
+GET /v1/memorial/public/banners/
+```
 
-The banner fetches public memorial data through the existing public memorial page adapter. It fails quietly on 404 or API errors so the ordinary homepage remains usable.
+The backend decides which memorials are active for the banner using publication, visibility, `show_banner`, and the configured banner date window. The frontend renders only records returned by that endpoint and builds public links as `/in-loving-memory-of-{slug}` using the memorial page slug from the API.
+
+To disable the homepage banner placement entirely, set `HOME_MEMORIAL_BANNER_ENABLED` in `src/features/memorial/public/homeMemorialBannerConfig.ts` to `false`, or remove the `HomeMemorialBanner` import/render call from `src/pages/LandingPage.tsx`.
+
+The banner fails quietly on API errors so the ordinary homepage remains usable.

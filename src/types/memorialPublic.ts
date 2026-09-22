@@ -91,6 +91,12 @@ export type MemorialPageIdentity = {
   featured_at: string | null;
 };
 
+export type PublicMemorialBanner = MemorialPageIdentity & {
+  banner_starts_at: string | null;
+  banner_ends_at: string | null;
+  banner_active: boolean;
+};
+
 export type MemorialBaseSection = {
   section_key?: string;
   label?: string;

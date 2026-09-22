@@ -3,6 +3,7 @@ import type {
   MemorialPublicPayload,
   MemorialPublicSections,
   MemorialRichText,
+  PublicMemorialBanner,
 } from "../types/memorialPublic";
 
 export const MEMORIAL_PUBLIC_ROUTE_PREFIX = "in-loving-memory-of";
@@ -47,8 +48,10 @@ export const memorialSectionKeys = [
 type MemorialSectionKey = (typeof memorialSectionKeys)[number];
 
 const createMemorialPublicPagePath = (slug: string) => `/v1/memorial/public/pages/${encodeURIComponent(slug)}/`;
+const createMemorialPublicBannersPath = () => "/v1/memorial/public/banners/";
 
 export const createMemorialPublicPageUrl = (slug: string) => createApiUrl(createMemorialPublicPagePath(slug));
+export const createMemorialPublicBannersUrl = () => createApiUrl(createMemorialPublicBannersPath());
 
 type MemorialSectionShapeSummary = {
   block_count: number;
@@ -82,6 +85,24 @@ export async function getMemorialPage(slug: string): Promise<MemorialPublicPaylo
     return JSON.parse(responseText) as MemorialPublicPayload;
   } catch (error) {
     throw new Error(`Memorial endpoint returned a non-JSON response from ${endpoint}`, { cause: error });
+  }
+}
+export async function getMemorialBanners(): Promise<PublicMemorialBanner[]> {
+  const endpoint = createMemorialPublicBannersUrl();
+  const response = await fetch(endpoint, {
+    headers: { Accept: "application/json" },
+  });
+  const responseText = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`Unable to load memorial banners from ${endpoint}`);
+  }
+
+  try {
+    const payload = JSON.parse(responseText) as PublicMemorialBanner[] | { results?: PublicMemorialBanner[] };
+    return Array.isArray(payload) ? payload : Array.isArray(payload.results) ? payload.results : [];
+  } catch (error) {
+    throw new Error(`Memorial banners endpoint returned a non-JSON response from ${endpoint}`, { cause: error });
   }
 }
 
